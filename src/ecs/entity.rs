@@ -20,8 +20,8 @@ pub enum Component {
 }
 
 impl ToType<ComponentType> for Component {
-    fn to_type(self) -> ComponentType {
-        match self {
+    fn to_type(&self) -> ComponentType {
+        match *self {
             Component::Position(_) => ComponentType::Position,
             Component::Solid => ComponentType::Solid,
         }
