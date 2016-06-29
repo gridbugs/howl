@@ -1,6 +1,7 @@
-use ecs::table::{Table, ToType};
+use ecs::table::{Table, TableId, ToType};
 use geometry::vector2::Vector2;
 
+pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
 
 macro_rules! entity {
