@@ -5,6 +5,7 @@
 mod renderer;
 mod geometry;
 mod grid;
+mod colour;
 #[macro_use] mod ecs;
 
 fn main() {

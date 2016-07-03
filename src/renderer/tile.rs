@@ -1,4 +1,4 @@
-use renderer::colour::Rgb24;
+use colour::rgb24::Rgb24;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Tile {

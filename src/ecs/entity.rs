@@ -1,7 +1,7 @@
 use ecs::table::{Table, TableId, ToType};
 use geometry::vector2::Vector2;
 use renderer::tile::Tile;
-use renderer::colour::Rgb24;
+use colour::rgb24::Rgb24;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
