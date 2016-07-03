@@ -1,6 +1,7 @@
 use std::marker::Copy;
 use std::convert::From;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
+use geometry::vector::Dot;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vector2<T> {
@@ -63,5 +64,17 @@ impl<T, S> MulAssign<S> for Vector2<T> where T: MulAssign<S>, S: Copy {
     fn mul_assign(&mut self, other: S) {
         self.x *= other;
         self.y *= other;
+    }
+}
+
+// Dot Product
+impl<T, S> Dot<Vector2<S>> for Vector2<T>
+    where T: Mul<S>,
+          <T as Mul<S>>::Output: Add
+{
+    type Output = <T::Output as Add>::Output;
+
+    fn dot(self, rhs: Vector2<S>) -> Self::Output {
+        self.x * rhs.x + self.y * rhs.y
     }
 }
