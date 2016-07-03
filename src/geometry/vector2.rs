@@ -1,7 +1,10 @@
 use std::marker::Copy;
 use std::convert::From;
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
 use geometry::vector::Dot;
+use rand;
+use rand::Rng;
+use std::f64::consts::PI;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vector2<T> {
@@ -16,6 +19,15 @@ impl<T> Vector2<T> {
 
     pub fn convert<S>(self) -> Vector2<S> where S: From<T> {
         Vector2 { x: S::from(self.x), y: S::from(self.y) }
+    }
+}
+
+impl Vector2<f64> {
+    pub fn from_radial(length: f64, angle: f64) -> Self {
+        Vector2::new(length * angle.cos(), length * angle.sin())
+    }
+    pub fn random_unit_vector() -> Self {
+        Self::from_radial(1.0, rand::thread_rng().gen_range(-PI, PI))
     }
 }
 
@@ -64,6 +76,22 @@ impl<T, S> MulAssign<S> for Vector2<T> where T: MulAssign<S>, S: Copy {
     fn mul_assign(&mut self, other: S) {
         self.x *= other;
         self.y *= other;
+    }
+}
+
+// Scalar Division
+impl<T, S> Div<S> for Vector2<T> where T: Div<S>, S: Copy {
+    type Output = Vector2<T::Output>;
+
+    fn div(self, other: S) -> Vector2<T::Output> {
+        Vector2 { x: self.x / other, y: self.y / other }
+    }
+}
+
+impl<T, S> DivAssign<S> for Vector2<T> where T: DivAssign<S>, S: Copy {
+    fn div_assign(&mut self, other: S) {
+        self.x /= other;
+        self.y /= other;
     }
 }
 

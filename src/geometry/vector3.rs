@@ -1,7 +1,10 @@
 use std::marker::Copy;
 use std::convert::From;
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
 use geometry::vector::Dot;
+use rand;
+use rand::Rng;
+use std::f64::consts::{PI, FRAC_PI_2};
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vector3<T> {
@@ -17,6 +20,17 @@ impl<T> Vector3<T> {
 
     pub fn convert<S>(self) -> Vector3<S> where S: From<T> {
         Vector3 { x: S::from(self.x), y: S::from(self.y), z: S::from(self.z) }
+    }
+}
+
+impl Vector3<f64> {
+    pub fn from_radial(length: f64, h_angle: f64, v_angle: f64) -> Self {
+        let r = length * v_angle.cos();
+        Vector3::new(r * h_angle.cos(), r * h_angle.sin(), length * v_angle.sin())
+    }
+    pub fn random_unit_vector() -> Self {
+        Self::from_radial(1.0, rand::thread_rng().gen_range(-PI, PI),
+                          rand::thread_rng().gen_range(-FRAC_PI_2, FRAC_PI_2))
     }
 }
 
@@ -68,6 +82,23 @@ impl<T, S> MulAssign<S> for Vector3<T> where T: MulAssign<S>, S: Copy {
         self.x *= other;
         self.y *= other;
         self.z *= other;
+    }
+}
+
+// Scalar Division
+impl<T, S> Div<S> for Vector3<T> where T: Div<S>, S: Copy {
+    type Output = Vector3<T::Output>;
+
+    fn div(self, other: S) -> Vector3<T::Output> {
+        Vector3 { x: self.x / other, y: self.y / other, z: self.z / other }
+    }
+}
+
+impl<T, S> DivAssign<S> for Vector3<T> where T: DivAssign<S>, S: Copy {
+    fn div_assign(&mut self, other: S) {
+        self.x /= other;
+        self.y /= other;
+        self.z /= other;
     }
 }
 
