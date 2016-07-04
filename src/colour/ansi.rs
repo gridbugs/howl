@@ -1,4 +1,5 @@
 // Error indicates value for a field is too high
+#[derive(Debug)]
 pub struct AnsiRangeError;
 
 #[derive(Clone, Copy, Debug)]
