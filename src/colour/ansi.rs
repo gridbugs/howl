@@ -34,7 +34,7 @@ pub struct RgbColour {
     green: u8,
     blue: u8,
 }
-const RGB_COLOUR_MAX_FIELD: u8 = 5;
+pub const RGB_COLOUR_MAX_FIELD: u8 = 5;
 
 impl RgbColour {
     fn new(red: u8, green: u8, blue: u8) -> Result<RgbColour, AnsiRangeError> {
@@ -52,7 +52,7 @@ impl RgbColour {
 // This can hold values from 0 to 23.
 #[derive(Clone, Copy, Debug)]
 pub struct GreyscaleColour(u8);
-const GREYSCALE_COLOUR_MAX_FIELD: u8 = 23;
+pub const GREYSCALE_COLOUR_MAX_FIELD: u8 = 23;
 
 impl GreyscaleColour {
     fn new(value: u8) -> Result<GreyscaleColour, AnsiRangeError> {
