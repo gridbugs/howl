@@ -4,6 +4,7 @@
 extern crate num;
 extern crate rand;
 
+mod perlin;
 mod renderer;
 mod geometry;
 mod grid;
