@@ -1,6 +1,7 @@
 use grid::static_grid::StaticGrid;
 use geometry::vector2::Vector2;
 use geometry::vector::Dot;
+use perlin::perlin::ease_curve;
 
 pub type Coord = Vector2<f64>;
 
@@ -30,10 +31,6 @@ pub struct Perlin2Grid {
 }
 
 const NUM_CORNERS: usize = 4;
-
-fn ease_curve(x: f64) -> f64 {
-    6.0 * x.powi(5) - 15.0 * x.powi(4) + 10.0 * x.powi(3)
-}
 
 impl Perlin2Grid {
     pub fn new(width: f64, height: f64, wrap_type: PerlinWrapType)
