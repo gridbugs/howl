@@ -36,10 +36,10 @@ pub enum DirectionType {
 
 #[derive(Copy, Clone, Debug)]
 pub struct DirectionProfile {
-    pub direction : Direction,
-    pub direction_type : DirectionType,
-    pub opposite : Direction,
-    pub vector : Vector2<i8>,
+    pub direction: Direction,
+    pub direction_type: DirectionType,
+    pub opposite: Direction,
+    pub vector: Vector2<i8>,
 }
 
 pub mod directions {
@@ -52,56 +52,56 @@ pub mod directions {
     use geometry::direction::OrdinalDirection;
     use geometry::direction::DirectionType;
 
-    pub static NORTH : DirectionProfile = DirectionProfile {
+    pub static NORTH: DirectionProfile = DirectionProfile {
         direction: Direction::North,
         direction_type: DirectionType::Cardinal(CardinalDirection::North),
         opposite: Direction::South,
         vector: Vector2 { x: 0, y: -1 },
     };
 
-    pub static EAST : DirectionProfile = DirectionProfile {
+    pub static EAST: DirectionProfile = DirectionProfile {
         direction: Direction::East,
         direction_type: DirectionType::Cardinal(CardinalDirection::East),
         opposite: Direction::West,
         vector: Vector2 { x: 1, y: 0 },
     };
 
-    pub static SOUTH : DirectionProfile = DirectionProfile {
+    pub static SOUTH: DirectionProfile = DirectionProfile {
         direction: Direction::South,
         direction_type: DirectionType::Cardinal(CardinalDirection::South),
         opposite: Direction::North,
         vector: Vector2 { x: 0, y: 1 },
     };
 
-    pub static WEST : DirectionProfile = DirectionProfile {
+    pub static WEST: DirectionProfile = DirectionProfile {
         direction: Direction::West,
         direction_type: DirectionType::Cardinal(CardinalDirection::West),
         opposite: Direction::East,
         vector: Vector2 { x: -1, y: 0 },
     };
 
-    pub static NORTH_EAST : DirectionProfile = DirectionProfile {
+    pub static NORTH_EAST: DirectionProfile = DirectionProfile {
         direction: Direction::NorthEast,
         direction_type: DirectionType::Ordinal(OrdinalDirection::NorthEast),
         opposite: Direction::SouthWest,
         vector: Vector2 { x: 1, y: -1 },
     };
 
-    pub static SOUTH_EAST : DirectionProfile = DirectionProfile {
+    pub static SOUTH_EAST: DirectionProfile = DirectionProfile {
         direction: Direction::SouthEast,
         direction_type: DirectionType::Ordinal(OrdinalDirection::SouthEast),
         opposite: Direction::NorthWest,
         vector: Vector2 { x: 1, y: 1 },
     };
 
-    pub static SOUTH_WEST : DirectionProfile = DirectionProfile {
+    pub static SOUTH_WEST: DirectionProfile = DirectionProfile {
         direction: Direction::SouthWest,
         direction_type: DirectionType::Ordinal(OrdinalDirection::SouthWest),
         opposite: Direction::NorthEast,
         vector: Vector2 { x: -1, y: 1 },
     };
 
-    pub static NORTH_WEST : DirectionProfile = DirectionProfile {
+    pub static NORTH_WEST: DirectionProfile = DirectionProfile {
         direction: Direction::NorthEast,
         direction_type: DirectionType::Ordinal(OrdinalDirection::NorthWest),
         opposite: Direction::SouthEast,
@@ -109,8 +109,8 @@ pub mod directions {
     };
 }
 
-pub const NUM_DIRECTIONS : usize = 8;
-pub static DIRECTIONS : [Direction; NUM_DIRECTIONS] = [
+pub const NUM_DIRECTIONS: usize = 8;
+pub static DIRECTIONS: [Direction; NUM_DIRECTIONS] = [
     Direction::North,
     Direction::NorthEast,
     Direction::East,
@@ -121,23 +121,23 @@ pub static DIRECTIONS : [Direction; NUM_DIRECTIONS] = [
     Direction::NorthWest,
 ];
 
-pub const NUM_CARDINAL_DIRECTIONS : usize = 4;
-pub static CARDINAL_DIRECTIONS : [Direction; NUM_CARDINAL_DIRECTIONS] = [
+pub const NUM_CARDINAL_DIRECTIONS: usize = 4;
+pub static CARDINAL_DIRECTIONS: [Direction; NUM_CARDINAL_DIRECTIONS] = [
     Direction::North,
     Direction::East,
     Direction::South,
     Direction::West,
 ];
 
-pub const NUM_ORDINAL_DIRECTIONS : usize = 4;
-pub static ORDINAL_DIRECTIONS : [Direction; NUM_ORDINAL_DIRECTIONS] = [
+pub const NUM_ORDINAL_DIRECTIONS: usize = 4;
+pub static ORDINAL_DIRECTIONS: [Direction; NUM_ORDINAL_DIRECTIONS] = [
     Direction::NorthEast,
     Direction::SouthEast,
     Direction::SouthWest,
     Direction::NorthWest,
 ];
 
-pub static DIRECTION_PROFILES : [&'static DirectionProfile; NUM_DIRECTIONS] = [
+pub static DIRECTION_PROFILES: [&'static DirectionProfile; NUM_DIRECTIONS] = [
     &directions::NORTH,
     &directions::NORTH_EAST,
     &directions::EAST,
