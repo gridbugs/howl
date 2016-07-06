@@ -2,9 +2,6 @@ use std::marker::Copy;
 use std::convert::From;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
 use geometry::vector::Dot;
-use rand;
-use rand::Rng;
-use std::f64::consts::{PI, FRAC_PI_2};
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Vector3<T> {
@@ -27,10 +24,6 @@ impl Vector3<f64> {
     pub fn from_radial(length: f64, h_angle: f64, v_angle: f64) -> Self {
         let r = length * v_angle.cos();
         Vector3::new(r * h_angle.cos(), r * h_angle.sin(), length * v_angle.sin())
-    }
-    pub fn random_unit_vector() -> Self {
-        Self::from_radial(1.0, rand::thread_rng().gen_range(-PI, PI),
-                          rand::thread_rng().gen_range(-FRAC_PI_2, FRAC_PI_2))
     }
 }
 
