@@ -19,7 +19,7 @@ struct Perlin3Vector(Vector3<f64>);
 impl Default for Perlin3Vector {
     fn default() -> Self {
         // random number from 0 to 15
-        let index: usize = rand::thread_rng().gen::<usize>() & GRADIENT_MASK;
+        let index = rand::thread_rng().gen::<usize>() & GRADIENT_MASK;
         Perlin3Vector(GRADIENTS[index].normalize())
     }
 }
