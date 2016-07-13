@@ -7,7 +7,11 @@ pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
 
 macro_rules! entity {
-    ( $( $x:expr ),* ) => { table![$($x),*] }
+    ( $( $x:expr ),* ) => {{
+        let mut entity = ecs::entity::Entity::new();
+        $(entity.add($x);)*
+        entity
+    }}
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]

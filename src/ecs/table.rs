@@ -30,18 +30,20 @@ impl<EntryType, Entry> Table<EntryType, Entry>
     pub fn add(&mut self, entry: Entry) {
         self.slots.insert(entry.to_type(), entry);
     }
+
+    pub fn get(&mut self, t: EntryType) -> Option<&Entry> {
+        self.slots.get(&t)
+    }
+
+    pub fn get_mut(&mut self, t: EntryType) -> Option<&mut Entry> {
+        self.slots.get_mut(&t)
+    }
 }
 
 macro_rules! table {
-    ( $( $x:expr ),* ) => {
-        {
-            let mut table = ecs::table::Table::new();
-
-            $(
-                table.add($x);
-            )*
-
-            table
-        }
-    }
+    ( $( $x:expr ),* ) => {{
+        let mut table = ecs::table::Table::new();
+        $(table.add($x);)*
+        table
+    }}
 }
