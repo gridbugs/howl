@@ -31,19 +31,28 @@ impl<EntryType, Entry> Table<EntryType, Entry>
         self.slots.insert(entry.to_type(), entry);
     }
 
-    pub fn get(&mut self, t: EntryType) -> Option<&Entry> {
+    pub fn remove(&mut self, t: EntryType) {
+        self.slots.remove(&t);
+    }
+
+    pub fn get(&self, t: EntryType) -> Option<&Entry> {
         self.slots.get(&t)
     }
 
     pub fn get_mut(&mut self, t: EntryType) -> Option<&mut Entry> {
         self.slots.get_mut(&t)
     }
+
+    pub fn has(&self, t: EntryType) -> bool {
+        self.slots.contains_key(&t)
+    }
 }
 
 macro_rules! table {
+    () => { ecs::table::Table::new() };
     ( $( $x:expr ),* ) => {{
         let mut table = ecs::table::Table::new();
         $(table.add($x);)*
         table
-    }}
+    }};
 }

@@ -24,3 +24,20 @@ pub fn set_fields() {
         panic!();
     }
 }
+
+#[test]
+pub fn add_remove_component() {
+    let mut entity = entity!();
+
+    entity.add(Position(Vector2::new(0, 0)));
+
+    if !entity.has(Type::Position) {
+        panic!();
+    }
+
+    entity.remove(Type::Position);
+
+    if entity.has(Type::Position) {
+        panic!();
+    }
+}

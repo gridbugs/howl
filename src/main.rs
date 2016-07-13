@@ -11,6 +11,9 @@ mod grid;
 mod colour;
 #[macro_use] mod ecs;
 
+use ecs::ecs_context::EcsContext;
+
 fn main() {
-    println!("Hello, world!");
+    let a = EcsContext::new();
+    println!("{:?}", a);
 }
