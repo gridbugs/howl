@@ -4,16 +4,15 @@
 extern crate num;
 extern crate rand;
 
+#[macro_use] mod ecs;
 mod perlin;
 mod renderer;
 mod geometry;
 mod grid;
 mod colour;
-#[macro_use] mod ecs;
-
-use ecs::ecs_context::EcsContext;
+mod game;
+mod tests;
 
 fn main() {
-    let a = EcsContext::new();
-    println!("{:?}", a);
+    println!("Hello, World!");
 }

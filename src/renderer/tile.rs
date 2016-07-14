@@ -1,17 +1,13 @@
-use colour::rgb24::Rgb24;
+use colour::ansi::AnsiColour;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Tile {
-    character: char,
-    colour: Rgb24,
+    pub character: char,
+    pub colour: AnsiColour,
 }
 
 impl Tile {
-    pub fn new(character: char, colour: Rgb24) -> Tile {
+    pub fn new(character: char, colour: AnsiColour) -> Tile {
         Tile { character: character, colour: colour }
-    }
-
-    pub fn new_rgb(character: char, red: u8, green: u8, blue: u8) -> Tile {
-        Tile::new(character, Rgb24::new(red, green, blue))
     }
 }
