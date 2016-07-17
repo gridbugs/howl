@@ -7,3 +7,4 @@ authors = ["Stephen Sherratt <stephen@sherra.tt>"]
 itertools = "0.4.16"
 rand = "0.3.14"
 num = "0.1.32"
+rustty = { git = "https://github.com/stevebob/rustty.git" }
