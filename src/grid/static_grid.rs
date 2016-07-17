@@ -5,6 +5,7 @@ use std::ops::{Index, IndexMut};
 use geometry::direction;
 use geometry::vector2::Vector2;
 use grid::coord::Coord;
+use grid::coord_cell::CoordCell;
 
 #[derive(Debug)]
 pub struct StaticGrid<T> {
@@ -79,6 +80,18 @@ impl<'a, T> Iterator for SomeNeiIter<'a, T> {
         }
 
         None
+    }
+}
+
+impl<T: CoordCell> StaticGrid<T> {
+    pub fn new_coords(width: isize, height: isize, data: T::Data) -> StaticGrid<T> {
+        let mut grid = StaticGrid::new_uninitialised(width, height);
+
+        for _ in 0..grid.size {
+            grid.elements.push(T::new(0, 0, data));
+        }
+
+        grid
     }
 }
 
