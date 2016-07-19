@@ -3,11 +3,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::slice;
 
-use ecs::system_name::SystemName;
-use ecs::system::System;
+use ecs::system::{System, SystemName};
 
-pub type SystemRef = Box<RefCell<System>>;
-pub type SystemTable = HashMap<SystemName, SystemRef>;
+pub type SystemTable = HashMap<SystemName, RefCell<System>>;
 
 #[derive(Debug)]
 pub struct SystemQueue {
@@ -21,7 +19,7 @@ pub struct SystemIter<'a> {
 }
 
 impl<'a> Iterator for SystemIter<'a> {
-    type Item = &'a SystemRef;
+    type Item = &'a RefCell<System>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|name| {
@@ -38,8 +36,8 @@ impl SystemQueue {
         }
     }
 
-    pub fn add<S: 'static + System>(&mut self, name: SystemName, system: S) {
-        if let Some(_) = self.systems.insert(name, Box::new(RefCell::new(system))) {
+    pub fn add(&mut self, name: SystemName, system: System) {
+        if let Some(_) = self.systems.insert(name, RefCell::new(system)) {
             panic!("System named {:?} already exists.", name);
         }
         let mut order_copy = self.order.to_vec();
@@ -47,7 +45,7 @@ impl SystemQueue {
         self.order = Rc::new(order_copy);
     }
 
-    pub fn get(&self, name: SystemName) -> &Box<RefCell<System>> {
+    pub fn get(&self, name: SystemName) -> &RefCell<System> {
         self.systems.get(&name).unwrap()
     }
 

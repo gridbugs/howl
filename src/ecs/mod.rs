@@ -4,6 +4,5 @@
 #[macro_use] pub mod message;
 pub mod entity_table;
 pub mod entity_types;
-pub mod system_name;
 pub mod system;
 pub mod systems;

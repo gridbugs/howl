@@ -4,7 +4,6 @@ use std::fmt;
 use ecs::entity_table::EntityTable;
 use ecs::system_queue::SystemQueue;
 use ecs::message::Message;
-use ecs::system::System;
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::message::Field::*;
@@ -12,7 +11,7 @@ use ecs::message::FieldType;
 
 use grid::static_grid::StaticGrid;
 
-pub struct WriteRenderer<T>(T);
+pub struct WriteRenderer<T>(pub T);
 
 impl<T> WriteRenderer<T> {
     pub fn new(write: T) -> Self {
@@ -26,8 +25,8 @@ impl<T> fmt::Debug for WriteRenderer<T> {
     }
 }
 
-impl<T: io::Write> System for WriteRenderer<T> {
-    fn process_message(&mut self, message: &mut Message,
+impl<T: io::Write> WriteRenderer<T> {
+    pub fn process_message(&mut self, message: &mut Message,
                        entities: &mut EntityTable,
                        _: &SystemQueue)
     {
