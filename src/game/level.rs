@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::collections::hash_set;
 use ecs::entity::{Entity, EntityId};
-use ecs::ecs_context::EcsContext;
+use ecs::entity_table::EntityTable;
 
 #[derive(Debug)]
 pub struct Level {
@@ -12,14 +12,14 @@ pub struct Level {
 
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
-    ecs: &'a EcsContext,
+    entities: &'a EntityTable,
 }
 
 impl<'a> Iterator for EntityIter<'a> {
     type Item = &'a Entity;
     fn next(&mut self) -> Option<Self::Item> {
         self.hash_set_iter.next().map(|id| {
-            self.ecs.get(*id)
+            self.entities.get(*id)
         })
     }
 }
@@ -37,10 +37,10 @@ impl Level {
         self.entities.insert(id);
     }
 
-    pub fn entities<'a>(&'a self, ecs: &'a EcsContext) -> EntityIter<'a> {
+    pub fn entities<'a>(&'a self, entities: &'a EntityTable) -> EntityIter<'a> {
         EntityIter {
             hash_set_iter: self.entities.iter(),
-            ecs: ecs,
+            entities: entities,
         }
     }
 }

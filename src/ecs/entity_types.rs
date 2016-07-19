@@ -6,9 +6,9 @@ use renderer::tile::Tile;
 use colour::ansi;
 use game;
 
-pub fn make_wall(pos: Vector2<isize>) -> Entity {
+pub fn make_wall(x: isize, y: isize) -> Entity {
     entity![
-        Position(pos),
+        Position(Vector2::new(x, y)),
         Solid,
         SolidTile {
             tile: Tile::new('#', ansi::GREY),
@@ -18,9 +18,9 @@ pub fn make_wall(pos: Vector2<isize>) -> Entity {
     ]
 }
 
-pub fn make_floor(pos: Vector2<isize>) -> Entity {
+pub fn make_floor(x: isize, y: isize) -> Entity {
     entity![
-        Position(pos),
+        Position(Vector2::new(x, y)),
         SolidTile {
             tile: Tile::new('.', ansi::DARK_GREY),
             background: ansi::GREEN
@@ -29,9 +29,9 @@ pub fn make_floor(pos: Vector2<isize>) -> Entity {
     ]
 }
 
-pub fn make_pc(pos: Vector2<isize>) -> Entity {
+pub fn make_pc(x: isize, y: isize) -> Entity {
     entity![
-        Position(pos),
+        Position(Vector2::new(x, y)),
         TransparentTile(Tile::new('@', ansi::WHITE)),
         TileDepth(2)
     ]

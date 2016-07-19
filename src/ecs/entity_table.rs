@@ -2,14 +2,14 @@ use ecs::entity::{EntityId, Entity};
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct EcsContext {
+pub struct EntityTable {
     next_entity_id: EntityId,
     entities: HashMap<EntityId, Entity>,
 }
 
-impl EcsContext {
-    pub fn new() -> EcsContext {
-        EcsContext {
+impl EntityTable {
+    pub fn new() -> Self {
+        EntityTable {
             next_entity_id: 0,
             entities: HashMap::new(),
         }
@@ -33,3 +33,4 @@ impl EcsContext {
         self.entities.get_mut(&id).unwrap()
     }
 }
+

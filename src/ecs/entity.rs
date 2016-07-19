@@ -9,6 +9,7 @@ pub type Entity = Table<ComponentType, Component>;
 
 macro_rules! entity {
     () => { ecs::entity::Entity::new() };
+    ( $( $x:expr ),* , ) => { entity!( $( $x ),* ) };
     ( $( $x:expr ),* ) => {{
         let mut entity = ecs::entity::Entity::new();
         $(entity.add($x);)*

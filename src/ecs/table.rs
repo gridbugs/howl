@@ -47,12 +47,3 @@ impl<EntryType, Entry> Table<EntryType, Entry>
         self.slots.contains_key(&t)
     }
 }
-
-macro_rules! table {
-    () => { ecs::table::Table::new() };
-    ( $( $x:expr ),* ) => {{
-        let mut table = ecs::table::Table::new();
-        $(table.add($x);)*
-        table
-    }};
-}
