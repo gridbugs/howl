@@ -54,6 +54,8 @@ impl<'a> WindowBuffer<'a> {
             self.window.get_cell(0, i as isize).set_ch('|');
             self.window.get_cell(self.width as isize - 1, i as isize).set_ch('|');
         }
+
+        self.window.flush();
     }
 
     fn clear(&self) {
@@ -116,6 +118,7 @@ impl<'a> io::Write for WindowBuffer<'a> {
 
             if self.cursor_pos.1 == self.num_lines as isize {
                 self.scroll();
+                assert!(false);
             }
             count += 1;
         }

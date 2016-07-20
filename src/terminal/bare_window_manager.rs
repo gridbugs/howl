@@ -71,6 +71,9 @@ impl BareWindowManager {
         })
     }
 
+    pub fn get_width(&self) -> usize { self.terminal.borrow().cols() }
+    pub fn get_height(&self) -> usize { self.terminal.borrow().rows() }
+
     pub fn make_window(&mut self, x: isize, y: isize,
                        width: usize, height: usize) -> u64
     {

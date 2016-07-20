@@ -114,7 +114,7 @@ impl WindowManager {
         }
     }
 
-    pub fn flush(&self) {
-        self.0.borrow_mut().flush();
-    }
+    pub fn flush(&self) { self.0.borrow_mut().flush(); }
+    pub fn get_width(&self) -> usize { self.0.borrow().get_width() }
+    pub fn get_height(&self) -> usize { self.0.borrow().get_height() }
 }
