@@ -25,7 +25,6 @@ use ecs::entity::ComponentType as Type;
 use ecs::entity::EntityId;
 use ecs::system::{System, SystemName};
 use ecs::systems::window_renderer::WindowRenderer;
-use ecs::system_queue::SystemQueue;
 
 use terminal::window_manager::WindowManager;
 use terminal::window_buffer::WindowBuffer;
@@ -81,10 +80,9 @@ fn main() {
 
     let game_window = wm.make_window(0, 0, 80, 20);
 
-    let mut systems = SystemQueue::new();
-    {
-        systems.add(SystemName::Renderer, System::WindowRenderer(WindowRenderer::new(game_window)));
-    }
+    let systems = system_queue![
+        SystemName::Renderer => System::WindowRenderer(WindowRenderer::new(game_window)),
+    ];
 
     let mut entities = EntityTable::new();
 
