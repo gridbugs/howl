@@ -2,6 +2,7 @@ use ecs::message::Message;
 use ecs::entity_table::EntityTable;
 use ecs::system_queue::SystemQueue;
 use ecs::systems::write_renderer::WriteRenderer;
+use ecs::systems::window_renderer::WindowRenderer;
 
 use std::io;
 
@@ -11,12 +12,13 @@ pub enum SystemName {
 }
 
 #[derive(Debug)]
-pub enum System {
+pub enum System<'a> {
     StdoutRenderer(WriteRenderer<io::Stdout>),
     TestRenderer(WriteRenderer<Vec<u8>>),
+    WindowRenderer(WindowRenderer<'a>),
 }
 
-impl System {
+impl<'a> System<'a> {
     pub fn process_message(&mut self, message: &mut Message,
                            entities: &mut EntityTable,
                            systems: &SystemQueue)
@@ -26,6 +28,9 @@ impl System {
                 renderer.process_message(message, entities, systems);
             },
             System::TestRenderer(ref mut renderer) => {
+                renderer.process_message(message, entities, systems);
+            },
+            System::WindowRenderer(ref mut renderer) => {
                 renderer.process_message(message, entities, systems);
             },
         }

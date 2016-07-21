@@ -5,21 +5,21 @@ use std::slice;
 
 use ecs::system::{System, SystemName};
 
-pub type SystemTable = HashMap<SystemName, RefCell<System>>;
+pub type SystemTable<'a> = HashMap<SystemName, RefCell<System<'a>>>;
 
 #[derive(Debug)]
-pub struct SystemQueue {
-    systems: SystemTable,
+pub struct SystemQueue<'a> {
+    systems: SystemTable<'a>,
     order: Rc<Vec<SystemName>>,
 }
 
 pub struct SystemIter<'a> {
     iter: slice::Iter<'a, SystemName>,
-    systems: &'a SystemTable,
+    systems: &'a SystemTable<'a>,
 }
 
 impl<'a> Iterator for SystemIter<'a> {
-    type Item = &'a RefCell<System>;
+    type Item = &'a RefCell<System<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|name| {
@@ -28,7 +28,7 @@ impl<'a> Iterator for SystemIter<'a> {
     }
 }
 
-impl SystemQueue {
+impl<'a> SystemQueue<'a> {
     pub fn new() -> Self {
         SystemQueue {
             systems: HashMap::new(),
@@ -36,7 +36,7 @@ impl SystemQueue {
         }
     }
 
-    pub fn add(&mut self, name: SystemName, system: System) {
+    pub fn add<'b>(&'b mut self, name: SystemName, system: System<'a>) {
         if let Some(_) = self.systems.insert(name, RefCell::new(system)) {
             panic!("System named {:?} already exists.", name);
         }
@@ -45,11 +45,11 @@ impl SystemQueue {
         self.order = Rc::new(order_copy);
     }
 
-    pub fn get(&self, name: SystemName) -> &RefCell<System> {
+    pub fn get(&'a self, name: SystemName) -> &'a RefCell<System<'a>> {
         self.systems.get(&name).unwrap()
     }
 
-    pub fn iter<'a>(&'a self) -> SystemIter<'a> {
+    pub fn iter(&'a self) -> SystemIter<'a> {
         SystemIter {
             iter: self.order.iter(),
             systems: &self.systems,
