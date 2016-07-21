@@ -54,24 +54,37 @@ impl<'a> WindowRef<'a> {
 
 impl<'a> WindowCell<'a> {
     pub fn set_ch(&'a self, ch: char) {
-        self.window.manager.0.borrow_mut()
+        self.window.manager.0.borrow()
             .set_window_ch(self.window.id,
                            self.window_coord.0,
                            self.window_coord.1, ch);
     }
 
     pub fn set_fg(&'a self, fg: AnsiColour) {
-        self.window.manager.0.borrow_mut()
+        self.window.manager.0.borrow()
             .set_window_fg(self.window.id,
                            self.window_coord.0,
                            self.window_coord.1, fg);
     }
 
     pub fn set_bg(&'a self, bg: AnsiColour) {
-        self.window.manager.0.borrow_mut()
+        self.window.manager.0.borrow()
             .set_window_bg(self.window.id,
                            self.window_coord.0,
                            self.window_coord.1, bg);
+    }
+
+    pub fn set(&'a self, ch: char, fg: AnsiColour, bg: AnsiColour) {
+        let w = self.window.manager.0.borrow();
+        w.set_window_ch(self.window.id,
+                        self.window_coord.0,
+                        self.window_coord.1, ch);
+        w.set_window_fg(self.window.id,
+                        self.window_coord.0,
+                        self.window_coord.1, fg);
+        w.set_window_bg(self.window.id,
+                        self.window_coord.0,
+                        self.window_coord.1, bg);
     }
 }
 
