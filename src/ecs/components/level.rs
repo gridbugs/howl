@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 use std::collections::hash_set;
-use ecs::entity::{Entity, EntityId};
-use ecs::entity_table::EntityTable;
+use ecs::entity::{Entity, EntityId, EntityTable};
 
 #[derive(Debug)]
 pub struct Level {
@@ -9,6 +8,8 @@ pub struct Level {
     pub height: usize,
     pub entities: HashSet<EntityId>,
 }
+
+impl Clone for Level { fn clone(&self) -> Level { unimplemented!(); } }
 
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,

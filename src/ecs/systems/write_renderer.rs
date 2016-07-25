@@ -1,9 +1,9 @@
 use std::io;
 use std::fmt;
 
-use ecs::entity_table::EntityTable;
 use ecs::system_queue::SystemQueue;
 use ecs::message::Message;
+use ecs::entity::EntityTable;
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::message::Field::*;

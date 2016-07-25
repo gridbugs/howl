@@ -1,6 +1,6 @@
-use ecs::entity_table::EntityTable;
 use ecs::system_queue::SystemQueue;
 use ecs::message::Message;
+use ecs::entity::EntityTable;
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::message::Field::*;
@@ -88,6 +88,8 @@ impl<'a> WindowRenderer<'a> {
                 }
             }
         }
+
+        self.window.flush();
     }
 }
 

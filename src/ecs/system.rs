@@ -1,14 +1,18 @@
 use ecs::message::Message;
-use ecs::entity_table::EntityTable;
+use ecs::entity::EntityTable;
 use ecs::system_queue::SystemQueue;
 use ecs::systems::write_renderer::WriteRenderer;
 use ecs::systems::window_renderer::WindowRenderer;
+use ecs::systems::terminal_player_actor::TerminalPlayerActor;
+use ecs::systems::apply_update::apply_update;
 
 use std::io;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum SystemName {
     Renderer,
+    PlayerActor,
+    ApplyUpdate,
 }
 
 #[derive(Debug)]
@@ -16,6 +20,8 @@ pub enum System<'a> {
     StdoutRenderer(WriteRenderer<io::Stdout>),
     TestRenderer(WriteRenderer<Vec<u8>>),
     WindowRenderer(WindowRenderer<'a>),
+    TerminalPlayerActor(TerminalPlayerActor<'a>),
+    ApplyUpdate,
 }
 
 impl<'a> System<'a> {
@@ -33,6 +39,12 @@ impl<'a> System<'a> {
             System::WindowRenderer(ref mut renderer) => {
                 renderer.process_message(message, entities, systems);
             },
+            System::TerminalPlayerActor(ref mut actor) => {
+                actor.process_message(message, entities, systems);
+            }
+            System::ApplyUpdate => {
+                apply_update(message, entities, systems);
+            }
         }
     }
 }

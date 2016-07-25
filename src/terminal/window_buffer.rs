@@ -118,7 +118,6 @@ impl<'a> io::Write for WindowBuffer<'a> {
 
             if self.cursor_pos.1 == self.num_lines as isize {
                 self.scroll();
-                assert!(false);
             }
             count += 1;
         }

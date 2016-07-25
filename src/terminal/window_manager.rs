@@ -88,6 +88,7 @@ impl<'a> WindowCell<'a> {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct InputSource<'a> {
     manager: &'a WindowManager,
 }

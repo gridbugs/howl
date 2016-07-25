@@ -1,11 +1,13 @@
 use ecs::table::{Table, TableId, ToType};
+use ecs::table_table::TableTable;
+use ecs::components;
 use geometry::vector2::Vector2;
 use renderer::tile::Tile;
 use colour::ansi::AnsiColour;
-use game;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
+pub type EntityTable = TableTable<ComponentType, Component>;
 
 macro_rules! entity {
     () => { ecs::entity::Entity::new() };
@@ -17,7 +19,7 @@ macro_rules! entity {
     }};
 }
 
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum ComponentType {
     Position,
     Solid,
@@ -25,16 +27,18 @@ pub enum ComponentType {
     TransparentTile,
     TileDepth,
     Level,
+    PlayerActor,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Component {
     Position(Vector2<isize>),
     Solid,
     SolidTile { tile: Tile, background: AnsiColour },
     TransparentTile(Tile),
     TileDepth(isize),
-    Level(game::level::Level),
+    Level(components::level::Level),
+    PlayerActor,
 }
 
 impl ToType<ComponentType> for Component {
@@ -46,6 +50,7 @@ impl ToType<ComponentType> for Component {
             Component::TransparentTile(_) => ComponentType::TransparentTile,
             Component::TileDepth(_) => ComponentType::TileDepth,
             Component::Level(_) => ComponentType::Level,
+            Component::PlayerActor => ComponentType::PlayerActor,
         }
     }
 }
