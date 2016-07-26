@@ -4,7 +4,7 @@ use ecs::system_queue::SystemQueue;
 use ecs::systems::write_renderer::WriteRenderer;
 use ecs::systems::window_renderer::WindowRenderer;
 use ecs::systems::terminal_player_actor::TerminalPlayerActor;
-use ecs::systems::apply_update::apply_update;
+use ecs::systems::apply_update::apply_update_message;
 
 use std::io;
 
@@ -43,7 +43,7 @@ impl<'a> System<'a> {
                 actor.process_message(message, entities, systems);
             }
             System::ApplyUpdate => {
-                apply_update(message, entities, systems);
+                apply_update_message(message, entities, systems);
             }
         }
     }

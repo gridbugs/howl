@@ -7,7 +7,7 @@ pub trait ToType<EntryType> {
 
 pub type TableId = u64;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Table<EntryType, Entry>
     where EntryType: Eq + Hash,
           Entry: ToType<EntryType>,

@@ -18,6 +18,15 @@ pub fn make_wall(x: isize, y: isize) -> Entity {
     ]
 }
 
+pub fn make_tree(x: isize, y: isize) -> Entity {
+    entity![
+        Position(Vector2::new(x, y)),
+        Solid,
+        TransparentTile(Tile::new('&', ansi::GREEN)),
+        TileDepth(1)
+    ]
+}
+
 pub fn make_floor(x: isize, y: isize) -> Entity {
     entity![
         Position(Vector2::new(x, y)),

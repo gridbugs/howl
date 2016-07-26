@@ -24,7 +24,9 @@ use ecs::entity::{EntityTable, EntityId};
 use ecs::system::{System, SystemName};
 use ecs::systems::window_renderer::WindowRenderer;
 use ecs::systems::terminal_player_actor::TerminalPlayerActor;
-use ecs::update::{Update, UpdateStage};
+use ecs::update::Update::*;
+use ecs::update::UpdateStage;
+use ecs::update::{then, then_with_entity, with_entity};
 
 use terminal::window_manager::WindowManager;
 use terminal::window_buffer::WindowBuffer;
@@ -69,7 +71,6 @@ const DEBUG_WINDOW_WIDTH: usize = 80;
 const DEBUG_WINDOW_HEIGHT: usize = 10;
 
 fn main() {
-
     let wm = terminal::window_manager::WindowManager::new().unwrap();
 
     let input_source = wm.make_input_source();
@@ -94,7 +95,25 @@ fn main() {
 
         let mut message = message![
             Field::UpdateStage(UpdateStage::Commit),
-            Field::Update(Update::SetEntityComponent {
+            Field::Update(then_with_entity(AddEntity(make_tree(0, 0)), move |id| {
+
+                then(with_entity(level_id, move |level_entity| {
+                        if let Some(&mut Level(ref mut level)) = level_entity.get_mut(Type::Level) {
+                            level.add(id);
+                        }
+                    }),
+                    SetEntityComponent {
+                        entity_id: id,
+                        component_type: Type::Position,
+                        component_value: Position(Vector2::new(5, 5)),
+                    })
+            })),
+        ];
+        systems.process_message(&mut message, &mut entities, &systems);
+
+        message = message![
+            Field::UpdateStage(UpdateStage::Commit),
+            Field::Update(SetEntityComponent {
                 entity_id: pc,
                 component_type: Type::Position,
                 component_value: Position(Vector2::new(1, 1)),
