@@ -18,20 +18,17 @@ mod tests;
 
 use ecs::entity_types::*;
 use ecs::message::Field;
+use ecs::message::FieldType;
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::entity::{EntityTable, EntityId};
 use ecs::system::{System, SystemName};
 use ecs::systems::window_renderer::WindowRenderer;
 use ecs::systems::terminal_player_actor::TerminalPlayerActor;
-use ecs::update::Update::*;
-use ecs::update::UpdateStage;
-use ecs::update::{then, then_with_entity, with_entity};
+use ecs::message_queue::MessageQueue;
 
 use terminal::window_manager::WindowManager;
 use terminal::window_buffer::WindowBuffer;
-
-use geometry::vector2::Vector2;
 
 use std::io;
 
@@ -71,6 +68,10 @@ const DEBUG_WINDOW_WIDTH: usize = 80;
 const DEBUG_WINDOW_HEIGHT: usize = 10;
 
 fn main() {
+    game();
+}
+
+fn game() {
     let wm = terminal::window_manager::WindowManager::new().unwrap();
 
     let input_source = wm.make_input_source();
@@ -83,56 +84,36 @@ fn main() {
 
     let game_window = wm.make_window(0, 0, 80, 20);
 
-    let systems = system_queue![
-        SystemName::ApplyUpdate => System::ApplyUpdate,
-        SystemName::Renderer => System::WindowRenderer(WindowRenderer::new(game_window)),
-        SystemName::PlayerActor => System::TerminalPlayerActor(TerminalPlayerActor::new(input_source)),
-    ];
-
     let mut entities = EntityTable::new();
+    let mut messages = MessageQueue::new();
 
-    if let Some((level_id, pc)) = populate(&mut entities) {
+    if let Some((_, pc)) = populate(&mut entities) {
 
-        let mut message = message![
-            Field::UpdateStage(UpdateStage::Commit),
-            Field::Update(then_with_entity(AddEntity(make_tree(0, 0)), move |id| {
-
-                then(with_entity(level_id, move |level_entity| {
-                        if let Some(&mut Level(ref mut level)) = level_entity.get_mut(Type::Level) {
-                            level.add(id);
-                        }
-                    }),
-                    SetEntityComponent {
-                        entity_id: id,
-                        component_type: Type::Position,
-                        component_value: Position(Vector2::new(5, 5)),
-                    })
-            })),
+        let systems = system_queue![
+            SystemName::ScheduleTurn => System::SchedulePlayerTurn(pc),
+            SystemName::ApplyUpdate => System::ApplyUpdate,
+            SystemName::Renderer => System::WindowRenderer(WindowRenderer::new(game_window)),
+            SystemName::PlayerActor => System::TerminalPlayerActor(TerminalPlayerActor::new(input_source)),
         ];
-        systems.process_message(&mut message, &mut entities, &systems);
 
-        message = message![
-            Field::UpdateStage(UpdateStage::Commit),
-            Field::Update(SetEntityComponent {
-                entity_id: pc,
-                component_type: Type::Position,
-                component_value: Position(Vector2::new(1, 1)),
-            }),
-        ];
-        systems.process_message(&mut message, &mut entities, &systems);
 
-        message = message![ Field::RenderLevel { level: level_id } ];
-        systems.process_message(&mut message, &mut entities, &systems);
+        'outer: loop {
 
-        message = message![ Field::ActorTurn { actor: pc } ];
-        systems.process_message(&mut message, &mut entities, &systems);
+            messages.enqueue(message![ Field::NewTurn ]);
+
+            while !messages.is_empty() {
+                let mut message = messages.dequeue().unwrap();
+
+                if message.has(FieldType::QuitGame) {
+                    break 'outer;
+                }
+
+                systems.process_message(&mut message, &mut entities, &systems, &mut messages);
+            }
+        }
 
     }
-
-    input_source.get_event().unwrap();
 }
-
-
 
 fn make_debug_window<'a>(wm: &'a WindowManager, width: usize, height: usize)
     -> WindowBuffer<'a>

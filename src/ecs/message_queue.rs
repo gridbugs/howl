@@ -1,18 +1,26 @@
 use ecs::message::Message;
 
-use std::collections::VecDequeue;
+use std::collections::VecDeque;
 
-
+#[derive(Debug)]
 pub struct MessageQueue {
-    messages: VecDequeue<Message>,
+    messages: VecDeque<Message>,
 }
 
 impl MessageQueue {
     pub fn new() -> Self {
         MessageQueue {
-            messages: VecDequeue::new(),
+            messages: VecDeque::new(),
         }
     }
 
-//    pub fn enqueue(
+    pub fn enqueue(&mut self, message: Message) {
+        self.messages.push_back(message);
+    }
+
+    pub fn dequeue(&mut self) -> Option<Message> {
+        self.messages.pop_front()
+    }
+
+    pub fn is_empty(&self) -> bool { self.messages.is_empty() }
 }

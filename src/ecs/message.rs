@@ -17,6 +17,8 @@ macro_rules! message {
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub enum FieldType {
+    QuitGame,
+    NewTurn,
     RenderLevel,
     ActorTurn,
     UpdateStage,
@@ -25,6 +27,8 @@ pub enum FieldType {
 
 #[derive(Debug)]
 pub enum Field {
+    QuitGame,
+    NewTurn,
     RenderLevel { level: EntityId },
     ActorTurn { actor: EntityId },
     UpdateStage(UpdateStage),
@@ -34,6 +38,8 @@ pub enum Field {
 impl ToType<FieldType> for Field {
     fn to_type(&self) -> FieldType {
         match *self {
+            Field::QuitGame => FieldType::QuitGame,
+            Field::NewTurn => FieldType::NewTurn,
             Field::RenderLevel { level: _ } => FieldType::RenderLevel,
             Field::ActorTurn { actor: _ } => FieldType::ActorTurn,
             Field::UpdateStage(_) => FieldType::UpdateStage,

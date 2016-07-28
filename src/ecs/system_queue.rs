@@ -1,4 +1,5 @@
 use ecs::message::Message;
+use ecs::message_queue::MessageQueue;
 use ecs::entity::EntityTable;
 use std::collections::HashMap;
 use std::cell::RefCell;
@@ -60,10 +61,11 @@ impl<'a> SystemQueue<'a> {
 
     pub fn process_message(&'a self, message: &mut Message,
                            entities: &mut EntityTable,
-                           systems: &SystemQueue)
+                           systems: &SystemQueue,
+                           message_queue: &mut MessageQueue)
     {
         for system in self.iter() {
-            system.borrow_mut().process_message(message, entities, systems);
+            system.borrow_mut().process_message(message, entities, systems, message_queue);
         }
     }
 }
