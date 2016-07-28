@@ -1,14 +1,12 @@
-use ecs::system_queue::SystemQueue;
 use ecs::message::Message;
 use ecs::entity::{EntityId, EntityTable};
 use ecs::message::Field::*;
 use ecs::message::FieldType as FType;
 use ecs::update;
 use ecs::update::Update::*;
-use ecs::update::UpdateStage::*;
 
 
-fn apply_update(update: &update::Update, entities: &mut EntityTable)
+fn do_apply_update(update: &update::Update, entities: &mut EntityTable)
     -> Option<EntityId>
 {
     match *update {
@@ -33,26 +31,24 @@ fn apply_update(update: &update::Update, entities: &mut EntityTable)
             Some(entity_id)
         }
         ThenWithEntity(ref sub_update, ref f) => {
-            if let Some(entity_id) = apply_update(sub_update, entities) {
-                apply_update(&f(entity_id), entities)
+            if let Some(entity_id) = do_apply_update(sub_update, entities) {
+                do_apply_update(&f(entity_id), entities)
             } else {
                 unreachable!()
             }
         },
         Then(ref first, ref second) => {
-            apply_update(first, entities);
-            apply_update(second, entities)
+            do_apply_update(first, entities);
+            do_apply_update(second, entities)
         },
         Null => None,
     }
 }
 
-pub fn apply_update_message(message: &mut Message,
-                    entities: &mut EntityTable, _: &SystemQueue)
+pub fn apply_update(message: &Message,
+                    entities: &mut EntityTable)
 {
-    if let Some(&UpdateStage(Commit)) = message.get(FType::UpdateStage) {
-        if let Some(&Update(ref update)) = message.get(FType::Update) {
-            apply_update(update, entities);
-        }
+    if let Some(&Update(ref update)) = message.get(FType::Update) {
+        do_apply_update(update, entities);
     }
 }

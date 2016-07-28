@@ -2,12 +2,6 @@ use ecs::entity::{EntityId, Entity, ComponentType, Component};
 
 use std::fmt;
 
-#[derive(Debug)]
-pub enum UpdateStage {
-    Propose,
-    Commit,
-}
-
 pub enum Update {
     SetEntityComponent {
         entity_id: EntityId,

@@ -17,15 +17,14 @@ mod allocator;
 mod tests;
 
 use ecs::entity_types::*;
-use ecs::message::Field;
 use ecs::message::FieldType;
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::entity::{EntityTable, EntityId};
-use ecs::system::{System, SystemName};
-use ecs::systems::window_renderer::WindowRenderer;
-use ecs::systems::terminal_player_actor::TerminalPlayerActor;
-use ecs::message_queue::MessageQueue;
+use ecs::systems::schedule::Schedule;
+use ecs::systems::terminal_player_actor;
+use ecs::systems::window_renderer;
+use ecs::systems::apply_update::apply_update;
 
 use terminal::window_manager::WindowManager;
 use terminal::window_buffer::WindowBuffer;
@@ -85,33 +84,31 @@ fn game() {
     let game_window = wm.make_window(0, 0, 80, 20);
 
     let mut entities = EntityTable::new();
-    let mut messages = MessageQueue::new();
 
-    if let Some((_, pc)) = populate(&mut entities) {
+    if let Some((level, pc)) = populate(&mut entities) {
 
-        let systems = system_queue![
-            SystemName::ScheduleTurn => System::SchedulePlayerTurn(pc),
-            SystemName::ApplyUpdate => System::ApplyUpdate,
-            SystemName::Renderer => System::WindowRenderer(WindowRenderer::new(game_window)),
-            SystemName::PlayerActor => System::TerminalPlayerActor(TerminalPlayerActor::new(input_source)),
-        ];
+        let schedule = Schedule::new(pc);
 
 
-        'outer: loop {
+        'game_loop: loop {
+            let turn = schedule.schedule().unwrap();
 
-            messages.enqueue(message![ Field::NewTurn ]);
+            window_renderer::render(game_window, &entities, level);
 
-            while !messages.is_empty() {
-                let mut message = messages.dequeue().unwrap();
-
-                if message.has(FieldType::QuitGame) {
-                    break 'outer;
+            loop {
+                if let Some(message) =
+                    terminal_player_actor::get_action(&input_source,
+                                                      &entities,
+                                                      &turn)
+                {
+                    if message.has(FieldType::QuitGame) {
+                        break 'game_loop;
+                    }
+                    apply_update(&message, &mut entities);
+                    break;
                 }
-
-                systems.process_message(&mut message, &mut entities, &systems, &mut messages);
             }
         }
-
     }
 }
 

@@ -1,16 +1,10 @@
-use ecs::system_queue::SystemQueue;
-use ecs::message::Message;
-use ecs::entity::EntityTable;
+use ecs::entity::{EntityTable, EntityId};
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
-use ecs::message::Field::*;
-use ecs::message::FieldType;
 
 use terminal::window_manager::WindowRef;
 use colour::ansi;
 use grid::static_grid::StaticGrid;
-
-use std::fmt;
 
 struct Cell {
     ch: char,
@@ -38,63 +32,41 @@ impl Default for Cell {
     }
 }
 
-pub struct WindowRenderer<'a> {
-    window: WindowRef<'a>,
-}
+pub fn render<'a>(window: WindowRef<'a>, entities: &EntityTable, level_id: EntityId) {
+    if let Some(&Level(ref level)) = entities.get(level_id).get(Type::Level) {
+        let mut grid = StaticGrid::<Cell>::new_default(level.width as isize, level.height as isize);
 
-impl<'a> WindowRenderer<'a> {
-    pub fn new(window: WindowRef<'a>) -> Self {
-        WindowRenderer {
-            window: window,
-        }
-    }
-
-    pub fn process_message(&mut self, message: &mut Message,
-                           entities: &mut EntityTable, _: &SystemQueue)
-    {
-        if let Some(&RenderLevel { level: level_id }) = message.get(FieldType::RenderLevel) {
-
-            if let Some(&Level(ref level)) = entities.get(level_id).get(Type::Level) {
-                let mut grid = StaticGrid::<Cell>::new_default(level.width as isize, level.height as isize);
-
-                for entity in level.entities(entities) {
-                    if let Some(&Position(ref v)) = entity.get(Type::Position) {
-                        let cell = &mut grid[v];
-                        if let Some(&TileDepth(depth)) = entity.get(Type::TileDepth) {
-                            if let Some(&SolidTile{ref tile, background: bg}) = entity.get(Type::SolidTile) {
-                                if depth > cell.bg_depth {
-                                    cell.bg_depth = depth;
-                                    cell.bg = bg;
-                                }
-                                if depth > cell.fg_depth {
-                                    cell.fg_depth = depth;
-                                    cell.fg = tile.colour;
-                                    cell.ch = tile.character;
-                                }
-                            } else if let Some(&TransparentTile(ref tile)) = entity.get(Type::TransparentTile) {
-                                if depth > cell.fg_depth {
-                                    cell.fg_depth = depth;
-                                    cell.fg = tile.colour;
-                                    cell.ch = tile.character;
-                                }
-                            }
+        for entity in level.entities(entities) {
+            if let Some(&Position(ref v)) = entity.get(Type::Position) {
+                let cell = &mut grid[v];
+                if let Some(&TileDepth(depth)) = entity.get(Type::TileDepth) {
+                    if let Some(&SolidTile{ref tile, background: bg}) = entity.get(Type::SolidTile) {
+                        if depth > cell.bg_depth {
+                            cell.bg_depth = depth;
+                            cell.bg = bg;
+                        }
+                        if depth > cell.fg_depth {
+                            cell.fg_depth = depth;
+                            cell.fg = tile.colour;
+                            cell.ch = tile.character;
+                        }
+                    } else if let Some(&TransparentTile(ref tile)) = entity.get(Type::TransparentTile) {
+                        if depth > cell.fg_depth {
+                            cell.fg_depth = depth;
+                            cell.fg = tile.colour;
+                            cell.ch = tile.character;
                         }
                     }
-                }
-
-                for (coord, cell) in izip!(grid.coord_iter(), grid.iter()) {
-                    let window_cell = self.window.get_cell(coord.x, coord.y);
-                    window_cell.set(cell.ch, cell.fg, cell.bg);
                 }
             }
         }
 
-        self.window.flush();
+        for (coord, cell) in izip!(grid.coord_iter(), grid.iter()) {
+            let window_cell = window.get_cell(coord.x, coord.y);
+            window_cell.set(cell.ch, cell.fg, cell.bg);
+        }
     }
-}
 
-impl<'a> fmt::Debug for WindowRenderer<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "WindowRenderer {{}}")
-    }
+    window.flush();
+
 }
