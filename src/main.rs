@@ -14,7 +14,6 @@ mod grid;
 mod colour;
 mod terminal;
 mod allocator;
-mod tests;
 
 use ecs::entity_types::*;
 use ecs::message::FieldType;
