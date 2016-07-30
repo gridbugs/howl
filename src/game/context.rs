@@ -6,7 +6,6 @@ use ecs::entity::ComponentType as Type;
 use ecs::systems::schedule::Schedule;
 use ecs::systems::terminal_player_actor;
 use ecs::systems::window_renderer;
-use ecs::systems::apply_update::apply_update;
 use ecs::components::level::Level;
 
 use std::cell;
@@ -89,10 +88,6 @@ impl<'a> GameContext<'a> {
         self.turn_entity(turn).has(Type::PlayerActor)
     }
 
-    pub fn apply_action(&mut self, action: &Message) {
-        apply_update(action, &mut self.entities);
-    }
-
     fn render_level(&self, level: EntityId) {
         window_renderer::render(self.game_window, &self.entities, level);
     }
@@ -101,5 +96,3 @@ impl<'a> GameContext<'a> {
         self.render_level(self.pc_level_id());
     }
 }
-
-

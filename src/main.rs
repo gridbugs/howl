@@ -17,7 +17,6 @@ mod allocator;
 mod game;
 
 use ecs::entity_types::*;
-use ecs::message::FieldType;
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::entity::{EntityTable, EntityId};
@@ -85,23 +84,7 @@ fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
     let mut game_context = GameContext::new(input_source, game_window);
     game_context.pc = populate(&mut game_context.entities);
 
-    loop {
-        let turn = game_context.pc_schedule_next();
-
-        if game_context.turn_entity_is_pc(&turn) {
-            game_context.render_pc_level();
-        }
-
-        let action = game_context.get_action(&turn);
-
-        if action.has(FieldType::QuitGame) {
-            break;
-        }
-
-        game_context.apply_action(&action);
-
-        game_context.render_pc_level();
-    }
+    game_context.game_loop();
 }
 
 fn make_debug_window<'a>(wm: &'a WindowManager, width: usize, height: usize)
