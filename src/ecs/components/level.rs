@@ -1,12 +1,16 @@
 use std::collections::HashSet;
 use std::collections::hash_set;
 use ecs::entity::{Entity, EntityId, EntityTable};
+use ecs::systems::schedule::Schedule;
+
+use std::cell::RefCell;
 
 #[derive(Debug)]
 pub struct Level {
     pub width: usize,
     pub height: usize,
     pub entities: HashSet<EntityId>,
+    pub schedule: RefCell<Schedule>
 }
 
 impl Clone for Level { fn clone(&self) -> Level { unimplemented!(); } }
@@ -31,6 +35,7 @@ impl Level {
             width: width,
             height: height,
             entities: HashSet::new(),
+            schedule: RefCell::new(Schedule::new()),
         }
     }
 

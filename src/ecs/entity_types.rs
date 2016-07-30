@@ -1,12 +1,12 @@
 use ecs;
-use ecs::entity::Entity;
+use ecs::entity::{Entity, EntityId};
 use ecs::entity::Component::*;
 use ecs::components;
 use geometry::vector2::Vector2;
 use renderer::tile::Tile;
 use colour::ansi;
 
-pub fn make_wall(x: isize, y: isize) -> Entity {
+pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
@@ -14,41 +14,45 @@ pub fn make_wall(x: isize, y: isize) -> Entity {
             tile: Tile::new('#', ansi::WHITE),
             background: ansi::DARK_GREY
         },
-        TileDepth(1)
+        TileDepth(1),
+        OnLevel(level),
     ]
 }
 
-pub fn make_tree(x: isize, y: isize) -> Entity {
+pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
         TransparentTile(Tile::new('&', ansi::GREEN)),
-        TileDepth(1)
+        TileDepth(1),
+        OnLevel(level),
     ]
 }
 
-pub fn make_floor(x: isize, y: isize) -> Entity {
+pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         SolidTile {
             tile: Tile::new('.', ansi::WHITE),
             background: ansi::DARK_GREY
         },
-        TileDepth(0)
+        TileDepth(0),
+        OnLevel(level),
     ]
 }
 
-pub fn make_pc(x: isize, y: isize) -> Entity {
+pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         TransparentTile(Tile::new('@', ansi::WHITE)),
         TileDepth(2),
         PlayerActor,
+        OnLevel(level),
     ]
 }
 
 pub fn make_level(width: usize, height: usize) -> Entity {
     entity![
-        Level(components::level::Level::new(width, height))
+        LevelData(components::level::Level::new(width, height))
     ]
 }

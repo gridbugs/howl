@@ -26,8 +26,9 @@ pub enum ComponentType {
     SolidTile,
     TransparentTile,
     TileDepth,
-    Level,
+    LevelData,
     PlayerActor,
+    OnLevel,
 }
 
 #[derive(Debug, Clone)]
@@ -37,8 +38,9 @@ pub enum Component {
     SolidTile { tile: Tile, background: AnsiColour },
     TransparentTile(Tile),
     TileDepth(isize),
-    Level(components::level::Level),
+    LevelData(components::level::Level),
     PlayerActor,
+    OnLevel(EntityId),
 }
 
 impl ToType<ComponentType> for Component {
@@ -49,8 +51,9 @@ impl ToType<ComponentType> for Component {
             Component::SolidTile { tile: _, background: _ } => ComponentType::SolidTile,
             Component::TransparentTile(_) => ComponentType::TransparentTile,
             Component::TileDepth(_) => ComponentType::TileDepth,
-            Component::Level(_) => ComponentType::Level,
+            Component::LevelData(_) => ComponentType::LevelData,
             Component::PlayerActor => ComponentType::PlayerActor,
+            Component::OnLevel(_) => ComponentType::OnLevel,
         }
     }
 }

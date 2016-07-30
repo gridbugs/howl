@@ -4,18 +4,26 @@ use ecs::entity::EntityId;
 
 use ecs;
 
+// TODO
+// Currently this just repeatedly schedules the player character 
+
+#[derive(Debug)]
 pub struct Schedule {
-    entity: EntityId,
+    entity: Option<EntityId>,
 }
 
 impl Schedule {
-    pub fn new(entity: EntityId) -> Schedule {
-        Schedule { entity: entity }
+    pub fn new() -> Schedule {
+        Schedule { entity: None }
     }
 
-    pub fn schedule(&self) -> Option<Message> {
+    pub fn set_pc(&mut self, pc: EntityId) {
+        self.entity = Some(pc);
+    }
+
+    pub fn next(&mut self) -> Option<Message> {
         Some(message![
-            ActorTurn { actor: self.entity },
+            ActorTurn { actor: self.entity.unwrap() },
         ])
     }
 }
