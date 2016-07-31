@@ -23,6 +23,7 @@ macro_rules! entity {
 pub enum ComponentType {
     Position,
     Solid,
+    Collider,
     SolidTile,
     TransparentTile,
     TileDepth,
@@ -35,6 +36,7 @@ pub enum ComponentType {
 pub enum Component {
     Position(Vector2<isize>),
     Solid,
+    Collider,
     SolidTile { tile: Tile, background: AnsiColour },
     TransparentTile(Tile),
     TileDepth(isize),
@@ -48,6 +50,7 @@ impl ToType<ComponentType> for Component {
         match *self {
             Component::Position(_) => ComponentType::Position,
             Component::Solid => ComponentType::Solid,
+            Component::Collider => ComponentType::Collider,
             Component::SolidTile { tile: _, background: _ } => ComponentType::SolidTile,
             Component::TransparentTile(_) => ComponentType::TransparentTile,
             Component::TileDepth(_) => ComponentType::TileDepth,

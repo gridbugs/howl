@@ -25,6 +25,7 @@ use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;
 
 use game::context::GameContext;
+use game::collision;
 
 use std::io;
 
@@ -82,7 +83,13 @@ fn window_session() {
 
 fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
     let mut game_context = GameContext::new(input_source, game_window);
+
     game_context.pc = populate(&mut game_context.entities);
+
+    game_context
+        .rule(collision::detect_collision);
+
+    game_context.finalise();
 
     game_context.game_loop();
 }

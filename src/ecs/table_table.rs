@@ -1,8 +1,9 @@
 use ecs::table::{TableId, Table, ToType};
+use std::collections::hash_map;
 use std::collections::HashMap;
 use std::hash::Hash;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TableTable<EntryType, Entry>
     where EntryType: Eq + Hash,
           Entry: ToType<EntryType>,
@@ -42,6 +43,10 @@ impl<EntryType, Entry> TableTable<EntryType, Entry>
 
     pub fn get_mut(&mut self, id: TableId) -> &mut Table<EntryType, Entry> {
         self.tables.get_mut(&id).unwrap()
+    }
+
+    pub fn tables(&self) -> hash_map::Values<TableId, Table<EntryType, Entry>> {
+        self.tables.values()
     }
 }
 

@@ -18,6 +18,7 @@ pub fn walk(entity: &Entity, direction: Direction) -> Option<Message> {
                 component_type: CType::Position,
                 component_value: Position(position + direction.vector().convert::<isize>()),
             }),
+            Field::UpdateEntity(entity.id.unwrap()),
         ])
     } else {
         None

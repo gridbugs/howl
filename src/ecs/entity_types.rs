@@ -48,6 +48,7 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
         TileDepth(2),
         PlayerActor,
         OnLevel(level),
+        Collider,
     ]
 }
 

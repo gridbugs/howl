@@ -5,15 +5,13 @@ use ecs::systems::schedule::Schedule;
 
 use std::cell::RefCell;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Level {
     pub width: usize,
     pub height: usize,
     pub entities: HashSet<EntityId>,
     pub schedule: RefCell<Schedule>
 }
-
-impl Clone for Level { fn clone(&self) -> Level { unimplemented!(); } }
 
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,

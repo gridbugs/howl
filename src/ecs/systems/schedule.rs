@@ -7,7 +7,7 @@ use ecs;
 // TODO
 // Currently this just repeatedly schedules the player character 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Schedule {
     entity: Option<EntityId>,
 }
