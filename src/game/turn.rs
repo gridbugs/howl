@@ -23,7 +23,7 @@ impl<'a> GameContext<'a> {
                 return TurnResult::QuitGame;
             }
 
-            if let ActionResult::Success = self.apply_action(&action) {
+            if let ActionResult::Success = self.apply_action_over_rules(&action) {
                 break;
             }
         }

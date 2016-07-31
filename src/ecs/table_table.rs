@@ -32,6 +32,10 @@ impl<EntryType, Entry> TableTable<EntryType, Entry>
         id
     }
 
+    pub fn remove(&mut self, id: TableId) -> Option<Table<EntryType, Entry>> {
+        self.tables.remove(&id)
+    }
+
     pub fn get(&self, id: TableId) -> &Table<EntryType, Entry> {
         self.tables.get(&id).unwrap()
     }

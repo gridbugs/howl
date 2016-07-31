@@ -9,9 +9,11 @@ pub enum Update {
         component_value: Component,
     },
     AddEntity(Entity),
+    RemoveEntity(EntityId),
     WithEntity(EntityId, Box<Fn(&mut Entity)>),
 
-    Null,
+    Null,   // Makes no change
+    Error(&'static str),  // Panics if applied
 
     ThenWithEntity(Box<Update>, Box<Fn(EntityId) -> Update>),
     Then(Box<Update>, Box<Update>),
