@@ -1,9 +1,10 @@
 use ecs::entity::{EntityId, EntityTable};
 use ecs::update;
 use ecs::update::Update::*;
+use ecs::update::UpdateSummary;
 
 
-fn do_apply_update(update: &update::Update, entities: &mut EntityTable)
+fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary: &mut UpdateSummary)
     -> (Option<EntityId>, update::Update)
 {
     match *update {
@@ -18,6 +19,8 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable)
                 let original = component.clone();
                 *component = component_value.clone();
 
+                summary.change_entity(entity_id, component_type);
+
                 (Some(entity_id), SetEntityComponent {
                     entity_id: entity_id,
                     component_type: component_type,
@@ -29,10 +32,15 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable)
         },
         AddEntity(ref entity) => {
             let id = entities.add(entity.clone());
+
+            summary.add_entity(id);
+
             (Some(id), RemoveEntity(id))
         },
         RemoveEntity(entity_id) => {
             let entity = entities.remove(entity_id).unwrap();
+
+            summary.remove_entity(entity_id);
 
             (None, AddEntity(entity))
         },
@@ -42,8 +50,8 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable)
             (Some(entity_id), Error("Can't revert"))
         }
         ThenWithEntity(ref sub_update, ref f) => {
-            if let (Some(entity_id), revert_a) = do_apply_update(sub_update, entities) {
-                let (maybe_id, revert_b) = do_apply_update(&f(entity_id), entities);
+            if let (Some(entity_id), revert_a) = do_apply_update(sub_update, entities, summary) {
+                let (maybe_id, revert_b) = do_apply_update(&f(entity_id), entities, summary);
 
                 (maybe_id, update::then(revert_b, revert_a))
             } else {
@@ -51,8 +59,8 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable)
             }
         },
         Then(ref first, ref second) => {
-            let (_, revert_a) = do_apply_update(first, entities);
-            let (maybe_id, revert_b) = do_apply_update(second, entities);
+            let (_, revert_a) = do_apply_update(first, entities, summary);
+            let (maybe_id, revert_b) = do_apply_update(second, entities, summary);
 
             (maybe_id, update::then(revert_b, revert_a))
         },
@@ -64,7 +72,10 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable)
 }
 
 pub fn apply_update(update: &update::Update,
-                    entities: &mut EntityTable) -> update::Update
+                    entities: &mut EntityTable) -> (update::Update, UpdateSummary)
 {
-    do_apply_update(update, entities).1
+    let mut summary = UpdateSummary::new();
+    let (_, revert) = do_apply_update(update, entities, &mut summary);
+
+    (revert, summary)
 }

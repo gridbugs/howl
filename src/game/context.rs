@@ -1,7 +1,7 @@
 use ecs::message::Message;
 use ecs::message::FieldType;
 use ecs::message::Field;
-use ecs::update::Update;
+use ecs::update::{Update, UpdateSummary};
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::systems::schedule::Schedule;
@@ -124,7 +124,7 @@ impl<'a> GameContext<'a> {
     }
 }
 
-fn apply_action_on_entities(action: &Message, entities: &mut EntityTable) -> Update {
+fn apply_action_on_entities(action: &Message, entities: &mut EntityTable) -> (Update, UpdateSummary) {
     if let Some(&Field::Update(ref update)) = action.get(FieldType::Update) {
         apply_update::apply_update(update, entities)
     } else {
@@ -148,7 +148,7 @@ impl<'a> GameContext<'a> {
         self.action_queue.push_back(action);
 
         while let Some(action) = self.action_queue.pop_front() {
-            let revert = apply_action_on_entities(&action, &mut self.entities);
+            let (revert, summary) = apply_action_on_entities(&action, &mut self.entities);
             let mut cancelled = false;
 
             self.reaction_queue.clear();
