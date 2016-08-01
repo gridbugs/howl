@@ -45,10 +45,12 @@ pub fn with_entity<F: 'static + Fn(&mut Entity)>(id: EntityId, f: F) -> Update {
     Update::WithEntity(id, Box::new(f))
 }
 
+#[derive(Debug)]
 pub struct UpdateSummary {
     pub added_entities: HashSet<EntityId>,
     pub removed_entities: HashSet<EntityId>,
     pub changed_entities: HashMap<EntityId, HashSet<ComponentType>>,
+    pub changed_components: HashSet<ComponentType>,
 }
 
 impl UpdateSummary {
@@ -57,6 +59,7 @@ impl UpdateSummary {
             added_entities: HashSet::new(),
             removed_entities: HashSet::new(),
             changed_entities: HashMap::new(),
+            changed_components: HashSet::new(),
         }
     }
 
@@ -74,5 +77,9 @@ impl UpdateSummary {
         }
 
         self.changed_entities.get_mut(&entity).unwrap().insert(component);
+    }
+
+    pub fn change_component(&mut self, component: ComponentType) {
+        self.changed_components.insert(component);
     }
 }

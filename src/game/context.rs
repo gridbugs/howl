@@ -154,7 +154,7 @@ impl<'a> GameContext<'a> {
             self.reaction_queue.clear();
 
             for rule in &self.rules {
-                let result = rule.check(&action, &self.entities_copy, &self.entities);
+                let result = rule.check(&action, &summary, &self.entities_copy, &self.entities);
 
                 match result {
                     RuleResult::Instead(_) => {

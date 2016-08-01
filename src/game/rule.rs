@@ -1,5 +1,6 @@
 use ecs::entity::EntityTable;
 use ecs::message::Message;
+use ecs::update::UpdateSummary;
 
 pub enum RuleResult {
     After(Vec<Message>),
@@ -12,18 +13,20 @@ pub fn fail() -> RuleResult { RuleResult::Instead(vec![]) }
 pub trait Rule {
     fn check(&self,
              message: &Message,
+             summary: &UpdateSummary,
              before: &EntityTable,
              after: &EntityTable)
         -> RuleResult;
 }
 
-impl<F: Fn(&Message, &EntityTable, &EntityTable) -> RuleResult> Rule for F {
+impl<F: Fn(&Message, &UpdateSummary, &EntityTable, &EntityTable) -> RuleResult> Rule for F {
     fn check(&self,
              message: &Message,
+             summary: &UpdateSummary,
              before: &EntityTable,
              after: &EntityTable)
         -> RuleResult
     {
-        self(message, before, after)
+        self(message, summary, before, after)
     }
 }

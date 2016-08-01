@@ -20,7 +20,6 @@ pub enum FieldType {
     QuitGame,
     ActorTurn,
     Update,
-    UpdateEntity,
 }
 
 #[derive(Debug)]
@@ -28,7 +27,6 @@ pub enum Field {
     QuitGame,
     ActorTurn { actor: EntityId },
     Update(Update),
-    UpdateEntity(EntityId),
 }
 
 impl ToType<FieldType> for Field {
@@ -37,7 +35,6 @@ impl ToType<FieldType> for Field {
             Field::QuitGame => FieldType::QuitGame,
             Field::ActorTurn { actor: _ } => FieldType::ActorTurn,
             Field::Update(_) => FieldType::Update,
-            Field::UpdateEntity(_) => FieldType::UpdateEntity,
         }
     }
 }

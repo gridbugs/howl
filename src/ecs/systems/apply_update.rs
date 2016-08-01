@@ -20,6 +20,7 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary:
                 *component = component_value.clone();
 
                 summary.change_entity(entity_id, component_type);
+                summary.change_component(component_type);
 
                 (Some(entity_id), SetEntityComponent {
                     entity_id: entity_id,
