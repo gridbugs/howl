@@ -3,6 +3,8 @@ use std::collections::hash_set;
 use ecs::entity::{Entity, EntityId, EntityTable};
 use ecs::systems::schedule::Schedule;
 
+use game::spacial_hash::SpacialHashMap;
+
 use std::cell::RefCell;
 
 #[derive(Debug, Clone)]
@@ -10,7 +12,8 @@ pub struct Level {
     pub width: usize,
     pub height: usize,
     pub entities: HashSet<EntityId>,
-    pub schedule: RefCell<Schedule>
+    pub schedule: RefCell<Schedule>,
+    pub spacial_hash: SpacialHashMap,
 }
 
 pub struct EntityIter<'a> {
@@ -34,6 +37,7 @@ impl Level {
             height: height,
             entities: HashSet::new(),
             schedule: RefCell::new(Schedule::new()),
+            spacial_hash: SpacialHashMap::new(),
         }
     }
 

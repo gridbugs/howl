@@ -1,3 +1,4 @@
+use ecs::table::ToType;
 use ecs::entity::{EntityId, Entity, ComponentType, Component};
 
 use std::fmt;
@@ -48,8 +49,8 @@ pub fn with_entity<F: 'static + Fn(&mut Entity)>(id: EntityId, f: F) -> Update {
 #[derive(Debug)]
 pub struct UpdateSummary {
     pub added_entities: HashSet<EntityId>,
-    pub removed_entities: HashSet<EntityId>,
-    pub changed_entities: HashMap<EntityId, HashSet<ComponentType>>,
+    pub removed_entities: HashMap<EntityId, Entity>,
+    pub changed_entities: HashMap<EntityId, HashMap<ComponentType, Component>>,
     pub changed_components: HashSet<ComponentType>,
 }
 
@@ -57,7 +58,7 @@ impl UpdateSummary {
     pub fn new() -> Self {
         UpdateSummary {
             added_entities: HashSet::new(),
-            removed_entities: HashSet::new(),
+            removed_entities: HashMap::new(),
             changed_entities: HashMap::new(),
             changed_components: HashSet::new(),
         }
@@ -67,19 +68,43 @@ impl UpdateSummary {
         self.added_entities.insert(entity);
     }
 
-    pub fn remove_entity(&mut self, entity: EntityId) {
-        self.removed_entities.insert(entity);
+    pub fn remove_entity(&mut self, entity: Entity) {
+        self.removed_entities.insert(entity.id.unwrap(), entity);
     }
 
-    pub fn change_entity(&mut self, entity: EntityId, component: ComponentType) {
+    pub fn change_entity(&mut self, entity: EntityId, old_component: Component) {
         if !self.changed_entities.contains_key(&entity) {
-            self.changed_entities.insert(entity, HashSet::new());
+            self.changed_entities.insert(entity, HashMap::new());
         }
 
-        self.changed_entities.get_mut(&entity).unwrap().insert(component);
+        let component_type = old_component.to_type();
+        self.changed_entities.get_mut(&entity).unwrap().insert(component_type, old_component);
+        self.changed_components.insert(component_type);
     }
 
-    pub fn change_component(&mut self, component: ComponentType) {
-        self.changed_components.insert(component);
+    // Consumes self, returning an update that undoes the
+    // update it summarises
+    pub fn to_revert_update(mut self) -> Update {
+        let mut update = Update::Null;
+
+        for entity in self.added_entities {
+            update = then(update, Update::RemoveEntity(entity));
+        }
+
+        for (_, entity) in self.removed_entities.drain() {
+            update = then(update, Update::AddEntity(entity));
+        }
+
+        for (entity, mut changed_components) in self.changed_entities.drain() {
+            for (component_type, component) in changed_components.drain() {
+                update = then(update, Update::SetEntityComponent {
+                    entity_id: entity,
+                    component_type: component_type,
+                    component_value: component,
+                });
+            }
+        }
+
+        update
     }
 }

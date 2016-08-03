@@ -17,7 +17,7 @@ pub fn detect_collision(_: &Message,
 
     for (entity_id, components) in &summary.changed_entities {
 
-        if !components.contains(&ComponentType::Position) {
+        if !components.contains_key(&ComponentType::Position) {
             continue;
         }
 

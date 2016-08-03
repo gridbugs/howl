@@ -5,7 +5,7 @@ use ecs::update::UpdateSummary;
 
 
 fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary: &mut UpdateSummary)
-    -> (Option<EntityId>, update::Update)
+    -> Option<EntityId>
 {
     match *update {
         SetEntityComponent {
@@ -19,14 +19,9 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary:
                 let original = component.clone();
                 *component = component_value.clone();
 
-                summary.change_entity(entity_id, component_type);
-                summary.change_component(component_type);
+                summary.change_entity(entity_id, original);
 
-                (Some(entity_id), SetEntityComponent {
-                    entity_id: entity_id,
-                    component_type: component_type,
-                    component_value: original
-                })
+                Some(entity_id)
             } else {
                 panic!("SetEntityComponent requires component to be present")
             }
@@ -36,36 +31,32 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary:
 
             summary.add_entity(id);
 
-            (Some(id), RemoveEntity(id))
+            Some(id)
         },
         RemoveEntity(entity_id) => {
             let entity = entities.remove(entity_id).unwrap();
 
-            summary.remove_entity(entity_id);
+            summary.remove_entity(entity);
 
-            (None, AddEntity(entity))
+            None
         },
         WithEntity(entity_id, ref f) => {
             f(entities.get_mut(entity_id));
 
-            (Some(entity_id), Error("Can't revert"))
+            Some(entity_id)
         }
         ThenWithEntity(ref sub_update, ref f) => {
-            if let (Some(entity_id), revert_a) = do_apply_update(sub_update, entities, summary) {
-                let (maybe_id, revert_b) = do_apply_update(&f(entity_id), entities, summary);
-
-                (maybe_id, update::then(revert_b, revert_a))
+            if let Some(entity_id) = do_apply_update(sub_update, entities, summary) {
+                do_apply_update(&f(entity_id), entities, summary)
             } else {
                 panic!("ThenWithEntity requires the first action to yield an entity.")
             }
         },
         Then(ref first, ref second) => {
-            let (_, revert_a) = do_apply_update(first, entities, summary);
-            let (maybe_id, revert_b) = do_apply_update(second, entities, summary);
-
-            (maybe_id, update::then(revert_b, revert_a))
+            do_apply_update(first, entities, summary);
+            do_apply_update(second, entities, summary)
         },
-        Null => (None, Null),
+        Null => None,
         Error(message) => {
             panic!(message)
         }
@@ -73,10 +64,9 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary:
 }
 
 pub fn apply_update(update: &update::Update,
-                    entities: &mut EntityTable) -> (update::Update, UpdateSummary)
+                    entities: &mut EntityTable) -> UpdateSummary
 {
     let mut summary = UpdateSummary::new();
-    let (_, revert) = do_apply_update(update, entities, &mut summary);
-
-    (revert, summary)
+    do_apply_update(update, entities, &mut summary);
+    summary
 }
