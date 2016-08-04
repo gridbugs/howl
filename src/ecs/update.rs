@@ -1,9 +1,18 @@
 use ecs::table::ToType;
-use ecs::entity::{EntityId, Entity, ComponentType, Component};
+use ecs::entity::{
+    EntityId,
+    Entity,
+    ComponentType,
+    Component,
+    EntityTable,
+};
+
+use game::util;
 
 use std::fmt;
 use std::collections::HashSet;
 use std::collections::HashMap;
+use std::cell::RefCell;
 
 pub enum Update {
     SetEntityComponent {
@@ -52,6 +61,7 @@ pub struct UpdateSummary {
     pub removed_entities: HashMap<EntityId, Entity>,
     pub changed_entities: HashMap<EntityId, HashMap<ComponentType, Component>>,
     pub changed_components: HashSet<ComponentType>,
+    levels: RefCell<HashSet<EntityId>>,
 }
 
 impl UpdateSummary {
@@ -61,6 +71,7 @@ impl UpdateSummary {
             removed_entities: HashMap::new(),
             changed_entities: HashMap::new(),
             changed_components: HashSet::new(),
+            levels: RefCell::new(HashSet::new()),
         }
     }
 
@@ -80,6 +91,39 @@ impl UpdateSummary {
         let component_type = old_component.to_type();
         self.changed_entities.get_mut(&entity).unwrap().insert(component_type, old_component);
         self.changed_components.insert(component_type);
+    }
+
+    pub fn update_spacial_hashes(&self, entities: &EntityTable) {
+        let mut levels = self.levels.borrow_mut();
+        levels.clear();
+
+        for entity_id in &self.added_entities {
+            let entity = entities.get(*entity_id);
+            if let Some(level) = util::get_level(entity) {
+                levels.insert(level);
+            }
+        }
+
+        for (_, entity) in &self.removed_entities {
+            if let Some(level) = util::get_level(entity) {
+                levels.insert(level);
+            }
+        }
+
+        for (entity_id, _) in &self.changed_entities {
+            let entity = entities.get(*entity_id);
+            if let Some(level) = util::get_level(entity) {
+                levels.insert(level);
+            }
+        }
+
+        for level_id in levels.iter() {
+            let mut spacial_hash = {
+                let level = util::get_level_data(entities.get(*level_id)).unwrap();
+                level.spacial_hash.borrow_mut()
+            };
+            spacial_hash.update(self, entities);
+        }
     }
 
     // Consumes self, returning an update that undoes the

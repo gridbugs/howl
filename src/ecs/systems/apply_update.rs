@@ -68,5 +68,8 @@ pub fn apply_update(update: &update::Update,
 {
     let mut summary = UpdateSummary::new();
     do_apply_update(update, entities, &mut summary);
+
+    summary.update_spacial_hashes(entities);
+
     summary
 }

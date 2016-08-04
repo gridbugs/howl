@@ -20,6 +20,10 @@ impl<T> Vector2<T> {
     pub fn convert<S>(self) -> Vector2<S> where S: From<T> {
         Vector2 { x: S::from(self.x), y: S::from(self.y) }
     }
+
+    pub fn to_tuple(self) -> (T, T) {
+        (self.x, self.y)
+    }
 }
 
 impl Vector2<f64> {

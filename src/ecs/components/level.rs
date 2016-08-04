@@ -9,11 +9,12 @@ use std::cell::RefCell;
 
 #[derive(Debug, Clone)]
 pub struct Level {
+    pub id: Option<EntityId>,
     pub width: usize,
     pub height: usize,
     pub entities: HashSet<EntityId>,
     pub schedule: RefCell<Schedule>,
-    pub spacial_hash: SpacialHashMap,
+    pub spacial_hash: RefCell<SpacialHashMap>,
 }
 
 pub struct EntityIter<'a> {
@@ -33,12 +34,18 @@ impl<'a> Iterator for EntityIter<'a> {
 impl Level {
     pub fn new(width: usize, height: usize) -> Level {
         Level {
+            id: None,
             width: width,
             height: height,
             entities: HashSet::new(),
             schedule: RefCell::new(Schedule::new()),
-            spacial_hash: SpacialHashMap::new(),
+            spacial_hash: RefCell::new(SpacialHashMap::new()),
         }
+    }
+
+    pub fn set_id(&mut self, id: EntityId) {
+        self.id = Some(id);
+        self.spacial_hash.borrow_mut().set_id(id);
     }
 
     pub fn add(&mut self, id: EntityId) {
