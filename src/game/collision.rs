@@ -6,6 +6,8 @@ use game::rule::RuleResult;
 use game::rule;
 use game::util;
 
+use debug;
+
 pub fn detect_collision(_: &Message,
                         summary: &UpdateSummary,
                         before: &EntityTable,
@@ -21,18 +23,23 @@ pub fn detect_collision(_: &Message,
             continue;
         }
 
-        if !before.get(*entity_id).has(ComponentType::Collider) {
+        let entity = after.get(*entity_id);
+        let level = after.get(util::get_level(entity).unwrap());
+
+        if !entity.has(ComponentType::Collider) {
             continue;
         }
 
-        let current_position = util::get_position(after.get(*entity_id)).unwrap();
+        let spacial_hash = util::get_level_spacial_hash(level).unwrap();
 
-        for entity in before.tables() {
-            if let Some(v) = util::get_position(entity) {
-                if v == current_position && entity.has(ComponentType::Solid) {
-                    return rule::fail();
-                }
+        let current_position = util::get_position(entity).unwrap();
+
+        if let Some(cell) = spacial_hash.get(current_position.to_tuple()) {
+            if cell.has(ComponentType::Solid) {
+                return rule::fail();
             }
+        } else {
+            debug_println!("{:?}", current_position.to_tuple());
         }
     }
 

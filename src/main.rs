@@ -33,7 +33,7 @@ use std::io;
 const LEVEL_WIDTH: usize = 10;
 const LEVEL_HEIGHT: usize = 10;
 
-fn populate(entities: &mut EntityTable) -> Option<EntityId> {
+fn populate(entities: &mut EntityTable) -> EntityId {
     let level_id = entities.add(make_level(LEVEL_WIDTH, LEVEL_HEIGHT));
     util::get_mut_level_data(entities.get_mut(level_id)).unwrap().set_id(level_id);
 
@@ -58,10 +58,11 @@ fn populate(entities: &mut EntityTable) -> Option<EntityId> {
     if let Some(&mut LevelData(ref mut level)) = entities.get_mut(level_id).get_mut(Type::LevelData) {
         level.schedule.borrow_mut().set_pc(pc);
         level.add(pc);
-        Some(pc)
-    } else {
-        None
     }
+
+    util::get_level_data(entities.get(level_id)).unwrap().finalise(entities);
+
+    pc
 }
 
 const DEBUG_WINDOW_WIDTH: usize = 80;
@@ -86,7 +87,7 @@ fn window_session() {
 fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
     let mut game_context = GameContext::new(input_source, game_window);
 
-    game_context.pc = populate(&mut game_context.entities);
+    game_context.pc = Some(populate(&mut game_context.entities));
 
     game_context
         .rule(collision::detect_collision);

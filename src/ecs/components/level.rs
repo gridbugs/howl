@@ -52,6 +52,14 @@ impl Level {
         self.entities.insert(id);
     }
 
+    // Makes the bookkeeping info reflect the contents of entities
+    pub fn finalise(&self, entities: &EntityTable) {
+        let mut spacial_hash = self.spacial_hash.borrow_mut();
+        for entity in self.entities(entities) {
+            spacial_hash.add_entity(entity);
+        }
+    }
+
     pub fn entities<'a>(&'a self, entities: &'a EntityTable) -> EntityIter<'a> {
         EntityIter {
             hash_set_iter: self.entities.iter(),

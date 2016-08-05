@@ -14,6 +14,10 @@ use ecs::components::level::Level;
 
 use geometry::vector2::Vector2;
 
+use game::spacial_hash::SpacialHashMap;
+
+use std::cell::Ref;
+
 pub fn get_update(message: &Message) -> Option<&Update> {
     if let Some(&Field::Update(ref update)) = message.get(FieldType::Update) {
         Some(update)
@@ -52,4 +56,10 @@ pub fn get_mut_level_data(entity: &mut Entity) -> Option<&mut Level> {
     } else {
         None
     }
+}
+
+pub fn get_level_spacial_hash(entity: &Entity) -> Option<Ref<SpacialHashMap>> {
+    get_level_data(entity).map(|level| {
+        level.spacial_hash.borrow()
+    })
 }
