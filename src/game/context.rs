@@ -9,7 +9,9 @@ use ecs::systems::terminal_player_actor;
 use ecs::systems::window_renderer;
 use ecs::components::level::Level;
 use ecs::systems::apply_update;
+use ecs::update_monad::Action;
 
+use game::control::Control;
 use game::rule::{Rule, RuleResult};
 
 use std::cell;
@@ -36,8 +38,8 @@ pub struct GameContext<'a> {
 
     // rule application
     entities_copy: EntityTable,
-    action_queue: VecDeque<Message>,
-    reaction_queue: VecDeque<Message>,
+    action_queue: VecDeque<Action>,
+    reaction_queue: VecDeque<Action>,
     rules: Vec<Box<Rule>>,
 }
 
@@ -88,31 +90,20 @@ impl<'a> GameContext<'a> {
         self.pc_level().schedule.borrow_mut()
     }
 
-    pub fn pc_schedule_next(&self) -> Message {
+    pub fn pc_schedule_next(&self) -> EntityId {
         self.pc_schedule().next().unwrap()
     }
 
-    pub fn get_action(&mut self, turn: &Message) -> Message {
+    pub fn get_control(&mut self, entity_id: EntityId) -> Control {
         loop {
-            if let Some(message) =
-                terminal_player_actor::get_action(&self.input_source, &self.entities, turn)
-            {
-                return message;
+            if let Some(control) = terminal_player_actor::get_control(&self.input_source, entity_id) {
+                return control;
             }
         }
     }
 
-    fn turn_entity(&self, turn: &Message) -> &Entity {
-        match turn.get(FieldType::ActorTurn).unwrap() {
-            &Field::ActorTurn { actor: entity_id } => {
-                self.entities.get(entity_id)
-            },
-            _ => unreachable!()
-        }
-    }
-
-    pub fn turn_entity_is_pc(&self, turn: &Message) -> bool {
-        self.turn_entity(turn).has(Type::PlayerActor)
+    pub fn entity_is_pc(&self, entity: EntityId) -> bool {
+        self.entities.get(entity).has(Type::PlayerActor)
     }
 
     fn render_level(&self, level: EntityId) {
@@ -121,14 +112,6 @@ impl<'a> GameContext<'a> {
 
     pub fn render_pc_level(&self) {
         self.render_level(self.pc_level_id());
-    }
-}
-
-fn apply_action_on_entities(action: &Message, entities: &mut EntityTable) -> UpdateSummary {
-    if let Some(&Field::Update(ref update)) = action.get(FieldType::Update) {
-        apply_update::apply_update(update, entities)
-    } else {
-        panic!("No Update field found in message")
     }
 }
 
@@ -143,18 +126,18 @@ enum TurnResult {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn apply_action(&mut self, action: Message) -> ActionResult {
+    pub fn apply_action(&mut self, action: Action) -> ActionResult {
 
         self.action_queue.push_back(action);
 
         while let Some(action) = self.action_queue.pop_front() {
-            let summary = apply_action_on_entities(&action, &mut self.entities);
+            let summary = apply_update::apply_update(&action, &mut self.entities);
             let mut cancelled = false;
 
             self.reaction_queue.clear();
 
             for rule in &self.rules {
-                let result = rule.check(&action, &summary, &self.entities_copy, &self.entities);
+                let result = rule.check(&summary, &self.entities_copy, &self.entities);
 
                 match result {
                     RuleResult::Instead(_) => {
@@ -168,9 +151,10 @@ impl<'a> GameContext<'a> {
             }
 
             if cancelled {
-                apply_update::apply_update(&summary.to_revert_update(), &mut self.entities);
+                apply_update::apply_update(&summary.to_revert_action(), &mut self.entities);
             } else {
-                apply_action_on_entities(&action, &mut self.entities_copy);
+                apply_update::apply_update(&action, &mut self.entities_copy);
+                //apply_action_on_entities(&action, &mut self.entities_copy);
             }
         }
 
@@ -178,21 +162,20 @@ impl<'a> GameContext<'a> {
     }
 
     fn game_turn(&mut self) -> TurnResult {
-        let turn = self.pc_schedule_next();
+        let entity_id = self.pc_schedule_next();
 
-        if self.turn_entity_is_pc(&turn) {
+        if self.entity_is_pc(entity_id) {
             self.render_pc_level();
         }
 
         loop {
-            let action = self.get_action(&turn);
-
-            if action.has(FieldType::QuitGame) {
-                return TurnResult::QuitGame;
-            }
-
-            if let ActionResult::Done = self.apply_action(action) {
-                break;
+            match self.get_control(entity_id) {
+                Control::Quit => return TurnResult::QuitGame,
+                Control::Action(action) => {
+                    if let ActionResult::Done = self.apply_action(action) {
+                        break;
+                    }
+                },
             }
         }
 

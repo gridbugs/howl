@@ -6,6 +6,7 @@ use ecs::entity::{
     Component,
     EntityTable,
 };
+use ecs::update_monad::{UpdateMonad, Action};
 
 use game::game_entity::GameEntity;
 
@@ -13,6 +14,8 @@ use std::fmt;
 use std::collections::HashSet;
 use std::collections::HashMap;
 use std::cell::RefCell;
+
+use std::mem;
 
 pub enum Update {
     SetEntityComponent {
@@ -54,6 +57,23 @@ pub fn then(first: Update, second: Update) -> Update {
 pub fn with_entity<F: 'static + Fn(&mut Entity)>(id: EntityId, f: F) -> Update {
     Update::WithEntity(id, Box::new(f))
 }
+
+pub fn set_entity_component(summary: &mut UpdateSummary,
+                        entities: &mut EntityTable,
+                        entity_id: EntityId,
+                        new_component: Component) {
+
+    let mut entity = entities.get_mut(entity_id);
+
+    if let Some(current_component) = entity.get_mut(new_component.to_type()) {
+        let original_component = mem::replace(current_component, new_component);
+        summary.change_entity(entity_id, original_component);
+    } else {
+        panic!("No component of type {:?} found.", new_component.to_type());
+    }
+}
+
+
 
 #[derive(Debug)]
 pub struct UpdateSummary {
@@ -124,6 +144,29 @@ impl UpdateSummary {
             };
             spacial_hash.update(self, entities);
         }
+    }
+
+    pub fn to_revert_action(mut self) -> Action {
+        let mut action = UpdateMonad::ret(());
+
+        for entity in self.added_entities {
+        }
+
+        for (_, entity) in self.removed_entities.drain() {
+        }
+
+        for (entity, mut changed_components) in self.changed_entities.drain() {
+            for (component_type, component) in changed_components.drain() {
+                action = action.bind(move |()| {
+                    let c = component.clone();
+                    UpdateMonad::new(move |summary, entities| {
+                        set_entity_component(summary, entities, entity, c.clone());
+                    })
+                });
+            }
+        }
+
+        action
     }
 
     // Consumes self, returning an update that undoes the

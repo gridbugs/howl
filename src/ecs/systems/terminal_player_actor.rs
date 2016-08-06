@@ -1,32 +1,27 @@
 use ecs::message::Message;
-use ecs::entity::EntityTable;
+use ecs::entity::EntityId;
 use ecs::message::Field;
 use ecs::message::FieldType as FType;
 use ecs::actions;
 
 use ecs;
 
+use game::control::Control;
 use rustty::Event;
 use terminal::window_manager::InputSource;
 use geometry::direction::Direction;
 
 const ETX: char = '\u{3}';
 
-pub fn get_action<'a>(input_source: &InputSource<'a>,
-                                      entities: &EntityTable,
-                                      message: &Message)
-    -> Option<Message>
+pub fn get_control<'a>(input_source: &InputSource<'a>,
+                       entity_id: EntityId)
+    -> Option<Control>
 {
-    if let Some(&Field::ActorTurn { actor: actor_id }) = message.get(FType::ActorTurn) {
-        let entity = entities.get(actor_id);
-        if let Some(event) = input_source.get_event() {
-            if let Some(direction) = event_to_direction(event) {
-                actions::walk(entity, direction)
-            } else {
-                event_to_message(event)
-            }
+    if let Some(event) = input_source.get_event() {
+        if let Some(direction) = event_to_direction(event) {
+            Some(Control::Action(actions::walk(entity_id, direction)))
         } else {
-            None
+            event_to_control(event)
         }
     } else {
         None
@@ -54,10 +49,10 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn event_to_message(event: Event) -> Option<Message> {
+fn event_to_control(event: Event) -> Option<Control> {
     match event {
-        Event::Char(ETX) => Some(message![ Field::QuitGame ]),
-        Event::Char('q') => Some(message![ Field::QuitGame ]),
+        Event::Char(ETX) => Some(Control::Quit),
+        Event::Char('q') => Some(Control::Quit),
         _ => None,
     }
 }

@@ -21,9 +21,7 @@ impl Schedule {
         self.entity = Some(pc);
     }
 
-    pub fn next(&mut self) -> Option<Message> {
-        Some(message![
-            ActorTurn { actor: self.entity.unwrap() },
-        ])
+    pub fn next(&mut self) -> Option<EntityId> {
+        self.entity
     }
 }

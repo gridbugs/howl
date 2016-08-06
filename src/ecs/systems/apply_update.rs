@@ -2,6 +2,7 @@ use ecs::entity::{EntityId, EntityTable};
 use ecs::update;
 use ecs::update::Update::*;
 use ecs::update::UpdateSummary;
+use ecs::update_monad::Action;
 
 
 fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary: &mut UpdateSummary)
@@ -63,13 +64,18 @@ fn do_apply_update(update: &update::Update, entities: &mut EntityTable, summary:
     }
 }
 
-pub fn apply_update(update: &update::Update,
+pub fn apply_update(action: &Action,
                     entities: &mut EntityTable) -> UpdateSummary
 {
     let mut summary = UpdateSummary::new();
+    action.apply(&mut summary, entities);
+
+    summary
+    /*
     do_apply_update(update, entities, &mut summary);
 
     summary.update_spacial_hashes(entities);
 
-    summary
+    summary*/
+    //unimplemented!()
 }

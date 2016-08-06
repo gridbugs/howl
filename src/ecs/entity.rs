@@ -21,6 +21,7 @@ macro_rules! entity {
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum ComponentType {
+    NullComponent,
     Position,
     Solid,
     Collider,
@@ -34,6 +35,7 @@ pub enum ComponentType {
 
 #[derive(Debug, Clone)]
 pub enum Component {
+    NullComponent,
     Position(Vector2<isize>),
     Solid,
     Collider,
@@ -48,6 +50,7 @@ pub enum Component {
 impl ToType<ComponentType> for Component {
     fn to_type(&self) -> ComponentType {
         match *self {
+            Component::NullComponent => ComponentType::NullComponent,
             Component::Position(_) => ComponentType::Position,
             Component::Solid => ComponentType::Solid,
             Component::Collider => ComponentType::Collider,

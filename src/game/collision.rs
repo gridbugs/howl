@@ -8,8 +8,7 @@ use game::game_entity::GameEntity;
 
 use debug;
 
-pub fn detect_collision(_: &Message,
-                        summary: &UpdateSummary,
+pub fn detect_collision(summary: &UpdateSummary,
                         before: &EntityTable,
                         after: &EntityTable) -> RuleResult
 {
