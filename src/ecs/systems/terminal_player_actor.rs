@@ -1,10 +1,5 @@
-use ecs::message::Message;
 use ecs::entity::EntityId;
-use ecs::message::Field;
-use ecs::message::FieldType as FType;
 use ecs::actions;
-
-use ecs;
 
 use game::control::Control;
 use rustty::Event;

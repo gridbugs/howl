@@ -1,6 +1,8 @@
 use ecs::update::UpdateSummary;
 use ecs::entity::EntityTable;
 
+use std::boxed::FnBox;
+
 pub type Action = UpdateMonad<()>;
 
 pub struct UpdateMonad<A> (
@@ -23,15 +25,49 @@ impl<A: 'static + Copy> UpdateMonad<A> {
         where F: 'static + Fn(A) -> UpdateMonad<B>
     {
         UpdateMonad(Box::new(move |summary, entities| {
-            let current : A = self.0(summary, entities);
+            let value : A = self.0(summary, entities);
 
-            let rest : UpdateMonad<B> = f(current);
+            let next : UpdateMonad<B> = f(value);
 
-            rest.0(summary, entities)
+            next.0(summary, entities)
         }))
     }
 
-    pub fn apply(&self, summary: &mut UpdateSummary, entities: &mut EntityTable) -> A {
-        self.0(summary, entities)
+    pub fn apply(&self, entities: &mut EntityTable) -> UpdateSummary {
+        let mut summary = UpdateSummary::new();
+        self.0(&mut summary, entities);
+        summary
     }
+}
+
+pub struct M<A> (
+    Box<FnBox(i32) -> A>
+
+);
+
+impl<A: 'static + Copy> M<A> {
+
+    pub fn new<F>(f: F) -> Self
+        where F: 'static + FnOnce(i32) -> A
+    {
+        M(Box::new(f))
+    }
+
+    pub fn ret(a: A) -> Self {
+        M(Box::new(move |_| { a }))
+    }
+/*
+    pub fn bind<B: 'static + Copy, F>(self, f: F) -> M<B>
+        where F: 'static + FnOnce(A) -> M<B>
+    {
+
+        M(Box::new(move |entities| {
+            let current : A = self.0(entities);
+
+            let rest : M<B> = f(current);
+
+            rest.0()
+        }))
+    }
+    */
 }

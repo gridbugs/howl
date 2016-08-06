@@ -1,5 +1,4 @@
 use ecs::entity::{EntityTable, ComponentType};
-use ecs::message::Message;
 use ecs::update::UpdateSummary;
 
 use game::rule::RuleResult;
@@ -9,8 +8,8 @@ use game::game_entity::GameEntity;
 use debug;
 
 pub fn detect_collision(summary: &UpdateSummary,
-                        before: &EntityTable,
-                        after: &EntityTable) -> RuleResult
+                        entities: &EntityTable)
+    -> RuleResult
 {
     if !summary.changed_components.contains(&ComponentType::Position) {
         return rule::pass();
@@ -22,8 +21,8 @@ pub fn detect_collision(summary: &UpdateSummary,
             continue;
         }
 
-        let entity = after.get(*entity_id);
-        let level = after.get(entity.on_level().unwrap());
+        let entity = entities.get(*entity_id);
+        let level = entities.get(entity.on_level().unwrap());
 
         if !entity.has(ComponentType::Collider) {
             continue;

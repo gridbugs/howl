@@ -1,6 +1,5 @@
 #[macro_use] pub mod table;
 #[macro_use] pub mod entity;
-#[macro_use] pub mod message;
 pub mod table_table;
 pub mod entity_types;
 pub mod update;

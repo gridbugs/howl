@@ -1,14 +1,9 @@
-use ecs::message::Message;
-use ecs::message::FieldType;
-use ecs::message::Field;
-use ecs::update::UpdateSummary;
 use ecs::entity::Component::*;
 use ecs::entity::ComponentType as Type;
 use ecs::systems::schedule::Schedule;
 use ecs::systems::terminal_player_actor;
 use ecs::systems::window_renderer;
 use ecs::components::level::Level;
-use ecs::systems::apply_update;
 use ecs::update_monad::Action;
 
 use game::control::Control;
@@ -37,7 +32,6 @@ pub struct GameContext<'a> {
     game_window: WindowRef<'a>,
 
     // rule application
-    entities_copy: EntityTable,
     action_queue: VecDeque<Action>,
     reaction_queue: VecDeque<Action>,
     rules: Vec<Box<Rule>>,
@@ -50,7 +44,6 @@ impl<'a> GameContext<'a> {
             pc: None,
             input_source: input_source,
             game_window: game_window,
-            entities_copy: EntityTable::new(),
             action_queue: VecDeque::new(),
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
@@ -63,8 +56,8 @@ impl<'a> GameContext<'a> {
         self
     }
 
-    pub fn finalise(&mut self) {
-        self.entities_copy = self.entities.clone();
+    pub fn entities(&self) -> &EntityTable {
+        &self.entities
     }
 
     fn pc_level_id(&self) -> EntityId {
@@ -131,13 +124,14 @@ impl<'a> GameContext<'a> {
         self.action_queue.push_back(action);
 
         while let Some(action) = self.action_queue.pop_front() {
-            let summary = apply_update::apply_update(&action, &mut self.entities);
+            let summary = action.apply(&mut self.entities);
+
             let mut cancelled = false;
 
             self.reaction_queue.clear();
 
             for rule in &self.rules {
-                let result = rule.check(&summary, &self.entities_copy, &self.entities);
+                let result = rule.check(&summary, &self.entities);
 
                 match result {
                     RuleResult::Instead(_) => {
@@ -151,10 +145,7 @@ impl<'a> GameContext<'a> {
             }
 
             if cancelled {
-                apply_update::apply_update(&summary.to_revert_action(), &mut self.entities);
-            } else {
-                apply_update::apply_update(&action, &mut self.entities_copy);
-                //apply_action_on_entities(&action, &mut self.entities_copy);
+                summary.to_revert_action().apply(&mut self.entities);
             }
         }
 

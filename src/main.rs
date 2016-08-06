@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![feature(fnbox)]
 
 #[macro_use] extern crate itertools;
 extern crate num;
@@ -91,8 +92,6 @@ fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
 
     game_context
         .rule(collision::detect_collision);
-
-    game_context.finalise();
 
     game_context.game_loop();
 }

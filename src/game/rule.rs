@@ -13,18 +13,16 @@ pub fn fail() -> RuleResult { RuleResult::Instead(vec![]) }
 pub trait Rule {
     fn check(&self,
              summary: &UpdateSummary,
-             before: &EntityTable,
-             after: &EntityTable)
+             entities: &EntityTable)
         -> RuleResult;
 }
 
-impl<F: Fn(&UpdateSummary, &EntityTable, &EntityTable) -> RuleResult> Rule for F {
+impl<F: Fn(&UpdateSummary, &EntityTable) -> RuleResult> Rule for F {
     fn check(&self,
              summary: &UpdateSummary,
-             before: &EntityTable,
-             after: &EntityTable)
+             entities: &EntityTable)
         -> RuleResult
     {
-        self(summary, before, after)
+        self(summary, entities)
     }
 }

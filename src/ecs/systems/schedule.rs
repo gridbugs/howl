@@ -1,8 +1,4 @@
-use ecs::message::Message;
-use ecs::message::Field::*;
 use ecs::entity::EntityId;
-
-use ecs;
 
 // TODO
 // Currently this just repeatedly schedules the player character 
