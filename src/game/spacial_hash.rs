@@ -3,7 +3,7 @@ use ecs::update::UpdateSummary;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use game::util;
+use game::game_entity::GameEntity;
 
 #[derive(Debug, Clone)]
 pub struct SpacialHashCell {
@@ -85,7 +85,7 @@ impl SpacialHashMap {
     }
 
     fn entity_is_on_level(&self, entity: &Entity) -> bool {
-        if let Some(id) = util::get_level(entity) {
+        if let Some(id) = entity.on_level() {
             if id == self.id.unwrap() {
                 true
             } else {
@@ -117,7 +117,7 @@ impl SpacialHashMap {
     }
 
     pub fn add_entity(&mut self, entity: &Entity) {
-        if let Some(vec) = util::get_position(entity) {
+        if let Some(vec) = entity.position() {
             let cell = self.get_mut(vec.to_tuple());
             cell.insert(entity);
         }
@@ -126,7 +126,7 @@ impl SpacialHashMap {
     pub fn change_entity(&mut self, entity: &Entity, changes: &HashMap<ComponentType, Component>) {
         for (_, component) in changes {
             if let &Component::Position(old_position) = component {
-                let new_position = util::get_position(entity).unwrap();
+                let new_position = entity.position().unwrap();
                 self.get_mut(old_position.to_tuple()).remove(entity);
                 self.get_mut(new_position.to_tuple()).insert(entity);
             }

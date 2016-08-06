@@ -7,7 +7,7 @@ use ecs::entity::{
     EntityTable,
 };
 
-use game::util;
+use game::game_entity::GameEntity;
 
 use std::fmt;
 use std::collections::HashSet;
@@ -99,27 +99,27 @@ impl UpdateSummary {
 
         for entity_id in &self.added_entities {
             let entity = entities.get(*entity_id);
-            if let Some(level) = util::get_level(entity) {
+            if let Some(level) = entity.on_level() {
                 levels.insert(level);
             }
         }
 
         for (_, entity) in &self.removed_entities {
-            if let Some(level) = util::get_level(entity) {
+            if let Some(level) = entity.on_level() {
                 levels.insert(level);
             }
         }
 
         for (entity_id, _) in &self.changed_entities {
             let entity = entities.get(*entity_id);
-            if let Some(level) = util::get_level(entity) {
+            if let Some(level) = entity.on_level() {
                 levels.insert(level);
             }
         }
 
         for level_id in levels.iter() {
             let mut spacial_hash = {
-                let level = util::get_level_data(entities.get(*level_id)).unwrap();
+                let level = entities.get(*level_id).level_data().unwrap();
                 level.spacial_hash.borrow_mut()
             };
             spacial_hash.update(self, entities);

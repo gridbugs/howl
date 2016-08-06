@@ -26,7 +26,7 @@ use terminal::window_buffer::WindowBuffer;
 
 use game::context::GameContext;
 use game::collision;
-use game::util;
+use game::game_entity::GameEntity;
 
 use std::io;
 
@@ -35,7 +35,7 @@ const LEVEL_HEIGHT: usize = 10;
 
 fn populate(entities: &mut EntityTable) -> EntityId {
     let level_id = entities.add(make_level(LEVEL_WIDTH, LEVEL_HEIGHT));
-    util::get_mut_level_data(entities.get_mut(level_id)).unwrap().set_id(level_id);
+    entities.get_mut(level_id).level_data_mut().unwrap().set_id(level_id);
 
     for y in 0..LEVEL_HEIGHT {
         for x in 0..LEVEL_WIDTH {
@@ -60,7 +60,7 @@ fn populate(entities: &mut EntityTable) -> EntityId {
         level.add(pc);
     }
 
-    util::get_level_data(entities.get(level_id)).unwrap().finalise(entities);
+    entities.get(level_id).level_data().unwrap().finalise(entities);
 
     pc
 }

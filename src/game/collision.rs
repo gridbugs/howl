@@ -4,7 +4,7 @@ use ecs::update::UpdateSummary;
 
 use game::rule::RuleResult;
 use game::rule;
-use game::util;
+use game::game_entity::GameEntity;
 
 use debug;
 
@@ -24,15 +24,15 @@ pub fn detect_collision(_: &Message,
         }
 
         let entity = after.get(*entity_id);
-        let level = after.get(util::get_level(entity).unwrap());
+        let level = after.get(entity.on_level().unwrap());
 
         if !entity.has(ComponentType::Collider) {
             continue;
         }
 
-        let spacial_hash = util::get_level_spacial_hash(level).unwrap();
+        let spacial_hash = level.level_spacial_hash().unwrap();
 
-        let current_position = util::get_position(entity).unwrap();
+        let current_position = entity.position().unwrap();
 
         if let Some(cell) = spacial_hash.get(current_position.to_tuple()) {
             if cell.has(ComponentType::Solid) {
