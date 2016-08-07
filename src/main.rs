@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#![feature(fnbox)]
 
 #[macro_use] extern crate itertools;
 extern crate num;

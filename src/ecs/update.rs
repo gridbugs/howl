@@ -16,21 +16,21 @@ use std::cell::RefCell;
 
 use std::mem;
 
-pub fn set_entity_component(summary: &mut UpdateSummary,
-                            entities: &mut EntityTable,
-                            entity_id: EntityId,
-                            new_component: Component)
+pub fn set_entity_component<F: 'static>(f: F) -> Action
+    where F: Fn(&mut EntityTable) -> (EntityId, Component)
 {
-    let mut entity = entities.get_mut(entity_id);
+    UpdateMonad::new(move |summary, entities| {
+        let (entity_id, new_component) = f(entities);
+        let mut entity = entities.get_mut(entity_id);
 
-    if let Some(current_component) = entity.get_mut(new_component.to_type()) {
-        let original_component = mem::replace(current_component, new_component);
-        summary.change_entity(entity_id, original_component);
-    } else {
-        panic!("No component of type {:?} found.", new_component.to_type());
-    }
+        if let Some(current_component) = entity.get_mut(new_component.to_type()) {
+            let original_component = mem::replace(current_component, new_component);
+            summary.change_entity(entity_id, original_component);
+        } else {
+            panic!("No component of type {:?} found.", new_component.to_type());
+        }
+    })
 }
-
 
 
 #[derive(Debug)]
@@ -117,10 +117,12 @@ impl UpdateSummary {
 
         for (entity, mut changed_components) in self.changed_entities.drain() {
             for (_, component) in changed_components.drain() {
-                action = action.bind(move |()| {
+                action = action.bind(move |_| {
+
+                    // both clones are needed until rust supports closure cloning
                     let intermediate = component.clone();
-                    UpdateMonad::new(move |summary, entities| {
-                        set_entity_component(summary, entities, entity, intermediate.clone());
+                    set_entity_component(move |_| {
+                        (entity, intermediate.clone())
                     })
                 });
             }
