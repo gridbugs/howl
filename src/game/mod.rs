@@ -12,7 +12,6 @@ pub mod update;
 
 pub mod rules;
 pub mod actions;
-pub mod updates;
 pub mod entities;
 pub mod components;
 

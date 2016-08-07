@@ -6,8 +6,6 @@ use game::entity::{
     EntityTable,
 };
 use game::table::ToType;
-use game::update::monad::{UpdateMonad, Action};
-use game::updates;
 use game::update::statement::{UpdateProgram, UpdateStatement};
 
 use game::game_entity::GameEntity;
@@ -106,32 +104,5 @@ impl UpdateSummary {
         }
 
         program
-    }
-
-    pub fn to_revert_action(mut self) -> Action {
-        let mut action = UpdateMonad::ret(());
-
-        for _ in self.added_entities {
-            // TODO
-        }
-
-        for (_, _) in self.removed_entities.drain() {
-            // TODO
-        }
-
-        for (entity, mut changed_components) in self.changed_entities.drain() {
-            for (_, component) in changed_components.drain() {
-                action = action.bind(move |_| {
-
-                    // both clones are needed until rust supports closure cloning
-                    let intermediate = component.clone();
-                    updates::set_entity_component(move |_| {
-                        (entity, intermediate.clone())
-                    })
-                });
-            }
-        }
-
-        action
     }
 }

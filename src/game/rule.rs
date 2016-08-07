@@ -1,9 +1,9 @@
 use game::entity::EntityTable;
-use game::update::{Action, UpdateSummary};
+use game::update::{UpdateProgram, UpdateSummary};
 
 pub enum RuleResult {
-    After(Vec<Action>),
-    Instead(Vec<Action>),
+    After(Vec<UpdateProgram>),
+    Instead(Vec<UpdateProgram>),
 }
 
 pub fn pass() -> RuleResult { RuleResult::After(vec![]) }
