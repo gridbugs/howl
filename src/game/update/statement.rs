@@ -53,6 +53,7 @@ impl UpdateProgram {
         for statement in self.0.drain(..) {
             statement.apply(&mut summary, entities);
         }
+        summary.update_spacial_hashes(entities);
         summary
     }
 }
