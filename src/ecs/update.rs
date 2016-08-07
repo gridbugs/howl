@@ -21,15 +21,13 @@ pub fn set_entity_component(summary: &mut UpdateSummary,
                             entity_id: EntityId,
                             new_component: Component)
 {
-    {
-        let mut entity = entities.get_mut(entity_id);
+    let mut entity = entities.get_mut(entity_id);
 
-        if let Some(current_component) = entity.get_mut(new_component.to_type()) {
-            let original_component = mem::replace(current_component, new_component);
-            summary.change_entity(entity_id, original_component);
-        } else {
-            panic!("No component of type {:?} found.", new_component.to_type());
-        }
+    if let Some(current_component) = entity.get_mut(new_component.to_type()) {
+        let original_component = mem::replace(current_component, new_component);
+        summary.change_entity(entity_id, original_component);
+    } else {
+        panic!("No component of type {:?} found.", new_component.to_type());
     }
 }
 
