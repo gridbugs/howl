@@ -1,5 +1,5 @@
 use game::entity::{EntityTable, ComponentType};
-use game::update::summary::UpdateSummary;
+use game::update::UpdateSummary;
 
 use game::rule::RuleResult;
 use game::rule;

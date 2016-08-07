@@ -4,7 +4,7 @@ use game::schedule::Schedule;
 use game::io::terminal_player_actor;
 use game::io::window_renderer;
 use game::components::level::Level;
-use game::update::monad::Action;
+use game::update::Action;
 
 use game::control::Control;
 use game::rule::{Rule, RuleResult};

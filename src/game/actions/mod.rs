@@ -1,7 +1,8 @@
 use game::entity::EntityId;
 use game::entity::Component::*;
+use game::update::Action;
+
 use game::updates;
-use game::update::monad::Action;
 
 use game::game_entity::GameEntity;
 

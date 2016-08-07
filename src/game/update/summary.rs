@@ -5,7 +5,7 @@ use game::entity::{
     Component,
     EntityTable,
 };
-use game::table::table::ToType;
+use game::table::ToType;
 use game::update::monad::{UpdateMonad, Action};
 use game::updates;
 

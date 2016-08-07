@@ -1,6 +1,5 @@
 use game::entity::EntityTable;
-use game::update::summary::UpdateSummary;
-use game::update::monad::Action;
+use game::update::{Action, UpdateSummary};
 
 pub enum RuleResult {
     After(Vec<Action>),

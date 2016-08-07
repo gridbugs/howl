@@ -7,7 +7,7 @@ use game::entity::{
 use game::components::level::Level;
 use game::spacial_hash::SpacialHashMap;
 
-use geometry::vector2::Vector2;
+use geometry::Vector2;
 
 use std::cell::Ref;
 

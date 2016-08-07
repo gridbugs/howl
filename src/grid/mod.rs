@@ -1,3 +1,5 @@
-pub mod static_grid;
-pub mod coord;
-pub mod coord_cell;
+mod coord_cell;
+mod static_grid;
+mod coord;
+
+pub use self::static_grid::StaticGrid;

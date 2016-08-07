@@ -1,4 +1,4 @@
-use game::update::monad::UpdateMonad;
+use game::update::UpdateMonad;
 
 pub enum Control {
     Action(UpdateMonad<()>),

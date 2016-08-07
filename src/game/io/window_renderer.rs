@@ -4,7 +4,7 @@ use game::entity::ComponentType as Type;
 
 use terminal::window_manager::WindowRef;
 use colour::ansi;
-use grid::static_grid::StaticGrid;
+use grid::StaticGrid;
 
 struct Cell {
     ch: char,

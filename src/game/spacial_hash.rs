@@ -1,5 +1,5 @@
 use game::entity::{Entity, EntityId, ComponentType, Component, EntityTable};
-use game::update::summary::UpdateSummary;
+use game::update::UpdateSummary;
 use std::collections::HashMap;
 use std::collections::HashSet;
 

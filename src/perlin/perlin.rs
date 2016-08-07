@@ -1,8 +1,8 @@
-use grid::static_grid::StaticGrid;
-use geometry::vector::Dot;
-use geometry::vector::Length;
-use geometry::vector2::Vector2;
-use geometry::vector3::Vector3;
+use grid::StaticGrid;
+use geometry::Dot;
+use geometry::Length;
+use geometry::Vector2;
+use geometry::Vector3;
 
 use rand;
 use rand::Rng;

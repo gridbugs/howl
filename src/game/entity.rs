@@ -1,7 +1,11 @@
-use game::table::table::{Table, TableId, ToType};
-use game::table::table_table::TableTable;
+use game::table::{
+    Table,
+    TableId,
+    ToType,
+    TableTable
+};
 use game::components;
-use geometry::vector2::Vector2;
+use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi::AnsiColour;
 

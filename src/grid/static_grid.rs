@@ -3,7 +3,7 @@ use std::slice;
 use std::ops::{Index, IndexMut};
 
 use geometry::direction;
-use geometry::vector2::Vector2;
+use geometry::Vector2;
 use grid::coord::Coord;
 use grid::coord_cell::CoordCell;
 
