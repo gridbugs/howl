@@ -1,36 +1,19 @@
-use ecs::table::ToType;
-use ecs::entity::{
+use game::entity::{
     EntityId,
     Entity,
     ComponentType,
     Component,
     EntityTable,
 };
-use ecs::update_monad::{UpdateMonad, Action};
+use game::table::table::ToType;
+use game::update::monad::{UpdateMonad, Action};
+use game::updates;
 
 use game::game_entity::GameEntity;
 
 use std::collections::HashSet;
 use std::collections::HashMap;
 use std::cell::RefCell;
-
-use std::mem;
-
-pub fn set_entity_component<F: 'static>(f: F) -> Action
-    where F: Fn(&mut EntityTable) -> (EntityId, Component)
-{
-    UpdateMonad::new(move |summary, entities| {
-        let (entity_id, new_component) = f(entities);
-        let mut entity = entities.get_mut(entity_id);
-
-        if let Some(current_component) = entity.get_mut(new_component.to_type()) {
-            let original_component = mem::replace(current_component, new_component);
-            summary.change_entity(entity_id, original_component);
-        } else {
-            panic!("No component of type {:?} found.", new_component.to_type());
-        }
-    })
-}
 
 
 #[derive(Debug)]
@@ -121,7 +104,7 @@ impl UpdateSummary {
 
                     // both clones are needed until rust supports closure cloning
                     let intermediate = component.clone();
-                    set_entity_component(move |_| {
+                    updates::set_entity_component(move |_| {
                         (entity, intermediate.clone())
                     })
                 });

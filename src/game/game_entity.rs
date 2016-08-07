@@ -1,18 +1,17 @@
-use ecs::entity::{
+use game::entity::{
     Entity,
     EntityId,
     Component,
     ComponentType,
 };
-use ecs::components::level::Level;
+use game::components::level::Level;
+use game::spacial_hash::SpacialHashMap;
 
 use geometry::vector2::Vector2;
 
-use game::spacial_hash::SpacialHashMap;
-
 use std::cell::Ref;
 
-// Convenience wrappers around ecs entities
+// Convenience wrappers around entities
 pub trait GameEntity {
     fn position(&self) -> Option<Vector2<isize>>;
     fn on_level(&self) -> Option<EntityId>;

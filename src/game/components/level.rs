@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::collections::hash_set;
-use ecs::entity::{Entity, EntityId, EntityTable};
-use ecs::systems::schedule::Schedule;
+use game::entity::{Entity, EntityId, EntityTable};
+use game::schedule::Schedule;
 
 use game::spacial_hash::SpacialHashMap;
 

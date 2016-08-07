@@ -1,10 +1,10 @@
-use ecs::entity::Component::*;
-use ecs::entity::ComponentType as Type;
-use ecs::systems::schedule::Schedule;
-use ecs::systems::terminal_player_actor;
-use ecs::systems::window_renderer;
-use ecs::components::level::Level;
-use ecs::update_monad::Action;
+use game::entity::Component::*;
+use game::entity::ComponentType as Type;
+use game::schedule::Schedule;
+use game::io::terminal_player_actor;
+use game::io::window_renderer;
+use game::components::level::Level;
+use game::update::monad::Action;
 
 use game::control::Control;
 use game::rule::{Rule, RuleResult};
@@ -12,7 +12,7 @@ use game::rule::{Rule, RuleResult};
 use std::cell;
 use std::collections::VecDeque;
 
-use ecs::entity::{
+use game::entity::{
     EntityTable,
     EntityId,
     Entity,

@@ -6,7 +6,6 @@ extern crate rand;
 extern crate rustty;
 
 #[macro_use] mod debug;
-#[macro_use] mod ecs;
 mod perlin;
 mod renderer;
 mod geometry;
@@ -14,19 +13,18 @@ mod grid;
 mod colour;
 mod terminal;
 mod allocator;
-mod game;
+#[macro_use] mod game;
 
-use ecs::entity_types::*;
-use ecs::entity::Component::*;
-use ecs::entity::ComponentType as Type;
-use ecs::entity::{EntityTable, EntityId};
+use game::entities::*;
+use game::entity::Component::*;
+use game::entity::ComponentType as Type;
+use game::entity::{EntityTable, EntityId};
+use game::context::GameContext;
+use game::rules::collision;
+use game::game_entity::GameEntity;
 
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;
-
-use game::context::GameContext;
-use game::collision;
-use game::game_entity::GameEntity;
 
 use std::io;
 

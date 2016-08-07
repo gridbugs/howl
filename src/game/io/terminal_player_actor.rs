@@ -1,5 +1,5 @@
-use ecs::entity::EntityId;
-use ecs::actions;
+use game::entity::EntityId;
+use game::actions;
 
 use game::control::Control;
 use rustty::Event;

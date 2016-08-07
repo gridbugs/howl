@@ -1,6 +1,6 @@
-use ecs::table::{Table, TableId, ToType};
-use ecs::table_table::TableTable;
-use ecs::components;
+use game::table::table::{Table, TableId, ToType};
+use game::table::table_table::TableTable;
+use game::components;
 use geometry::vector2::Vector2;
 use renderer::tile::Tile;
 use colour::ansi::AnsiColour;
@@ -10,10 +10,10 @@ pub type Entity = Table<ComponentType, Component>;
 pub type EntityTable = TableTable<ComponentType, Component>;
 
 macro_rules! entity {
-    () => { ecs::entity::Entity::new() };
+    () => { game::entity::Entity::new() };
     ( $( $x:expr ),* , ) => { entity!( $( $x ),* ) };
     ( $( $x:expr ),* ) => {{
-        let mut entity = ecs::entity::Entity::new();
+        let mut entity = game::entity::Entity::new();
         $(entity.add($x);)*
         entity
     }};

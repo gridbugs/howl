@@ -1,5 +1,5 @@
-use ecs::update::UpdateSummary;
-use ecs::entity::EntityTable;
+use game::update::summary::UpdateSummary;
+use game::entity::EntityTable;
 
 pub type Action = UpdateMonad<()>;
 

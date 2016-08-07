@@ -1,6 +1,6 @@
-use ecs::entity::EntityTable;
-use ecs::update::UpdateSummary;
-use ecs::update_monad::Action;
+use game::entity::EntityTable;
+use game::update::summary::UpdateSummary;
+use game::update::monad::Action;
 
 pub enum RuleResult {
     After(Vec<Action>),

@@ -1,6 +1,6 @@
-use ecs::entity::{EntityTable, EntityId};
-use ecs::entity::Component::*;
-use ecs::entity::ComponentType as Type;
+use game::entity::{EntityTable, EntityId};
+use game::entity::Component::*;
+use game::entity::ComponentType as Type;
 
 use terminal::window_manager::WindowRef;
 use colour::ansi;

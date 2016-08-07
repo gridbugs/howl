@@ -1,7 +1,7 @@
-use ecs;
-use ecs::entity::{Entity, EntityId};
-use ecs::entity::Component::*;
-use ecs::components;
+use game;
+use game::entity::{Entity, EntityId};
+use game::entity::Component::*;
+use game::components;
 use geometry::vector2::Vector2;
 use renderer::tile::Tile;
 use colour::ansi;

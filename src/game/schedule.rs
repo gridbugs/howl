@@ -1,4 +1,4 @@
-use ecs::entity::EntityId;
+use game::entity::EntityId;
 
 // TODO
 // Currently this just repeatedly schedules the player character 
