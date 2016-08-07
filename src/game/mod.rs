@@ -15,3 +15,11 @@ pub mod actions;
 pub mod updates;
 pub mod entities;
 pub mod components;
+
+pub use self::entity::{
+    EntityId,
+    Entity,
+    Component,
+    ComponentType,
+    EntityTable,
+};

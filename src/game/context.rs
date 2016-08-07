@@ -4,7 +4,7 @@ use game::schedule::Schedule;
 use game::io::terminal_player_actor;
 use game::io::window_renderer;
 use game::components::level::Level;
-use game::update::Action;
+use game::update::UpdateProgramFn;
 
 use game::control::Control;
 use game::rule::{Rule, RuleResult};
@@ -32,8 +32,8 @@ pub struct GameContext<'a> {
     game_window: WindowRef<'a>,
 
     // rule application
-    action_queue: VecDeque<Action>,
-    reaction_queue: VecDeque<Action>,
+    action_queue: VecDeque<UpdateProgramFn>,
+    reaction_queue: VecDeque<UpdateProgramFn>,
     rules: Vec<Box<Rule>>,
 }
 
@@ -119,12 +119,13 @@ enum TurnResult {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn apply_action(&mut self, action: Action) -> ActionResult {
+    pub fn apply_action(&mut self, action: UpdateProgramFn) -> ActionResult {
 
         self.action_queue.push_back(action);
 
         while let Some(action) = self.action_queue.pop_front() {
-            let summary = action.apply(&mut self.entities);
+            let update_program = action(&self.entities);
+            let summary = update_program.apply(&mut self.entities);
 
             let mut cancelled = false;
 
@@ -145,7 +146,7 @@ impl<'a> GameContext<'a> {
             }
 
             if cancelled {
-                summary.to_revert_action().apply(&mut self.entities);
+                summary.to_revert_program().apply(&mut self.entities);
             }
         }
 

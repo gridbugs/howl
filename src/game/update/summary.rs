@@ -8,6 +8,7 @@ use game::entity::{
 use game::table::ToType;
 use game::update::monad::{UpdateMonad, Action};
 use game::updates;
+use game::update::statement::{UpdateProgram, UpdateStatement};
 
 use game::game_entity::GameEntity;
 
@@ -85,6 +86,26 @@ impl UpdateSummary {
             };
             spacial_hash.update(self, entities);
         }
+    }
+
+    pub fn to_revert_program(mut self) -> UpdateProgram {
+        let mut program = UpdateProgram::new_empty();
+
+        for _ in self.added_entities {
+            // TODO
+        }
+
+        for (_, _) in self.removed_entities.drain() {
+            // TODO
+        }
+
+        for (entity, mut changed_components) in self.changed_entities.drain() {
+            for (_, component) in changed_components.drain() {
+                program.append(UpdateStatement::SetEntityComponent(entity, component));
+            }
+        }
+
+        program
     }
 
     pub fn to_revert_action(mut self) -> Action {

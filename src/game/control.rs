@@ -1,6 +1,6 @@
-use game::update::UpdateMonad;
+use game::update::UpdateProgramFn;
 
 pub enum Control {
-    Action(UpdateMonad<()>),
+    Action(UpdateProgramFn),
     Quit,
 }
