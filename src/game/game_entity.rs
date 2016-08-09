@@ -18,6 +18,7 @@ pub trait GameEntity {
     fn level_data(&self) -> Option<&Level>;
     fn level_data_mut(&mut self) -> Option<&mut Level>;
     fn level_spacial_hash(&self) -> Option<Ref<SpacialHashMap>>;
+    fn is_pc(&self) -> bool;
 }
 
 impl GameEntity for Entity {
@@ -65,5 +66,9 @@ impl GameEntity for Entity {
         self.level_data().map(|level| {
             level.spacial_hash.borrow()
         })
+    }
+
+    fn is_pc(&self) -> bool {
+        self.has(ComponentType::PlayerActor)
     }
 }

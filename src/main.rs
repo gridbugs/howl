@@ -28,39 +28,86 @@ use terminal::window_buffer::WindowBuffer;
 
 use std::io;
 
-const LEVEL_WIDTH: usize = 10;
-const LEVEL_HEIGHT: usize = 10;
-
 fn populate(entities: &mut EntityTable) -> EntityId {
-    let level_id = entities.add(make_level(LEVEL_WIDTH, LEVEL_HEIGHT));
+    let strings = [
+        "####################################",
+        "#............#.....................#",
+        "#............#.....................#",
+        "#............#.....................#",
+        "#............#.....................#",
+        "#............+.....................#",
+        "#............#.....................#",
+        "#............#.....................#",
+        "#............#.....................#",
+        "#............#.....................#",
+        "#............#########+#############",
+        "#............#.....................#",
+        "#............#.....................#",
+        "#............#.....................#",
+        "########+#####.....................#",
+        "#..................................#",
+        "#..................................#",
+        "#..................................#",
+        "#.................@................#",
+        "#..................................#",
+        "#..................................#",
+        "#..................................#",
+        "####################################",
+    ];
+
+    let height = strings.len();
+    let width = strings[0].len();
+
+    let level_id = entities.add(make_level(width, height));
     entities.get_mut(level_id).level_data_mut().unwrap().set_id(level_id);
 
-    for y in 0..LEVEL_HEIGHT {
-        for x in 0..LEVEL_WIDTH {
+    let mut level_entities = Vec::new();
 
-            let floor = entities.add(make_floor(x as isize, y as isize, level_id));
-            if let Some(&mut LevelData(ref mut level)) = entities.get_mut(level_id).get_mut(Type::LevelData) {
-                level.add(floor);
-            }
+    let mut y = 0;
+    for line in &strings {
+        let mut x = 0;
+        for ch in line.chars() {
 
-            if x == 0 || x == LEVEL_WIDTH - 1 || y == 0 || y == LEVEL_HEIGHT - 1 {
-                let wall = entities.add(make_wall(x as isize, y as isize, level_id));
-                if let Some(&mut LevelData(ref mut level)) = entities.get_mut(level_id).get_mut(Type::LevelData) {
-                    level.add(wall);
-                }
-            }
+            match ch {
+                '#' => {
+                    level_entities.push(make_wall(x, y, level_id));
+                    level_entities.push(make_floor(x, y, level_id));
+                },
+                '.' => {
+                    level_entities.push(make_floor(x, y, level_id));
+                },
+                '+' => {
+                    level_entities.push(make_door(x, y, level_id, DoorState::Closed));
+                    level_entities.push(make_floor(x, y, level_id));
+                },
+                '@' => {
+                    level_entities.push(make_pc(x, y, level_id));
+                    level_entities.push(make_floor(x, y, level_id));
+                },
+                _ => panic!(),
+            };
+
+            x += 1;
         }
+        y += 1;
     }
 
-    let pc = entities.add(make_pc(3, 2, level_id));
-    if let Some(&mut LevelData(ref mut level)) = entities.get_mut(level_id).get_mut(Type::LevelData) {
-        level.schedule.borrow_mut().set_pc(pc);
-        level.add(pc);
+    let mut pc = None;
+
+    for entity in level_entities.drain(..) {
+        let id = entities.add(entity);
+        entities.get_mut(level_id).level_data_mut().unwrap().add(id);
+
+        if entities.get(id).is_pc() {
+            assert!(pc == None, "Multiple player characters");
+            pc = Some(id);
+            entities.get(level_id).level_data().unwrap().schedule.borrow_mut().set_pc(id);
+        }
     }
 
     entities.get(level_id).level_data().unwrap().finalise(entities);
 
-    pc
+    pc.unwrap()
 }
 
 const DEBUG_WINDOW_WIDTH: usize = 80;
@@ -79,7 +126,7 @@ fn window_session() {
 
     debug::debug::init(&mut debug_buffer as &mut io::Write);
 
-    game(wm.make_input_source(), wm.make_window(0, 0, 80, 20));
+    game(wm.make_input_source(), wm.make_window(0, 0, 80, 24));
 }
 
 fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {

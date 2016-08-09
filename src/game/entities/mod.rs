@@ -19,6 +19,32 @@ pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
     ]
 }
 
+#[derive(PartialEq)]
+pub enum DoorState {
+    Open,
+    Closed,
+}
+
+pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entity {
+    let mut entity = entity![
+        Position(Vector2::new(x, y)),
+        TileDepth(1),
+        OnLevel(level),
+    ];
+
+    if state == DoorState::Open {
+        entity.add(TransparentTile(Tile::new('+', ansi::WHITE)));
+    } else {
+        entity.add(Solid);
+        entity.add(SolidTile {
+            tile: Tile::new('+', ansi::WHITE),
+            background: ansi::DARK_GREY,
+        });
+    }
+
+    entity
+}
+
 pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
