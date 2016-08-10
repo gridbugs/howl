@@ -33,14 +33,14 @@ struct Perlin3Slice {
 #[derive(Debug)]
 pub struct Perlin3Grid {
     slices: Vec<Perlin3Slice>,
-    grid_width: isize,
-    grid_height: isize,
+    grid_width: usize,
+    grid_height: usize,
     z: f64,
     width: f64,
     height: f64,
     depth: f64,
     minor_offset: Vector2<f64>,
-    major_offset: Vector2<isize>,
+    major_offset: Vector2<usize>,
     wrap_type: PerlinWrapType,
 }
 
@@ -51,7 +51,7 @@ pub fn ease_curve(x: f64) -> f64 {
 }
 
 impl Perlin3Grid {
-    pub fn new(width: isize, height: isize, wrap_type: PerlinWrapType) -> Perlin3Grid {
+    pub fn new(width: usize, height: usize, wrap_type: PerlinWrapType) -> Perlin3Grid {
         let grid_width = width + 2;
         let grid_height = height + 2;
         Perlin3Grid {
@@ -109,8 +109,8 @@ impl Perlin3Grid {
         let floor_f = Vector2::new(self.minor_offset.x.floor(),
                                    self.minor_offset.y.floor());
 
-        let floor_i = Vector2::new(floor_f.x as isize,
-                                   floor_f.y as isize);
+        let floor_i = Vector2::new(floor_f.x as usize,
+                                   floor_f.y as usize);
 
         if floor_i.x != 0 {
             if self.wrap_type == PerlinWrapType::Regenerate {
@@ -174,8 +174,8 @@ impl Perlin3Grid {
 
         let top_left_f = Vector2::new(x.floor(), y.floor());
         let top_left_i = self.major_offset +
-                         Vector2::new(top_left_f.x as isize,
-                                      top_left_f.y as isize);
+                         Vector2::new(top_left_f.x as usize,
+                                      top_left_f.y as usize);
 
         let mut corner_coords_i = [
             top_left_i,
@@ -204,7 +204,7 @@ impl Perlin3Grid {
                             izip!(&corner_coords_i,
                                   &corner_coords_f)))
         {
-            let gradient = slice.grid.get(*corner_coord_i).unwrap().0;
+            let gradient = slice.grid[corner_coord_i].0;
             let corner_coord_f3 = Vector3::new(
                 corner_coord_f.x,
                 corner_coord_f.y,

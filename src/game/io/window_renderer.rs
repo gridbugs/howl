@@ -34,7 +34,7 @@ impl Default for Cell {
 
 pub fn render<'a>(window: WindowRef<'a>, entities: &EntityTable, level_id: EntityId) {
     if let Some(&LevelData(ref level)) = entities.get(level_id).get(Type::LevelData) {
-        let mut grid = StaticGrid::<Cell>::new_default(level.width as isize, level.height as isize);
+        let mut grid = StaticGrid::<Cell>::new_default(level.width, level.height);
 
         for entity in level.entities(entities) {
             if let Some(&Position(ref v)) = entity.get(Type::Position) {

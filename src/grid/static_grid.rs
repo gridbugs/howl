@@ -84,7 +84,7 @@ impl<'a, T> Iterator for SomeNeiIter<'a, T> {
 }
 
 impl<T: CoordCell> StaticGrid<T> {
-    pub fn new_coords(width: isize, height: isize, data: T::Data) -> StaticGrid<T> {
+    pub fn new_coords(width: usize, height: usize, data: T::Data) -> StaticGrid<T> {
         let mut grid = StaticGrid::new_uninitialised(width, height);
 
         for _ in 0..grid.size {
@@ -96,7 +96,7 @@ impl<T: CoordCell> StaticGrid<T> {
 }
 
 impl<T: Default> StaticGrid<T> {
-    pub fn new_default(width: isize, height: isize) -> StaticGrid<T> {
+    pub fn new_default(width: usize, height: usize) -> StaticGrid<T> {
         let mut grid = StaticGrid::new_uninitialised(width, height);
 
         for _ in 0..grid.size {
@@ -114,7 +114,7 @@ impl<T: Default> StaticGrid<T> {
 }
 
 impl<T: Copy> StaticGrid<T> {
-    pub fn new_copy(width: isize, height: isize, example: T) -> StaticGrid<T> {
+    pub fn new_copy(width: usize, height: usize, example: T) -> StaticGrid<T> {
         let mut grid = StaticGrid::new_uninitialised(width, height);
 
         for _ in 0..grid.size {
@@ -132,16 +132,15 @@ impl<T: Copy> StaticGrid<T> {
 }
 
 impl<T> StaticGrid<T> {
-    fn new_uninitialised(width: isize, height: isize) -> StaticGrid<T> {
-        assert!(width > 0 && height > 0, "width and height must be positive");
+    fn new_uninitialised(width: usize, height: usize) -> StaticGrid<T> {
 
         let size = (width as usize).checked_mul(height as usize)
             .expect("product of width and height overflows");
 
         StaticGrid {
-            width: width,
-            height: height,
-            limits: Vector2::new(width - 1, height - 1),
+            width: width as isize,
+            height: height as isize,
+            limits: Vector2::new(width as isize - 1, height as isize - 1),
             size: size,
             elements: Vec::with_capacity(size),
         }
@@ -243,7 +242,7 @@ impl<T> StaticGrid<T> {
     {
         let mut regions = Vec::<Vec<Coord>>::new();
 
-        let mut visited = StaticGrid::<bool>::new_copy(self.width, self.height, false);
+        let mut visited = StaticGrid::<bool>::new_copy(self.width as usize, self.height as usize, false);
         let mut to_visit = Vec::<Coord>::new();
 
         for (coord, data) in izip!(
@@ -294,31 +293,58 @@ impl<T> StaticGrid<T> {
     }
 }
 
-impl<'a, T> Index<&'a Coord> for StaticGrid<T> {
+impl<'a, T> Index<&'a Vector2<isize>> for StaticGrid<T> {
     type Output = T;
-    fn index<'b>(&'b self, index: &'a Coord) -> &'b T {
+    fn index<'b>(&'b self, index: &'a Vector2<isize>) -> &'b T {
         self.get(*index).unwrap()
     }
 }
 
-impl<'a, T> IndexMut<&'a Coord> for StaticGrid<T> {
-    fn index_mut<'b>(&'b mut self, index: &'a Coord) -> &'b mut T {
+impl<'a, T> IndexMut<&'a Vector2<isize>> for StaticGrid<T> {
+    fn index_mut<'b>(&'b mut self, index: &'a Vector2<isize>) -> &'b mut T {
         self.get_mut(*index).unwrap()
     }
 }
 
-impl<T> Index<Coord> for StaticGrid<T> {
+impl<T> Index<Vector2<isize>> for StaticGrid<T> {
     type Output = T;
-    fn index<'a>(&'a self, index: Coord) -> &'a T {
+    fn index<'a>(&'a self, index: Vector2<isize>) -> &'a T {
         self.get(index).unwrap()
     }
 }
 
-impl<T> IndexMut<Coord> for StaticGrid<T> {
-    fn index_mut<'a>(&'a mut self, index: Coord) -> &'a mut T {
+impl<T> IndexMut<Vector2<isize>> for StaticGrid<T> {
+    fn index_mut<'a>(&'a mut self, index: Vector2<isize>) -> &'a mut T {
         self.get_mut(index).unwrap()
     }
 }
+
+impl<'a, T> Index<&'a Vector2<usize>> for StaticGrid<T> {
+    type Output = T;
+    fn index<'b>(&'b self, index: &'a Vector2<usize>) -> &'b T {
+        self.get(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+    }
+}
+
+impl<'a, T> IndexMut<&'a Vector2<usize>> for StaticGrid<T> {
+    fn index_mut<'b>(&'b mut self, index: &'a Vector2<usize>) -> &'b mut T {
+        self.get_mut(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+    }
+}
+
+impl<T> Index<Vector2<usize>> for StaticGrid<T> {
+    type Output = T;
+    fn index<'a>(&'a self, index: Vector2<usize>) -> &'a T {
+        self.get(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+    }
+}
+
+impl<T> IndexMut<Vector2<usize>> for StaticGrid<T> {
+    fn index_mut<'a>(&'a mut self, index: Vector2<usize>) -> &'a mut T {
+        self.get_mut(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+    }
+}
+
 
 impl<T> Index<(isize, isize)> for StaticGrid<T> {
     type Output = T;
@@ -330,5 +356,19 @@ impl<T> Index<(isize, isize)> for StaticGrid<T> {
 impl<T> IndexMut<(isize, isize)> for StaticGrid<T> {
     fn index_mut<'a>(&'a mut self, (x, y): (isize, isize)) -> &'a mut T {
         &mut self[Coord { x: x, y: y }]
+    }
+}
+
+
+impl<T> Index<(usize, usize)> for StaticGrid<T> {
+    type Output = T;
+    fn index<'a>(&'a self, (x, y): (usize, usize)) -> &'a T {
+        &self[Coord { x: x as isize, y: y as isize }]
+    }
+}
+
+impl<T> IndexMut<(usize, usize)> for StaticGrid<T> {
+    fn index_mut<'a>(&'a mut self, (x, y): (usize, usize)) -> &'a mut T {
+        &mut self[Coord { x: x as isize, y: y as isize}]
     }
 }

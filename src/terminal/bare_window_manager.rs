@@ -80,8 +80,7 @@ impl BareWindowManager {
         let window = Window {
             coord: (x, y),
             size: (width, height),
-            buffer: RefCell::new(StaticGrid::new_default(width as isize,
-                                                         height as isize)),
+            buffer: RefCell::new(StaticGrid::new_default(width, height)),
         };
 
         let id = self.allocator.allocate(window);
