@@ -4,7 +4,7 @@ use game::schedule::Schedule;
 use game::io::terminal_player_actor;
 use game::io::window_renderer;
 use game::components::level::Level;
-use game::update::UpdateProgramFn;
+use game::update::UpdateProgram;
 
 use game::control::Control;
 use game::rule::{Rule, RuleResult};
@@ -32,8 +32,8 @@ pub struct GameContext<'a> {
     game_window: WindowRef<'a>,
 
     // rule application
-    action_queue: VecDeque<UpdateProgramFn>,
-    reaction_queue: VecDeque<UpdateProgramFn>,
+    action_queue: VecDeque<UpdateProgram>,
+    reaction_queue: VecDeque<UpdateProgram>,
     rules: Vec<Box<Rule>>,
 }
 
@@ -89,7 +89,7 @@ impl<'a> GameContext<'a> {
 
     pub fn get_control(&mut self, entity_id: EntityId) -> Control {
         loop {
-            if let Some(control) = terminal_player_actor::get_control(&self.input_source, entity_id) {
+            if let Some(control) = terminal_player_actor::get_control(&self.input_source, entity_id, &self.entities) {
                 return control;
             }
         }
@@ -119,13 +119,12 @@ enum TurnResult {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn apply_action(&mut self, action: UpdateProgramFn) -> ActionResult {
+    pub fn apply_action(&mut self, action: UpdateProgram) -> ActionResult {
 
         self.action_queue.push_back(action);
 
         while let Some(action) = self.action_queue.pop_front() {
-            let update_program = action(&self.entities);
-            let summary = update_program.apply(&mut self.entities);
+            let summary = action.apply(&mut self.entities);
 
             let mut cancelled = false;
 
@@ -135,18 +134,28 @@ impl<'a> GameContext<'a> {
                 let result = rule.check(&summary, &self.entities);
 
                 match result {
-                    RuleResult::Instead(_) => {
+                    RuleResult::Instead(mut actions) => {
                         cancelled = true;
+                        for action in actions.drain(..) {
+                            self.action_queue.push_back(action);
+                        }
                         break;
                     },
-                    RuleResult::After(_) => {
-
+                    RuleResult::After(mut actions) => {
+                        for action in actions.drain(..) {
+                            self.reaction_queue.push_back(action);
+                        }
                     },
                 }
             }
 
             if cancelled {
                 summary.to_revert_program().apply(&mut self.entities);
+                self.reaction_queue.clear();
+            } else {
+                while let Some(action) = self.reaction_queue.pop_front() {
+                    self.action_queue.push_back(action);
+                }
             }
         }
 

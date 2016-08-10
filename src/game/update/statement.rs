@@ -1,6 +1,7 @@
 use game::{
     EntityId,
     Component,
+    ComponentType,
     EntityTable,
 };
 use game::update::summary::UpdateSummary;
@@ -9,10 +10,11 @@ use game::table::ToType;
 use std::mem;
 
 pub struct UpdateProgram(Vec<UpdateStatement>);
-pub type UpdateProgramFn = Box<Fn(&EntityTable) -> UpdateProgram>;
 
 pub enum UpdateStatement {
-    SetEntityComponent(EntityId, Component),
+    SetComponent(EntityId, Component),
+    AddComponent(EntityId, Component),
+    RemoveComponent(EntityId, ComponentType),
 }
 
 use self::UpdateStatement::*;
@@ -22,13 +24,33 @@ impl UpdateStatement {
                        entities: &mut EntityTable)
     {
         match self {
-            SetEntityComponent(entity_id, component) => {
+            SetComponent(entity_id, component) => {
                 let mut entity = entities.get_mut(entity_id);
                 if let Some(current) =
                     entity.get_mut(component.to_type())
                 {
                     let original = mem::replace(current, component);
                     summary.change_entity(entity_id, original);
+                } else {
+                    panic!("SetComponent called on non-existent component");
+                }
+            },
+            AddComponent(entity_id, component) => {
+                let mut entity = entities.get_mut(entity_id);
+                if entity.has(component.to_type()) {
+                    panic!("AddComponent called with component already present");
+                } else {
+                    summary.add_component(entity_id, component.to_type());
+                    entity.add(component);
+                }
+            },
+            RemoveComponent(entity_id, component_type) => {
+                let mut entity = entities.get_mut(entity_id);
+                if entity.has(component_type) {
+                    let component = entity.remove(component_type);
+                    summary.remove_component(entity_id, component);
+                } else {
+                    panic!("RemoveComponent called with component not present");
                 }
             },
         }

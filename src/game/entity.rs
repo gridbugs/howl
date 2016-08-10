@@ -35,6 +35,7 @@ pub enum ComponentType {
     LevelData,
     PlayerActor,
     OnLevel,
+    Door,
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +50,7 @@ pub enum Component {
     LevelData(components::level::Level),
     PlayerActor,
     OnLevel(EntityId),
+    Door(components::door::DoorState),
 }
 
 impl ToType<ComponentType> for Component {
@@ -64,6 +66,7 @@ impl ToType<ComponentType> for Component {
             Component::LevelData(_) => ComponentType::LevelData,
             Component::PlayerActor => ComponentType::PlayerActor,
             Component::OnLevel(_) => ComponentType::OnLevel,
+            Component::Door(_) => ComponentType::Door,
         }
     }
 }

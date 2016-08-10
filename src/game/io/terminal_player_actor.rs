@@ -1,4 +1,4 @@
-use game::entity::EntityId;
+use game::entity::{EntityId, EntityTable};
 use game::actions;
 
 use game::control::Control;
@@ -9,12 +9,13 @@ use geometry::direction::Direction;
 const ETX: char = '\u{3}';
 
 pub fn get_control<'a>(input_source: &InputSource<'a>,
-                       entity_id: EntityId)
+                       entity_id: EntityId,
+                       entities: &EntityTable)
     -> Option<Control>
 {
     if let Some(event) = input_source.get_event() {
         if let Some(direction) = event_to_direction(event) {
-            Some(Control::Action(actions::walk(entity_id, direction)))
+            Some(Control::Action(actions::walk(entity_id, direction, entities)))
         } else {
             event_to_control(event)
         }

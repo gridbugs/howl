@@ -16,12 +16,11 @@ mod allocator;
 #[macro_use] mod game;
 
 use game::entities::*;
-use game::entity::Component::*;
-use game::entity::ComponentType as Type;
 use game::entity::{EntityTable, EntityId};
 use game::context::GameContext;
-use game::rules::collision;
+use game::rules;
 use game::game_entity::GameEntity;
+use game::components::door::DoorState;
 
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;
@@ -135,7 +134,8 @@ fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
     game_context.pc = Some(populate(&mut game_context.entities));
 
     game_context
-        .rule(collision::detect_collision);
+        .rule(rules::door::detect_open)
+        .rule(rules::collision::detect_collision);
 
     game_context.game_loop();
 }

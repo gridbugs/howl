@@ -14,12 +14,19 @@ use std::collections::HashSet;
 use std::collections::HashMap;
 use std::cell::RefCell;
 
+#[derive(Debug)]
+pub enum ComponentChange {
+    Add,
+    Set(Component),
+    Remove(Component),
+}
+use self::ComponentChange::*;
 
 #[derive(Debug)]
 pub struct UpdateSummary {
     pub added_entities: HashSet<EntityId>,
     pub removed_entities: HashMap<EntityId, Entity>,
-    pub changed_entities: HashMap<EntityId, HashMap<ComponentType, Component>>,
+    pub changed_entities: HashMap<EntityId, HashMap<ComponentType, ComponentChange>>,
     pub changed_components: HashSet<ComponentType>,
     levels: RefCell<HashSet<EntityId>>,
 }
@@ -43,13 +50,45 @@ impl UpdateSummary {
         self.removed_entities.insert(entity.id.unwrap(), entity);
     }
 
-    pub fn change_entity(&mut self, entity: EntityId, old_component: Component) {
+    fn ensure_changed_entity_entry(&mut self, entity: EntityId) {
         if !self.changed_entities.contains_key(&entity) {
             self.changed_entities.insert(entity, HashMap::new());
         }
+    }
+
+    pub fn change_entity(&mut self, entity: EntityId, old_component: Component) {
+        self.ensure_changed_entity_entry(entity);
 
         let component_type = old_component.to_type();
-        self.changed_entities.get_mut(&entity).unwrap().insert(component_type, old_component);
+
+        let existing = self.changed_entities.get_mut(&entity).unwrap()
+            .insert(component_type, Set(old_component));
+
+        assert!(existing.is_none());
+
+        self.changed_components.insert(component_type);
+    }
+
+    pub fn add_component(&mut self, entity: EntityId, component_type: ComponentType) {
+        self.ensure_changed_entity_entry(entity);
+
+        let existing = self.changed_entities.get_mut(&entity).unwrap()
+            .insert(component_type, Add);
+        assert!(existing.is_none());
+
+        self.changed_components.insert(component_type);
+    }
+
+    pub fn remove_component(&mut self, entity: EntityId, component: Component) {
+        self.ensure_changed_entity_entry(entity);
+
+        let component_type = component.to_type();
+
+        let existing = self.changed_entities.get_mut(&entity).unwrap()
+            .insert(component_type, Remove(component));
+
+        assert!(existing.is_none());
+
         self.changed_components.insert(component_type);
     }
 
@@ -98,8 +137,15 @@ impl UpdateSummary {
         }
 
         for (entity, mut changed_components) in self.changed_entities.drain() {
-            for (_, component) in changed_components.drain() {
-                program.append(UpdateStatement::SetEntityComponent(entity, component));
+            for (_, change) in changed_components.drain() {
+                match change {
+                    Set(original) => {
+                        program.append(UpdateStatement::SetComponent(entity, original));
+                    },
+                    _ => {
+                        unimplemented!();
+                    },
+                }
             }
         }
 

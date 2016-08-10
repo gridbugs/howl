@@ -2,6 +2,9 @@ use game;
 use game::entity::{Entity, EntityId};
 use game::entity::Component::*;
 use game::components;
+
+use game::components::door::DoorState;
+
 use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi;
@@ -19,12 +22,6 @@ pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
     ]
 }
 
-#[derive(PartialEq)]
-pub enum DoorState {
-    Open,
-    Closed,
-}
-
 pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entity {
     let mut entity = entity![
         Position(Vector2::new(x, y)),
@@ -33,13 +30,15 @@ pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entit
     ];
 
     if state == DoorState::Open {
-        entity.add(TransparentTile(Tile::new('+', ansi::WHITE)));
+        entity.add(TransparentTile(Tile::new('-', ansi::WHITE)));
+        entity.add(Door(DoorState::Open));
     } else {
         entity.add(Solid);
         entity.add(SolidTile {
             tile: Tile::new('+', ansi::WHITE),
             background: ansi::DARK_GREY,
         });
+        entity.add(Door(DoorState::Closed));
     }
 
     entity

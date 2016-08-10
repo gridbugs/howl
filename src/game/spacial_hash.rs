@@ -1,5 +1,6 @@
 use game::entity::{Entity, EntityId, ComponentType, Component, EntityTable};
-use game::update::UpdateSummary;
+use game::update::{UpdateSummary, ComponentChange};
+use game::update::ComponentChange::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -43,23 +44,31 @@ impl SpacialHashCell {
         }
     }
 
-    pub fn insert(&mut self, entity: &Entity) {
+    fn increment_count(&mut self, component_type: ComponentType) {
+        let count = self.get_count(component_type);
+        self.set_count(component_type, count + 1);
+    }
+
+    fn decrement_count(&mut self, component_type: ComponentType) {
+        let count = self.get_count(component_type);
+        self.set_count(component_type, count - 1);
+    }
+
+    fn insert(&mut self, entity: &Entity) {
         if self.entities.insert(entity.id.unwrap()) {
 
             // update component counts
             for component_type in entity.slots.keys() {
-                let count = self.get_count(*component_type);
-                self.set_count(*component_type, count + 1);
+                self.increment_count(*component_type);
             }
         }
     }
 
-    pub fn remove(&mut self, entity: &Entity) {
+    fn remove(&mut self, entity: &Entity) {
         if self.entities.remove(&entity.id.unwrap()) {
             // update component counts
             for component_type in entity.slots.keys() {
-                let count = self.get_count(*component_type);
-                self.set_count(*component_type, count - 1);
+                self.decrement_count(*component_type);
             }
         }
     }
@@ -123,12 +132,21 @@ impl SpacialHashMap {
         }
     }
 
-    pub fn change_entity(&mut self, entity: &Entity, changes: &HashMap<ComponentType, Component>) {
-        for (_, component) in changes {
-            if let &Component::Position(old_position) = component {
+    pub fn change_entity(&mut self, entity: &Entity, changes: &HashMap<ComponentType, ComponentChange>) {
+        for (component_type, change) in changes {
+
+            // changing the position of an entity
+            if let &Set(Component::Position(old_position)) = change {
                 let new_position = entity.position().unwrap();
                 self.get_mut(old_position.to_tuple()).remove(entity);
                 self.get_mut(new_position.to_tuple()).insert(entity);
+            } else if let Some(&Component::Position(v)) = entity.get(ComponentType::Position) {
+                // update component counts
+                if let &Add = change {
+                    self.get_mut(v.to_tuple()).increment_count(*component_type);
+                } else if let &Remove(_) = change {
+                    self.get_mut(v.to_tuple()).decrement_count(*component_type);
+                }
             }
         }
     }

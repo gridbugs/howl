@@ -1,6 +1,6 @@
-use game::update::UpdateProgramFn;
+use game::update::UpdateProgram;
 
 pub enum Control {
-    Action(UpdateProgramFn),
+    Action(UpdateProgram),
     Quit,
 }
