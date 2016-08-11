@@ -1,10 +1,12 @@
 use game::entity::{Entity, EntityId, ComponentType, Component, EntityTable};
 use game::update::{UpdateSummary, ComponentChange};
 use game::update::ComponentChange::*;
+use game::game_entity::GameEntity;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use game::game_entity::GameEntity;
+use grid::StaticGrid;
+use geometry::Vector2;
 
 #[derive(Debug, Clone)]
 pub struct SpacialHashCell {
@@ -12,14 +14,16 @@ pub struct SpacialHashCell {
     pub components: HashMap<ComponentType, usize>,
 }
 
-impl SpacialHashCell {
-    pub fn new() -> Self {
+impl Default for SpacialHashCell {
+    fn default() -> Self {
         SpacialHashCell {
             entities: HashSet::new(),
             components: HashMap::new(),
         }
     }
+}
 
+impl SpacialHashCell {
     pub fn has(&self, component_type: ComponentType) -> bool {
         if let Some(count) = self.components.get(&component_type) {
             *count != 0
@@ -78,14 +82,14 @@ impl SpacialHashCell {
 #[derive(Debug, Clone)]
 pub struct SpacialHashMap {
     pub id: Option<EntityId>,
-    pub hash_map: HashMap<(isize, isize), SpacialHashCell>,
+    pub grid: StaticGrid<SpacialHashCell>,
 }
 
 impl SpacialHashMap {
-    pub fn new() -> Self {
+    pub fn new(width: usize, height: usize) -> Self {
         SpacialHashMap {
             id: None,
-            hash_map: HashMap::new(),
+            grid: StaticGrid::new_default(width, height),
         }
     }
 
@@ -115,19 +119,16 @@ impl SpacialHashMap {
     }
 
     pub fn get(&self, coord: (isize, isize)) -> Option<&SpacialHashCell> {
-        self.hash_map.get(&coord)
+        self.grid.get(Vector2::from_tuple(coord))
     }
 
-    fn get_mut(&mut self, coord: (isize, isize)) -> &mut SpacialHashCell {
-        if !self.hash_map.contains_key(&coord) {
-            self.hash_map.insert(coord, SpacialHashCell::new());
-        }
-        self.hash_map.get_mut(&coord).unwrap()
+    fn get_mut(&mut self, coord: (isize, isize)) -> Option<&mut SpacialHashCell> {
+        self.grid.get_mut(Vector2::from_tuple(coord))
     }
 
     pub fn add_entity(&mut self, entity: &Entity) {
         if let Some(vec) = entity.position() {
-            let cell = self.get_mut(vec.to_tuple());
+            let cell = self.get_mut(vec.to_tuple()).unwrap();
             cell.insert(entity);
         }
     }
@@ -138,14 +139,14 @@ impl SpacialHashMap {
             // changing the position of an entity
             if let &Set(Component::Position(old_position)) = change {
                 let new_position = entity.position().unwrap();
-                self.get_mut(old_position.to_tuple()).remove(entity);
-                self.get_mut(new_position.to_tuple()).insert(entity);
+                self.get_mut(old_position.to_tuple()).unwrap().remove(entity);
+                self.get_mut(new_position.to_tuple()).unwrap().insert(entity);
             } else if let Some(&Component::Position(v)) = entity.get(ComponentType::Position) {
                 // update component counts
                 if let &Add = change {
-                    self.get_mut(v.to_tuple()).increment_count(*component_type);
+                    self.get_mut(v.to_tuple()).unwrap().increment_count(*component_type);
                 } else if let &Remove(_) = change {
-                    self.get_mut(v.to_tuple()).decrement_count(*component_type);
+                    self.get_mut(v.to_tuple()).unwrap().decrement_count(*component_type);
                 }
             }
         }

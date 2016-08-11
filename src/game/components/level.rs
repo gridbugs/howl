@@ -39,7 +39,7 @@ impl Level {
             height: height,
             entities: HashSet::new(),
             schedule: RefCell::new(Schedule::new()),
-            spacial_hash: RefCell::new(SpacialHashMap::new()),
+            spacial_hash: RefCell::new(SpacialHashMap::new(width, height)),
         }
     }
 

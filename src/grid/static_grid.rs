@@ -16,6 +16,18 @@ pub struct StaticGrid<T> {
     elements: Vec<T>,
 }
 
+impl<T: Clone> Clone for StaticGrid<T> {
+    fn clone(&self) -> Self {
+        StaticGrid {
+            width: self.width,
+            height: self.height,
+            limits: self.limits.clone(),
+            size: self.size,
+            elements: self.elements.clone(),
+        }
+    }
+}
+
 pub struct CoordIter {
     width: isize,
     height: isize,

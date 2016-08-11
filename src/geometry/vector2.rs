@@ -13,7 +13,7 @@ pub struct Vector2<T> {
 }
 
 impl<T> Vector2<T> {
-    pub fn new(x: T, y: T) -> Vector2<T> {
+    pub fn new(x: T, y: T) -> Self {
         Vector2 {x: x, y: y}
     }
 
@@ -23,6 +23,10 @@ impl<T> Vector2<T> {
 
     pub fn to_tuple(self) -> (T, T) {
         (self.x, self.y)
+    }
+
+    pub fn from_tuple(tuple: (T, T)) -> Self {
+        Vector2::new(tuple.0, tuple.1)
     }
 }
 
