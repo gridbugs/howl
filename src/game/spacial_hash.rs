@@ -1,5 +1,5 @@
 use game::entity::{Entity, EntityId, ComponentType, Component, EntityTable};
-use game::update::{UpdateSummary, ComponentChange};
+use game::update::{UpdateSummary, ComponentChange, UpdateSummary_};
 use game::update::ComponentChange::*;
 use game::game_entity::GameEntity;
 use std::collections::HashMap;
@@ -133,35 +133,63 @@ impl SpacialHashMap {
         }
     }
 
-    pub fn change_entity(&mut self, entity: &Entity, changes: &HashMap<ComponentType, ComponentChange>) {
-        for (component_type, change) in changes {
+    pub fn remove_entity(&mut self, entity: &Entity) {
+        if let Some(vec) = entity.position() {
+            let cell = self.get_mut(vec.to_tuple()).unwrap();
+            cell.remove(entity);
+        }
+    }
 
-            // changing the position of an entity
-            if let &Set(Component::Position(old_position)) = change {
-                let new_position = entity.position().unwrap();
-                self.get_mut(old_position.to_tuple()).unwrap().remove(entity);
-                self.get_mut(new_position.to_tuple()).unwrap().insert(entity);
-            } else if let Some(&Component::Position(v)) = entity.get(ComponentType::Position) {
-                // update component counts
-                if let &Add = change {
-                    self.get_mut(v.to_tuple()).unwrap().increment_count(*component_type);
-                } else if let &Remove(_) = change {
-                    self.get_mut(v.to_tuple()).unwrap().decrement_count(*component_type);
+    pub fn add_components(&mut self, entity: &Entity, changes: &Entity) {
+        for (component_type, component) in &changes.slots {
+            // TODO no need to do this in loop
+            if entity.has(*component_type) {
+                // component is being changed
+                if let &Component::Position(new_position) = component {
+                    let old_position = entity.position().unwrap();
+                    self.get_mut(old_position.to_tuple()).unwrap().remove(entity);
+                    self.get_mut(new_position.to_tuple()).unwrap().insert(entity);
+                }
+            } else {
+                // component is being added
+                // TODO only need to check this once
+                if let Some(position) = entity.position() {
+                    self.get_mut(position.to_tuple()).unwrap().increment_count(*component_type);
                 }
             }
         }
     }
 
-    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable) {
-        for entity_id in &update.added_entities {
-            self.get_entity(*entity_id, entities).map(|entity| {
-                self.add_entity(entity);
-            });
+    pub fn remove_components(&mut self, entity: &Entity, component_types: &HashSet<ComponentType>) {
+        if let Some(position) = entity.position() {
+            if component_types.contains(&ComponentType::Position) {
+                // removing position - remove the entity
+                self.remove_entity(entity);
+            } else {
+                let mut cell = self.get_mut(position.to_tuple()).unwrap();
+                // decrement count for each removed component 
+                for component_type in component_types {
+                    cell.decrement_count(*component_type);
+                }
+            }
         }
-        for (entity_id, components) in &update.changed_entities {
-            self.get_entity(*entity_id, entities).map(|entity| {
-                self.change_entity(entity, components);
-            });
+    }
+
+    pub fn update(&mut self, update: &UpdateSummary_, entities: &EntityTable) {
+        for entity in update.added_entities.values() {
+            self.add_entity(entity);
+        }
+
+        for entity_id in &update.removed_entities {
+            self.remove_entity(entities.get(*entity_id));
+        }
+
+        for (entity_id, changes) in &update.added_components {
+            self.add_components(entities.get(*entity_id), changes);
+        }
+
+        for (entity_id, component_types) in &update.removed_components {
+            self.remove_components(entities.get(*entity_id), component_types);
         }
     }
 }

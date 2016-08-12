@@ -27,13 +27,12 @@ impl<EntryType, Entry> Table<EntryType, Entry>
         }
     }
 
-    pub fn add(&mut self, entry: Entry) {
-        self.slots.insert(entry.to_type(), entry);
+    pub fn add(&mut self, entry: Entry) -> Option<Entry> {
+        self.slots.insert(entry.to_type(), entry)
     }
 
-    pub fn remove(&mut self, t: EntryType) -> Entry {
+    pub fn remove(&mut self, t: EntryType) -> Option<Entry> {
         self.slots.remove(&t)
-            .expect("Tried to remove non-existent component")
     }
 
     pub fn get(&self, t: EntryType) -> Option<&Entry> {

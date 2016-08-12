@@ -23,6 +23,8 @@ macro_rules! entity {
     }};
 }
 
+
+
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum ComponentType {
     NullComponent,

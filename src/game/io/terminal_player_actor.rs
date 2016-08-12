@@ -1,5 +1,6 @@
 use game::entity::{EntityId, EntityTable};
 use game::actions;
+use game::update::UpdateSummary_;
 
 use game::control::Control;
 use rustty::Event;
@@ -13,9 +14,13 @@ pub fn get_control<'a>(input_source: &InputSource<'a>,
                        entities: &EntityTable)
     -> Option<Control>
 {
+
+    let mut update = UpdateSummary_::new();
+
     if let Some(event) = input_source.get_event() {
         if let Some(direction) = event_to_direction(event) {
-            Some(Control::Action(actions::walk(entity_id, direction, entities)))
+            update.walk(entities.get(entity_id), direction);
+            Some(Control::Action(update))
         } else {
             event_to_control(event)
         }

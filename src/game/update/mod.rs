@@ -8,4 +8,5 @@ pub use self::statement::{
 pub use self::summary::{
     ComponentChange,
     UpdateSummary,
+    UpdateSummary_,
 };

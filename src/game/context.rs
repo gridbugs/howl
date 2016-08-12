@@ -5,6 +5,7 @@ use game::io::terminal_player_actor;
 use game::io::window_renderer;
 use game::components::level::Level;
 use game::update::UpdateProgram;
+use game::update::UpdateSummary_;
 
 use game::control::Control;
 use game::rule::{Rule, RuleResult};
@@ -32,8 +33,8 @@ pub struct GameContext<'a> {
     game_window: WindowRef<'a>,
 
     // rule application
-    action_queue: VecDeque<UpdateProgram>,
-    reaction_queue: VecDeque<UpdateProgram>,
+    action_queue: VecDeque<UpdateSummary_>,
+    reaction_queue: VecDeque<UpdateSummary_>,
     rules: Vec<Box<Rule>>,
 }
 
@@ -119,27 +120,28 @@ enum TurnResult {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn apply_action(&mut self, action: UpdateProgram) -> ActionResult {
+    pub fn apply_action(&mut self, action: UpdateSummary_) -> ActionResult {
 
         self.action_queue.push_back(action);
 
-        while let Some(action) = self.action_queue.pop_front() {
-            let summary = action.apply(&mut self.entities);
+        'action_loop: while let Some(action) = self.action_queue.pop_front() {
+           // let revert = action.commit(&mut self.entities);
 
-            let mut cancelled = false;
+            //let mut cancelled = false;
 
             self.reaction_queue.clear();
 
             for rule in &self.rules {
-                let result = rule.check(&summary, &self.entities);
+                let result = rule.check(&action, &self.entities);
 
                 match result {
                     RuleResult::Instead(mut actions) => {
-                        cancelled = true;
+                        //cancelled = true;
                         for action in actions.drain(..) {
                             self.action_queue.push_back(action);
                         }
-                        break;
+                        self.reaction_queue.clear();
+                        continue 'action_loop;
                     },
                     RuleResult::After(mut actions) => {
                         for action in actions.drain(..) {
@@ -149,13 +151,10 @@ impl<'a> GameContext<'a> {
                 }
             }
 
-            if cancelled {
-                summary.to_revert_program().apply(&mut self.entities);
-                self.reaction_queue.clear();
-            } else {
-                while let Some(action) = self.reaction_queue.pop_front() {
-                    self.action_queue.push_back(action);
-                }
+            action.commit(&mut self.entities);
+
+            while let Some(action) = self.reaction_queue.pop_front() {
+                self.action_queue.push_back(action);
             }
         }
 

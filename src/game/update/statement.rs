@@ -47,7 +47,7 @@ impl UpdateStatement {
             RemoveComponent(entity_id, component_type) => {
                 let mut entity = entities.get_mut(entity_id);
                 if entity.has(component_type) {
-                    let component = entity.remove(component_type);
+                    let component = entity.remove(component_type).unwrap();
                     summary.remove_component(entity_id, component);
                 } else {
                     panic!("RemoveComponent called with component not present");
