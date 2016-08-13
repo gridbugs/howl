@@ -1,7 +1,6 @@
-use game::update::UpdateProgram;
-use game::update::UpdateSummary_;
+use game::update::UpdateSummary;
 
 pub enum Control {
-    Action(UpdateSummary_),
+    Action(UpdateSummary),
     Quit,
 }

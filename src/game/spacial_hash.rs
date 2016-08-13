@@ -1,6 +1,5 @@
 use game::entity::{Entity, EntityId, ComponentType, Component, EntityTable};
-use game::update::{UpdateSummary, ComponentChange, UpdateSummary_};
-use game::update::ComponentChange::*;
+use game::update::UpdateSummary;
 use game::game_entity::GameEntity;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -175,7 +174,7 @@ impl SpacialHashMap {
         }
     }
 
-    pub fn update(&mut self, update: &UpdateSummary_, entities: &EntityTable) {
+    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable) {
         for entity in update.added_entities.values() {
             self.add_entity(entity);
         }

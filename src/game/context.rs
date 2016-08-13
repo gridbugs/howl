@@ -4,8 +4,7 @@ use game::schedule::Schedule;
 use game::io::terminal_player_actor;
 use game::io::window_renderer;
 use game::components::level::Level;
-use game::update::UpdateProgram;
-use game::update::UpdateSummary_;
+use game::update::UpdateSummary;
 
 use game::control::Control;
 use game::rule::{Rule, RuleResult};
@@ -33,8 +32,8 @@ pub struct GameContext<'a> {
     game_window: WindowRef<'a>,
 
     // rule application
-    action_queue: VecDeque<UpdateSummary_>,
-    reaction_queue: VecDeque<UpdateSummary_>,
+    action_queue: VecDeque<UpdateSummary>,
+    reaction_queue: VecDeque<UpdateSummary>,
     rules: Vec<Box<Rule>>,
 }
 
@@ -120,15 +119,11 @@ enum TurnResult {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn apply_action(&mut self, action: UpdateSummary_) -> ActionResult {
+    pub fn apply_action(&mut self, action: UpdateSummary) -> ActionResult {
 
         self.action_queue.push_back(action);
 
-        'action_loop: while let Some(action) = self.action_queue.pop_front() {
-           // let revert = action.commit(&mut self.entities);
-
-            //let mut cancelled = false;
-
+        'outer: while let Some(action) = self.action_queue.pop_front() {
             self.reaction_queue.clear();
 
             for rule in &self.rules {
@@ -136,12 +131,10 @@ impl<'a> GameContext<'a> {
 
                 match result {
                     RuleResult::Instead(mut actions) => {
-                        //cancelled = true;
                         for action in actions.drain(..) {
                             self.action_queue.push_back(action);
                         }
-                        self.reaction_queue.clear();
-                        continue 'action_loop;
+                        continue 'outer;
                     },
                     RuleResult::After(mut actions) => {
                         for action in actions.drain(..) {

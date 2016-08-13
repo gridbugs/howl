@@ -11,20 +11,6 @@ use geometry::Vector2;
 
 use std::cell::Ref;
 
-pub trait GameComponent {
-    fn position_vector(&self) -> Option<Vector2<isize>>;
-}
-
-impl GameComponent for Component {
-    fn position_vector(&self) -> Option<Vector2<isize>> {
-        if let &Component::Position(ref vec) = self {
-            Some(*vec)
-        } else {
-            None
-        }
-    }
-}
-
 // Convenience wrappers around entities
 pub trait GameEntity {
     fn position(&self) -> Option<Vector2<isize>>;
