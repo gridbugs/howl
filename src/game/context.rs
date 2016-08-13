@@ -119,39 +119,46 @@ enum UpdateError {
 }
 
 impl<'a> GameContext<'a> {
-    fn apply_update(&mut self, action: UpdateSummary) -> Result<(), UpdateError> {
+    fn apply_update(&mut self, update: UpdateSummary) -> Result<(), UpdateError> {
 
-        self.update_queue.push_back(action);
+        let mut no_commits = true;
 
-        'outer: while let Some(action) = self.update_queue.pop_front() {
+        self.update_queue.push_back(update);
+
+        'outer: while let Some(update) = self.update_queue.pop_front() {
             self.reaction_queue.clear();
 
             for rule in &self.rules {
-                let result = rule.check(&action, &self.entities);
+                let result = rule.check(&update, &self.entities);
 
                 match result {
-                    RuleResult::Instead(mut actions) => {
-                        for action in actions.drain(..) {
-                            self.update_queue.push_back(action);
+                    RuleResult::Instead(mut updates) => {
+                        for u in updates.drain(..) {
+                            self.update_queue.push_back(u);
                         }
                         continue 'outer;
                     },
-                    RuleResult::After(mut actions) => {
-                        for action in actions.drain(..) {
-                            self.reaction_queue.push_back(action);
+                    RuleResult::After(mut updates) => {
+                        for u in updates.drain(..) {
+                            self.reaction_queue.push_back(u);
                         }
                     },
                 }
             }
 
-            action.commit(&mut self.entities);
+            no_commits = false;
+            update.commit(&mut self.entities);
 
-            while let Some(action) = self.reaction_queue.pop_front() {
-                self.update_queue.push_back(action);
+            while let Some(update) = self.reaction_queue.pop_front() {
+                self.update_queue.push_back(update);
             }
         }
 
-        Ok(())
+        if no_commits {
+            Err(UpdateError::NothingApplied)
+        } else {
+            Ok(())
+        }
     }
 
     fn game_turn(&mut self) -> Result<(), TurnError> {
