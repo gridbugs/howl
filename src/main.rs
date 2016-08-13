@@ -6,6 +6,7 @@ extern crate rand;
 extern crate rustty;
 
 #[macro_use] mod debug;
+#[macro_use] mod game;
 mod perlin;
 mod renderer;
 mod geometry;
@@ -13,7 +14,6 @@ mod grid;
 mod colour;
 mod terminal;
 mod allocator;
-#[macro_use] mod game;
 
 use game::entities::*;
 use game::entity::{EntityTable, EntityId};

@@ -194,7 +194,9 @@ impl SpacialHashMap {
                 let mut cell = self.get_mut(position.to_tuple()).unwrap();
                 // decrement count for each removed component 
                 for component_type in component_types {
-                    cell.decrement_count(*component_type);
+                    if entity.has(*component_type) {
+                        cell.decrement_count(*component_type);
+                    }
                 }
             }
         }
@@ -202,19 +204,30 @@ impl SpacialHashMap {
 
     pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable) {
         for entity in update.added_entities.values() {
-            self.add_entity(entity);
+            if self.entity_is_on_level(entity) {
+                self.add_entity(entity);
+            }
         }
 
         for entity_id in &update.removed_entities {
-            self.remove_entity(entities.get(*entity_id));
+            let entity = entities.get(*entity_id);
+            if self.entity_is_on_level(entity) {
+                self.remove_entity(entity);
+            }
         }
 
         for (entity_id, changes) in &update.added_components {
-            self.add_components(entities.get(*entity_id), changes);
+            let entity = entities.get(*entity_id);
+            if self.entity_is_on_level(entity) {
+                self.add_components(entity, changes);
+            }
         }
 
         for (entity_id, component_types) in &update.removed_components {
-            self.remove_components(entities.get(*entity_id), component_types);
+            let entity = entities.get(*entity_id);
+            if self.entity_is_on_level(entity) {
+                self.remove_components(entity, component_types);
+            }
         }
     }
 }
