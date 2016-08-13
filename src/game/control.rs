@@ -1,6 +1,6 @@
 use game::update::UpdateSummary;
 
 pub enum Control {
-    Action(UpdateSummary),
+    Update(UpdateSummary),
     Quit,
 }

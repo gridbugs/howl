@@ -15,7 +15,7 @@ pub fn get_control<'a>(input_source: &InputSource<'a>,
 {
     if let Some(event) = input_source.get_event() {
         if let Some(direction) = event_to_direction(event) {
-            Some(Control::Action(actions::walk(entities.get(entity_id), direction)))
+            Some(Control::Update(actions::walk(entities.get(entity_id), direction)))
         } else {
             event_to_control(event)
         }

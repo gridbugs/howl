@@ -202,6 +202,7 @@ impl SpacialHashMap {
         }
     }
 
+    /// Update the spacial hash's metadata. This should be called before the update is applied.
     pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable) {
         for entity in update.added_entities.values() {
             if self.entity_is_on_level(entity) {

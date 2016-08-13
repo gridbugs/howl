@@ -32,7 +32,7 @@ pub struct GameContext<'a> {
     game_window: WindowRef<'a>,
 
     // rule application
-    action_queue: VecDeque<UpdateSummary>,
+    update_queue: VecDeque<UpdateSummary>,
     reaction_queue: VecDeque<UpdateSummary>,
     rules: Vec<Box<Rule>>,
 }
@@ -44,7 +44,7 @@ impl<'a> GameContext<'a> {
             pc: None,
             input_source: input_source,
             game_window: game_window,
-            action_queue: VecDeque::new(),
+            update_queue: VecDeque::new(),
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
         }
@@ -108,22 +108,20 @@ impl<'a> GameContext<'a> {
     }
 }
 
-pub enum ActionResult {
-    Done,
-    Retry,
+enum TurnError {
+    Quit,
 }
 
-enum TurnResult {
-    Continue,
-    QuitGame,
+enum UpdateError {
+    NothingApplied,
 }
 
 impl<'a> GameContext<'a> {
-    pub fn apply_action(&mut self, action: UpdateSummary) -> ActionResult {
+    fn apply_update(&mut self, action: UpdateSummary) -> Result<(), UpdateError> {
 
-        self.action_queue.push_back(action);
+        self.update_queue.push_back(action);
 
-        'outer: while let Some(action) = self.action_queue.pop_front() {
+        'outer: while let Some(action) = self.update_queue.pop_front() {
             self.reaction_queue.clear();
 
             for rule in &self.rules {
@@ -132,7 +130,7 @@ impl<'a> GameContext<'a> {
                 match result {
                     RuleResult::Instead(mut actions) => {
                         for action in actions.drain(..) {
-                            self.action_queue.push_back(action);
+                            self.update_queue.push_back(action);
                         }
                         continue 'outer;
                     },
@@ -147,14 +145,14 @@ impl<'a> GameContext<'a> {
             action.commit(&mut self.entities);
 
             while let Some(action) = self.reaction_queue.pop_front() {
-                self.action_queue.push_back(action);
+                self.update_queue.push_back(action);
             }
         }
 
-        ActionResult::Done
+        Ok(())
     }
 
-    fn game_turn(&mut self) -> TurnResult {
+    fn game_turn(&mut self) -> Result<(), TurnError> {
         let entity_id = self.pc_schedule_next();
 
         if self.entity_is_pc(entity_id) {
@@ -163,9 +161,11 @@ impl<'a> GameContext<'a> {
 
         loop {
             match self.get_control(entity_id) {
-                Control::Quit => return TurnResult::QuitGame,
-                Control::Action(action) => {
-                    if let ActionResult::Done = self.apply_action(action) {
+                Control::Quit => return Err(TurnError::Quit),
+                Control::Update(update) => {
+                    if let Err(_) = self.apply_update(update) {
+                        continue;
+                    } else {
                         break;
                     }
                 },
@@ -174,13 +174,15 @@ impl<'a> GameContext<'a> {
 
         self.render_pc_level();
 
-        TurnResult::Continue
+        Ok(())
     }
 
     pub fn game_loop(&mut self) {
         loop {
-            if let TurnResult::QuitGame = self.game_turn() {
-                break;
+            if let Err(err) = self.game_turn() {
+                match err {
+                    TurnError::Quit => break,
+                }
             }
         }
     }
