@@ -16,10 +16,13 @@ mod terminal;
 mod allocator;
 
 use game::entities::*;
-use game::entity::{EntityTable, EntityId};
-use game::context::GameContext;
+use game::{
+    EntityTable,
+    EntityId,
+    GameContext,
+    GameEntity,
+};
 use game::rules;
-use game::game_entity::GameEntity;
 use game::components::door::DoorState;
 
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};

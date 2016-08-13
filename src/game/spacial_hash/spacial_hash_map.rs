@@ -1,11 +1,12 @@
-use game::entity::{
+use game::{
     Entity,
     EntityId,
     ComponentType,
     EntityTable,
+    UpdateSummary,
+    GameEntity,
 };
-use game::update::UpdateSummary;
-use game::game_entity::GameEntity;
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 

@@ -1,6 +1,9 @@
-use game::entity::{EntityId, EntityTable};
+use game::{
+    EntityId,
+    EntityTable,
+    MetaAction,
+};
 use game::actions;
-use game::control::Control;
 
 use rustty::Event;
 use terminal::window_manager::InputSource;
@@ -8,16 +11,16 @@ use geometry::direction::Direction;
 
 const ETX: char = '\u{3}';
 
-pub fn get_control<'a>(input_source: &InputSource<'a>,
+pub fn act<'a>(input_source: &InputSource<'a>,
                        entity_id: EntityId,
                        entities: &EntityTable)
-    -> Option<Control>
+    -> Option<MetaAction>
 {
     if let Some(event) = input_source.get_event() {
         if let Some(direction) = event_to_direction(event) {
-            Some(Control::Update(actions::walk(entities.get(entity_id), direction)))
+            Some(MetaAction::Update(actions::walk(entities.get(entity_id), direction)))
         } else {
-            event_to_control(event)
+            event_to_meta_action(event)
         }
     } else {
         None
@@ -45,10 +48,10 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn event_to_control(event: Event) -> Option<Control> {
+fn event_to_meta_action(event: Event) -> Option<MetaAction> {
     match event {
-        Event::Char(ETX) => Some(Control::Quit),
-        Event::Char('q') => Some(Control::Quit),
+        Event::Char(ETX) => Some(MetaAction::Quit),
+        Event::Char('q') => Some(MetaAction::Quit),
         _ => None,
     }
 }

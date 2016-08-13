@@ -1,13 +1,15 @@
-use game::entity::Component::*;
-use game::entity::ComponentType as Type;
-use game::schedule::Schedule;
+use game::Component::*;
+use game::ComponentType as Type;
+use game::{
+    Schedule,
+    UpdateSummary,
+    MetaAction,
+    Rule,
+    RuleResult,
+};
 use game::io::terminal_player_actor;
 use game::io::window_renderer;
 use game::components::level::Level;
-use game::update::UpdateSummary;
-
-use game::control::Control;
-use game::rule::{Rule, RuleResult};
 
 use std::cell;
 use std::collections::VecDeque;
@@ -87,10 +89,10 @@ impl<'a> GameContext<'a> {
         self.pc_schedule().next().unwrap()
     }
 
-    pub fn get_control(&mut self, entity_id: EntityId) -> Control {
+    pub fn act(&mut self, entity_id: EntityId) -> MetaAction {
         loop {
-            if let Some(control) = terminal_player_actor::get_control(&self.input_source, entity_id, &self.entities) {
-                return control;
+            if let Some(meta_action) = terminal_player_actor::act(&self.input_source, entity_id, &self.entities) {
+                return meta_action;
             }
         }
     }
@@ -160,9 +162,9 @@ impl<'a> GameContext<'a> {
         }
 
         loop {
-            match self.get_control(entity_id) {
-                Control::Quit => return Err(TurnError::Quit),
-                Control::Update(update) => {
+            match self.act(entity_id) {
+                MetaAction::Quit => return Err(TurnError::Quit),
+                MetaAction::Update(update) => {
                     if let Err(_) = self.apply_update(update) {
                         continue;
                     } else {

@@ -1,8 +1,10 @@
 use game;
-use game::spacial_hash::SpacialHashMap;
-use game::entity::Component::*;
-use game::entity::ComponentType as CType;
-use game::entity::Entity;
+use game::Component::*;
+use game::ComponentType as CType;
+use game::{
+    SpacialHashMap,
+    Entity,
+};
 
 use geometry::Vector2;
 
