@@ -4,10 +4,16 @@ use game::table::{
     ToType,
     TableTable
 };
-use game::components;
+use game::components::{
+    Level,
+    DoorState,
+};
 use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi::AnsiColour;
+
+use std::collections::HashSet;
+use std::collections::hash_set;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
@@ -23,6 +29,28 @@ macro_rules! entity {
     }};
 }
 
+pub struct EntityIter<'a> {
+    hash_set_iter: hash_set::Iter<'a, EntityId>,
+    entities: &'a EntityTable,
+}
+
+impl<'a> Iterator for EntityIter<'a> {
+    type Item = &'a Entity;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.hash_set_iter.next().map(|id| {
+            self.entities.get(*id)
+        })
+    }
+}
+
+impl EntityTable {
+    pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>) -> EntityIter<'a> {
+        EntityIter {
+            hash_set_iter: set.iter(),
+            entities: self,
+        }
+    }
+}
 
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
@@ -49,10 +77,10 @@ pub enum Component {
     SolidTile { tile: Tile, background: AnsiColour },
     TransparentTile(Tile),
     TileDepth(isize),
-    LevelData(components::level::Level),
+    LevelData(Level),
     PlayerActor,
     OnLevel(EntityId),
-    Door(components::door::DoorState),
+    Door(DoorState),
 }
 
 impl ToType<ComponentType> for Component {

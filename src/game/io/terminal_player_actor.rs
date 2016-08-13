@@ -2,8 +2,13 @@ use game::{
     EntityId,
     EntityTable,
     MetaAction,
+    UpdateSummary,
+    GameEntity,
 };
+use game::ComponentType as CType;
+
 use game::actions;
+use game::components::DoorState;
 
 use rustty::Event;
 use terminal::window_manager::InputSource;
@@ -20,7 +25,7 @@ pub fn act<'a>(input_source: &InputSource<'a>,
         if let Some(direction) = event_to_direction(event) {
             Some(MetaAction::Update(actions::walk(entities.get(entity_id), direction)))
         } else {
-            event_to_meta_action(event)
+            event_to_meta_action(event, entity_id, entities)
         }
     } else {
         None
@@ -48,10 +53,29 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn event_to_meta_action(event: Event) -> Option<MetaAction> {
+fn close_door(entity_id: EntityId, entities: &EntityTable) -> Option<UpdateSummary> {
+    let entity = entities.get(entity_id);
+    let level = entities.get(entity.on_level().unwrap());
+    let sh = level.level_spacial_hash().unwrap();
+
+    for cell in sh.grid.some_nei_iter(entity.position().unwrap()) {
+        if cell.has(CType::Door) {
+            for e in entities.id_set_iter(&cell.entities) {
+                if let Some(DoorState::Open) = e.door_state() {
+                    return Some(actions::close_door(e.id()));
+                }
+            }
+        }
+    }
+
+    None
+}
+
+fn event_to_meta_action(event: Event, entity_id: EntityId, entities: &EntityTable) -> Option<MetaAction> {
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),
         Event::Char('q') => Some(MetaAction::Quit),
+        Event::Char('c') => close_door(entity_id, entities).map(|u| MetaAction::Update(u)),
         _ => None,
     }
 }

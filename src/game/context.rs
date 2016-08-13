@@ -9,7 +9,7 @@ use game::{
 };
 use game::io::terminal_player_actor;
 use game::io::window_renderer;
-use game::components::level::Level;
+use game::components::Level;
 
 use std::cell;
 use std::collections::VecDeque;

@@ -5,7 +5,7 @@ use game::update::UpdateSummary;
 
 use game::game_entity::GameEntity;
 
-use game::components::door::DoorState;
+use game::components::DoorState;
 
 use geometry::direction::Direction;
 use renderer::tile::Tile;
@@ -27,6 +27,20 @@ pub fn open_door(door_id: EntityId) -> UpdateSummary {
     summary.remove_component(door_id, CType::SolidTile);
     summary.add_component(door_id, TransparentTile(Tile::new('-', ansi::WHITE)));
     summary.add_component(door_id, Door(DoorState::Open));
+
+    summary
+}
+
+pub fn close_door(door_id: EntityId) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.add_component(door_id, Solid);
+    summary.remove_component(door_id, CType::TransparentTile);
+    summary.add_component(door_id, SolidTile {
+        tile: Tile::new('+', ansi::WHITE),
+        background: ansi::DARK_GREY,
+    });
+    summary.add_component(door_id, Door(DoorState::Closed));
 
     summary
 }

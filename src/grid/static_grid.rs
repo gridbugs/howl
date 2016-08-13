@@ -86,7 +86,7 @@ impl<'a, T> Iterator for SomeNeiIter<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
 
         while let Some(maybe_neighbour) = self.0.next() {
-            if let Some(_) = maybe_neighbour {
+            if maybe_neighbour.is_some() {
                 return maybe_neighbour;
             }
         }
@@ -94,6 +94,28 @@ impl<'a, T> Iterator for SomeNeiIter<'a, T> {
         None
     }
 }
+
+pub struct SomeNeiCoordIter<'a, T: 'a> {
+    grid: &'a StaticGrid<T>,
+    nei_coord_iter: NeiCoordIter,
+}
+
+impl<'a, T> Iterator for SomeNeiCoordIter<'a, T> {
+    type Item = Coord;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(coord) = self.nei_coord_iter.next() {
+            if self.grid.is_valid_coord(coord) {
+                return Some(coord);
+            }
+        }
+
+        None
+    }
+}
+
+
+
 
 impl<T: CoordCell> StaticGrid<T> {
     pub fn new_coords(width: usize, height: usize, data: T::Data) -> StaticGrid<T> {
@@ -225,6 +247,13 @@ impl<T> StaticGrid<T> {
 
     pub fn some_nei_iter<'a>(&'a self, coord: Coord) -> SomeNeiIter<'a, T> {
         SomeNeiIter(self.nei_iter(coord))
+    }
+
+    pub fn some_nei_coord_iter<'a>(&'a self, coord: Coord) -> SomeNeiCoordIter<'a, T> {
+        SomeNeiCoordIter {
+            grid: self,
+            nei_coord_iter: self.nei_coord_iter(coord),
+        }
     }
 
     pub fn flood_fill_region_coord_all<'a, P>(&'a self, predicate: P)

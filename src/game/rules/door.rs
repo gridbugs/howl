@@ -1,11 +1,14 @@
-use game::entity::{EntityTable, ComponentType};
+use game::{
+    EntityTable,
+    ComponentType,
+    UpdateSummary,
+    RuleResult,
+    GameEntity,
+};
 use game::entity::Component::*;
-use game::components::door::DoorState;
-use game::update::UpdateSummary;
+use game::components::DoorState;
 use game::actions;
-use game::rule::RuleResult;
 use game::rule;
-use game::game_entity::GameEntity;
 
 pub fn detect_open(summary: &UpdateSummary,
                     entities: &EntityTable)

@@ -23,7 +23,7 @@ use game::{
     GameEntity,
 };
 use game::rules;
-use game::components::door::DoorState;
+use game::components::DoorState;
 
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;

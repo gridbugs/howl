@@ -4,7 +4,10 @@ use game::entity::{
     Component,
     ComponentType,
 };
-use game::components::level::Level;
+use game::components::{
+    Level,
+    DoorState,
+};
 use game::spacial_hash::SpacialHashMap;
 
 use geometry::Vector2;
@@ -13,15 +16,22 @@ use std::cell::Ref;
 
 // Convenience wrappers around entities
 pub trait GameEntity {
+    fn id(&self) -> EntityId;
     fn position(&self) -> Option<Vector2<isize>>;
     fn on_level(&self) -> Option<EntityId>;
     fn level_data(&self) -> Option<&Level>;
     fn level_data_mut(&mut self) -> Option<&mut Level>;
     fn level_spacial_hash(&self) -> Option<Ref<SpacialHashMap>>;
     fn is_pc(&self) -> bool;
+    fn door_state(&self) -> Option<DoorState>;
 }
 
 impl GameEntity for Entity {
+
+    fn id(&self) -> EntityId {
+        self.id.unwrap()
+    }
+
     fn position(&self) -> Option<Vector2<isize>> {
         if let Some(&Component::Position(ref vec)) =
             self.get(ComponentType::Position)
@@ -70,5 +80,15 @@ impl GameEntity for Entity {
 
     fn is_pc(&self) -> bool {
         self.has(ComponentType::PlayerActor)
+    }
+
+    fn door_state(&self) -> Option<DoorState> {
+        if let Some(&Component::Door(state)) =
+            self.get(ComponentType::Door)
+        {
+            Some(state)
+        } else {
+            None
+        }
     }
 }

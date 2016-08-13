@@ -1,9 +1,10 @@
 use game;
 use game::entity::{Entity, EntityId};
 use game::entity::Component::*;
-use game::components;
-
-use game::components::door::DoorState;
+use game::components::{
+    Level,
+    DoorState,
+};
 
 use geometry::Vector2;
 use renderer::tile::Tile;
@@ -79,6 +80,6 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
 
 pub fn make_level(width: usize, height: usize) -> Entity {
     entity![
-        LevelData(components::level::Level::new(width, height))
+        LevelData(Level::new(width, height))
     ]
 }
