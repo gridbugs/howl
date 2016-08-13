@@ -1,4 +1,9 @@
-use game::entity::{Entity, EntityId, ComponentType, Component, EntityTable};
+use game::entity::{
+    Entity,
+    EntityId,
+    ComponentType,
+    EntityTable,
+};
 use game::update::UpdateSummary;
 use game::game_entity::GameEntity;
 use std::collections::HashMap;
@@ -140,20 +145,41 @@ impl SpacialHashMap {
     }
 
     pub fn add_components(&mut self, entity: &Entity, changes: &Entity) {
-        for (component_type, component) in &changes.slots {
-            // TODO no need to do this in loop
-            if entity.has(*component_type) {
-                // component is being changed
-                if let &Component::Position(new_position) = component {
-                    let old_position = entity.position().unwrap();
-                    self.get_mut(old_position.to_tuple()).unwrap().remove(entity);
-                    self.get_mut(new_position.to_tuple()).unwrap().insert(entity);
+
+        // position will be set to the position of entity after the change
+        let position = if let Some(new_position) = changes.position() {
+
+            // position is special as it indicates which cell to update
+            if let Some(old_position) = entity.position() {
+                // entity is moving from old_position to new_position
+                self.get_mut(old_position.to_tuple()).unwrap().remove(entity);
+            }
+
+            // the entity's position is changing or the entity is gaining a position
+            // in either case, add the entity to the position's cell
+            self.get_mut(new_position.to_tuple()).unwrap().insert(entity);
+
+            // entity will eventually end up here
+            Some(new_position)
+        } else if let Some(current_position) = entity.position() {
+            // entity isn't moving, so use its current position
+            Some(current_position)
+        } else {
+            // entity has no position, so the spacial hash won't be updated
+            None
+        };
+
+        if let Some(position) = position {
+            let mut cell = self.get_mut(position.to_tuple()).unwrap();
+            for component_type in changes.slots.keys() {
+                if *component_type == ComponentType::Position {
+                    // this has already been handled
+                    continue;
                 }
-            } else {
-                // component is being added
-                // TODO only need to check this once
-                if let Some(position) = entity.position() {
-                    self.get_mut(position.to_tuple()).unwrap().increment_count(*component_type);
+
+                // only update the component count if the component is being added
+                if !entity.has(*component_type) {
+                    cell.increment_count(*component_type);
                 }
             }
         }
