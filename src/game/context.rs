@@ -164,24 +164,32 @@ impl<'a> GameContext<'a> {
     fn game_turn(&mut self) -> Result<(), TurnError> {
         let entity_id = self.pc_schedule_next();
 
-        if self.entity_is_pc(entity_id) {
-            self.render_pc_level();
-        }
+        self.render_pc_level();
 
         loop {
             match self.act(entity_id) {
                 MetaAction::Quit => return Err(TurnError::Quit),
                 MetaAction::Update(update) => {
-                    if let Err(_) = self.apply_update(update) {
-                        continue;
+                    if let Err(err) = self.apply_update(update) {
+                        match err {
+                            UpdateError::NothingApplied => {
+                                if self.entity_is_pc(entity_id) {
+                                    // the player can choose a new action
+                                    continue;
+                                } else {
+                                    // Other actors skip their turn.
+                                    // This is to prevent infinite loops in the
+                                    // face of buggy ai.
+                                    break;
+                                }
+                            },
+                        }
                     } else {
                         break;
                     }
                 },
             }
         }
-
-        self.render_pc_level();
 
         Ok(())
     }
