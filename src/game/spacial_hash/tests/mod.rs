@@ -245,3 +245,42 @@ fn add_entities_remove_components() {
     e1.remove(CType::Solid);
     assert!(s.get((0, 0)).unwrap().has(CType::Solid));
 }
+
+/// Add entities to a cell, change one of their opacity, then remove one, ensuring the opacity
+/// tracked by the the spacial hash cell remains consistent.
+#[test]
+fn opacity() {
+    let mut s = make_spacial_hash();
+
+    let mut e0 = make_entity(0, 0);
+    e0.id = Some(0);
+    let mut e1 = make_entity(0, 0);
+    e1.id = Some(1);
+
+    e0.add(Opacity(0.1));
+    e1.add(Opacity(0.2));
+
+    s.add_entity(&e0);
+    s.add_entity(&e1);
+
+    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.3*10.0);
+
+    s.add_components(&e0, &entity![
+        Opacity(0.4),
+    ]);
+    e0.add(Opacity(0.4));
+    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.6*10.0);
+
+    s.remove_components(&e1, &set_from_vec(vec![CType::Opacity]));
+    e1.remove(CType::Opacity);
+    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.4*10.0);
+
+    s.add_components(&e1, &entity![
+        Opacity(0.5),
+    ]);
+    e1.add(Opacity(0.5));
+    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.9*10.0);
+
+    s.remove_entity(&e1);
+    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.4*10.0);
+}

@@ -5,7 +5,7 @@ use game::components::{
     Level,
     DoorState,
 };
-
+use game::vision::VisionInfo;
 use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi;
@@ -20,6 +20,7 @@ pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
         },
         TileDepth(1),
         OnLevel(level),
+        Opacity(1.0),
     ]
 }
 
@@ -33,6 +34,7 @@ pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entit
     if state == DoorState::Open {
         entity.add(TransparentTile(Tile::new('-', ansi::WHITE)));
         entity.add(Door(DoorState::Open));
+        entity.add(Opacity(0.0));
     } else {
         entity.add(Solid);
         entity.add(SolidTile {
@@ -40,6 +42,7 @@ pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entit
             background: ansi::DARK_GREY,
         });
         entity.add(Door(DoorState::Closed));
+        entity.add(Opacity(1.0));
     }
 
     entity
@@ -52,6 +55,7 @@ pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
         TransparentTile(Tile::new('&', ansi::GREEN)),
         TileDepth(1),
         OnLevel(level),
+        Opacity(0.4),
     ]
 }
 
@@ -75,6 +79,7 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
         PlayerActor,
         OnLevel(level),
         Collider,
+        Vision(VisionInfo::new(1)),
     ]
 }
 

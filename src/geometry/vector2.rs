@@ -6,7 +6,7 @@ use rand;
 use rand::Rng;
 use std::f64::consts::PI;
 
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Hash, Eq)]
 pub struct Vector2<T> {
     pub x: T,
     pub y: T,

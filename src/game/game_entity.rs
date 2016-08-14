@@ -1,14 +1,15 @@
-use game::entity::{
+use game::{
     Entity,
     EntityId,
     Component,
     ComponentType,
+    SpacialHashMap,
 };
 use game::components::{
     Level,
     DoorState,
 };
-use game::spacial_hash::SpacialHashMap;
+use game::vision::VisionInfo;
 
 use geometry::Vector2;
 
@@ -24,6 +25,8 @@ pub trait GameEntity {
     fn level_spacial_hash(&self) -> Option<Ref<SpacialHashMap>>;
     fn is_pc(&self) -> bool;
     fn door_state(&self) -> Option<DoorState>;
+    fn opacity(&self) -> f64;
+    fn vision_info(&self) -> Option<VisionInfo>;
 }
 
 impl GameEntity for Entity {
@@ -87,6 +90,26 @@ impl GameEntity for Entity {
             self.get(ComponentType::Door)
         {
             Some(state)
+        } else {
+            None
+        }
+    }
+
+    fn opacity(&self) -> f64 {
+        if let Some(&Component::Opacity(o)) =
+            self.get(ComponentType::Opacity)
+        {
+            o
+        } else {
+            0.0
+        }
+    }
+
+    fn vision_info(&self) -> Option<VisionInfo> {
+        if let Some(&Component::Vision(v)) =
+            self.get(ComponentType::Vision)
+        {
+            Some(v)
         } else {
             None
         }

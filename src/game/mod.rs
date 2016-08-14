@@ -1,4 +1,7 @@
 #[macro_use] mod table;
+pub use self::table::{
+    ToType,
+};
 
 #[macro_use] mod entity;
 pub use self::entity::{
@@ -37,4 +40,9 @@ pub use self::rule::{
 };
 
 mod spacial_hash;
-pub use self::spacial_hash::SpacialHashMap;
+pub use self::spacial_hash::{
+    SpacialHashMap,
+    SpacialHashCell,
+};
+
+pub mod vision;

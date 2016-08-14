@@ -1,10 +1,12 @@
 use game::{
     Entity,
     EntityId,
+    Component,
     ComponentType,
     EntityTable,
     UpdateSummary,
     GameEntity,
+    ToType,
 };
 
 use std::collections::HashMap;
@@ -17,6 +19,7 @@ use geometry::Vector2;
 pub struct SpacialHashCell {
     pub entities: HashSet<EntityId>,
     pub components: HashMap<ComponentType, usize>,
+    pub opacity: f64,
 }
 
 impl Default for SpacialHashCell {
@@ -24,6 +27,7 @@ impl Default for SpacialHashCell {
         SpacialHashCell {
             entities: HashSet::new(),
             components: HashMap::new(),
+            opacity: 0.0,
         }
     }
 }
@@ -63,22 +67,43 @@ impl SpacialHashCell {
         self.set_count(component_type, count - 1);
     }
 
-    fn insert(&mut self, entity: &Entity) {
+    fn add_entity(&mut self, entity: &Entity) {
         if self.entities.insert(entity.id.unwrap()) {
-
-            // update component counts
-            for component_type in entity.slots.keys() {
-                self.increment_count(*component_type);
+            for component in entity.slots.values() {
+                self.add_component(entity, component);
             }
         }
     }
 
-    fn remove(&mut self, entity: &Entity) {
+    fn remove_entity(&mut self, entity: &Entity) {
         if self.entities.remove(&entity.id.unwrap()) {
-            // update component counts
-            for component_type in entity.slots.keys() {
-                self.decrement_count(*component_type);
+            for component in entity.slots.values() {
+                self.remove_component(entity, component);
             }
+        }
+    }
+
+    fn change_component(&mut self, _: &Entity, old: &Component, new: &Component) {
+        if let &Component::Opacity(old_opacity) = old {
+            if let &Component::Opacity(new_opacity) = new {
+                self.opacity += new_opacity - old_opacity;
+            }
+        }
+    }
+
+    fn add_component(&mut self, _: &Entity, component: &Component) {
+        self.increment_count(component.to_type());
+
+        if let &Component::Opacity(opacity) = component {
+            self.opacity += opacity;
+        }
+    }
+
+    fn remove_component(&mut self , _: &Entity, component: &Component) {
+        self.decrement_count(component.to_type());
+
+        if let &Component::Opacity(opacity) = component {
+            self.opacity -= opacity;
         }
     }
 }
@@ -134,14 +159,14 @@ impl SpacialHashMap {
     pub fn add_entity(&mut self, entity: &Entity) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut(vec.to_tuple()).unwrap();
-            cell.insert(entity);
+            cell.add_entity(entity);
         }
     }
 
     pub fn remove_entity(&mut self, entity: &Entity) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut(vec.to_tuple()).unwrap();
-            cell.remove(entity);
+            cell.remove_entity(entity);
         }
     }
 
@@ -153,12 +178,12 @@ impl SpacialHashMap {
             // position is special as it indicates which cell to update
             if let Some(old_position) = entity.position() {
                 // entity is moving from old_position to new_position
-                self.get_mut(old_position.to_tuple()).unwrap().remove(entity);
+                self.get_mut(old_position.to_tuple()).unwrap().remove_entity(entity);
             }
 
             // the entity's position is changing or the entity is gaining a position
             // in either case, add the entity to the position's cell
-            self.get_mut(new_position.to_tuple()).unwrap().insert(entity);
+            self.get_mut(new_position.to_tuple()).unwrap().add_entity(entity);
 
             // entity will eventually end up here
             Some(new_position)
@@ -172,15 +197,17 @@ impl SpacialHashMap {
 
         if let Some(position) = position {
             let mut cell = self.get_mut(position.to_tuple()).unwrap();
-            for component_type in changes.slots.keys() {
+            for (component_type, new_component) in &changes.slots {
                 if *component_type == ComponentType::Position {
                     // this has already been handled
                     continue;
                 }
 
-                // only update the component count if the component is being added
-                if !entity.has(*component_type) {
-                    cell.increment_count(*component_type);
+                if let Some(ref old_component) = entity.get(*component_type) {
+                    cell.change_component(entity, old_component, new_component);
+                } else {
+                    // only update the component count if the component is being added
+                    cell.add_component(entity, new_component);
                 }
             }
         }
@@ -193,10 +220,9 @@ impl SpacialHashMap {
                 self.remove_entity(entity);
             } else {
                 let mut cell = self.get_mut(position.to_tuple()).unwrap();
-                // decrement count for each removed component 
                 for component_type in component_types {
-                    if entity.has(*component_type) {
-                        cell.decrement_count(*component_type);
+                    if let Some(ref component) = entity.get(*component_type) {
+                        cell.remove_component(entity, component);
                     }
                 }
             }

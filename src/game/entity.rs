@@ -11,6 +11,7 @@ use game::components::{
 use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi::AnsiColour;
+use game::vision::VisionInfo;
 
 use std::collections::HashSet;
 use std::collections::hash_set;
@@ -66,6 +67,8 @@ pub enum ComponentType {
     PlayerActor,
     OnLevel,
     Door,
+    Vision,
+    Opacity,
 }
 
 #[derive(Debug, Clone)]
@@ -81,6 +84,8 @@ pub enum Component {
     PlayerActor,
     OnLevel(EntityId),
     Door(DoorState),
+    Vision(VisionInfo),
+    Opacity(f64),
 }
 
 impl ToType<ComponentType> for Component {
@@ -97,6 +102,8 @@ impl ToType<ComponentType> for Component {
             Component::PlayerActor => ComponentType::PlayerActor,
             Component::OnLevel(_) => ComponentType::OnLevel,
             Component::Door(_) => ComponentType::Door,
+            Component::Vision(_) => ComponentType::Vision,
+            Component::Opacity(_) => ComponentType::Opacity,
         }
     }
 }
