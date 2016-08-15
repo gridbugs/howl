@@ -5,7 +5,6 @@ use game::components::{
     Level,
     DoorState,
 };
-use game::vision::VisionInfo;
 use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi;
@@ -79,7 +78,6 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
         PlayerActor,
         OnLevel(level),
         Collider,
-        Vision(VisionInfo::new(1)),
     ]
 }
 

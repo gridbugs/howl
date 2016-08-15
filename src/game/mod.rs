@@ -46,3 +46,4 @@ pub use self::spacial_hash::{
 };
 
 pub mod vision;
+pub mod observer;

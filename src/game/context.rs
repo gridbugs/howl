@@ -6,13 +6,6 @@ use game::{
     MetaAction,
     Rule,
     RuleResult,
-    GameEntity,
-};
-
-use game::vision;
-use game::vision::{
-    DefaultObserver,
-    DefaultVisionReport,
 };
 
 use game::io::terminal_player_actor;
@@ -45,10 +38,6 @@ pub struct GameContext<'a> {
     update_queue: VecDeque<UpdateSummary>,
     reaction_queue: VecDeque<UpdateSummary>,
     rules: Vec<Box<Rule>>,
-
-    // observation
-    observer: Box<DefaultObserver>,
-    vision_report: DefaultVisionReport,
 }
 
 impl<'a> GameContext<'a> {
@@ -61,8 +50,6 @@ impl<'a> GameContext<'a> {
             update_queue: VecDeque::new(),
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
-            observer: Box::new(vision::square),
-            vision_report: DefaultVisionReport::new(),
         }
     }
 
@@ -175,20 +162,9 @@ impl<'a> GameContext<'a> {
         }
     }
 
-    fn observe(&mut self, entity_id: EntityId) {
-        let entity = self.entities.get(entity_id);
-        let eye = entity.position().unwrap();
-        let level = self.entities.get(entity.on_level().unwrap());
-        let sh = level.level_spacial_hash().unwrap();
-        let vision_info = entity.vision_info().unwrap();
-        self.vision_report.clear();
-        self.observer.observe(eye, &sh.grid, vision_info, &mut self.vision_report);
-    }
-
     fn game_turn(&mut self) -> Result<(), TurnError> {
         let entity_id = self.pc_schedule_next();
 
-        self.observe(entity_id);
         self.render_pc_level();
 
         loop {

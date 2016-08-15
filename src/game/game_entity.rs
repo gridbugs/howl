@@ -9,7 +9,6 @@ use game::components::{
     Level,
     DoorState,
 };
-use game::vision::VisionInfo;
 
 use geometry::Vector2;
 
@@ -26,7 +25,6 @@ pub trait GameEntity {
     fn is_pc(&self) -> bool;
     fn door_state(&self) -> Option<DoorState>;
     fn opacity(&self) -> f64;
-    fn vision_info(&self) -> Option<VisionInfo>;
 }
 
 impl GameEntity for Entity {
@@ -105,13 +103,4 @@ impl GameEntity for Entity {
         }
     }
 
-    fn vision_info(&self) -> Option<VisionInfo> {
-        if let Some(&Component::Vision(v)) =
-            self.get(ComponentType::Vision)
-        {
-            Some(v)
-        } else {
-            None
-        }
-    }
 }

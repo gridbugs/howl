@@ -1,17 +1,15 @@
-mod observer;
-pub use self::observer::{
+mod vision;
+pub use self::vision::{
     Opacity,
-    VisionReport,
-    VisionInfo,
-    Observer,
+    VisibilityReport,
+    VisionSystem,
 };
 
-mod default_observer;
-pub use self::default_observer::{
-    DefaultObserver,
+mod default;
+pub use self::default::{
     DefaultOpacity,
-    DefaultVisionReport,
+    DefaultVisibilityReport,
 };
 
 mod square;
-pub use self::square::square;
+pub use self::square::Square;
