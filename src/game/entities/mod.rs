@@ -5,9 +5,13 @@ use game::components::{
     Level,
     DoorState,
 };
+use game::knowledge;
+
 use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi;
+
+use std::cell::RefCell;
 
 pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
@@ -78,6 +82,8 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
         PlayerActor,
         OnLevel(level),
         Collider,
+        VisionDistance(4),
+        DefaultKnowledge(RefCell::new(knowledge::DefaultKnowledge::new())),
     ]
 }
 

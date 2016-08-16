@@ -3,7 +3,6 @@ use game::{
     EntityTable,
     MetaAction,
     UpdateSummary,
-    GameEntity,
 };
 use game::ComponentType as CType;
 

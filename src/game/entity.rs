@@ -8,12 +8,15 @@ use game::components::{
     Level,
     DoorState,
 };
+use game::knowledge::DefaultKnowledge;
+
 use geometry::Vector2;
 use renderer::tile::Tile;
 use colour::ansi::AnsiColour;
 
 use std::collections::HashSet;
 use std::collections::hash_set;
+use std::cell::RefCell;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
@@ -67,6 +70,8 @@ pub enum ComponentType {
     OnLevel,
     Door,
     Opacity,
+    VisionDistance,
+    DefaultKnowledge,
 }
 
 #[derive(Debug, Clone)]
@@ -83,6 +88,8 @@ pub enum Component {
     OnLevel(EntityId),
     Door(DoorState),
     Opacity(f64),
+    VisionDistance(usize),
+    DefaultKnowledge(RefCell<DefaultKnowledge>),
 }
 
 impl ToType<ComponentType> for Component {
@@ -100,6 +107,8 @@ impl ToType<ComponentType> for Component {
             Component::OnLevel(_) => ComponentType::OnLevel,
             Component::Door(_) => ComponentType::Door,
             Component::Opacity(_) => ComponentType::Opacity,
+            Component::VisionDistance(_) => ComponentType::VisionDistance,
+            Component::DefaultKnowledge(_) => ComponentType::DefaultKnowledge,
         }
     }
 }

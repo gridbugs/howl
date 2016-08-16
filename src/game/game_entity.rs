@@ -9,31 +9,23 @@ use game::components::{
     Level,
     DoorState,
 };
+use game::knowledge::DefaultKnowledge;
 
 use geometry::Vector2;
 
-use std::cell::Ref;
+use std::cell::{
+    Ref,
+    RefMut,
+};
 
 // Convenience wrappers around entities
-pub trait GameEntity {
-    fn id(&self) -> EntityId;
-    fn position(&self) -> Option<Vector2<isize>>;
-    fn on_level(&self) -> Option<EntityId>;
-    fn level_data(&self) -> Option<&Level>;
-    fn level_data_mut(&mut self) -> Option<&mut Level>;
-    fn level_spacial_hash(&self) -> Option<Ref<SpacialHashMap>>;
-    fn is_pc(&self) -> bool;
-    fn door_state(&self) -> Option<DoorState>;
-    fn opacity(&self) -> f64;
-}
+impl Entity {
 
-impl GameEntity for Entity {
-
-    fn id(&self) -> EntityId {
+    pub fn id(&self) -> EntityId {
         self.id.unwrap()
     }
 
-    fn position(&self) -> Option<Vector2<isize>> {
+    pub fn position(&self) -> Option<Vector2<isize>> {
         if let Some(&Component::Position(ref vec)) =
             self.get(ComponentType::Position)
         {
@@ -43,7 +35,7 @@ impl GameEntity for Entity {
         }
     }
 
-    fn on_level(&self) -> Option<EntityId> {
+    pub fn on_level(&self) -> Option<EntityId> {
         if let Some(&Component::OnLevel(level_id)) =
             self.get(ComponentType::OnLevel)
         {
@@ -53,7 +45,7 @@ impl GameEntity for Entity {
         }
     }
 
-    fn level_data(&self) -> Option<&Level> {
+    pub fn level_data(&self) -> Option<&Level> {
         if let Some(&Component::LevelData(ref level)) =
             self.get(ComponentType::LevelData)
         {
@@ -63,7 +55,7 @@ impl GameEntity for Entity {
         }
     }
 
-    fn level_data_mut(&mut self) -> Option<&mut Level> {
+    pub fn level_data_mut(&mut self) -> Option<&mut Level> {
         if let Some(&mut Component::LevelData(ref mut level)) =
             self.get_mut(ComponentType::LevelData)
         {
@@ -73,17 +65,17 @@ impl GameEntity for Entity {
         }
     }
 
-    fn level_spacial_hash(&self) -> Option<Ref<SpacialHashMap>> {
+    pub fn level_spacial_hash(&self) -> Option<Ref<SpacialHashMap>> {
         self.level_data().map(|level| {
             level.spacial_hash.borrow()
         })
     }
 
-    fn is_pc(&self) -> bool {
+    pub fn is_pc(&self) -> bool {
         self.has(ComponentType::PlayerActor)
     }
 
-    fn door_state(&self) -> Option<DoorState> {
+    pub fn door_state(&self) -> Option<DoorState> {
         if let Some(&Component::Door(state)) =
             self.get(ComponentType::Door)
         {
@@ -93,7 +85,7 @@ impl GameEntity for Entity {
         }
     }
 
-    fn opacity(&self) -> f64 {
+    pub fn opacity(&self) -> f64 {
         if let Some(&Component::Opacity(o)) =
             self.get(ComponentType::Opacity)
         {
@@ -103,4 +95,23 @@ impl GameEntity for Entity {
         }
     }
 
+    pub fn vision_distance(&self) -> Option<usize> {
+        if let Some(&Component::VisionDistance(distance)) =
+            self.get(ComponentType::VisionDistance)
+        {
+            Some(distance)
+        } else {
+            None
+        }
+    }
+
+    pub fn default_knowledge(&self) -> Option<RefMut<DefaultKnowledge>> {
+        if let Some(&Component::DefaultKnowledge(ref knowledge)) =
+            self.get(ComponentType::DefaultKnowledge)
+        {
+            Some(knowledge.borrow_mut())
+        } else {
+            None
+        }
+    }
 }

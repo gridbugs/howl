@@ -3,7 +3,6 @@ use game::update::UpdateSummary;
 
 use game::rule::RuleResult;
 use game::rule;
-use game::game_entity::GameEntity;
 
 pub fn detect_collision(summary: &UpdateSummary,
                         entities: &EntityTable)

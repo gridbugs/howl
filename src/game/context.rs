@@ -6,20 +6,21 @@ use game::{
     MetaAction,
     Rule,
     RuleResult,
+    EntityTable,
+    EntityId,
+    Entity,
 };
 
 use game::io::terminal_player_actor;
 use game::io::window_renderer;
 use game::components::Level;
+use game::observer::{
+    DefaultObserver,
+    Observer,
+};
 
 use std::cell;
 use std::collections::VecDeque;
-
-use game::entity::{
-    EntityTable,
-    EntityId,
-    Entity,
-};
 
 use terminal::window_manager::{
     WindowRef,
@@ -38,6 +39,9 @@ pub struct GameContext<'a> {
     update_queue: VecDeque<UpdateSummary>,
     reaction_queue: VecDeque<UpdateSummary>,
     rules: Vec<Box<Rule>>,
+
+    // observation
+    observer: DefaultObserver,
 }
 
 impl<'a> GameContext<'a> {
@@ -50,6 +54,7 @@ impl<'a> GameContext<'a> {
             update_queue: VecDeque::new(),
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
+            observer: DefaultObserver::new(),
         }
     }
 
@@ -165,6 +170,7 @@ impl<'a> GameContext<'a> {
     fn game_turn(&mut self) -> Result<(), TurnError> {
         let entity_id = self.pc_schedule_next();
 
+        self.observer.observe(entity_id, &self.entities);
         self.render_pc_level();
 
         loop {

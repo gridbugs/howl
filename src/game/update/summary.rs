@@ -4,7 +4,6 @@ use game::{
     ComponentType,
     Component,
     EntityTable,
-    GameEntity,
 };
 
 use std::collections::HashSet;

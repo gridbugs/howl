@@ -3,8 +3,6 @@ use game::entity::Component::*;
 use game::entity::ComponentType as CType;
 use game::update::UpdateSummary;
 
-use game::game_entity::GameEntity;
-
 use game::components::DoorState;
 
 use geometry::direction::Direction;

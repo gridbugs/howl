@@ -3,7 +3,6 @@ use game::{
     ComponentType,
     UpdateSummary,
     RuleResult,
-    GameEntity,
 };
 use game::entity::Component::*;
 use game::components::DoorState;

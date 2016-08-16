@@ -9,8 +9,8 @@ use grid::coord_cell::CoordCell;
 
 #[derive(Debug)]
 pub struct StaticGrid<T> {
-    pub width: isize,
-    pub height: isize,
+    pub width: usize,
+    pub height: usize,
     limits: Vector2<isize>,
     size: usize,
     elements: Vec<T>,
@@ -29,8 +29,8 @@ impl<T: Clone> Clone for StaticGrid<T> {
 }
 
 pub struct CoordIter {
-    width: isize,
-    height: isize,
+    width: usize,
+    height: usize,
     coord: Coord,
 }
 
@@ -38,7 +38,7 @@ impl Iterator for CoordIter {
     type Item = Coord;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.coord.y == self.height {
+        if self.coord.y == self.height as isize {
             return None;
         }
 
@@ -172,8 +172,8 @@ impl<T> StaticGrid<T> {
             .expect("product of width and height overflows");
 
         StaticGrid {
-            width: width as isize,
-            height: height as isize,
+            width: width,
+            height: height,
             limits: Vector2::new(width as isize - 1, height as isize - 1),
             size: size,
             elements: Vec::with_capacity(size),
@@ -189,7 +189,7 @@ impl<T> StaticGrid<T> {
     }
 
     pub fn is_valid_coord(&self, Coord {x, y}: Coord) -> bool {
-        x < self.width && y < self.height && x >= 0 && y >= 0
+        x < self.width as isize && y < self.height as isize && x >= 0 && y >= 0
     }
 
     pub fn is_boorder_coord(&self, Coord {x, y}: Coord) -> bool {
@@ -198,7 +198,7 @@ impl<T> StaticGrid<T> {
 
     fn to_index(&self, coord: Coord) -> Option<usize> {
         if self.is_valid_coord(coord) {
-            Some((coord.x + coord.y * self.width) as usize)
+            Some((coord.x + coord.y * (self.width as isize)) as usize)
         } else {
             None
         }

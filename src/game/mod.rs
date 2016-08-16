@@ -30,8 +30,7 @@ pub use self::schedule::Schedule;
 mod context;
 pub use self::context::GameContext;
 
-mod game_entity;
-pub use self::game_entity::GameEntity;
+pub mod game_entity;
 
 mod rule;
 pub use self::rule::{
@@ -47,3 +46,4 @@ pub use self::spacial_hash::{
 
 pub mod vision;
 pub mod observer;
+pub mod knowledge;

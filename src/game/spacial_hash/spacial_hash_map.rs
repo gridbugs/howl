@@ -5,7 +5,6 @@ use game::{
     ComponentType,
     EntityTable,
     UpdateSummary,
-    GameEntity,
     ToType,
 };
 

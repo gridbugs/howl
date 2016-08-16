@@ -20,7 +20,6 @@ use game::{
     EntityTable,
     EntityId,
     GameContext,
-    GameEntity,
 };
 use game::rules;
 use game::components::DoorState;
