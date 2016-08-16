@@ -17,15 +17,11 @@ pub trait VisibilityReport {
 }
 
 /// Trait implemented by vision systems
-pub trait VisionSystem<O: Opacity, R: VisibilityReport> {
-
-    /// Information describing a viewer's vision
-    type VisionInfo;
-
+pub trait VisionSystem<O: Opacity, R: VisibilityReport, I> {
     fn detect_visible_area(
         &self,
         eye: Vector2<isize>,
         grid: &StaticGrid<O>,
-        info: Self::VisionInfo,
+        info: I,
         report: &mut R);
 }
