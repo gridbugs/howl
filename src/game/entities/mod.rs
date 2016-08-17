@@ -8,7 +8,7 @@ use game::components::{
 use game::knowledge;
 
 use geometry::Vector2;
-use renderer::tile::Tile;
+use renderer::Tile;
 use colour::ansi;
 
 use std::cell::RefCell;

@@ -12,6 +12,8 @@ use game::components::{
 use game::knowledge::DefaultKnowledge;
 
 use geometry::Vector2;
+use renderer::Tile;
+use colour::ansi::AnsiColour;
 
 use std::cell::{
     Ref,
@@ -110,6 +112,40 @@ impl Entity {
             self.get(ComponentType::DefaultKnowledge)
         {
             Some(knowledge.borrow_mut())
+        } else {
+            None
+        }
+    }
+
+    pub fn tile_depth(&self) -> Option<isize> {
+         if let Some(&Component::TileDepth(depth)) =
+            self.get(ComponentType::TileDepth)
+        {
+            Some(depth)
+        } else {
+            None
+        }
+    }
+
+    pub fn tile(&self) -> Option<Tile> {
+         if let Some(&Component::TransparentTile(tile)) =
+            self.get(ComponentType::TransparentTile)
+        {
+            Some(tile)
+        } else if let Some(&Component::SolidTile {tile, background: _}) =
+            self.get(ComponentType::SolidTile)
+        {
+            Some(tile)
+        } else {
+            None
+        }
+    }
+
+    pub fn background(&self) -> Option<AnsiColour> {
+        if let Some(&Component::SolidTile {tile: _, background}) =
+            self.get(ComponentType::SolidTile)
+        {
+            Some(background)
         } else {
             None
         }

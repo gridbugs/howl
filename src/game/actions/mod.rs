@@ -6,7 +6,7 @@ use game::update::UpdateSummary;
 use game::components::DoorState;
 
 use geometry::direction::Direction;
-use renderer::tile::Tile;
+use renderer::Tile;
 use colour::ansi;
 
 pub fn walk(entity: &Entity, direction: Direction) -> UpdateSummary {

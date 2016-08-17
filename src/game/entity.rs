@@ -11,7 +11,7 @@ use game::components::{
 use game::knowledge::DefaultKnowledge;
 
 use geometry::Vector2;
-use renderer::tile::Tile;
+use renderer::Tile;
 use colour::ansi::AnsiColour;
 
 use std::collections::HashSet;

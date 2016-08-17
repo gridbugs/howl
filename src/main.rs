@@ -14,6 +14,9 @@ mod grid;
 mod colour;
 mod terminal;
 mod allocator;
+mod best;
+mod clear;
+mod object_pool;
 
 use game::entities::*;
 use game::{

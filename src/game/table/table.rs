@@ -1,3 +1,5 @@
+use clear::Clear;
+
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -45,5 +47,23 @@ impl<EntryType, Entry> Table<EntryType, Entry>
 
     pub fn has(&self, t: EntryType) -> bool {
         self.slots.contains_key(&t)
+    }
+}
+
+impl<EntryType, Entry> Clear for Table<EntryType, Entry>
+    where EntryType: Eq + Hash,
+          Entry: ToType<EntryType>,
+{
+    fn clear(&mut self) {
+        self.slots.clear();
+    }
+}
+
+impl<EntryType, Entry> Default for Table<EntryType, Entry>
+    where EntryType: Eq + Hash,
+          Entry: ToType<EntryType>,
+{
+    fn default() -> Self {
+        Table::new()
     }
 }

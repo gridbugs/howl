@@ -1,1 +1,2 @@
-pub mod tile;
+mod tile;
+pub use self::tile::Tile;

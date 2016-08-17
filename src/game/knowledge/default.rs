@@ -3,31 +3,70 @@ use game::{
     EntityId,
     EntityTable,
     SpacialHashCell,
+    ComponentType as CType,
 };
 use game::vision::DefaultVisibilityReport;
 
 use grid::StaticGrid;
+use best::BestMap;
+use renderer::Tile;
+use colour::ansi::AnsiColour;
+use object_pool::ObjectPool;
 
-use std::collections::HashMap;
+use std::collections::{
+    HashMap,
+    HashSet,
+};
 
 #[derive(Debug)]
 struct KnowledgeCell {
-    // TODO
+    component_types: HashSet<CType>,
+    memory_pool: ObjectPool<Entity>,
+    foreground: BestMap<isize, Tile>,
+    background: BestMap<isize, AnsiColour>,
 }
 
 impl Default for KnowledgeCell {
     fn default() -> Self {
-        KnowledgeCell {}
+        KnowledgeCell {
+            component_types: HashSet::new(),
+            memory_pool: ObjectPool::new(),
+            foreground: BestMap::new(),
+            background: BestMap::new(),
+        }
     }
 }
 
 impl KnowledgeCell {
     fn clear(&mut self) {
-        // TODO
+        self.component_types.clear();
     }
 
-    fn update(&mut self, _: &Entity, _: f64) {
-        // TODO
+    fn update(&mut self, entity: &Entity, _: f64) {
+        // update set of component types
+        for component_type in entity.slots.keys() {
+            self.component_types.insert(*component_type);
+        }
+
+        // add entity memory containing clones of components
+        {
+            let mut memory = self.memory_pool.alloc();
+            Self::update_memory(memory, entity);
+        }
+
+        // update tiles
+        entity.tile_depth().map(|depth| {
+            entity.tile().map(|tile| {
+                self.foreground.insert(depth, tile);
+            });
+            entity.background().map(|background| {
+                self.background.insert(depth, background);
+            });
+        });
+    }
+
+    fn update_memory(memory: &mut Entity, entity: &Entity) {
+        entity.get(CType::Solid).map(|c| memory.add(c.clone()));
     }
 }
 
