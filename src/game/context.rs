@@ -12,7 +12,7 @@ use game::{
 };
 
 use game::io::terminal_player_actor;
-use game::io::window_renderer;
+use game::io::window_renderer::WindowRenderer;
 use game::components::Level;
 use game::observer::{
     DefaultObserver,
@@ -34,6 +34,7 @@ pub struct GameContext<'a> {
     // io
     input_source: InputSource<'a>,
     game_window: WindowRef<'a>,
+    renderer: WindowRenderer<'a>,
 
     // rule application
     update_queue: VecDeque<UpdateSummary>,
@@ -51,6 +52,7 @@ impl<'a> GameContext<'a> {
             pc: None,
             input_source: input_source,
             game_window: game_window,
+            renderer: WindowRenderer::new(game_window),
             update_queue: VecDeque::new(),
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
@@ -107,12 +109,13 @@ impl<'a> GameContext<'a> {
         self.entities.get(entity).has(Type::PlayerActor)
     }
 
-    fn render_level(&self, level: EntityId) {
-        window_renderer::render(self.game_window, &self.entities, level);
+    fn render_level(&mut self, level: EntityId) {
+        self.renderer.render(&self.entities, level);
     }
 
-    pub fn render_pc_level(&self) {
-        self.render_level(self.pc_level_id());
+    pub fn render_pc_level(&mut self) {
+        let id = self.pc_level_id();
+        self.render_level(id);
     }
 }
 

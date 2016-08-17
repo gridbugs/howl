@@ -50,6 +50,14 @@ impl<'a> WindowRef<'a> {
     pub fn get_size(&'a self) -> (usize, usize) {
         self.manager.0.borrow_mut().get_window(self.id).size
     }
+
+    pub fn width(&'a self) -> usize {
+        self.manager.0.borrow_mut().get_window(self.id).size.0
+    }
+
+    pub fn height(&'a self) -> usize {
+        self.manager.0.borrow_mut().get_window(self.id).size.1
+    }
 }
 
 impl<'a> WindowCell<'a> {

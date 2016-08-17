@@ -24,49 +24,70 @@ impl Cell {
             bg_depth: bg_depth,
         }
     }
+
+    fn clear(&mut self) {
+        self.fg_depth = -1;
+        self.bg_depth = -1;
+    }
 }
 
 impl Default for Cell {
     fn default() -> Self {
-        Cell::new(' ', ansi::WHITE, ansi::BLACK, -1, -1)
+        Cell::new(' ', ansi::WHITE, ansi::DARK_GREY, -1, -1)
     }
 }
 
-pub fn render<'a>(window: WindowRef<'a>, entities: &EntityTable, level_id: EntityId) {
-    if let Some(&LevelData(ref level)) = entities.get(level_id).get(Type::LevelData) {
-        let mut grid = StaticGrid::<Cell>::new_default(level.width, level.height);
+pub struct WindowRenderer<'a> {
+    window: WindowRef<'a>,
+    grid: StaticGrid<Cell>,
+}
 
-        for entity in level.entities(entities) {
-            if let Some(&Position(ref v)) = entity.get(Type::Position) {
-                let cell = &mut grid[v];
-                if let Some(&TileDepth(depth)) = entity.get(Type::TileDepth) {
-                    if let Some(&SolidTile{ref tile, background: bg}) = entity.get(Type::SolidTile) {
-                        if depth > cell.bg_depth {
-                            cell.bg_depth = depth;
-                            cell.bg = bg;
-                        }
-                        if depth > cell.fg_depth {
-                            cell.fg_depth = depth;
-                            cell.fg = tile.colour;
-                            cell.ch = tile.character;
-                        }
-                    } else if let Some(&TransparentTile(ref tile)) = entity.get(Type::TransparentTile) {
-                        if depth > cell.fg_depth {
-                            cell.fg_depth = depth;
-                            cell.fg = tile.colour;
-                            cell.ch = tile.character;
+impl<'a> WindowRenderer<'a> {
+    pub fn new(window: WindowRef<'a>) -> Self {
+        WindowRenderer {
+            window: window,
+            grid: StaticGrid::new_default(window.width(), window.height()),
+        }
+    }
+
+    pub fn render(&mut self, entities: &EntityTable, level_id: EntityId) {
+
+        for cell in self.grid.iter_mut() {
+            cell.clear();
+        }
+
+        if let Some(&LevelData(ref level)) = entities.get(level_id).get(Type::LevelData) {
+            for entity in level.entities(entities) {
+                if let Some(&Position(ref v)) = entity.get(Type::Position) {
+                    let cell = &mut self.grid[v];
+                    if let Some(&TileDepth(depth)) = entity.get(Type::TileDepth) {
+                        if let Some(&SolidTile{ref tile, background: bg}) = entity.get(Type::SolidTile) {
+                            if depth > cell.bg_depth {
+                                cell.bg_depth = depth;
+                                cell.bg = bg;
+                            }
+                            if depth > cell.fg_depth {
+                                cell.fg_depth = depth;
+                                cell.fg = tile.colour;
+                                cell.ch = tile.character;
+                            }
+                        } else if let Some(&TransparentTile(ref tile)) = entity.get(Type::TransparentTile) {
+                            if depth > cell.fg_depth {
+                                cell.fg_depth = depth;
+                                cell.fg = tile.colour;
+                                cell.ch = tile.character;
+                            }
                         }
                     }
                 }
             }
+
+            for (coord, cell) in izip!(self.grid.coord_iter(), self.grid.iter()) {
+                let window_cell = self.window.get_cell(coord.x, coord.y);
+                window_cell.set(cell.ch, cell.fg, cell.bg);
+            }
         }
 
-        for (coord, cell) in izip!(grid.coord_iter(), grid.iter()) {
-            let window_cell = window.get_cell(coord.x, coord.y);
-            window_cell.set(cell.ch, cell.fg, cell.bg);
-        }
+        self.window.flush();
     }
-
-    window.flush();
-
 }
