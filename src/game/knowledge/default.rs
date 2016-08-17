@@ -40,6 +40,9 @@ impl Default for KnowledgeCell {
 impl KnowledgeCell {
     fn clear(&mut self) {
         self.component_types.clear();
+        self.memory_pool.clear();
+        self.foreground.clear();
+        self.background.clear();
     }
 
     fn update(&mut self, entity: &Entity, _: f64) {

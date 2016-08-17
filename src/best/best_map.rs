@@ -1,5 +1,3 @@
-use debug;
-
 #[derive(Debug)]
 pub struct BestMap<K: Ord + Copy, V: Copy> {
     key: Option<K>,
