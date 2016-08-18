@@ -1,2 +1,7 @@
 pub mod terminal_player_actor;
-pub mod window_renderer;
+
+mod window_renderer;
+pub use self::window_renderer::WindowRenderer;
+
+mod window_knowledge_renderer;
+pub use self::window_knowledge_renderer::WindowKnowledgeRenderer;

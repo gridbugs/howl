@@ -107,7 +107,19 @@ impl Entity {
         }
     }
 
-    pub fn default_knowledge(&self) -> Option<RefMut<DefaultKnowledge>> {
+    pub fn default_knowledge(&self) -> Option<Ref<DefaultKnowledge>> {
+        if let Some(&Component::DefaultKnowledge(ref knowledge)) =
+            self.get(ComponentType::DefaultKnowledge)
+        {
+            Some(knowledge.borrow())
+        } else {
+            None
+        }
+    }
+
+
+
+    pub fn default_knowledge_mut(&self) -> Option<RefMut<DefaultKnowledge>> {
         if let Some(&Component::DefaultKnowledge(ref knowledge)) =
             self.get(ComponentType::DefaultKnowledge)
         {

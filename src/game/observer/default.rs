@@ -26,7 +26,7 @@ impl Observer for DefaultObserver {
         self.visibility_report.clear();
         square.detect_visible_area(eye, grid, info, &mut self.visibility_report);
 
-        let mut knowledge = entity.default_knowledge().unwrap();
+        let mut knowledge = entity.default_knowledge_mut().unwrap();
         knowledge.update(level_id, entities, grid, &self.visibility_report);
     }
 }

@@ -19,20 +19,20 @@ use std::collections::{
 };
 
 #[derive(Debug)]
-struct KnowledgeCell {
-    component_types: HashSet<CType>,
+pub struct KnowledgeCell {
+    pub component_types: HashSet<CType>,
+    pub foreground: BestMap<isize, Tile>,
+    pub background: BestMap<isize, AnsiColour>,
     memory_pool: ObjectPool<Entity>,
-    foreground: BestMap<isize, Tile>,
-    background: BestMap<isize, AnsiColour>,
 }
 
 impl Default for KnowledgeCell {
     fn default() -> Self {
         KnowledgeCell {
             component_types: HashSet::new(),
-            memory_pool: ObjectPool::new(),
             foreground: BestMap::new(),
             background: BestMap::new(),
+            memory_pool: ObjectPool::new(),
         }
     }
 }
@@ -74,8 +74,8 @@ impl KnowledgeCell {
 }
 
 #[derive(Debug)]
-struct KnowledgeGrid {
-    grid: StaticGrid<KnowledgeCell>,
+pub struct KnowledgeGrid {
+    pub grid: StaticGrid<KnowledgeCell>,
 }
 
 impl KnowledgeGrid {
@@ -102,7 +102,7 @@ impl KnowledgeGrid {
 
 #[derive(Debug)]
 pub struct DefaultKnowledge {
-    levels: HashMap<EntityId, KnowledgeGrid>,
+    pub levels: HashMap<EntityId, KnowledgeGrid>,
 }
 
 impl DefaultKnowledge {
