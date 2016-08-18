@@ -14,7 +14,7 @@ pub struct DefaultObserver {
 }
 
 impl Observer for DefaultObserver {
-    fn observe(&mut self, entity_id: EntityId, entities: &EntityTable) {
+    fn observe(&mut self, entity_id: EntityId, entities: &EntityTable, turn_count: u64) {
         let entity = entities.get(entity_id);
         let level_id = entity.on_level().unwrap();
         let level = entities.get(level_id);
@@ -27,7 +27,7 @@ impl Observer for DefaultObserver {
         square.detect_visible_area(eye, grid, info, &mut self.visibility_report);
 
         let mut knowledge = entity.default_knowledge_mut().unwrap();
-        knowledge.update(level_id, entities, grid, &self.visibility_report);
+        knowledge.update(level_id, entities, grid, &self.visibility_report, turn_count);
     }
 }
 

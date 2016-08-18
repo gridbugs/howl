@@ -45,6 +45,9 @@ pub struct GameContext<'a> {
 
     // observation
     observer: DefaultObserver,
+
+    // time
+    turn_count: u64,
 }
 
 impl<'a> GameContext<'a> {
@@ -59,6 +62,7 @@ impl<'a> GameContext<'a> {
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
             observer: DefaultObserver::new(),
+            turn_count: 0,
         }
     }
 
@@ -111,8 +115,12 @@ impl<'a> GameContext<'a> {
         self.entities.get(entity).has(Type::PlayerActor)
     }
 
+    pub fn observe_pc(&mut self) {
+        self.observer.observe(self.pc.unwrap(), &self.entities, self.turn_count);
+    }
+
     pub fn render_pc_knowledge(&self) {
-        self.renderer.render(&self.entities, self.pc.unwrap());
+        self.renderer.render(&self.entities, self.pc.unwrap(), self.turn_count);
     }
 }
 
@@ -168,10 +176,15 @@ impl<'a> GameContext<'a> {
     }
 
     fn game_turn(&mut self) -> Result<(), TurnError> {
+        self.turn_count += 1;
         let entity_id = self.pc_schedule_next();
 
-        self.observer.observe(entity_id, &self.entities);
+        self.observe_pc();
         self.render_pc_knowledge();
+
+        if !self.entity_is_pc(entity_id) {
+            self.observer.observe(entity_id, &self.entities, self.turn_count);
+        }
 
         loop {
             match self.act(entity_id) {

@@ -23,6 +23,7 @@ pub struct KnowledgeCell {
     pub component_types: HashSet<CType>,
     pub foreground: BestMap<isize, Tile>,
     pub background: BestMap<isize, AnsiColour>,
+    pub last_turn: u64,
     memory_pool: ObjectPool<Entity>,
 }
 
@@ -32,6 +33,7 @@ impl Default for KnowledgeCell {
             component_types: HashSet::new(),
             foreground: BestMap::new(),
             background: BestMap::new(),
+            last_turn: 0,
             memory_pool: ObjectPool::new(),
         }
     }
@@ -45,7 +47,7 @@ impl KnowledgeCell {
         self.background.clear();
     }
 
-    fn update(&mut self, entity: &Entity, _: f64) {
+    fn update(&mut self, entity: &Entity, _: f64, turn_count: u64) {
         // update set of component types
         for component_type in entity.slots.keys() {
             self.component_types.insert(*component_type);
@@ -66,6 +68,8 @@ impl KnowledgeCell {
                 self.background.insert(depth, background);
             });
         });
+
+        self.last_turn = turn_count;
     }
 
     fn update_memory(memory: &mut Entity, entity: &Entity) {
@@ -87,14 +91,15 @@ impl KnowledgeGrid {
 
     fn update(&mut self, entities: &EntityTable,
               grid: &StaticGrid<SpacialHashCell>,
-              report: &DefaultVisibilityReport)
+              report: &DefaultVisibilityReport,
+              turn_count: u64)
     {
         for (coord, meta) in report.iter() {
             let sh_cell = &grid[coord];
             let mut kn_cell = &mut self.grid[coord];
             kn_cell.clear();
             for entity in entities.id_set_iter(&sh_cell.entities) {
-                kn_cell.update(entity, *meta);
+                kn_cell.update(entity, *meta, turn_count);
             }
         }
     }
@@ -115,13 +120,14 @@ impl DefaultKnowledge {
     pub fn update(&mut self, level_id: EntityId,
                   entities: &EntityTable,
                   grid: &StaticGrid<SpacialHashCell>,
-                  report: &DefaultVisibilityReport)
+                  report: &DefaultVisibilityReport,
+                  turn_count: u64)
     {
         if !self.levels.contains_key(&level_id) {
             self.levels.insert(level_id, KnowledgeGrid::new(grid.width, grid.height));
         }
 
-        self.levels.get_mut(&level_id).unwrap().update(entities, grid, report);
+        self.levels.get_mut(&level_id).unwrap().update(entities, grid, report, turn_count);
     }
 }
 

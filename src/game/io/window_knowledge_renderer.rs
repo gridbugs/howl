@@ -18,7 +18,8 @@ impl<'a> WindowKnowledgeRenderer<'a> {
 
     pub fn render(&self,
                   entities: &EntityTable,
-                  entity_id: EntityId)
+                  entity_id: EntityId,
+                  turn_count: u64)
     {
         let entity = entities.get(entity_id);
         let level_id = entity.on_level().unwrap();
@@ -31,7 +32,12 @@ impl<'a> WindowKnowledgeRenderer<'a> {
         {
             let window_cell = self.window.get_cell(x, y);
             cell.foreground.value().map(|tile| {
-                window_cell.set(tile.character, tile.colour, ansi::DARK_GREY);
+                let colour = if cell.last_turn == turn_count {
+                    tile.colour
+                } else {
+                    ansi::BLACK
+                };
+                window_cell.set(tile.character, colour, ansi::DARK_GREY);
             });
         }
 
