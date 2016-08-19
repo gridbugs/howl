@@ -23,11 +23,11 @@ impl<'a> WindowKnowledgeRenderer<'a> {
     {
         let entity = entities.get(entity_id);
         let level_id = entity.on_level().unwrap();
-        let knowledge = entity.default_knowledge().unwrap();
-        let grid = &knowledge.levels.get(&level_id).unwrap().grid;
+        let knowledge = entity.drawable_knowledge().unwrap();
+        let grid = &knowledge.grid(level_id).unwrap();
 
         for (Coord {x, y}, cell) in izip!(
-            grid.coord_iter(), 
+            grid.coord_iter(),
             grid.iter())
         {
             let window_cell = self.window.get_cell(x, y);

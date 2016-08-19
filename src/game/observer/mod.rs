@@ -1,5 +1,5 @@
 mod observer;
 pub use self::observer::Observer;
 
-mod default;
-pub use self::default::DefaultObserver;
+mod drawable;
+pub use self::drawable::DrawableObserver;

@@ -83,7 +83,7 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
         OnLevel(level),
         Collider,
         VisionDistance(4),
-        DefaultKnowledge(RefCell::new(knowledge::DefaultKnowledge::new())),
+        DrawableKnowledge(RefCell::new(knowledge::DrawableKnowledge::new())),
     ]
 }
 

@@ -1,6 +1,7 @@
 use game::vision::{
     Opacity,
     VisibilityReport,
+    VisionSystem,
 };
 
 use geometry::Vector2;
@@ -20,5 +21,21 @@ pub fn square<O: Opacity, R: VisibilityReport<MetaData=f64>>(
                 report.see(coord, 1.0);
             }
         }
+    }
+}
+
+pub struct Square;
+impl<O, R> VisionSystem<O, R, usize> for Square
+    where O: Opacity,
+          R: VisibilityReport<MetaData=f64>
+{
+    fn detect_visible_area(
+        &self,
+        eye: Vector2<isize>,
+        grid: &StaticGrid<O>,
+        info: usize,
+        report: &mut R)
+    {
+        square(eye, grid, info, report);
     }
 }

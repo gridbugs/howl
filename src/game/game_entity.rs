@@ -9,7 +9,7 @@ use game::components::{
     Level,
     DoorState,
 };
-use game::knowledge::DefaultKnowledge;
+use game::knowledge::DrawableKnowledge;
 
 use geometry::Vector2;
 use renderer::Tile;
@@ -19,6 +19,7 @@ use std::cell::{
     Ref,
     RefMut,
 };
+
 
 // Convenience wrappers around entities
 impl Entity {
@@ -107,9 +108,9 @@ impl Entity {
         }
     }
 
-    pub fn default_knowledge(&self) -> Option<Ref<DefaultKnowledge>> {
-        if let Some(&Component::DefaultKnowledge(ref knowledge)) =
-            self.get(ComponentType::DefaultKnowledge)
+    pub fn drawable_knowledge(&self) -> Option<Ref<DrawableKnowledge>> {
+        if let Some(&Component::DrawableKnowledge(ref knowledge)) =
+            self.get(ComponentType::DrawableKnowledge)
         {
             Some(knowledge.borrow())
         } else {
@@ -117,11 +118,9 @@ impl Entity {
         }
     }
 
-
-
-    pub fn default_knowledge_mut(&self) -> Option<RefMut<DefaultKnowledge>> {
-        if let Some(&Component::DefaultKnowledge(ref knowledge)) =
-            self.get(ComponentType::DefaultKnowledge)
+    pub fn drawable_knowledge_mut(&self) -> Option<RefMut<DrawableKnowledge>> {
+        if let Some(&Component::DrawableKnowledge(ref knowledge)) =
+            self.get(ComponentType::DrawableKnowledge)
         {
             Some(knowledge.borrow_mut())
         } else {

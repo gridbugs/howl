@@ -8,7 +8,7 @@ use game::components::{
     Level,
     DoorState,
 };
-use game::knowledge::DefaultKnowledge;
+use game::knowledge::DrawableKnowledge;
 
 use geometry::Vector2;
 use renderer::Tile;
@@ -71,7 +71,7 @@ pub enum ComponentType {
     Door,
     Opacity,
     VisionDistance,
-    DefaultKnowledge,
+    DrawableKnowledge,
 }
 
 #[derive(Debug, Clone)]
@@ -89,7 +89,7 @@ pub enum Component {
     Door(DoorState),
     Opacity(f64),
     VisionDistance(usize),
-    DefaultKnowledge(RefCell<DefaultKnowledge>),
+    DrawableKnowledge(RefCell<DrawableKnowledge>),
 }
 
 impl ToType<ComponentType> for Component {
@@ -108,7 +108,7 @@ impl ToType<ComponentType> for Component {
             Component::Door(_) => ComponentType::Door,
             Component::Opacity(_) => ComponentType::Opacity,
             Component::VisionDistance(_) => ComponentType::VisionDistance,
-            Component::DefaultKnowledge(_) => ComponentType::DefaultKnowledge,
+            Component::DrawableKnowledge(_) => ComponentType::DrawableKnowledge,
         }
     }
 }

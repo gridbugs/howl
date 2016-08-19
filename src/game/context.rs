@@ -17,7 +17,7 @@ use game::io::{
 };
 use game::components::Level;
 use game::observer::{
-    DefaultObserver,
+    DrawableObserver,
     Observer,
 };
 
@@ -44,7 +44,7 @@ pub struct GameContext<'a> {
     rules: Vec<Box<Rule>>,
 
     // observation
-    observer: DefaultObserver,
+    observer: DrawableObserver,
 
     // time
     turn_count: u64,
@@ -61,7 +61,7 @@ impl<'a> GameContext<'a> {
             update_queue: VecDeque::new(),
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
-            observer: DefaultObserver::new(),
+            observer: DrawableObserver::new(),
             turn_count: 0,
         }
     }
