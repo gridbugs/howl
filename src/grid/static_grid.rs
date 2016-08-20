@@ -6,6 +6,7 @@ use geometry::Vector2;
 
 use grid::{
     Grid,
+    RowGrid,
     Coord,
     CoordCell,
 };
@@ -67,15 +68,33 @@ impl<T: Copy> StaticGrid<T> {
     }
 }
 
+impl<T> StaticGrid<T> {
+    fn new_uninitialised(width: usize, height: usize) -> StaticGrid<T> {
+
+        let size = (width as usize).checked_mul(height as usize)
+            .expect("product of width and height overflows");
+
+        StaticGrid {
+            width: width,
+            height: height,
+            limits: Vector2::new(width as isize - 1, height as isize - 1),
+            size: size,
+            elements: Vec::with_capacity(size),
+        }
+    }
+
+    fn to_index(&self, coord: Coord) -> Option<usize> {
+        if self.is_valid_coord(coord) {
+            Some((coord.x + coord.y * (self.width as isize)) as usize)
+        } else {
+            None
+        }
+    }
+}
+
 impl<'a, T: 'a> Grid<'a> for StaticGrid<T> {
 
     type Item = T;
-
-    type RowIntoIter = &'a [T];
-    type RowIter = slice::Chunks<'a, T>;
-
-    type RowIntoIterMut = &'a mut [T];
-    type RowIterMut = slice::ChunksMut<'a, T>;
 
     type Iter = slice::Iter<'a, T>;
     type IterMut = slice::IterMut<'a, T>;
@@ -104,14 +123,6 @@ impl<'a, T: 'a> Grid<'a> for StaticGrid<T> {
         self.limits
     }
 
-    fn rows(&'a self) -> Self::RowIter {
-        self.elements.chunks(self.width)
-    }
-
-    fn rows_mut(&'a mut self) -> Self::RowIterMut {
-        self.elements.chunks_mut(self.width)
-    }
-
     fn iter(&'a self) -> Self::Iter {
         self.elements.iter()
     }
@@ -121,27 +132,20 @@ impl<'a, T: 'a> Grid<'a> for StaticGrid<T> {
     }
 }
 
-impl<T> StaticGrid<T> {
-    fn new_uninitialised(width: usize, height: usize) -> StaticGrid<T> {
+impl<'a, T: 'a> RowGrid<'a> for StaticGrid<T> {
 
-        let size = (width as usize).checked_mul(height as usize)
-            .expect("product of width and height overflows");
+    type RowIntoIter = &'a [T];
+    type RowIter = slice::Chunks<'a, T>;
 
-        StaticGrid {
-            width: width,
-            height: height,
-            limits: Vector2::new(width as isize - 1, height as isize - 1),
-            size: size,
-            elements: Vec::with_capacity(size),
-        }
+    type RowIntoIterMut = &'a mut [T];
+    type RowIterMut = slice::ChunksMut<'a, T>;
+
+    fn rows(&'a self) -> Self::RowIter {
+        self.elements.chunks(self.width)
     }
 
-    fn to_index(&self, coord: Coord) -> Option<usize> {
-        if self.is_valid_coord(coord) {
-            Some((coord.x + coord.y * (self.width as isize)) as usize)
-        } else {
-            None
-        }
+    fn rows_mut(&'a mut self) -> Self::RowIterMut {
+        self.elements.chunks_mut(self.width)
     }
 }
 

@@ -20,12 +20,6 @@ pub trait Grid<'a> :
 
     type Item: 'a;
 
-    type RowIntoIter: IntoIterator<Item=&'a Self::Item> + 'a;
-    type RowIter: Iterator<Item=Self::RowIntoIter>;
-
-    type RowIntoIterMut: IntoIterator<Item=&'a mut Self::Item> + 'a;
-    type RowIterMut: Iterator<Item=Self::RowIntoIterMut>;
-
     type Iter: Iterator<Item=&'a Self::Item>;
     type IterMut: Iterator<Item=&'a mut Self::Item>;
 
@@ -60,9 +54,6 @@ pub trait Grid<'a> :
             c.x == self.x_max() || c.y == self.y_max()
     }
 
-    fn rows(&'a self) -> Self::RowIter;
-    fn rows_mut(&'a mut self) -> Self::RowIterMut;
-
     fn iter(&'a self) -> Self::Iter;
     fn iter_mut(&'a mut self) -> Self::IterMut;
 
@@ -93,3 +84,14 @@ pub trait Grid<'a> :
     }
 }
 
+pub trait RowGrid<'a> : Grid<'a> {
+    type RowIntoIter: IntoIterator<Item=&'a Self::Item> + 'a;
+    type RowIter: Iterator<Item=Self::RowIntoIter>;
+
+    type RowIntoIterMut: IntoIterator<Item=&'a mut Self::Item> + 'a;
+    type RowIterMut: Iterator<Item=Self::RowIntoIterMut>;
+
+
+    fn rows(&'a self) -> Self::RowIter;
+    fn rows_mut(&'a mut self) -> Self::RowIterMut;
+}

@@ -9,7 +9,10 @@ mod coord;
 pub use self::coord::Coord;
 
 mod grid;
-pub use self::grid::Grid;
+pub use self::grid::{
+    Grid,
+    RowGrid,
+};
 
 mod iter;
 pub use self::iter::{
