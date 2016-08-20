@@ -17,6 +17,7 @@ mod allocator;
 mod best;
 mod clear;
 mod object_pool;
+mod vision;
 
 use game::entities::*;
 use game::{

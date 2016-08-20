@@ -1,4 +1,4 @@
-use game::vision::{
+use vision::{
     Opacity,
     VisibilityReport,
     VisionSystem,

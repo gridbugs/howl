@@ -6,10 +6,7 @@ pub use self::vision::{
 };
 
 mod default;
-pub use self::default::{
-    DefaultOpacity,
-    DefaultVisibilityReport,
-};
+pub use self::default::DefaultVisibilityReport;
 
 mod square;
 pub use self::square::Square;

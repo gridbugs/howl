@@ -8,6 +8,7 @@ use game::{
     ToType,
 };
 
+use vision::Opacity;
 use grid::Grid;
 use geometry::Vector2;
 
@@ -19,6 +20,10 @@ pub struct SpacialHashCell {
     pub entities: HashSet<EntityId>,
     pub components: HashMap<ComponentType, usize>,
     pub opacity: f64,
+}
+
+impl Opacity for SpacialHashCell {
+    fn opacity(&self) -> f64 { self.opacity }
 }
 
 impl Default for SpacialHashCell {

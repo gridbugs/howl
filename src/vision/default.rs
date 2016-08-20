@@ -1,18 +1,8 @@
-use game::SpacialHashCell;
-use game::vision::{
-    Opacity,
-    VisibilityReport,
-};
+use vision::VisibilityReport;
 
 use geometry::Vector2;
 
 use std::collections::HashMap;
-
-pub type DefaultOpacity = SpacialHashCell;
-
-impl Opacity for DefaultOpacity {
-    fn opacity(&self) -> f64 { self.opacity }
-}
 
 pub type DefaultVisibilityReport = HashMap<Vector2<isize>, f64>;
 

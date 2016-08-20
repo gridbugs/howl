@@ -1,12 +1,13 @@
-use game::observer::Observer;
-use game::vision::{
+use game::{
+    Observer,
+    EntityId,
+    EntityTable,
+};
+
+use vision::{
     VisionSystem,
     DefaultVisibilityReport,
     Square,
-};
-use game::{
-    EntityId,
-    EntityTable,
 };
 
 pub struct DrawableObserver {

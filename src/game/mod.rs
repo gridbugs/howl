@@ -44,6 +44,7 @@ pub use self::spacial_hash::{
     SpacialHashCell,
 };
 
-pub mod vision;
 pub mod observer;
+pub use self::observer::Observer;
+
 pub mod knowledge;
