@@ -1,4 +1,7 @@
-use game::entity::{EntityTable, EntityId};
+use game::entity::{
+    EntityTable,
+    EntityId,
+};
 use game::entity::Component::*;
 use game::entity::ComponentType as Type;
 
@@ -6,6 +9,8 @@ use terminal::window_manager::WindowRef;
 use colour::ansi;
 use grid::{
     Grid,
+    DefaultGrid,
+    IterGrid,
     StaticGrid,
 };
 

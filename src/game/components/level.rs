@@ -1,11 +1,26 @@
-use std::collections::HashSet;
-use std::collections::hash_set;
-use game::entity::{Entity, EntityId, EntityTable};
+use game::entity::{
+    Entity,
+    EntityId,
+    EntityTable,
+};
 use game::schedule::Schedule;
 
-use game::spacial_hash::SpacialHashMap;
+use game::spacial_hash::{
+    SpacialHashMap,
+    SpacialHashCell,
+};
+
+use grid::{
+    StaticGrid,
+    DefaultGrid,
+};
 
 use std::cell::RefCell;
+use std::collections::HashSet;
+use std::collections::hash_set;
+
+pub type LevelSpacialHashMap =
+    SpacialHashMap<StaticGrid<SpacialHashCell>>;
 
 #[derive(Debug, Clone)]
 pub struct Level {
@@ -14,7 +29,7 @@ pub struct Level {
     pub height: usize,
     pub entities: HashSet<EntityId>,
     pub schedule: RefCell<Schedule>,
-    pub spacial_hash: RefCell<SpacialHashMap>,
+    pub spacial_hash: RefCell<LevelSpacialHashMap>,
 }
 
 pub struct EntityIter<'a> {
@@ -39,7 +54,8 @@ impl Level {
             height: height,
             entities: HashSet::new(),
             schedule: RefCell::new(Schedule::new()),
-            spacial_hash: RefCell::new(SpacialHashMap::new(width, height)),
+            spacial_hash: RefCell::new(SpacialHashMap::new(
+                    StaticGrid::new_default(width, height))),
         }
     }
 

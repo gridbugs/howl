@@ -1,6 +1,9 @@
-use grid::Grid;
-use grid::StaticGrid;
-use grid::Coord;
+use grid::{
+    Grid,
+    IterGrid,
+    StaticGrid,
+    Coord,
+};
 
 use geometry::direction;
 

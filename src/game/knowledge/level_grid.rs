@@ -5,8 +5,11 @@ use game::{
     SpacialHashCell,
 };
 
-use grid::StaticGrid;
-use grid::Coord;
+use grid::{
+    Grid,
+    DefaultGrid,
+    Coord,
+};
 
 use std::collections::HashMap;
 
@@ -19,24 +22,35 @@ pub trait KnowledgeCell: Default {
 }
 
 #[derive(Debug)]
-struct KnowledgeGrid<C: KnowledgeCell>(StaticGrid<C>);
+struct KnowledgeGrid<G>
+    where G: DefaultGrid,
+          G::Item: KnowledgeCell
+{
+    grid: G,
+}
 
-impl<C: KnowledgeCell> KnowledgeGrid<C> {
+impl<G> KnowledgeGrid<G>
+    where G: DefaultGrid,
+          G::Item: KnowledgeCell,
+{
     fn new(width: usize, height: usize) -> Self {
-        KnowledgeGrid(StaticGrid::new_default(width, height))
+        KnowledgeGrid {
+            grid: G::new_default(width, height),
+        }
     }
 
-    fn update<'a, I>(
+    fn update<'a, I, S>(
         &mut self, entities: &EntityTable,
-        grid: &StaticGrid<SpacialHashCell>,
+        grid: &S,
         report_iter: I,
         turn_count: u64)
-        where C::MetaData: 'a,
-              I: Iterator<Item=(&'a Coord, &'a C::MetaData)>,
+        where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
+              I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
+              S: Grid<Item=SpacialHashCell>,
     {
         for (coord, meta) in report_iter {
-            let sh_cell = &grid[coord];
-            let mut kn_cell = &mut self.0[coord];
+            let sh_cell = &grid.get(*coord).unwrap();
+            let mut kn_cell = &mut self.grid.get_mut(*coord).unwrap();
             kn_cell.clear();
             for entity in entities.id_set_iter(&sh_cell.entities) {
                 kn_cell.update(entity, turn_count, meta);
@@ -46,39 +60,49 @@ impl<C: KnowledgeCell> KnowledgeGrid<C> {
 }
 
 #[derive(Debug)]
-pub struct LevelGridKnowledge<C: KnowledgeCell> {
-    levels: HashMap<EntityId, KnowledgeGrid<C>>,
+pub struct LevelGridKnowledge<G>
+    where G: DefaultGrid,
+          G::Item: KnowledgeCell
+{
+    levels: HashMap<EntityId, KnowledgeGrid<G>>,
 }
 
-impl<C: KnowledgeCell> LevelGridKnowledge<C> {
+impl<G> LevelGridKnowledge<G>
+    where G: DefaultGrid,
+          G::Item: KnowledgeCell
+{
     pub fn new() -> Self {
         LevelGridKnowledge {
             levels: HashMap::new(),
         }
     }
 
-    pub fn update<'a, I>(
+    pub fn update<'a, I, S>(
         &mut self, level_id: EntityId,
         entities: &EntityTable,
-        grid: &StaticGrid<SpacialHashCell>,
+        grid: &S,
         report_iter: I,
         turn_count: u64)
-        where C::MetaData: 'a,
-              I: Iterator<Item=(&'a Coord, &'a C::MetaData)>,
+        where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
+              I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
+              S: Grid<Item=SpacialHashCell>,
     {
         if !self.levels.contains_key(&level_id) {
-            self.levels.insert(level_id, KnowledgeGrid::new(grid.width, grid.height));
+            self.levels.insert(level_id, KnowledgeGrid::new(grid.width(), grid.height()));
         }
 
         self.levels.get_mut(&level_id).unwrap().update(entities, grid, report_iter, turn_count);
     }
 
-    pub fn grid(&self, level_id: EntityId) -> Option<&StaticGrid<C>> {
-        self.levels.get(&level_id).map(|g| &g.0)
+    pub fn grid(&self, level_id: EntityId) -> Option<&G> {
+        self.levels.get(&level_id).map(|g| &g.grid)
     }
 }
 
-impl<C: KnowledgeCell> Clone for LevelGridKnowledge<C> {
+impl<G> Clone for LevelGridKnowledge<G>
+    where G: DefaultGrid,
+          G::Item: KnowledgeCell
+{
     fn clone(&self) -> Self {
         panic!("Tried to clone knowledge.")
     }

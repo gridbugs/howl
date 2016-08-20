@@ -62,12 +62,12 @@ impl Iterator for NeiCoordIter {
     }
 }
 
-pub struct NeiIter<'a, G: Grid<'a> + 'a> {
+pub struct NeiIter<'a, G: Grid + 'a> {
     grid: &'a G,
     nei_coord_iter: NeiCoordIter,
 }
 
-impl<'a, G: Grid<'a> + 'a> NeiIter<'a, G> {
+impl<'a, G: Grid + 'a> NeiIter<'a, G> {
     pub fn new(grid: &'a G, coord: Coord) -> Self {
         NeiIter {
             grid: grid,
@@ -76,7 +76,7 @@ impl<'a, G: Grid<'a> + 'a> NeiIter<'a, G> {
     }
 }
 
-impl<'a, G: Grid<'a>> Iterator for NeiIter<'a, G> {
+impl<'a, G: Grid> Iterator for NeiIter<'a, G> {
     type Item = Option<&'a G::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -86,15 +86,15 @@ impl<'a, G: Grid<'a>> Iterator for NeiIter<'a, G> {
     }
 }
 
-pub struct SomeNeiIter<'a, G: Grid<'a> + 'a>(NeiIter<'a, G>);
+pub struct SomeNeiIter<'a, G: Grid + 'a>(NeiIter<'a, G>);
 
-impl<'a, G: Grid<'a> + 'a> SomeNeiIter<'a, G> {
+impl<'a, G: Grid + 'a> SomeNeiIter<'a, G> {
     pub fn new(grid: &'a G, coord: Coord) -> Self {
         SomeNeiIter(NeiIter::new(grid, coord))
     }
 }
 
-impl<'a, G: Grid<'a>> Iterator for SomeNeiIter<'a, G> {
+impl<'a, G: Grid> Iterator for SomeNeiIter<'a, G> {
     type Item = &'a G::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -109,12 +109,12 @@ impl<'a, G: Grid<'a>> Iterator for SomeNeiIter<'a, G> {
     }
 }
 
-pub struct SomeNeiCoordIter<'a, G: Grid<'a> + 'a> {
+pub struct SomeNeiCoordIter<'a, G: Grid + 'a> {
     grid: &'a G,
     nei_coord_iter: NeiCoordIter,
 }
 
-impl<'a, G: Grid<'a> + 'a> SomeNeiCoordIter<'a, G> {
+impl<'a, G: Grid + 'a> SomeNeiCoordIter<'a, G> {
     pub fn new(grid: &'a G, coord: Coord) -> Self {
         SomeNeiCoordIter {
             grid: grid,
@@ -123,7 +123,7 @@ impl<'a, G: Grid<'a> + 'a> SomeNeiCoordIter<'a, G> {
     }
 }
 
-impl<'a, G: Grid<'a>> Iterator for SomeNeiCoordIter<'a, G> {
+impl<'a, G: Grid> Iterator for SomeNeiCoordIter<'a, G> {
     type Item = Coord;
 
     fn next(&mut self) -> Option<Self::Item> {

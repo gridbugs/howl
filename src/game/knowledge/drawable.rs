@@ -11,10 +11,11 @@ use best::BestMap;
 use renderer::Tile;
 use colour::ansi::AnsiColour;
 use object_pool::ObjectPool;
+use grid::StaticGrid;
 
 use std::collections::HashSet;
 
-pub type DrawableKnowledge = LevelGridKnowledge<DrawableCell>;
+pub type DrawableKnowledge = LevelGridKnowledge<StaticGrid<DrawableCell>>;
 
 #[derive(Debug)]
 pub struct DrawableCell {

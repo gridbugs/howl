@@ -7,21 +7,11 @@ use grid::{
     SomeNeiCoordIter,
 };
 
-use std::ops::{
-    Index,
-    IndexMut,
-};
 use std::marker::Sized;
 
-pub trait Grid<'a> :
-    Index<Coord> + Index<(isize, isize)> +
-    IndexMut<Coord> + IndexMut<(isize, isize)>
-{
+pub trait Grid {
 
-    type Item: 'a;
-
-    type Iter: Iterator<Item=&'a Self::Item>;
-    type IterMut: Iterator<Item=&'a mut Self::Item>;
+    type Item;
 
     fn swap(&mut self, other: &mut Self);
 
@@ -54,9 +44,6 @@ pub trait Grid<'a> :
             c.x == self.x_max() || c.y == self.y_max()
     }
 
-    fn iter(&'a self) -> Self::Iter;
-    fn iter_mut(&'a mut self) -> Self::IterMut;
-
     fn coord_iter(&self) -> CoordIter {
         CoordIter::new(self.limits_min(), self.limits_max())
     }
@@ -65,32 +52,50 @@ pub trait Grid<'a> :
         NeiCoordIter::new(coord)
     }
 
-    fn nei_iter(&'a self, coord: Coord) -> NeiIter<'a, Self>
+    fn nei_iter<'a>(&'a self, coord: Coord) -> NeiIter<'a, Self>
         where Self: Sized
     {
         NeiIter::new(self, coord)
     }
 
-    fn some_nei_iter(&'a self, coord: Coord) -> SomeNeiIter<'a, Self>
+    fn some_nei_iter<'a>(&'a self, coord: Coord) -> SomeNeiIter<'a, Self>
         where Self: Sized
     {
         SomeNeiIter::new(self, coord)
     }
 
-    fn some_nei_coord_iter(&'a self, coord: Coord) -> SomeNeiCoordIter<'a, Self>
+    fn some_nei_coord_iter<'a>(&'a self, coord: Coord) -> SomeNeiCoordIter<'a, Self>
         where Self: Sized
     {
         SomeNeiCoordIter::new(self, coord)
     }
 }
 
-pub trait RowGrid<'a> : Grid<'a> {
+pub trait DefaultGrid : Grid
+    where <Self as Grid>::Item: Default,
+{
+    fn new_default(width: usize, height: usize) -> Self;
+    fn reset_all(&mut self);
+}
+
+pub trait IterGrid<'a> : Grid
+    where <Self as Grid>::Item: 'a,
+{
+    type Iter: Iterator<Item=&'a Self::Item>;
+    type IterMut: Iterator<Item=&'a mut Self::Item>;
+
+    fn iter(&'a self) -> Self::Iter;
+    fn iter_mut(&'a mut self) -> Self::IterMut;
+}
+
+pub trait RowGrid<'a> : Grid
+    where <Self as Grid>::Item: 'a,
+{
     type RowIntoIter: IntoIterator<Item=&'a Self::Item> + 'a;
     type RowIter: Iterator<Item=Self::RowIntoIter>;
 
     type RowIntoIterMut: IntoIterator<Item=&'a mut Self::Item> + 'a;
     type RowIterMut: Iterator<Item=Self::RowIntoIterMut>;
-
 
     fn rows(&'a self) -> Self::RowIter;
     fn rows_mut(&'a mut self) -> Self::RowIterMut;

@@ -6,6 +6,8 @@ use geometry::Vector2;
 
 use grid::{
     Grid,
+    DefaultGrid,
+    IterGrid,
     RowGrid,
     Coord,
     CoordCell,
@@ -32,8 +34,8 @@ impl<T: CoordCell> StaticGrid<T> {
     }
 }
 
-impl<T: Default> StaticGrid<T> {
-    pub fn new_default(width: usize, height: usize) -> StaticGrid<T> {
+impl<T: Default> DefaultGrid for StaticGrid<T> {
+    fn new_default(width: usize, height: usize) -> Self {
         let mut grid = StaticGrid::new_uninitialised(width, height);
 
         for _ in 0..grid.size {
@@ -43,7 +45,7 @@ impl<T: Default> StaticGrid<T> {
         grid
     }
 
-    pub fn reset_all(&mut self) {
+    fn reset_all(&mut self) {
         for x in self.iter_mut() {
             *x = T::default();
         }
@@ -92,12 +94,9 @@ impl<T> StaticGrid<T> {
     }
 }
 
-impl<'a, T: 'a> Grid<'a> for StaticGrid<T> {
+impl<T> Grid for StaticGrid<T> {
 
     type Item = T;
-
-    type Iter = slice::Iter<'a, T>;
-    type IterMut = slice::IterMut<'a, T>;
 
     fn swap(&mut self, other: &mut Self) {
         if self.width == other.width && self.height == other.height {
@@ -122,6 +121,14 @@ impl<'a, T: 'a> Grid<'a> for StaticGrid<T> {
     fn limits_max(&self) -> Coord {
         self.limits
     }
+
+    fn width(&self) -> usize { self.width }
+    fn height(&self) -> usize { self.height }
+}
+
+impl<'a, T: 'a> IterGrid<'a> for StaticGrid<T> {
+    type Iter = slice::Iter<'a, T>;
+    type IterMut = slice::IterMut<'a, T>;
 
     fn iter(&'a self) -> Self::Iter {
         self.elements.iter()

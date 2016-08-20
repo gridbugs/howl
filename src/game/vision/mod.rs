@@ -12,7 +12,4 @@ pub use self::default::{
 };
 
 mod square;
-pub use self::square::{
-    Square,
-    square,
-};
+pub use self::square::Square;

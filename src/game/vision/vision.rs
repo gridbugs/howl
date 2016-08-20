@@ -17,8 +17,8 @@ pub trait VisibilityReport {
 }
 
 /// Trait implemented by vision systems
-pub trait VisionSystem<'a, G, R, I>
-    where G: Grid<'a>,
+pub trait VisionSystem<G, R, I>
+    where G: Grid,
           G::Item: Opacity,
           R: VisibilityReport,
 {

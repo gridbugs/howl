@@ -3,10 +3,10 @@ use game::{
     EntityId,
     Component,
     ComponentType,
-    SpacialHashMap,
 };
 use game::components::{
     Level,
+    LevelSpacialHashMap,
     DoorState,
 };
 use game::knowledge::DrawableKnowledge;
@@ -68,7 +68,7 @@ impl Entity {
         }
     }
 
-    pub fn level_spacial_hash(&self) -> Option<Ref<SpacialHashMap>> {
+    pub fn level_spacial_hash(&self) -> Option<Ref<LevelSpacialHashMap>> {
         self.level_data().map(|level| {
             level.spacial_hash.borrow()
         })

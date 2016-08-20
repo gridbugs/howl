@@ -5,6 +5,8 @@ use colour::ansi::AnsiColour;
 use colour::ansi;
 use grid::{
     Grid,
+    DefaultGrid,
+    IterGrid,
     StaticGrid,
 };
 use geometry::Vector2;

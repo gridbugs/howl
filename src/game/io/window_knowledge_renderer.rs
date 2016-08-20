@@ -5,6 +5,7 @@ use game::entity::{
 
 use grid::{
     Grid,
+    IterGrid,
     Coord,
 };
 use terminal::window_manager::WindowRef;

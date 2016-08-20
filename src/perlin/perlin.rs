@@ -1,4 +1,7 @@
-use grid::StaticGrid;
+use grid::{
+    StaticGrid,
+    DefaultGrid,
+};
 use geometry::Dot;
 use geometry::Length;
 use geometry::Vector2;

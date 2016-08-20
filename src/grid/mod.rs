@@ -11,6 +11,8 @@ pub use self::coord::Coord;
 mod grid;
 pub use self::grid::{
     Grid,
+    DefaultGrid,
+    IterGrid,
     RowGrid,
 };
 

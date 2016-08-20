@@ -8,14 +8,11 @@ use game::{
     ToType,
 };
 
+use grid::Grid;
+use geometry::Vector2;
+
 use std::collections::HashMap;
 use std::collections::HashSet;
-
-use grid::{
-    Grid,
-    StaticGrid,
-};
-use geometry::Vector2;
 
 #[derive(Debug, Clone)]
 pub struct SpacialHashCell {
@@ -112,16 +109,16 @@ impl SpacialHashCell {
 
 
 #[derive(Debug, Clone)]
-pub struct SpacialHashMap {
+pub struct SpacialHashMap<G: Grid<Item=SpacialHashCell>> {
     pub id: Option<EntityId>,
-    pub grid: StaticGrid<SpacialHashCell>,
+    pub grid: G,
 }
 
-impl SpacialHashMap {
-    pub fn new(width: usize, height: usize) -> Self {
+impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
+    pub fn new(grid: G) -> Self {
         SpacialHashMap {
             id: None,
-            grid: StaticGrid::new_default(width, height),
+            grid: grid,
         }
     }
 
