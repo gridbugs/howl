@@ -6,16 +6,16 @@ use game::vision::{
 
 use geometry::Vector2;
 
-use grid::{
-    Grid,
-    StaticGrid,
-};
+use grid::Grid;
 
-pub fn square<O: Opacity, R: VisibilityReport<MetaData=f64>>(
+pub fn square<'a, G, R>(
     eye: Vector2<isize>,
-    grid: &StaticGrid<O>,
+    grid: &G,
     distance: usize,
     report: &mut R)
+    where G: Grid<'a>,
+          G::Item: Opacity,
+          R: VisibilityReport<MetaData=f64>
 {
     let distance = distance as isize;
     for i in -distance..distance + 1 {
@@ -29,14 +29,15 @@ pub fn square<O: Opacity, R: VisibilityReport<MetaData=f64>>(
 }
 
 pub struct Square;
-impl<O, R> VisionSystem<O, R, usize> for Square
-    where O: Opacity,
+impl<'a, G, R> VisionSystem<'a, G, R, usize> for Square
+    where G: Grid<'a>,
+          G::Item: Opacity,
           R: VisibilityReport<MetaData=f64>
 {
     fn detect_visible_area(
         &self,
         eye: Vector2<isize>,
-        grid: &StaticGrid<O>,
+        grid: &G,
         info: usize,
         report: &mut R)
     {
