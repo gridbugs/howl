@@ -9,6 +9,7 @@ use game::ComponentType as CType;
 use game::actions;
 use game::components::DoorState;
 
+use grid::Grid;
 use rustty::Event;
 use terminal::window_manager::InputSource;
 use geometry::direction::Direction;

@@ -2,7 +2,11 @@ use game::entity::{
     EntityTable,
     EntityId
 };
-use grid::Coord;
+
+use grid::{
+    Grid,
+    Coord,
+};
 use terminal::window_manager::WindowRef;
 use colour::ansi;
 

@@ -11,7 +11,10 @@ use game::{
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use grid::StaticGrid;
+use grid::{
+    Grid,
+    StaticGrid,
+};
 use geometry::Vector2;
 
 #[derive(Debug, Clone)]

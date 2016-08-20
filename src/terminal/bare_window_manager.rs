@@ -3,7 +3,10 @@ use std::cell::RefCell;
 use allocator::allocator::Allocator;
 use colour::ansi::AnsiColour;
 use colour::ansi;
-use grid::StaticGrid;
+use grid::{
+    Grid,
+    StaticGrid,
+};
 use geometry::Vector2;
 use std::io::Error;
 use rustty;

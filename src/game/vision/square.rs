@@ -5,7 +5,11 @@ use game::vision::{
 };
 
 use geometry::Vector2;
-use grid::StaticGrid;
+
+use grid::{
+    Grid,
+    StaticGrid,
+};
 
 pub fn square<O: Opacity, R: VisibilityReport<MetaData=f64>>(
     eye: Vector2<isize>,
