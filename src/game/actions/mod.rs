@@ -25,6 +25,7 @@ pub fn open_door(door_id: EntityId) -> UpdateSummary {
     summary.remove_component(door_id, CType::SolidTile);
     summary.add_component(door_id, TransparentTile(Tile::new('-', ansi::WHITE)));
     summary.add_component(door_id, Door(DoorState::Open));
+    summary.add_component(door_id, Opacity(0.0));
 
     summary
 }
@@ -39,6 +40,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
         background: ansi::DARK_GREY,
     });
     summary.add_component(door_id, Door(DoorState::Closed));
+    summary.add_component(door_id, Opacity(1.0));
 
     summary
 }

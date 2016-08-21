@@ -160,6 +160,36 @@ pub mod cardinal_directions {
     };
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct OrdinalDirectionProfile {
+    pub corner_offset: Vector2<f64>,
+    pub opposite: OrdinalDirection,
+}
+
+pub mod ordinal_directions {
+    use geometry::Vector2;
+
+    use geometry::direction::OrdinalDirectionProfile;
+    use geometry::direction::OrdinalDirection;
+
+    pub static NORTH_EAST: OrdinalDirectionProfile = OrdinalDirectionProfile {
+        corner_offset: Vector2 { x: 1.0, y: 0.0 },
+        opposite: OrdinalDirection::SouthWest,
+    };
+    pub static SOUTH_EAST: OrdinalDirectionProfile = OrdinalDirectionProfile {
+        corner_offset: Vector2 { x: 1.0, y: 1.0 },
+        opposite: OrdinalDirection::NorthWest,
+    };
+    pub static SOUTH_WEST: OrdinalDirectionProfile = OrdinalDirectionProfile {
+        corner_offset: Vector2 { x: 0.0, y: 1.0 },
+        opposite: OrdinalDirection::NorthEast,
+    };
+    pub static NORTH_WEST: OrdinalDirectionProfile = OrdinalDirectionProfile {
+        corner_offset: Vector2 { x: 0.0, y: 0.0 },
+        opposite: OrdinalDirection::SouthEast,
+    };
+}
+
 pub const NUM_DIRECTIONS: usize = 8;
 pub static DIRECTIONS: [Direction; NUM_DIRECTIONS] = [
     Direction::North,
@@ -264,6 +294,32 @@ impl CardinalDirection {
     }
 
     pub fn opposite(self) -> CardinalDirection {
+        self.profile().opposite
+    }
+}
+
+pub static ORDINAL_DIRECTION_PROFILES:
+[&'static OrdinalDirectionProfile; NUM_ORDINAL_DIRECTIONS] = [
+    &ordinal_directions::NORTH_EAST,
+    &ordinal_directions::SOUTH_EAST,
+    &ordinal_directions::SOUTH_WEST,
+    &ordinal_directions::NORTH_WEST,
+];
+
+impl OrdinalDirection {
+    pub fn index(self) -> usize {
+        self as usize
+    }
+
+    pub fn profile(self) -> &'static OrdinalDirectionProfile {
+        ORDINAL_DIRECTION_PROFILES[self.index()]
+    }
+
+    pub fn corner_offset(self) -> Vector2<f64> {
+        self.profile().corner_offset
+    }
+
+    pub fn opposite(self) -> OrdinalDirection {
         self.profile().opposite
     }
 }

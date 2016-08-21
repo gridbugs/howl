@@ -2,6 +2,7 @@ use std::marker::Copy;
 use std::convert::From;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
 use geometry::vector::Dot;
+use geometry::vector::LengthSquared;
 use rand;
 use rand::Rng;
 use std::f64::consts::PI;
@@ -134,3 +135,9 @@ impl<T, S> Dot<Vector2<S>> for Vector2<T>
         self.x * rhs.x + self.y * rhs.y
     }
 }
+
+impl<T> LengthSquared for Vector2<T>
+    where T: Mul<T>,
+          <T as Mul<T>>::Output: Add,
+          T: Copy,
+{}

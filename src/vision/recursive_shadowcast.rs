@@ -1,9 +1,26 @@
 use geometry::{
     Direction,
     CardinalDirection,
+    OrdinalDirection,
     SubDirection,
+    Vector2,
     Vector2Index,
+    LengthSquared,
 };
+
+use vision::{
+    Opacity,
+    VisionSystem,
+    VisibilityReport,
+};
+
+use grid::{
+    Grid,
+    Coord,
+};
+
+use std::cell::RefCell;
+use std::cmp;
 
 /// Different types of rounding functions
 enum RoundType {
@@ -16,10 +33,10 @@ enum RoundType {
 }
 
 impl RoundType {
-    fn round(&self, x: f64) -> f64 {
+    fn round(&self, x: f64) -> isize {
         match *self {
-            RoundType::Floor => x.floor(),
-            RoundType::ExclusiveFloor => (x - 1.0).ceil(),
+            RoundType::Floor => x.floor() as isize,
+            RoundType::ExclusiveFloor => (x - 1.0).ceil() as isize,
         }
     }
 }
@@ -49,18 +66,21 @@ struct Octant {
     /// Added to depth part of coord as depth increases
     depth_step: isize,
 
-    /// Added to lateral part of coord during scan
+    /// Added to lateral part of coord during scan.
     lateral_step: isize,
+
+    /// Copy of lateral_step, casted to a float.
+    lateral_step_float: f64,
 
     /// During a scan, if the current cell has more opacity than the
     /// previous cell, use the gradient through this corner of the
     /// current cell to split the visible area.
-    opacity_increase_corner: Direction,
+    opacity_increase_corner: OrdinalDirection,
 
     /// During a scan, if the current cell has less opacity than the
     /// previous cell, use the gradient through this corner of the
     /// current cell to split the visible area.
-    opacity_decrease_corner: Direction,
+    opacity_decrease_corner: OrdinalDirection,
 
     /// Side of a cell in this octant  facing the eye
     facing_side: Direction,
@@ -69,7 +89,7 @@ struct Octant {
     across_side: Direction,
 
     /// Corner of cell closest to eye
-    facing_corner: Direction,
+    facing_corner: OrdinalDirection,
 
     /// Rounding function to use at the start of a scan to convert a
     /// floating point derived from a gradient into part of a coord
@@ -117,16 +137,17 @@ impl Octant {
 
             depth_step: depth_step,
             lateral_step: lateral_step,
+            lateral_step_float: lateral_step as f64,
 
             opacity_increase_corner: card_depth_dir
-                .combine(card_lateral_dir.opposite()).unwrap().direction(),
+                .combine(card_lateral_dir.opposite()).unwrap(),
 
             opacity_decrease_corner: card_depth_dir.opposite()
-                .combine(card_lateral_dir.opposite()).unwrap().direction(),
+                .combine(card_lateral_dir.opposite()).unwrap(),
 
             facing_side: card_facing_side.direction(),
             across_side: card_across_side.direction(),
-            facing_corner: card_facing_side.combine(card_across_side).unwrap().direction(),
+            facing_corner: card_facing_side.combine(card_across_side).unwrap(),
 
             round_start: round_start,
             round_end: round_end,
@@ -134,8 +155,247 @@ impl Octant {
             rotation: rotation,
         }
     }
+
+    fn compute_slope(&self, from: Vector2<f64>, to: Vector2<f64>) -> f64 {
+        ((to.get(self.lateral_idx) - from.get(self.lateral_idx)) /
+            (to.get(self.depth_idx) - from.get(self.depth_idx))).abs()
+    }
+}
+
+#[derive(Debug)]
+struct Frame {
+    depth: usize,
+    min_slope: f64,
+    max_slope: f64,
+    visibility: f64,
+}
+
+impl Frame {
+    fn new(depth: usize, min_slope: f64, max_slope: f64, visibility: f64) -> Self {
+        Frame {
+            depth: depth,
+            min_slope: min_slope,
+            max_slope: max_slope,
+            visibility: visibility,
+        }
+    }
 }
 
 pub struct RecursiveShadowcast {
     octants: [Octant; NUM_OCTANTS],
+    stack: RefCell<Vec<Frame>>,
+}
+
+impl RecursiveShadowcast {
+    pub fn new() -> Self {
+        RecursiveShadowcast {
+            // The order octants appear is the order one would visit
+            // each octant if they started at -PI radians and moved
+            // in the positive (anticlockwise) direction.
+            octants: [
+                Octant::new(CardinalDirection::West, CardinalDirection::South),
+                Octant::new(CardinalDirection::South, CardinalDirection::West),
+                Octant::new(CardinalDirection::South, CardinalDirection::East),
+                Octant::new(CardinalDirection::East, CardinalDirection::South),
+                Octant::new(CardinalDirection::East, CardinalDirection::North),
+                Octant::new(CardinalDirection::North, CardinalDirection::East),
+                Octant::new(CardinalDirection::North, CardinalDirection::West),
+                Octant::new(CardinalDirection::West, CardinalDirection::North),
+            ],
+            stack: RefCell::new(Vec::new()),
+        }
+    }
+
+    fn detect_visible_area_octant<G, R>(
+        &self,
+        octant: &Octant,
+        eye: Coord,
+        grid: &G,
+        distance: usize,
+        distance_squared: isize,
+        initial_min_slope: f64,
+        initial_max_slope: f64,
+        report: &mut R)
+    where G: Grid,
+          G::Item: Opacity,
+          R: VisibilityReport<MetaData=f64>
+    {
+        // limiting coordinates of grid
+        let depth_min = grid.limits_min().get(octant.depth_idx);
+        let depth_max = grid.limits_max().get(octant.depth_idx);
+        let lateral_min = grid.limits_min().get(octant.lateral_idx);
+        let lateral_max = grid.limits_max().get(octant.lateral_idx);
+
+        // eye centre position
+        let eye_centre = eye.cell_centre();
+        let eye_lateral_pos = eye_centre.get(octant.lateral_idx);
+
+        // eye index
+        let eye_depth_idx = eye.get(octant.depth_idx);
+
+        // Initial stack frame
+        self.stack.borrow_mut().push(
+            Frame::new(1, initial_min_slope, initial_max_slope, 1.0));
+
+        // Coord to use for the scan
+        let mut coord = Coord::new(0, 0);
+
+        loop {
+            let mut frame = if let Some(f) = self.stack.borrow_mut().pop() {
+                f
+            } else {
+                break;
+            };
+
+            assert!(frame.min_slope >= 0.0);
+            assert!(frame.min_slope <= 1.0);
+            assert!(frame.max_slope >= 0.0);
+            assert!(frame.max_slope <= 1.0);
+
+            // Don't scan past the view distance
+            if frame.depth > distance {
+                continue;
+            }
+
+            // Absolute grid index in depth direction of current row
+            let depth_abs_idx = eye_depth_idx + (frame.depth as isize) * octant.depth_step;
+
+            // Don't scan off the edge of the grid
+            if depth_abs_idx < depth_min || depth_abs_idx > depth_max {
+                continue;
+            }
+
+            // Offset of inner side of current row.
+            // The 0.5 comes from the fact that the eye is in the centre of its cell.
+            let inner_depth_offset = frame.depth as f64 - 0.5;
+
+            // Offset of the outer side of the current row.
+            // We add 1 to the inner offset, as row's are 1 unit wide.
+            let outer_depth_offset = inner_depth_offset + 1.0;
+
+            // Lateral index to start scanning from.
+            // We always scan from from cardinal axis to ordinal axis.
+            let rel_scan_start_idx = frame.min_slope * inner_depth_offset;
+            let abs_scan_start_idx =
+                octant.round_start.round(eye_lateral_pos +
+                                         rel_scan_start_idx * octant.lateral_step_float);
+
+            // Make sure the scan starts inside the grid.
+            // We always scan away from the eye in the lateral direction, so if the scan
+            // starts off the grid, the entire scan will be off the grid, so can be skipped.
+            if abs_scan_start_idx < lateral_min || abs_scan_start_idx > lateral_max {
+                continue;
+            }
+
+            // Lateral index at which to stop scanning.
+            let rel_scan_end_idx = frame.max_slope * outer_depth_offset;
+            let abs_scan_end_idx =
+                octant.round_end.round(eye_lateral_pos +
+                                       rel_scan_end_idx * octant.lateral_step_float);
+
+            // Constrain the end of the scan within the limits of the grid
+            let abs_scan_end_idx =
+                cmp::min(cmp::max(abs_scan_end_idx, lateral_min), lateral_max);
+
+
+            // Do the scan
+            let mut first_iteration = true;
+            let mut previous_opaque = false;
+            let mut previous_visibility = -1.0;
+            coord.set(octant.depth_idx, depth_abs_idx);
+            let final_idx = abs_scan_end_idx + octant.lateral_step;
+            let mut idx = abs_scan_start_idx;
+            loop {
+                if idx == final_idx {
+                    break;
+                }
+
+                let last_iteration = idx == abs_scan_end_idx;
+
+                // update the coord to the current grid position
+                coord.set(octant.lateral_idx, idx);
+
+                // report the cell as visible
+                if (coord - eye).len_sq() < distance_squared {
+                    report.see(coord, frame.visibility);
+                }
+
+                // look up the cell with opacity
+                let cell = grid.get(coord).unwrap();
+
+                // compute current visibility
+                let current_visibility = (frame.visibility - cell.opacity()).max(0.0);
+                let current_opaque = current_visibility == 0.0;
+
+                // process changes in visibility
+                if !first_iteration {
+                    // determine corner of current cell we'll be looking through
+                    let corner = if current_visibility > previous_visibility {
+                        Some(octant.opacity_decrease_corner)
+                    } else if current_visibility < previous_visibility {
+                        Some(octant.opacity_increase_corner)
+                    } else {
+                        // no change in visibility - nothing happens
+                        None
+                    };
+
+                    if let Some(corner) = corner {
+                        let corner_coord = coord.cell_corner(corner);
+                        let slope = octant.compute_slope(eye_centre, corner_coord);
+                        assert!(slope >= 0.0);
+                        assert!(slope <= 1.0);
+
+                        if !previous_opaque {
+                            // unless this marks the end of an opaque region, push
+                            // the just-completed region onto the stack so it can
+                            // be expanded in a future scan
+                            self.stack.borrow_mut().push(Frame::new(frame.depth + 1,
+                                                                    frame.min_slope,
+                                                                    slope,
+                                                                    previous_visibility));
+                        }
+
+                        frame.min_slope = slope;
+                    }
+                }
+
+                if last_iteration && !current_opaque {
+                    // push the final region of the scan to the stack
+                    self.stack.borrow_mut().push(Frame::new(frame.depth + 1,
+                                                            frame.min_slope,
+                                                            frame.max_slope,
+                                                            current_visibility));
+                }
+
+                previous_opaque = current_opaque;
+                previous_visibility = current_visibility;
+                first_iteration = false;
+
+                idx += octant.lateral_step;
+            }
+        }
+    }
+}
+
+impl<G, R> VisionSystem<G, R, usize> for RecursiveShadowcast
+    where G: Grid,
+          G::Item: Opacity,
+          R: VisibilityReport<MetaData=f64>
+{
+    fn detect_visible_area(
+        &mut self,
+        eye: Vector2<isize>,
+        grid: &G,
+        distance: usize,
+        report: &mut R)
+    {
+        let distance_squared = (distance * distance) as isize;
+
+        report.see(eye, 1.0);
+
+        for octant in &self.octants {
+            self.detect_visible_area_octant(octant, eye, grid, distance,
+                                            distance_squared, 0.0, 1.0, report);
+        }
+    }
 }

@@ -9,13 +9,13 @@ use geometry::Vector2;
 use grid::Grid;
 
 pub struct Square;
-impl<'a, G, R> VisionSystem<G, R, usize> for Square
+impl<G, R> VisionSystem<G, R, usize> for Square
     where G: Grid,
           G::Item: Opacity,
           R: VisibilityReport<MetaData=f64>
 {
     fn detect_visible_area(
-        &self,
+        &mut self,
         eye: Vector2<isize>,
         grid: &G,
         distance: usize,

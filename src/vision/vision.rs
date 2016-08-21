@@ -23,7 +23,7 @@ pub trait VisionSystem<G, R, I>
           R: VisibilityReport,
 {
     fn detect_visible_area(
-        &self,
+        &mut self,
         eye: Vector2<isize>,
         grid: &G,
         info: I,

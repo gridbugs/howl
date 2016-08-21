@@ -13,3 +13,6 @@ pub use self::square::Square;
 
 mod recursive_shadowcast;
 pub use self::recursive_shadowcast::RecursiveShadowcast;
+
+#[cfg(test)]
+mod tests;

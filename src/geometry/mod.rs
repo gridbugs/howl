@@ -5,6 +5,7 @@ mod vector3;
 pub use self::vector::{
     Dot,
     Length,
+    LengthSquared,
 };
 pub use self::vector2::{
     Vector2,
