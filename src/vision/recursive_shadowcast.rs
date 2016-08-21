@@ -181,6 +181,105 @@ impl Frame {
     }
 }
 
+struct Limits {
+    // limiting coordinates of grid
+    depth_min: isize,
+    depth_max: isize,
+    lateral_min: isize,
+    lateral_max: isize,
+
+    // eye centre position
+    eye_centre: Vector2<f64>,
+    eye_lateral_pos: f64,
+
+    // eye index
+    eye_depth_idx: isize,
+}
+
+impl Limits {
+    fn new<G>(eye: Coord, grid: &G, octant: &Octant) -> Self
+        where G: Grid,
+              G::Item: Opacity,
+    {
+        let eye_centre = eye.cell_centre();
+        Limits {
+            depth_min: grid.limits_min().get(octant.depth_idx),
+            depth_max: grid.limits_max().get(octant.depth_idx),
+            lateral_min: grid.limits_min().get(octant.lateral_idx),
+            lateral_max: grid.limits_max().get(octant.lateral_idx),
+            eye_centre: eye_centre,
+            eye_lateral_pos: eye_centre.get(octant.lateral_idx),
+            eye_depth_idx: eye.get(octant.depth_idx),
+        }
+    }
+}
+
+struct Scan {
+    depth_idx: isize,
+    start_lateral_idx: isize,
+    end_lateral_idx: isize,
+}
+
+impl Scan {
+    fn new(limits: &Limits, frame: &Frame, octant: &Octant, distance: usize) -> Option<Self> {
+        assert!(frame.min_slope >= 0.0);
+        assert!(frame.min_slope <= 1.0);
+        assert!(frame.max_slope >= 0.0);
+        assert!(frame.max_slope <= 1.0);
+
+        // Don't scan past the view distance
+        if frame.depth > distance {
+            return None;
+        }
+
+        // Absolute grid index in depth direction of current row
+        let depth_abs_idx = limits.eye_depth_idx + (frame.depth as isize) * octant.depth_step;
+
+        // Don't scan off the edge of the grid
+        if depth_abs_idx < limits.depth_min || depth_abs_idx > limits.depth_max {
+            return None;
+        }
+
+        // Offset of inner side of current row.
+        // The 0.5 comes from the fact that the eye is in the centre of its cell.
+        let inner_depth_offset = frame.depth as f64 - 0.5;
+
+        // Offset of the outer side of the current row.
+        // We add 1 to the inner offset, as row's are 1 unit wide.
+        let outer_depth_offset = inner_depth_offset + 1.0;
+
+        // Lateral index to start scanning from.
+        // We always scan from from cardinal axis to ordinal axis.
+        let rel_scan_start_idx = frame.min_slope * inner_depth_offset;
+        let abs_scan_start_idx =
+            octant.round_start.round(limits.eye_lateral_pos +
+                                     rel_scan_start_idx * octant.lateral_step_float);
+
+        // Make sure the scan starts inside the grid.
+        // We always scan away from the eye in the lateral direction, so if the scan
+        // starts off the grid, the entire scan will be off the grid, so can be skipped.
+        if abs_scan_start_idx < limits.lateral_min || abs_scan_start_idx > limits.lateral_max {
+            return None;
+        }
+
+        // Lateral index at which to stop scanning.
+        let rel_scan_end_idx = frame.max_slope * outer_depth_offset;
+        let abs_scan_end_idx =
+            octant.round_end.round(limits.eye_lateral_pos +
+                                   rel_scan_end_idx * octant.lateral_step_float);
+
+        // Constrain the end of the scan within the limits of the grid
+        let abs_scan_end_idx =
+            cmp::min(cmp::max(abs_scan_end_idx, limits.lateral_min), limits.lateral_max);
+
+        Some(Scan {
+            depth_idx: depth_abs_idx,
+            start_lateral_idx: abs_scan_start_idx,
+            end_lateral_idx: abs_scan_end_idx,
+        })
+    }
+}
+
 pub struct RecursiveShadowcast {
     octants: [Octant; NUM_OCTANTS],
     stack: RefCell<Vec<Frame>>,
@@ -206,6 +305,107 @@ impl RecursiveShadowcast {
         }
     }
 
+    fn scan<G, R>(
+        &self,
+        octant: &Octant,
+        eye: Coord,
+        grid: &G,
+        distance_squared: isize,
+        limits: &Limits,
+        frame: &Frame,
+        scan: &Scan,
+        report: &mut R)
+        where G: Grid,
+              G::Item: Opacity,
+              R: VisibilityReport<MetaData=f64>
+    {
+        let mut coord = Coord::new(0, 0);
+        coord.set(octant.depth_idx, scan.depth_idx);
+
+        let mut first_iteration = true;
+        let mut previous_opaque = false;
+        let mut previous_visibility = -1.0;
+        let mut idx = scan.start_lateral_idx;
+        let mut min_slope = frame.min_slope;
+
+        let final_idx = scan.end_lateral_idx + octant.lateral_step;
+
+        while idx != final_idx {
+
+            let last_iteration = idx == scan.end_lateral_idx;
+
+            // update the coord to the current grid position
+            coord.set(octant.lateral_idx, idx);
+
+            // report the cell as visible
+            if (coord - eye).len_sq() < distance_squared {
+                report.see(coord, frame.visibility);
+            }
+
+            // look up the cell with opacity
+            let cell = grid.get(coord).unwrap();
+
+            // compute current visibility
+            let current_visibility = (frame.visibility - cell.opacity()).max(0.0);
+            let current_opaque = current_visibility == 0.0;
+
+            // process changes in visibility
+            if !first_iteration {
+                // determine corner of current cell we'll be looking through
+                let corner = if current_visibility > previous_visibility {
+                    Some(octant.opacity_decrease_corner)
+                } else if current_visibility < previous_visibility {
+                    Some(octant.opacity_increase_corner)
+                } else {
+                    // no change in visibility - nothing happens
+                    None
+                };
+
+                if let Some(corner) = corner {
+                    let corner_coord = coord.cell_corner(corner);
+                    let slope = octant.compute_slope(limits.eye_centre, corner_coord);
+                    assert!(slope >= 0.0);
+                    assert!(slope <= 1.0);
+
+                    if !previous_opaque {
+                        // unless this marks the end of an opaque region, push
+                        // the just-completed region onto the stack so it can
+                        // be expanded in a future scan
+                        self.push(Frame::new(frame.depth + 1,
+                                  min_slope,
+                                  slope,
+                                  previous_visibility));
+                    }
+
+                    min_slope = slope;
+                }
+            }
+
+            if last_iteration && !current_opaque {
+                // push the final region of the scan to the stack
+                self.push(Frame::new(frame.depth + 1,
+                                     min_slope,
+                                     frame.max_slope,
+                                     current_visibility));
+            }
+
+            previous_opaque = current_opaque;
+            previous_visibility = current_visibility;
+            first_iteration = false;
+
+            idx += octant.lateral_step;
+        }
+
+    }
+
+    fn pop(&self) -> Option<Frame> {
+        self.stack.borrow_mut().pop()
+    }
+
+    fn push(&self, frame: Frame) {
+        self.stack.borrow_mut().push(frame);
+    }
+
     fn detect_visible_area_octant<G, R>(
         &self,
         octant: &Octant,
@@ -216,164 +416,20 @@ impl RecursiveShadowcast {
         initial_min_slope: f64,
         initial_max_slope: f64,
         report: &mut R)
-    where G: Grid,
-          G::Item: Opacity,
-          R: VisibilityReport<MetaData=f64>
+        where G: Grid,
+              G::Item: Opacity,
+              R: VisibilityReport<MetaData=f64>
     {
-        // limiting coordinates of grid
-        let depth_min = grid.limits_min().get(octant.depth_idx);
-        let depth_max = grid.limits_max().get(octant.depth_idx);
-        let lateral_min = grid.limits_min().get(octant.lateral_idx);
-        let lateral_max = grid.limits_max().get(octant.lateral_idx);
-
-        // eye centre position
-        let eye_centre = eye.cell_centre();
-        let eye_lateral_pos = eye_centre.get(octant.lateral_idx);
-
-        // eye index
-        let eye_depth_idx = eye.get(octant.depth_idx);
+        let limits = Limits::new(eye, grid, octant);
 
         // Initial stack frame
-        self.stack.borrow_mut().push(
-            Frame::new(1, initial_min_slope, initial_max_slope, 1.0));
+        self.push(Frame::new(1, initial_min_slope, initial_max_slope, 1.0));
 
-        // Coord to use for the scan
-        let mut coord = Coord::new(0, 0);
-
-        loop {
-            let mut frame = if let Some(f) = self.stack.borrow_mut().pop() {
-                f
-            } else {
-                break;
-            };
-
-            assert!(frame.min_slope >= 0.0);
-            assert!(frame.min_slope <= 1.0);
-            assert!(frame.max_slope >= 0.0);
-            assert!(frame.max_slope <= 1.0);
-
-            // Don't scan past the view distance
-            if frame.depth > distance {
-                continue;
+        while let Some(frame) = self.pop() {
+            if let Some(scan) = Scan::new(&limits, &frame, octant, distance) {
+                self.scan(octant, eye, grid, distance_squared, &limits, &frame, &scan, report);
             }
-
-            // Absolute grid index in depth direction of current row
-            let depth_abs_idx = eye_depth_idx + (frame.depth as isize) * octant.depth_step;
-
-            // Don't scan off the edge of the grid
-            if depth_abs_idx < depth_min || depth_abs_idx > depth_max {
-                continue;
-            }
-
-            // Offset of inner side of current row.
-            // The 0.5 comes from the fact that the eye is in the centre of its cell.
-            let inner_depth_offset = frame.depth as f64 - 0.5;
-
-            // Offset of the outer side of the current row.
-            // We add 1 to the inner offset, as row's are 1 unit wide.
-            let outer_depth_offset = inner_depth_offset + 1.0;
-
-            // Lateral index to start scanning from.
-            // We always scan from from cardinal axis to ordinal axis.
-            let rel_scan_start_idx = frame.min_slope * inner_depth_offset;
-            let abs_scan_start_idx =
-                octant.round_start.round(eye_lateral_pos +
-                                         rel_scan_start_idx * octant.lateral_step_float);
-
-            // Make sure the scan starts inside the grid.
-            // We always scan away from the eye in the lateral direction, so if the scan
-            // starts off the grid, the entire scan will be off the grid, so can be skipped.
-            if abs_scan_start_idx < lateral_min || abs_scan_start_idx > lateral_max {
-                continue;
-            }
-
-            // Lateral index at which to stop scanning.
-            let rel_scan_end_idx = frame.max_slope * outer_depth_offset;
-            let abs_scan_end_idx =
-                octant.round_end.round(eye_lateral_pos +
-                                       rel_scan_end_idx * octant.lateral_step_float);
-
-            // Constrain the end of the scan within the limits of the grid
-            let abs_scan_end_idx =
-                cmp::min(cmp::max(abs_scan_end_idx, lateral_min), lateral_max);
-
-
-            // Do the scan
-            let mut first_iteration = true;
-            let mut previous_opaque = false;
-            let mut previous_visibility = -1.0;
-            coord.set(octant.depth_idx, depth_abs_idx);
-            let final_idx = abs_scan_end_idx + octant.lateral_step;
-            let mut idx = abs_scan_start_idx;
-            loop {
-                if idx == final_idx {
-                    break;
-                }
-
-                let last_iteration = idx == abs_scan_end_idx;
-
-                // update the coord to the current grid position
-                coord.set(octant.lateral_idx, idx);
-
-                // report the cell as visible
-                if (coord - eye).len_sq() < distance_squared {
-                    report.see(coord, frame.visibility);
-                }
-
-                // look up the cell with opacity
-                let cell = grid.get(coord).unwrap();
-
-                // compute current visibility
-                let current_visibility = (frame.visibility - cell.opacity()).max(0.0);
-                let current_opaque = current_visibility == 0.0;
-
-                // process changes in visibility
-                if !first_iteration {
-                    // determine corner of current cell we'll be looking through
-                    let corner = if current_visibility > previous_visibility {
-                        Some(octant.opacity_decrease_corner)
-                    } else if current_visibility < previous_visibility {
-                        Some(octant.opacity_increase_corner)
-                    } else {
-                        // no change in visibility - nothing happens
-                        None
-                    };
-
-                    if let Some(corner) = corner {
-                        let corner_coord = coord.cell_corner(corner);
-                        let slope = octant.compute_slope(eye_centre, corner_coord);
-                        assert!(slope >= 0.0);
-                        assert!(slope <= 1.0);
-
-                        if !previous_opaque {
-                            // unless this marks the end of an opaque region, push
-                            // the just-completed region onto the stack so it can
-                            // be expanded in a future scan
-                            self.stack.borrow_mut().push(Frame::new(frame.depth + 1,
-                                                                    frame.min_slope,
-                                                                    slope,
-                                                                    previous_visibility));
-                        }
-
-                        frame.min_slope = slope;
-                    }
-                }
-
-                if last_iteration && !current_opaque {
-                    // push the final region of the scan to the stack
-                    self.stack.borrow_mut().push(Frame::new(frame.depth + 1,
-                                                            frame.min_slope,
-                                                            frame.max_slope,
-                                                            current_visibility));
-                }
-
-                previous_opaque = current_opaque;
-                previous_visibility = current_visibility;
-                first_iteration = false;
-
-                idx += octant.lateral_step;
-            }
-        }
+       }
     }
 }
 
