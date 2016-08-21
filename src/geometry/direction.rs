@@ -1,6 +1,9 @@
-use geometry::vector2::Vector2;
+use geometry::{
+    Vector2,
+    Vector2Index,
+};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Direction {
     North,
     NorthEast,
@@ -12,7 +15,7 @@ pub enum Direction {
     NorthWest,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CardinalDirection {
     North,
     East,
@@ -20,7 +23,7 @@ pub enum CardinalDirection {
     West,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum OrdinalDirection {
     NorthEast,
     SouthEast,
@@ -39,12 +42,12 @@ pub struct DirectionProfile {
     pub direction: Direction,
     pub direction_type: DirectionType,
     pub opposite: Direction,
-    pub vector: Vector2<i8>,
+    pub vector: Vector2<isize>,
 }
 
 pub mod directions {
 
-    use geometry::vector2::Vector2;
+    use geometry::Vector2;
 
     use geometry::direction::DirectionProfile;
     use geometry::direction::Direction;
@@ -109,6 +112,30 @@ pub mod directions {
     };
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct CardinalDirectionProfile {
+    pub vector2_index: Vector2Index,
+}
+
+pub mod cardinal_directions {
+    use geometry::Vector2Index;
+
+    use geometry::direction::CardinalDirectionProfile;
+
+    pub static NORTH: CardinalDirectionProfile = CardinalDirectionProfile {
+        vector2_index: Vector2Index::Y,
+    };
+    pub static EAST: CardinalDirectionProfile = CardinalDirectionProfile {
+        vector2_index: Vector2Index::X,
+    };
+    pub static SOUTH: CardinalDirectionProfile = CardinalDirectionProfile {
+        vector2_index: Vector2Index::Y,
+    };
+    pub static WEST: CardinalDirectionProfile = CardinalDirectionProfile {
+        vector2_index: Vector2Index::X,
+    };
+}
+
 pub const NUM_DIRECTIONS: usize = 8;
 pub static DIRECTIONS: [Direction; NUM_DIRECTIONS] = [
     Direction::North,
@@ -164,8 +191,46 @@ impl Direction {
     pub fn opposite(self) -> Direction {
         self.profile().opposite
     }
-    pub fn vector(self) -> Vector2<i8> {
+    pub fn vector(self) -> Vector2<isize> {
         self.profile().vector
+    }
+}
+
+pub static CARDINAL_DIRECTION_PROFILES:
+[&'static CardinalDirectionProfile; NUM_CARDINAL_DIRECTIONS] = [
+    &cardinal_directions::NORTH,
+    &cardinal_directions::EAST,
+    &cardinal_directions::SOUTH,
+    &cardinal_directions::WEST,
+];
+
+pub static CARDINAL_DIRECTION_COMBINATIONS:
+[[Option<OrdinalDirection>; NUM_CARDINAL_DIRECTIONS]; NUM_CARDINAL_DIRECTIONS] = [
+    // North
+    [None, Some(OrdinalDirection::NorthEast), None, Some(OrdinalDirection::NorthWest)],
+    // East
+    [Some(OrdinalDirection::NorthEast), None, Some(OrdinalDirection::SouthEast), None],
+    // South
+    [None, Some(OrdinalDirection::SouthEast), None, Some(OrdinalDirection::SouthWest)],
+    // West
+    [Some(OrdinalDirection::NorthWest), None, Some(OrdinalDirection::SouthWest), None],
+];
+
+impl CardinalDirection {
+    pub fn index(self) -> usize {
+        self as usize
+    }
+
+    pub fn profile(self) -> &'static CardinalDirectionProfile {
+        CARDINAL_DIRECTION_PROFILES[self.index()]
+    }
+
+    pub fn vector2_index(self) -> Vector2Index {
+        self.profile().vector2_index
+    }
+
+    pub fn combine(self, other: CardinalDirection) -> Option<OrdinalDirection> {
+        CARDINAL_DIRECTION_COMBINATIONS[self.index()][other.index()]
     }
 }
 

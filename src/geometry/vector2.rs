@@ -12,6 +12,12 @@ pub struct Vector2<T> {
     pub y: T,
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum Vector2Index {
+    X,
+    Y,
+}
+
 impl<T> Vector2<T> {
     pub fn new(x: T, y: T) -> Self {
         Vector2 {x: x, y: y}
