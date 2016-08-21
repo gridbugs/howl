@@ -3,10 +3,15 @@ use game::Component::*;
 use game::ComponentType as CType;
 use game::{
     SpacialHashMap,
+    SpacialHashCell,
     Entity,
 };
 
 use geometry::Vector2;
+use grid::{
+    StaticGrid,
+    DefaultGrid,
+};
 
 use std::collections::HashSet;
 
@@ -15,8 +20,10 @@ const HEIGHT: usize = 10;
 
 // helper fns
 
-fn make_spacial_hash() -> SpacialHashMap {
-    SpacialHashMap::new(WIDTH, HEIGHT)
+fn make_spacial_hash() 
+    -> SpacialHashMap<StaticGrid<SpacialHashCell>>
+{
+    SpacialHashMap::new(StaticGrid::new_default(WIDTH, HEIGHT))
 }
 
 fn make_entity(x: isize, y: isize) -> Entity {
