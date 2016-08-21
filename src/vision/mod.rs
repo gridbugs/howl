@@ -10,3 +10,6 @@ pub use self::default::DefaultVisibilityReport;
 
 mod square;
 pub use self::square::Square;
+
+mod recursive_shadowcast;
+pub use self::recursive_shadowcast::RecursiveShadowcast;

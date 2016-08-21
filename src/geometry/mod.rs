@@ -17,6 +17,7 @@ pub use self::direction::{
     Direction,
     CardinalDirection,
     OrdinalDirection,
+    SubDirection,
 };
 
 #[cfg(test)]

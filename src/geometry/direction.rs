@@ -43,6 +43,8 @@ pub struct DirectionProfile {
     pub direction_type: DirectionType,
     pub opposite: Direction,
     pub vector: Vector2<isize>,
+    pub left90: Direction,
+    pub right90: Direction,
 }
 
 pub mod directions {
@@ -60,6 +62,8 @@ pub mod directions {
         direction_type: DirectionType::Cardinal(CardinalDirection::North),
         opposite: Direction::South,
         vector: Vector2 { x: 0, y: -1 },
+        left90: Direction::West,
+        right90: Direction::East,
     };
 
     pub static EAST: DirectionProfile = DirectionProfile {
@@ -67,6 +71,8 @@ pub mod directions {
         direction_type: DirectionType::Cardinal(CardinalDirection::East),
         opposite: Direction::West,
         vector: Vector2 { x: 1, y: 0 },
+        left90: Direction::North,
+        right90: Direction::South,
     };
 
     pub static SOUTH: DirectionProfile = DirectionProfile {
@@ -74,6 +80,8 @@ pub mod directions {
         direction_type: DirectionType::Cardinal(CardinalDirection::South),
         opposite: Direction::North,
         vector: Vector2 { x: 0, y: 1 },
+        left90: Direction::East,
+        right90: Direction::West,
     };
 
     pub static WEST: DirectionProfile = DirectionProfile {
@@ -81,6 +89,8 @@ pub mod directions {
         direction_type: DirectionType::Cardinal(CardinalDirection::West),
         opposite: Direction::East,
         vector: Vector2 { x: -1, y: 0 },
+        left90: Direction::South,
+        right90: Direction::North,
     };
 
     pub static NORTH_EAST: DirectionProfile = DirectionProfile {
@@ -88,6 +98,8 @@ pub mod directions {
         direction_type: DirectionType::Ordinal(OrdinalDirection::NorthEast),
         opposite: Direction::SouthWest,
         vector: Vector2 { x: 1, y: -1 },
+        left90: Direction::NorthWest,
+        right90: Direction::SouthEast,
     };
 
     pub static SOUTH_EAST: DirectionProfile = DirectionProfile {
@@ -95,6 +107,8 @@ pub mod directions {
         direction_type: DirectionType::Ordinal(OrdinalDirection::SouthEast),
         opposite: Direction::NorthWest,
         vector: Vector2 { x: 1, y: 1 },
+        left90: Direction::NorthEast,
+        right90: Direction::SouthWest,
     };
 
     pub static SOUTH_WEST: DirectionProfile = DirectionProfile {
@@ -102,6 +116,8 @@ pub mod directions {
         direction_type: DirectionType::Ordinal(OrdinalDirection::SouthWest),
         opposite: Direction::NorthEast,
         vector: Vector2 { x: -1, y: 1 },
+        left90: Direction::SouthEast,
+        right90: Direction::NorthWest,
     };
 
     pub static NORTH_WEST: DirectionProfile = DirectionProfile {
@@ -109,30 +125,38 @@ pub mod directions {
         direction_type: DirectionType::Ordinal(OrdinalDirection::NorthWest),
         opposite: Direction::SouthEast,
         vector: Vector2 { x: -1, y: -1 },
+        left90: Direction::SouthWest,
+        right90: Direction::NorthEast,
     };
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct CardinalDirectionProfile {
     pub vector2_index: Vector2Index,
+    pub opposite: CardinalDirection,
 }
 
 pub mod cardinal_directions {
     use geometry::Vector2Index;
 
     use geometry::direction::CardinalDirectionProfile;
+    use geometry::direction::CardinalDirection;
 
     pub static NORTH: CardinalDirectionProfile = CardinalDirectionProfile {
         vector2_index: Vector2Index::Y,
+        opposite: CardinalDirection::South,
     };
     pub static EAST: CardinalDirectionProfile = CardinalDirectionProfile {
         vector2_index: Vector2Index::X,
+        opposite: CardinalDirection::West,
     };
     pub static SOUTH: CardinalDirectionProfile = CardinalDirectionProfile {
         vector2_index: Vector2Index::Y,
+        opposite: CardinalDirection::North,
     };
     pub static WEST: CardinalDirectionProfile = CardinalDirectionProfile {
         vector2_index: Vector2Index::X,
+        opposite: CardinalDirection::East,
     };
 }
 
@@ -194,6 +218,12 @@ impl Direction {
     pub fn vector(self) -> Vector2<isize> {
         self.profile().vector
     }
+    pub fn left90(self) -> Direction {
+        self.profile().left90
+    }
+    pub fn right90(self) -> Direction {
+        self.profile().right90
+    }
 }
 
 pub static CARDINAL_DIRECTION_PROFILES:
@@ -231,6 +261,10 @@ impl CardinalDirection {
 
     pub fn combine(self, other: CardinalDirection) -> Option<OrdinalDirection> {
         CARDINAL_DIRECTION_COMBINATIONS[self.index()][other.index()]
+    }
+
+    pub fn opposite(self) -> CardinalDirection {
+        self.profile().opposite
     }
 }
 

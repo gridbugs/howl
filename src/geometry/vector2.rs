@@ -34,6 +34,20 @@ impl<T> Vector2<T> {
     pub fn from_tuple(tuple: (T, T)) -> Self {
         Vector2::new(tuple.0, tuple.1)
     }
+
+    pub fn get(self, idx: Vector2Index) -> T {
+        match idx {
+            Vector2Index::X => self.x,
+            Vector2Index::Y => self.y,
+        }
+    }
+
+    pub fn set(&mut self, idx: Vector2Index, value: T) {
+        match idx {
+            Vector2Index::X => { self.x = value; },
+            Vector2Index::Y => { self.y = value; },
+        };
+    }
 }
 
 impl Vector2<f64> {
