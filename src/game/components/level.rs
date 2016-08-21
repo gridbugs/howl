@@ -69,10 +69,10 @@ impl Level {
     }
 
     // Makes the bookkeeping info reflect the contents of entities
-    pub fn finalise(&self, entities: &EntityTable) {
+    pub fn finalise(&self, entities: &EntityTable, turn_count: u64) {
         let mut spacial_hash = self.spacial_hash.borrow_mut();
         for entity in self.entities(entities) {
-            spacial_hash.add_entity(entity);
+            spacial_hash.add_entity(entity, turn_count);
         }
     }
 

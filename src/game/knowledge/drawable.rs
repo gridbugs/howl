@@ -73,6 +73,11 @@ impl KnowledgeCell for DrawableCell {
 
         self.last_turn = turn_count;
     }
+
+    fn last_updated(&self) -> u64 { self.last_turn }
+    fn set_last_updated(&mut self, last_updated: u64) {
+        self.last_turn = last_updated;
+    }
 }
 
 impl DrawableCell {

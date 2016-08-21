@@ -19,6 +19,8 @@ pub trait KnowledgeCell: Default {
 
     fn clear(&mut self);
     fn update(&mut self, entity: &Entity, turn_count: u64, meta: &Self::MetaData);
+    fn last_updated(&self) -> u64;
+    fn set_last_updated(&mut self, last_updated: u64);
 }
 
 #[derive(Debug)]
@@ -51,9 +53,18 @@ impl<G> KnowledgeGrid<G>
         for (coord, meta) in report_iter {
             let sh_cell = &grid.get(*coord).unwrap();
             let mut kn_cell = &mut self.grid.get_mut(*coord).unwrap();
-            kn_cell.clear();
-            for entity in entities.id_set_iter(&sh_cell.entities) {
-                kn_cell.update(entity, turn_count, meta);
+
+            // If the last update to the cell was before the last
+            // time the cell was observed, we can skip updating
+            // knowledge for that cell.
+
+            if sh_cell.last_updated < kn_cell.last_updated() {
+                kn_cell.set_last_updated(turn_count);
+            } else {
+                kn_cell.clear();
+                for entity in entities.id_set_iter(&sh_cell.entities) {
+                    kn_cell.update(entity, turn_count, meta);
+                }
             }
         }
     }

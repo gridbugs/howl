@@ -68,9 +68,9 @@ impl UpdateSummary {
         self.removed_components.get_mut(&entity).unwrap().insert(component_type);
     }
 
-    pub fn commit(mut self, entities: &mut EntityTable) -> Self {
+    pub fn commit(mut self, entities: &mut EntityTable, turn_count: u64) -> Self {
 
-        self.update_spacial_hashes(entities);
+        self.update_spacial_hashes(entities, turn_count);
 
         let mut revert = Self::new();
 
@@ -108,7 +108,7 @@ impl UpdateSummary {
         revert
     }
 
-    fn update_spacial_hashes(&self, entities: &EntityTable) {
+    fn update_spacial_hashes(&self, entities: &EntityTable, turn_count: u64) {
         self.update_levels(entities);
         let levels = self.levels.borrow();
 
@@ -117,7 +117,7 @@ impl UpdateSummary {
                 let level = entities.get(*level_id).level_data().unwrap();
                 level.spacial_hash.borrow_mut()
             };
-            spacial_hash.update(self, entities);
+            spacial_hash.update(self, entities, turn_count);
         }
     }
 

@@ -20,6 +20,7 @@ pub struct SpacialHashCell {
     pub entities: HashSet<EntityId>,
     pub components: HashMap<ComponentType, usize>,
     pub opacity: f64,
+    pub last_updated: u64,
 }
 
 impl Opacity for SpacialHashCell {
@@ -32,6 +33,7 @@ impl Default for SpacialHashCell {
             entities: HashSet::new(),
             components: HashMap::new(),
             opacity: 0.0,
+            last_updated: 0,
         }
     }
 }
@@ -160,29 +162,36 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         self.grid.get_mut(Vector2::from_tuple(coord))
     }
 
-    pub fn add_entity(&mut self, entity: &Entity) {
+    pub fn add_entity(&mut self, entity: &Entity, turn_count: u64) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut(vec.to_tuple()).unwrap();
             cell.add_entity(entity);
+            cell.last_updated = turn_count;
         }
     }
 
-    pub fn remove_entity(&mut self, entity: &Entity) {
+    pub fn remove_entity(&mut self, entity: &Entity, turn_count: u64) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut(vec.to_tuple()).unwrap();
             cell.remove_entity(entity);
+            cell.last_updated = turn_count;
         }
     }
 
-    pub fn add_components(&mut self, entity: &Entity, changes: &Entity) {
-
+    pub fn add_components(&mut self,
+                          entity: &Entity,
+                          changes: &Entity,
+                          turn_count: u64)
+    {
         // position will be set to the position of entity after the change
         let position = if let Some(new_position) = changes.position() {
 
             // position is special as it indicates which cell to update
             if let Some(old_position) = entity.position() {
                 // entity is moving from old_position to new_position
-                self.get_mut(old_position.to_tuple()).unwrap().remove_entity(entity);
+                let mut cell = self.get_mut(old_position.to_tuple()).unwrap();
+                cell.remove_entity(entity);
+                cell.last_updated = turn_count;
             }
 
             // the entity's position is changing or the entity is gaining a position
@@ -213,15 +222,21 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
                     // only update the component count if the component is being added
                     cell.add_component(entity, new_component);
                 }
+
             }
+            cell.last_updated = turn_count;
         }
     }
 
-    pub fn remove_components(&mut self, entity: &Entity, component_types: &HashSet<ComponentType>) {
+    pub fn remove_components(&mut self,
+                             entity: &Entity,
+                             component_types: &HashSet<ComponentType>,
+                             turn_count: u64)
+    {
         if let Some(position) = entity.position() {
             if component_types.contains(&ComponentType::Position) {
                 // removing position - remove the entity
-                self.remove_entity(entity);
+                self.remove_entity(entity, turn_count);
             } else {
                 let mut cell = self.get_mut(position.to_tuple()).unwrap();
                 for component_type in component_types {
@@ -229,36 +244,37 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
                         cell.remove_component(entity, component);
                     }
                 }
+                cell.last_updated = turn_count;
             }
         }
     }
 
     /// Update the spacial hash's metadata. This should be called before the update is applied.
-    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable) {
+    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable, turn_count: u64) {
         for entity in update.added_entities.values() {
             if self.entity_is_on_level(entity) {
-                self.add_entity(entity);
+                self.add_entity(entity, turn_count);
             }
         }
 
         for entity_id in &update.removed_entities {
             let entity = entities.get(*entity_id);
             if self.entity_is_on_level(entity) {
-                self.remove_entity(entity);
+                self.remove_entity(entity, turn_count);
             }
         }
 
         for (entity_id, changes) in &update.added_components {
             let entity = entities.get(*entity_id);
             if self.entity_is_on_level(entity) {
-                self.add_components(entity, changes);
+                self.add_components(entity, changes, turn_count);
             }
         }
 
         for (entity_id, component_types) in &update.removed_components {
             let entity = entities.get(*entity_id);
             if self.entity_is_on_level(entity) {
-                self.remove_components(entity, component_types);
+                self.remove_components(entity, component_types, turn_count);
             }
         }
     }

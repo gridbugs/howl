@@ -161,7 +161,7 @@ impl<'a> GameContext<'a> {
             }
 
             no_commits = false;
-            update.commit(&mut self.entities);
+            update.commit(&mut self.entities, self.turn_count);
 
             while let Some(update) = self.reaction_queue.pop_front() {
                 self.update_queue.push_back(update);

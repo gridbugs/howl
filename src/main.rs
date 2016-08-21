@@ -110,7 +110,7 @@ fn populate(entities: &mut EntityTable) -> EntityId {
         }
     }
 
-    entities.get(level_id).level_data().unwrap().finalise(entities);
+    entities.get(level_id).level_data().unwrap().finalise(entities, 0);
 
     pc.unwrap()
 }
