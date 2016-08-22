@@ -56,7 +56,7 @@ fn add_entity() {
     let mut s = make_spacial_hash();
     let e = make_entity(0, 0);
 
-    s.add_entity(&e);
+    s.add_entity(&e, 0);
 
     let cell = s.get((0, 0)).unwrap();
 
@@ -72,8 +72,8 @@ fn remove_entity() {
     let mut s = make_spacial_hash();
     let e = make_entity(0, 0);
 
-    s.add_entity(&e);
-    s.remove_entity(&e);
+    s.add_entity(&e, 0);
+    s.remove_entity(&e, 0);
 
     let cell = s.get((0, 0)).unwrap();
 
@@ -99,7 +99,7 @@ fn add_remove_many_entities() {
 
     // add entities to spacial hash
     for e in &entities {
-        s.add_entity(&e);
+        s.add_entity(&e, 0);
     }
 
     // assert that entities are in spacial hash
@@ -115,7 +115,7 @@ fn add_remove_many_entities() {
 
     // remove entities from spacial hash
     for e in &entities {
-        s.remove_entity(&e);
+        s.remove_entity(&e, 0);
     }
 
     // assert that the entities are gone from spacial hash
@@ -136,13 +136,13 @@ fn change_entity() {
     let mut s = make_spacial_hash();
     let e = make_entity(0, 0);
 
-    s.add_entity(&e);
+    s.add_entity(&e, 0);
 
     s.add_components(&e, &entity![
         Collider,
-    ]);
+    ], 0);
 
-    s.remove_components(&e, &set_from_vec(vec![CType::Solid]));
+    s.remove_components(&e, &set_from_vec(vec![CType::Solid]), 0);
 
     let cell = s.get((0, 0)).unwrap();
     assert!(cell.has(CType::Collider));
@@ -158,18 +158,18 @@ fn add_remove_components() {
 
     s.add_components(&e, &entity![
         Collider,
-    ]);
+    ], 0);
     e.add(Collider);
     assert!(s.get((0, 0)).unwrap().has(CType::Collider));
 
     // add the same component again
     s.add_components(&e, &entity![
         Collider,
-    ]);
+    ], 0);
     e.add(Collider);
     assert!(s.get((0, 0)).unwrap().has(CType::Collider));
 
-    s.remove_components(&e, &set_from_vec(vec![CType::Collider]));
+    s.remove_components(&e, &set_from_vec(vec![CType::Collider]), 0);
     e.remove(CType::Collider);
     assert!(!s.get((0, 0)).unwrap().has(CType::Collider));
 }
@@ -180,11 +180,11 @@ fn move_entity() {
     let mut s = make_spacial_hash();
     let e = make_entity(0, 0);
 
-    s.add_entity(&e);
+    s.add_entity(&e, 0);
 
     s.add_components(&e, &entity![
         Position(Vector2::new(1, 1)),
-    ]);
+    ], 0);
 
     // assert that the starting cell is empty
     let cell = s.get((0, 0)).unwrap();
@@ -207,12 +207,12 @@ fn move_entity_adding_component() {
     let mut s = make_spacial_hash();
     let e = make_entity(0, 0);
 
-    s.add_entity(&e);
+    s.add_entity(&e, 0);
 
     s.add_components(&e, &entity![
         Position(Vector2::new(1, 1)),
         Collider,
-    ]);
+    ], 0);
 
     let cell = s.get((0, 0)).unwrap();
     assert_eq!(cell.entities.len(), 0);
@@ -239,16 +239,16 @@ fn add_entities_remove_components() {
     let mut e1 = make_entity(0, 0);
     e1.id = Some(1);
 
-    s.add_entity(&e0);
-    s.add_entity(&e1);
+    s.add_entity(&e0, 0);
+    s.add_entity(&e1, 0);
     assert!(s.get((0, 0)).unwrap().has(CType::Solid));
 
-    s.remove_components(&e1, &set_from_vec(vec![CType::Solid]));
+    s.remove_components(&e1, &set_from_vec(vec![CType::Solid]), 0);
     e1.remove(CType::Solid);
     assert!(s.get((0, 0)).unwrap().has(CType::Solid));
 
     // second remove shouldn't have any effect
-    s.remove_components(&e1, &set_from_vec(vec![CType::Solid]));
+    s.remove_components(&e1, &set_from_vec(vec![CType::Solid]), 0);
     e1.remove(CType::Solid);
     assert!(s.get((0, 0)).unwrap().has(CType::Solid));
 }
@@ -267,27 +267,27 @@ fn opacity() {
     e0.add(Opacity(0.1));
     e1.add(Opacity(0.2));
 
-    s.add_entity(&e0);
-    s.add_entity(&e1);
+    s.add_entity(&e0, 0);
+    s.add_entity(&e1, 0);
 
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.3*10.0);
 
     s.add_components(&e0, &entity![
         Opacity(0.4),
-    ]);
+    ], 0);
     e0.add(Opacity(0.4));
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.6*10.0);
 
-    s.remove_components(&e1, &set_from_vec(vec![CType::Opacity]));
+    s.remove_components(&e1, &set_from_vec(vec![CType::Opacity]), 0);
     e1.remove(CType::Opacity);
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.4*10.0);
 
     s.add_components(&e1, &entity![
         Opacity(0.5),
-    ]);
+    ], 0);
     e1.add(Opacity(0.5));
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.9*10.0);
 
-    s.remove_entity(&e1);
+    s.remove_entity(&e1, 0);
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.4*10.0);
 }
