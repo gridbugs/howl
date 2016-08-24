@@ -21,7 +21,7 @@ pub mod components;
 mod meta_action;
 pub use self::meta_action::MetaAction;
 
-mod update;
+pub mod update;
 pub use self::update::UpdateSummary;
 
 mod schedule;

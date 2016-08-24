@@ -5,6 +5,11 @@ use game::{
     Component,
     EntityTable,
 };
+use game::update::{
+    Metadata,
+    Metadatum,
+    MetadatumType,
+};
 
 use std::collections::HashSet;
 use std::collections::HashMap;
@@ -17,6 +22,7 @@ pub struct UpdateSummary {
     pub added_components: HashMap<EntityId, Entity>,
     pub removed_components: HashMap<EntityId, HashSet<ComponentType>>,
     levels: RefCell<HashSet<EntityId>>,
+    pub metadata: Metadata,
 }
 
 impl UpdateSummary {
@@ -28,6 +34,7 @@ impl UpdateSummary {
             added_components: HashMap::new(),
             removed_components: HashMap::new(),
             levels: RefCell::new(HashSet::new()),
+            metadata: Metadata::new(),
         }
     }
 
@@ -151,5 +158,17 @@ impl UpdateSummary {
                 levels.insert(level);
             }
         }
+    }
+
+    pub fn set_metadata(&mut self, metadatum: Metadatum) {
+        self.metadata.add(metadatum);
+    }
+
+    pub fn get_metadata(&self, metadatum_type: MetadatumType) -> Option<&Metadatum> {
+        self.metadata.get(metadatum_type)
+    }
+
+    pub fn has_metadata(&self, metadatum_type: MetadatumType) ->  bool {
+        self.metadata.has(metadatum_type)
     }
 }
