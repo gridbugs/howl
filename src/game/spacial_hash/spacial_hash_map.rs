@@ -5,9 +5,9 @@ use game::{
     ComponentType,
     EntityTable,
     UpdateSummary,
-    ToType,
 };
 
+use table::ToType;
 use vision::Opacity;
 use grid::Grid;
 use geometry::Vector2;

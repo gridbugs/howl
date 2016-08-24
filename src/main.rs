@@ -6,6 +6,7 @@ extern crate rand;
 extern crate rustty;
 
 #[macro_use] mod debug;
+#[macro_use] mod table;
 #[macro_use] mod game;
 mod perlin;
 mod renderer;

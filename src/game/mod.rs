@@ -1,8 +1,3 @@
-#[macro_use] mod table;
-pub use self::table::{
-    ToType,
-};
-
 #[macro_use] mod entity;
 pub use self::entity::{
     EntityId,

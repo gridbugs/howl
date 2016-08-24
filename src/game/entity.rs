@@ -1,14 +1,15 @@
-use game::table::{
-    Table,
-    TableId,
-    ToType,
-    TableTable
-};
 use game::components::{
     Level,
     DoorState,
 };
 use game::knowledge::DrawableKnowledge;
+
+use table::{
+    Table,
+    TableId,
+    ToType,
+    TableTable
+};
 
 use geometry::Vector2;
 use renderer::Tile;

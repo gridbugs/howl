@@ -1,4 +1,4 @@
-use game::table::{
+use table::{
     Table,
     ToType,
 };

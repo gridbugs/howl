@@ -1,4 +1,9 @@
-use game::table::table::{TableId, Table, ToType};
+use table::table::{
+    TableId,
+    Table,
+    ToType,
+};
+
 use std::collections::hash_map;
 use std::collections::HashMap;
 use std::hash::Hash;
