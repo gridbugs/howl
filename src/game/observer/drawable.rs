@@ -7,12 +7,12 @@ use game::{
 use vision::{
     VisionSystem,
     DefaultVisibilityReport,
-    RecursiveShadowcast,
+    Shadowcast,
 };
 
 pub struct DrawableObserver {
     visibility_report: DefaultVisibilityReport,
-    vision_system: RecursiveShadowcast,
+    vision_system: Shadowcast,
 }
 
 impl Observer for DrawableObserver {
@@ -37,7 +37,7 @@ impl DrawableObserver {
     pub fn new() -> Self {
         DrawableObserver {
             visibility_report: DefaultVisibilityReport::new(),
-            vision_system: RecursiveShadowcast::new(),
+            vision_system: Shadowcast::new(),
         }
     }
 }

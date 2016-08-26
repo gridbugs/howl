@@ -1,9 +1,9 @@
-mod recursive_shadowcast {
-    use vision::RecursiveShadowcast;
+mod shadowcast {
+    use vision::Shadowcast;
 
-    /// Test recursive shadowcast constructor
+    /// Test shadowcast constructor
     #[test]
     fn construct() {
-        RecursiveShadowcast::new();
+        Shadowcast::new();
     }
 }

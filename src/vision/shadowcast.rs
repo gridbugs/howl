@@ -49,7 +49,7 @@ enum RotationType {
 
 const NUM_OCTANTS: usize = 8;
 
-/// Classification of an octant for recursive shadowcast
+/// Classification of an octant for shadowcast
 struct Octant {
     /// Direction to proceed with each scan
     depth_dir: Direction,
@@ -280,14 +280,14 @@ impl Scan {
     }
 }
 
-pub struct RecursiveShadowcast {
+pub struct Shadowcast {
     octants: [Octant; NUM_OCTANTS],
     stack: RefCell<Vec<Frame>>,
 }
 
-impl RecursiveShadowcast {
+impl Shadowcast {
     pub fn new() -> Self {
-        RecursiveShadowcast {
+        Shadowcast {
             // The order octants appear is the order one would visit
             // each octant if they started at -PI radians and moved
             // in the positive (anticlockwise) direction.
@@ -433,7 +433,7 @@ impl RecursiveShadowcast {
     }
 }
 
-impl<G, R> VisionSystem<G, R, usize> for RecursiveShadowcast
+impl<G, R> VisionSystem<G, R, usize> for Shadowcast
     where G: Grid,
           G::Item: Opacity,
           R: VisibilityReport<MetaData=f64>
