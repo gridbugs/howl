@@ -214,14 +214,16 @@ impl Limits {
     }
 }
 
-struct Scan {
+struct Scan<'a> {
     depth_idx: isize,
     start_lateral_idx: isize,
     end_lateral_idx: isize,
+    limits: &'a Limits,
+    frame: &'a Frame,
 }
 
-impl Scan {
-    fn new(limits: &Limits, frame: &Frame, octant: &Octant, distance: usize) -> Option<Self> {
+impl<'a> Scan<'a> {
+    fn new(limits: &'a Limits, frame: &'a Frame, octant: &'a Octant, distance: usize) -> Option<Self> {
         assert!(frame.min_slope >= 0.0);
         assert!(frame.min_slope <= 1.0);
         assert!(frame.max_slope >= 0.0);
@@ -276,8 +278,47 @@ impl Scan {
             depth_idx: depth_abs_idx,
             start_lateral_idx: abs_scan_start_idx,
             end_lateral_idx: abs_scan_end_idx,
+            limits: limits,
+            frame: frame,
         })
     }
+}
+
+struct OctantArgs<'a, G>
+    where G: Grid + 'a,
+          G::Item: Opacity,
+{
+    octant: &'a Octant,
+    grid: &'a G,
+    eye: Coord,
+    distance: usize,
+    distance_squared: isize,
+    initial_min_slope: f64,
+    initial_max_slope: f64,
+}
+
+impl<'a, G> OctantArgs<'a, G>
+    where G: Grid + 'a,
+          G::Item: Opacity,
+{
+    fn new(octant: &'a Octant,
+           grid: &'a G,
+           eye: Coord,
+           distance: usize,
+           initial_min_slope: f64,
+           initial_max_slope: f64) -> Self
+    {
+        OctantArgs {
+            octant: octant,
+            grid: grid,
+            eye: eye,
+            distance: distance,
+            distance_squared: (distance * distance) as isize,
+            initial_min_slope: initial_min_slope,
+            initial_max_slope: initial_max_slope,
+        }
+    }
+
 }
 
 pub struct Shadowcast {
@@ -307,55 +348,50 @@ impl Shadowcast {
 
     fn scan<G, R>(
         &self,
-        octant: &Octant,
-        eye: Coord,
-        grid: &G,
-        distance_squared: isize,
-        limits: &Limits,
-        frame: &Frame,
+        args: &OctantArgs<G>,
         scan: &Scan,
         report: &mut R)
         where G: Grid,
               G::Item: Opacity,
-              R: VisibilityReport<MetaData=f64>
+              R: VisibilityReport<MetaData=f64>,
     {
         let mut coord = Coord::new(0, 0);
-        coord.set(octant.depth_idx, scan.depth_idx);
+        coord.set(args.octant.depth_idx, scan.depth_idx);
 
         let mut first_iteration = true;
         let mut previous_opaque = false;
         let mut previous_visibility = -1.0;
         let mut idx = scan.start_lateral_idx;
-        let mut min_slope = frame.min_slope;
+        let mut min_slope = scan.frame.min_slope;
 
-        let final_idx = scan.end_lateral_idx + octant.lateral_step;
+        let final_idx = scan.end_lateral_idx + args.octant.lateral_step;
 
         while idx != final_idx {
 
             let last_iteration = idx == scan.end_lateral_idx;
 
             // update the coord to the current grid position
-            coord.set(octant.lateral_idx, idx);
+            coord.set(args.octant.lateral_idx, idx);
 
             // report the cell as visible
-            if (coord - eye).len_sq() < distance_squared {
-                report.see(coord, frame.visibility);
+            if (coord - args.eye).len_sq() < args.distance_squared {
+                report.see(coord, scan.frame.visibility);
             }
 
             // look up the cell with opacity
-            let cell = grid.get(coord).unwrap();
+            let cell = args.grid.get(coord).unwrap();
 
             // compute current visibility
-            let current_visibility = (frame.visibility - cell.opacity()).max(0.0);
+            let current_visibility = (scan.frame.visibility - cell.opacity()).max(0.0);
             let current_opaque = current_visibility == 0.0;
 
             // process changes in visibility
             if !first_iteration {
                 // determine corner of current cell we'll be looking through
                 let corner = if current_visibility > previous_visibility {
-                    Some(octant.opacity_decrease_corner)
+                    Some(args.octant.opacity_decrease_corner)
                 } else if current_visibility < previous_visibility {
-                    Some(octant.opacity_increase_corner)
+                    Some(args.octant.opacity_increase_corner)
                 } else {
                     // no change in visibility - nothing happens
                     None
@@ -363,7 +399,7 @@ impl Shadowcast {
 
                 if let Some(corner) = corner {
                     let corner_coord = coord.cell_corner(corner);
-                    let slope = octant.compute_slope(limits.eye_centre, corner_coord);
+                    let slope = args.octant.compute_slope(scan.limits.eye_centre, corner_coord);
                     assert!(slope >= 0.0);
                     assert!(slope <= 1.0);
 
@@ -371,7 +407,7 @@ impl Shadowcast {
                         // unless this marks the end of an opaque region, push
                         // the just-completed region onto the stack so it can
                         // be expanded in a future scan
-                        self.push(Frame::new(frame.depth + 1,
+                        self.push(Frame::new(scan.frame.depth + 1,
                                   min_slope,
                                   slope,
                                   previous_visibility));
@@ -383,9 +419,9 @@ impl Shadowcast {
 
             if last_iteration && !current_opaque {
                 // push the final region of the scan to the stack
-                self.push(Frame::new(frame.depth + 1,
+                self.push(Frame::new(scan.frame.depth + 1,
                                      min_slope,
-                                     frame.max_slope,
+                                     scan.frame.max_slope,
                                      current_visibility));
             }
 
@@ -393,7 +429,7 @@ impl Shadowcast {
             previous_visibility = current_visibility;
             first_iteration = false;
 
-            idx += octant.lateral_step;
+            idx += args.octant.lateral_step;
         }
 
     }
@@ -406,28 +442,21 @@ impl Shadowcast {
         self.stack.borrow_mut().push(frame);
     }
 
-    fn detect_visible_area_octant<G, R>(
-        &self,
-        octant: &Octant,
-        eye: Coord,
-        grid: &G,
-        distance: usize,
-        distance_squared: isize,
-        initial_min_slope: f64,
-        initial_max_slope: f64,
-        report: &mut R)
+    fn detect_visible_area_octant<G, R>(&self, args: &OctantArgs<G>, report: &mut R)
         where G: Grid,
               G::Item: Opacity,
-              R: VisibilityReport<MetaData=f64>
+              R: VisibilityReport<MetaData=f64>,
     {
-        let limits = Limits::new(eye, grid, octant);
+        let limits = Limits::new(args.eye, args.grid, args.octant);
 
         // Initial stack frame
-        self.push(Frame::new(1, initial_min_slope, initial_max_slope, 1.0));
+        self.push(Frame::new(1, args.initial_min_slope, args.initial_max_slope, 1.0));
 
         while let Some(frame) = self.pop() {
-            if let Some(scan) = Scan::new(&limits, &frame, octant, distance) {
-                self.scan(octant, eye, grid, distance_squared, &limits, &frame, &scan, report);
+            if let Some(scan) = Scan::new(&limits, &frame, args.octant, args.distance) {
+                // Scan::new can yield None if the scan would be entirely off the grid
+                // outside the view distance.
+                self.scan(args, &scan, report);
             }
        }
     }
@@ -436,7 +465,7 @@ impl Shadowcast {
 impl<G, R> VisionSystem<G, R, usize> for Shadowcast
     where G: Grid,
           G::Item: Opacity,
-          R: VisibilityReport<MetaData=f64>
+          R: VisibilityReport<MetaData=f64>,
 {
     fn detect_visible_area(
         &mut self,
@@ -445,13 +474,18 @@ impl<G, R> VisionSystem<G, R, usize> for Shadowcast
         distance: usize,
         report: &mut R)
     {
-        let distance_squared = (distance * distance) as isize;
-
         report.see(eye, 1.0);
 
         for octant in &self.octants {
-            self.detect_visible_area_octant(octant, eye, grid, distance,
-                                            distance_squared, 0.0, 1.0, report);
+            let args = OctantArgs::new(
+                octant,
+                grid,
+                eye,
+                distance,
+                0.0,
+                1.0
+            );
+            self.detect_visible_area_octant(&args, report);
         }
     }
 }
