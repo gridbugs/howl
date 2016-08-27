@@ -7,6 +7,8 @@ use game::{
 use game::Component::*;
 use game::ComponentType as CType;
 
+use game::update::Metadatum::*;
+
 use game::components::DoorState;
 use game::entities;
 
@@ -56,9 +58,26 @@ pub fn fire_bullet(source: &Entity, direction: Direction, entities: &EntityTable
     let start_coord = source.position().unwrap() + direction.vector();
     let level = source.on_level().unwrap();
 
-    let bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+    let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+
+    let speed = 1.0;
+
+    bullet.add(AxisVelocity { direction: direction, speed: speed });
 
     summary.add_entity(entities.reserve_id(), bullet);
+
+    summary.set_metadata(ActionTime((1000.0 / speed) as u64));
+
+    summary
+}
+
+pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: f64) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
+    summary.add_component(entity.id.unwrap(), Position(vec));
+
+    summary.set_metadata(ActionTime((1000.0 / speed) as u64));
 
     summary
 }

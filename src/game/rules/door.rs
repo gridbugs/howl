@@ -10,7 +10,7 @@ use game::actions;
 use game::rule;
 
 pub fn detect_open(summary: &UpdateSummary,
-                    entities: &EntityTable)
+                   entities: &EntityTable)
     -> RuleResult
 {
     for (entity_id, changes) in &summary.added_components {

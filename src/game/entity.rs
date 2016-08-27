@@ -11,7 +11,10 @@ use table::{
     TableTable
 };
 
-use geometry::Vector2;
+use geometry::{
+    Vector2,
+    Direction,
+};
 use renderer::Tile;
 use colour::ansi::AnsiColour;
 
@@ -74,6 +77,7 @@ pub enum ComponentType {
     VisionDistance,
     DrawableKnowledge,
     Bullet,
+    AxisVelocity,
 }
 
 #[derive(Debug, Clone)]
@@ -93,6 +97,7 @@ pub enum Component {
     VisionDistance(usize),
     DrawableKnowledge(RefCell<DrawableKnowledge>),
     Bullet,
+    AxisVelocity { direction: Direction, speed: f64 },
 }
 
 impl ToType<ComponentType> for Component {
@@ -113,6 +118,7 @@ impl ToType<ComponentType> for Component {
             Component::VisionDistance(_) => ComponentType::VisionDistance,
             Component::DrawableKnowledge(_) => ComponentType::DrawableKnowledge,
             Component::Bullet => ComponentType::Bullet,
+            Component::AxisVelocity { direction: _, speed: _ } => ComponentType::AxisVelocity,
         }
     }
 }
