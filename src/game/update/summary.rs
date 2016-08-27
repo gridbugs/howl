@@ -15,6 +15,7 @@ use std::collections::HashSet;
 use std::collections::HashMap;
 use std::cell::RefCell;
 
+#[derive(Clone)]
 pub struct UpdateSummary {
     pub added_entities: HashMap<EntityId, Entity>,
     pub removed_entities: HashSet<EntityId>,

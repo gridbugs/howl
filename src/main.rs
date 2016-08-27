@@ -145,7 +145,9 @@ fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
         .rule(rules::door::detect_open)
         .rule(rules::collision::detect_collision)
         .rule(rules::axis_velocity::start_velocity_movement)
-        .rule(rules::axis_velocity::maintain_velocity_movement);
+        .rule(rules::axis_velocity::maintain_velocity_movement)
+        .rule(rules::burst_fire::burst_fire)
+        .rule(rules::delay::delay);
 
     game_context.game_loop();
 }

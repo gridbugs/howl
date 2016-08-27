@@ -79,7 +79,9 @@ fn close_door(entity: &Entity, entities: &EntityTable) -> Option<UpdateSummary> 
 
 fn event_to_action(event: Event, entity: &Entity, entities: &EntityTable) -> Option<UpdateSummary> {
     match event {
-        Event::Char('f') => Some(actions::fire_bullet(entity, Direction::North, entities)),
+        Event::Char('f') => Some(actions::fire_single_bullet(entity, Direction::North, entities)),
+        Event::Char('g') => Some(actions::burst_fire_bullet(entity, Direction::North, 6, 100)),
+        Event::Char('F') => Some(actions::fire_bullets_all_axes(entity, entities)),
         _ => None,
     }
 }

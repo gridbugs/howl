@@ -14,6 +14,7 @@ use game::components::DoorState;
 use game::entities;
 
 use geometry::direction::Direction;
+use geometry::direction;
 use renderer::Tile;
 use colour::ansi;
 
@@ -53,7 +54,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     summary
 }
 
-pub fn fire_bullet(source: &Entity, direction: Direction, entities: &EntityTable) -> UpdateSummary {
+pub fn fire_single_bullet(source: &Entity, direction: Direction, entities: &EntityTable) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
@@ -72,6 +73,49 @@ pub fn fire_bullet(source: &Entity, direction: Direction, entities: &EntityTable
     summary
 }
 
+pub fn burst_fire_bullet(source: &Entity, direction: Direction,
+                         num_bullets: u64, period: u64)
+    -> UpdateSummary
+{
+    let mut summary = UpdateSummary::new();
+
+    let start_coord = source.position().unwrap() + direction.vector();
+    let level = source.on_level().unwrap();
+
+    let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+    let speed = Speed::from_cells_per_sec(100.0);
+    bullet.add(AxisVelocity { direction: direction, speed: speed });
+
+    summary.set_metadata(BurstFire {
+        prototype: bullet,
+        count: num_bullets,
+        period: period,
+    });
+    summary.set_metadata(ActionTime(speed.ms_per_cell()));
+
+    summary
+}
+
+pub fn fire_bullets_all_axes(source: &Entity, entities: &EntityTable) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    let level = source.on_level().unwrap();
+    let speed = Speed::from_cells_per_sec(100.0);
+
+    for dir in direction::iter() {
+        let start_coord = source.position().unwrap() + dir.vector();
+
+        let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+        bullet.add(AxisVelocity { direction: dir, speed: speed });
+
+        summary.add_entity(entities.reserve_id(), bullet);
+    }
+
+    summary.set_metadata(ActionTime(speed.ms_per_cell()));
+
+    summary
+}
+
 pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: Speed) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
@@ -84,10 +128,27 @@ pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: Speed) -
     summary
 }
 
+pub fn add_entity(entity: Entity, entities: &EntityTable) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.add_entity(entities.reserve_id(), entity);
+
+    summary
+}
+
 pub fn remove_entity(entity: &Entity) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.remove_entity(entity.id.unwrap());
+
+    summary
+}
+
+pub fn delay(update: UpdateSummary, time_ms: u64) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.set_metadata(Delay(update));
+    summary.set_metadata(ActionTime(time_ms));
 
     summary
 }

@@ -1,3 +1,8 @@
+use game::{
+    Entity,
+    UpdateSummary,
+};
+
 use game::update::{
     Metadata,
     Metadatum,
@@ -27,5 +32,25 @@ impl Metadata {
 
     pub fn is_axis_velocity(&self) -> bool {
         self.has(MetadatumType::AxisVelocityMovement)
+    }
+
+    pub fn burst_fire(&self) -> Option<(&Entity, u64, u64)> {
+        if let Some(&Metadatum::BurstFire { ref prototype, count, period }) =
+            self.get(MetadatumType::BurstFire)
+        {
+            Some((prototype, count, period))
+        } else {
+            None
+        }
+    }
+
+    pub fn delay(&self) -> Option<&UpdateSummary> {
+        if let Some(&Metadatum::Delay(ref update)) =
+            self.get(MetadatumType::Delay)
+        {
+            Some(update)
+        } else {
+            None
+        }
     }
 }
