@@ -183,4 +183,8 @@ impl Entity {
     pub fn is_collider(&self) -> bool {
         self.has(ComponentType::Collider)
     }
+
+    pub fn is_destroy_on_collision(&self) -> bool {
+        self.has(ComponentType::DestroyOnCollision)
+    }
 }

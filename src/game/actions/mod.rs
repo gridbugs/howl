@@ -83,3 +83,11 @@ pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: Speed) -
 
     summary
 }
+
+pub fn remove_entity(entity: &Entity) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.remove_entity(entity.id.unwrap());
+
+    summary
+}

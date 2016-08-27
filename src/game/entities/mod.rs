@@ -96,6 +96,7 @@ pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
         OnLevel(level),
         Collider,
         Bullet,
+        DestroyOnCollision,
     ]
 }
 

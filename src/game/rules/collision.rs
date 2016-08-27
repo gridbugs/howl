@@ -1,8 +1,12 @@
-use game::entity::{EntityTable, ComponentType};
-use game::update::UpdateSummary;
+use game::{
+    rule,
+    actions,
+    EntityTable,
+    ComponentType,
+    UpdateSummary,
+};
 
 use game::rule::RuleResult;
-use game::rule;
 
 pub fn detect_collision(summary: &UpdateSummary,
                         entities: &EntityTable)
@@ -27,7 +31,11 @@ pub fn detect_collision(summary: &UpdateSummary,
 
         if let Some(cell) = spacial_hash.get(new_position.to_tuple()) {
             if cell.has(ComponentType::Solid) {
-                return rule::fail();
+                if entity.is_destroy_on_collision() {
+                    return rule::instead(actions::remove_entity(entity));
+                } else {
+                    return rule::fail();
+                }
             }
         }
     }

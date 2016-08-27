@@ -9,6 +9,14 @@ pub enum RuleResult {
 pub fn pass() -> RuleResult { RuleResult::After(vec![]) }
 pub fn fail() -> RuleResult { RuleResult::Instead(vec![]) }
 
+pub fn instead(update: UpdateSummary) -> RuleResult {
+    RuleResult::Instead(vec![update])
+}
+
+pub fn after(update: UpdateSummary) -> RuleResult {
+    RuleResult::After(vec![update])
+}
+
 pub trait Rule {
     fn check(&self,
              summary: &UpdateSummary,
