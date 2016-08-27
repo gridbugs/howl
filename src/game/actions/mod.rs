@@ -48,6 +48,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
         background: ansi::DARK_GREY,
     });
     summary.add_component(door_id, Door(DoorState::Closed));
+    summary.add_component(door_id, Opacity(1.0));
 
     summary
 }
