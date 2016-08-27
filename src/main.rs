@@ -11,6 +11,7 @@ extern crate rustty;
 mod perlin;
 mod renderer;
 mod geometry;
+mod schedule;
 mod grid;
 mod colour;
 mod terminal;

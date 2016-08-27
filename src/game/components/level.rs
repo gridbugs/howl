@@ -1,11 +1,8 @@
-use game::entity::{
+use game::{
     Entity,
     EntityId,
     EntityTable,
-};
-use game::schedule::Schedule;
-
-use game::spacial_hash::{
+    TurnSchedule,
     SpacialHashMap,
     SpacialHashCell,
 };
@@ -28,7 +25,7 @@ pub struct Level {
     pub width: usize,
     pub height: usize,
     pub entities: HashSet<EntityId>,
-    pub schedule: RefCell<Schedule>,
+    pub schedule: RefCell<TurnSchedule>,
     pub spacial_hash: RefCell<LevelSpacialHashMap>,
 }
 
@@ -53,7 +50,7 @@ impl Level {
             width: width,
             height: height,
             entities: HashSet::new(),
-            schedule: RefCell::new(Schedule::new()),
+            schedule: RefCell::new(TurnSchedule::new()),
             spacial_hash: RefCell::new(SpacialHashMap::new(
                     StaticGrid::new_default(width, height))),
         }

@@ -19,13 +19,13 @@ pub use self::meta_action::MetaAction;
 pub mod update;
 pub use self::update::UpdateSummary;
 
-mod schedule;
-pub use self::schedule::Schedule;
+mod turn_schedule;
+pub use self::turn_schedule::TurnSchedule;
 
 mod context;
 pub use self::context::GameContext;
 
-pub mod game_entity;
+mod entity_wrapper;
 
 mod rule;
 pub use self::rule::{

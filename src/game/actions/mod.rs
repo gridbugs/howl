@@ -1,7 +1,10 @@
-use game::entity::{EntityId, Entity};
-use game::entity::Component::*;
-use game::entity::ComponentType as CType;
-use game::update::UpdateSummary;
+use game::{
+    EntityId,
+    Entity,
+    UpdateSummary,
+};
+use game::Component::*;
+use game::ComponentType as CType;
 
 use game::components::DoorState;
 

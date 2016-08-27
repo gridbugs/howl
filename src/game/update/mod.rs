@@ -7,3 +7,5 @@ pub use self::metadata::{
     Metadatum,
     MetadatumType,
 };
+
+mod metadata_wrapper;

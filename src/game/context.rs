@@ -1,7 +1,7 @@
 use game::Component::*;
 use game::ComponentType as Type;
 use game::{
-    Schedule,
+    TurnSchedule,
     UpdateSummary,
     MetaAction,
     Rule,
@@ -21,13 +21,17 @@ use game::observer::{
     Observer,
 };
 
-use std::cell;
-use std::collections::VecDeque;
+use schedule::Schedule;
 
 use terminal::window_manager::{
     WindowRef,
     InputSource
 };
+
+use std::cell;
+use std::collections::VecDeque;
+use std::thread;
+use std::time::Duration;
 
 pub struct GameContext<'a> {
     pub entities: EntityTable,
@@ -39,7 +43,7 @@ pub struct GameContext<'a> {
     renderer: WindowKnowledgeRenderer<'a>,
 
     // rule application
-    update_queue: VecDeque<UpdateSummary>,
+    update_queue: Schedule<UpdateSummary>,
     reaction_queue: VecDeque<UpdateSummary>,
     rules: Vec<Box<Rule>>,
 
@@ -58,7 +62,7 @@ impl<'a> GameContext<'a> {
             input_source: input_source,
             game_window: game_window,
             renderer: WindowKnowledgeRenderer::new(game_window),
-            update_queue: VecDeque::new(),
+            update_queue: Schedule::new(),
             reaction_queue: VecDeque::new(),
             rules: Vec::new(),
             observer: DrawableObserver::new(),
@@ -95,7 +99,7 @@ impl<'a> GameContext<'a> {
         }
     }
 
-    fn pc_schedule(&self) -> cell::RefMut<Schedule> {
+    fn pc_schedule(&self) -> cell::RefMut<TurnSchedule> {
         self.pc_level().schedule.borrow_mut()
     }
 
@@ -122,6 +126,11 @@ impl<'a> GameContext<'a> {
     pub fn render_pc_knowledge(&self) {
         self.renderer.render(&self.entities, self.pc.unwrap(), self.turn_count);
     }
+
+    pub fn render(&mut self) {
+        self.observe_pc();
+        self.render_pc_knowledge();
+    }
 }
 
 enum TurnError {
@@ -137,18 +146,17 @@ impl<'a> GameContext<'a> {
 
         let mut no_commits = true;
 
-        self.update_queue.push_back(update);
+        self.update_queue.insert(update, 0);
 
-        'outer: while let Some(update) = self.update_queue.pop_front() {
+        'outer: while let Some((update, time_delta)) = self.update_queue.next() {
             self.reaction_queue.clear();
-
             for rule in &self.rules {
                 let result = rule.check(&update, &self.entities);
 
                 match result {
                     RuleResult::Instead(mut updates) => {
                         for u in updates.drain(..) {
-                            self.update_queue.push_back(u);
+                            self.update_queue.insert(u, 0);
                         }
                         continue 'outer;
                     },
@@ -160,17 +168,26 @@ impl<'a> GameContext<'a> {
                 }
             }
 
+            if time_delta != 0 {
+                self.render();
+                thread::sleep(Duration::from_millis(time_delta));
+            }
+
             no_commits = false;
+
+            let action_time = update.metadata.action_time();
+
             update.commit(&mut self.entities, self.turn_count);
 
             while let Some(update) = self.reaction_queue.pop_front() {
-                self.update_queue.push_back(update);
+                self.update_queue.insert(update, action_time);
             }
         }
 
         if no_commits {
             Err(UpdateError::NothingApplied)
         } else {
+            self.render();
             Ok(())
         }
     }
@@ -179,8 +196,7 @@ impl<'a> GameContext<'a> {
         self.turn_count += 1;
         let entity_id = self.pc_schedule_next();
 
-        self.observe_pc();
-        self.render_pc_knowledge();
+        self.render();
 
         if !self.entity_is_pc(entity_id) {
             self.observer.observe(entity_id, &self.entities, self.turn_count);
