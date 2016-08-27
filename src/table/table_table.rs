@@ -7,13 +7,14 @@ use table::table::{
 use std::collections::hash_map;
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::cell::Cell;
 
 #[derive(Debug, Clone)]
 pub struct TableTable<EntryType, Entry>
     where EntryType: Eq + Hash,
           Entry: ToType<EntryType>,
 {
-    next_id: TableId,
+    next_id: Cell<TableId>,
     tables: HashMap<TableId, Table<EntryType, Entry>>,
 }
 
@@ -23,16 +24,27 @@ impl<EntryType, Entry> TableTable<EntryType, Entry>
 {
     pub fn new() -> Self {
         TableTable {
-            next_id: 0,
+            next_id: Cell::new(0),
             tables: HashMap::new(),
         }
     }
 
-    pub fn add(&mut self, mut table: Table<EntryType, Entry>) -> TableId {
-        let id = self.next_id;
-        self.next_id += 1;
+    pub fn reserve_id(&self) -> TableId {
+        let id = self.next_id.get();
+        self.next_id.set(id + 1);
+        id
+    }
 
-        table.id = Some(id);
+    pub fn add(&mut self, mut table: Table<EntryType, Entry>) -> TableId {
+
+        let id = if let Some(id) = table.id {
+            id
+        } else {
+            let id = self.reserve_id();
+            table.id = Some(id);
+            id
+        };
+
         self.tables.insert(id, table);
 
         id

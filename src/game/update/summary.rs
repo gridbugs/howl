@@ -16,7 +16,6 @@ use std::collections::HashMap;
 use std::cell::RefCell;
 
 pub struct UpdateSummary {
-    next_id: u64,
     pub added_entities: HashMap<EntityId, Entity>,
     pub removed_entities: HashSet<EntityId>,
     pub added_components: HashMap<EntityId, Entity>,
@@ -28,7 +27,6 @@ pub struct UpdateSummary {
 impl UpdateSummary {
     pub fn new() -> Self {
         UpdateSummary {
-            next_id: 0,
             added_entities: HashMap::new(),
             removed_entities: HashSet::new(),
             added_components: HashMap::new(),
@@ -38,19 +36,9 @@ impl UpdateSummary {
         }
     }
 
-    fn get_next_id(&mut self) -> u64 {
-        let id = self.next_id;
-        self.next_id += 1;
-        id
-    }
-
-    pub fn add_entity(&mut self, mut entity: Entity) -> EntityId {
-        let id = self.get_next_id();
+    pub fn add_entity(&mut self, id: EntityId, mut entity: Entity) {
         entity.id = Some(id);
-
         self.added_entities.insert(id, entity);
-
-        id
     }
 
     pub fn remove_entity(&mut self, entity: EntityId) {
@@ -89,7 +77,7 @@ impl UpdateSummary {
         for entity_id in self.removed_entities.drain() {
             let entity = entities.remove(entity_id).
                 expect("Tried to remove non-existent entity.");
-            revert.add_entity(entity);
+            revert.add_entity(entity_id, entity);
         }
 
         for (entity_id, mut changes) in self.added_components.drain() {
