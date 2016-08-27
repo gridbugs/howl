@@ -43,3 +43,6 @@ pub mod observer;
 pub use self::observer::Observer;
 
 pub mod knowledge;
+
+mod speed;
+pub use self::speed::Speed;

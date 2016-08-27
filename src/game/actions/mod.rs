@@ -3,6 +3,7 @@ use game::{
     Entity,
     UpdateSummary,
     EntityTable,
+    Speed,
 };
 use game::Component::*;
 use game::ComponentType as CType;
@@ -47,7 +48,6 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
         background: ansi::DARK_GREY,
     });
     summary.add_component(door_id, Door(DoorState::Closed));
-    summary.add_component(door_id, Opacity(1.0));
 
     summary
 }
@@ -60,24 +60,25 @@ pub fn fire_bullet(source: &Entity, direction: Direction, entities: &EntityTable
 
     let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
 
-    let speed = 1.0;
+    let speed = Speed::from_cells_per_sec(100.0);
 
     bullet.add(AxisVelocity { direction: direction, speed: speed });
 
     summary.add_entity(entities.reserve_id(), bullet);
 
-    summary.set_metadata(ActionTime((1000.0 / speed) as u64));
+    summary.set_metadata(ActionTime(speed.ms_per_cell()));
 
     summary
 }
 
-pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: f64) -> UpdateSummary {
+pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: Speed) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
     summary.add_component(entity.id.unwrap(), Position(vec));
 
-    summary.set_metadata(ActionTime((1000.0 / speed) as u64));
+    summary.set_metadata(ActionTime(speed.ms_per_cell()));
+    summary.set_metadata(AxisVelocityMovement);
 
     summary
 }

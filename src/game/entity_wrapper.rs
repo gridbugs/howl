@@ -3,6 +3,7 @@ use game::{
     EntityId,
     Component,
     ComponentType,
+    Speed,
 };
 use game::components::{
     Level,
@@ -11,7 +12,10 @@ use game::components::{
 };
 use game::knowledge::DrawableKnowledge;
 
-use geometry::Vector2;
+use geometry::{
+    Vector2,
+    Direction,
+};
 use renderer::Tile;
 use colour::ansi::AnsiColour;
 
@@ -157,6 +161,16 @@ impl Entity {
             self.get(ComponentType::SolidTile)
         {
             Some(background)
+        } else {
+            None
+        }
+    }
+
+    pub fn axis_velocity(&self) -> Option<(Direction, Speed)> {
+        if let Some(&Component::AxisVelocity {direction, speed}) =
+            self.get(ComponentType::AxisVelocity)
+        {
+            Some((direction, speed))
         } else {
             None
         }

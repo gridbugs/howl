@@ -1,5 +1,6 @@
 use game::{
     actions,
+    Speed,
     UpdateSummary,
     EntityTable,
     RuleResult,
@@ -8,16 +9,34 @@ use game::{
 
 use geometry::Direction;
 
+pub fn maintain_velocity_movement(summary: &UpdateSummary,
+                                  entities: &EntityTable)
+    -> RuleResult
+{
+    let mut reactions = Vec::new();
+
+    if summary.metadata.is_axis_velocity() {
+        for (entity_id, changes) in &summary.added_components {
+            let entity = entities.get(*entity_id);
+            if let Some((direction, speed)) = entity.axis_velocity() {
+                reactions.push(actions::axis_velocity_move(entity, direction, speed));
+            }
+        }
+    }
+
+    RuleResult::After(reactions)
+}
+
 /// When a new entity with velocity is added, add an update that
 /// moves it under its velocity.
 pub fn start_velocity_movement(summary: &UpdateSummary,
-                               entities: &EntityTable)
+                               _: &EntityTable)
     -> RuleResult
 {
     let mut reactions = Vec::new();
     for (_, entity) in &summary.added_entities {
-        if entity.has(ComponentType::AxisVelocity) {
-            reactions.push(actions::axis_velocity_move(entity, Direction::North, 1.0));
+        if let Some((direction, speed)) = entity.axis_velocity() {
+            reactions.push(actions::axis_velocity_move(entity, direction, speed));
         }
     }
 

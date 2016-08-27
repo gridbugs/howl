@@ -1,3 +1,4 @@
+use game::Speed;
 use game::components::{
     Level,
     DoorState,
@@ -97,7 +98,7 @@ pub enum Component {
     VisionDistance(usize),
     DrawableKnowledge(RefCell<DrawableKnowledge>),
     Bullet,
-    AxisVelocity { direction: Direction, speed: f64 },
+    AxisVelocity { direction: Direction, speed: Speed },
 }
 
 impl ToType<ComponentType> for Component {

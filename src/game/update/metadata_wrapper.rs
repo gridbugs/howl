@@ -25,4 +25,7 @@ impl Metadata {
         }
     }
 
+    pub fn is_axis_velocity(&self) -> bool {
+        self.has(MetadatumType::AxisVelocityMovement)
+    }
 }
