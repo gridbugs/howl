@@ -82,6 +82,7 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
         PlayerActor,
         OnLevel(level),
         Collider,
+        DoorOpener,
         VisionDistance(20),
         DrawableKnowledge(RefCell::new(knowledge::DrawableKnowledge::new())),
     ]
@@ -91,7 +92,7 @@ pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         TransparentTile(Tile::new('*', ansi::RED)),
-        TileDepth(3),
+        TileDepth(1),
         OnLevel(level),
         Collider,
         Bullet,

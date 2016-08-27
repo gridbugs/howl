@@ -21,7 +21,7 @@ pub fn detect_open(summary: &UpdateSummary,
 
         let entity = entities.get(*entity_id);
 
-        if !entity.has(ComponentType::Collider) {
+        if !entity.is_collider() || !entity.is_door_opener() {
             continue;
         }
 

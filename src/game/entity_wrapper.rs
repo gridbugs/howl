@@ -175,4 +175,12 @@ impl Entity {
             None
         }
     }
+
+    pub fn is_door_opener(&self) -> bool {
+        self.has(ComponentType::DoorOpener)
+    }
+
+    pub fn is_collider(&self) -> bool {
+        self.has(ComponentType::Collider)
+    }
 }
