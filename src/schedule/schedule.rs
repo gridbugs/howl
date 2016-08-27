@@ -19,9 +19,9 @@ impl<T> ScheduleEntry<T> {
 
 impl<T> Ord for ScheduleEntry<T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        let abs_time_ord = self.abs_time.cmp(&other.abs_time);
+        let abs_time_ord = other.abs_time.cmp(&self.abs_time);
         if abs_time_ord == Ordering::Equal {
-            self.seq.cmp(&other.seq)
+            other.seq.cmp(&self.seq)
         } else {
             abs_time_ord
         }
@@ -65,7 +65,7 @@ impl<T> Schedule<T> {
 
     pub fn next(&mut self) -> Option<(T, u64)> {
         self.heap.pop().map(|entry| {
-            assert!(entry.abs_time >= self.abs_time);
+            assert!(entry.abs_time >= self.abs_time, "{} < {}", entry.abs_time, self.abs_time);
             let time_delta = entry.abs_time - self.abs_time;
             self.abs_time = entry.abs_time;
 
