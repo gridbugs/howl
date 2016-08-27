@@ -73,6 +73,7 @@ pub enum ComponentType {
     Opacity,
     VisionDistance,
     DrawableKnowledge,
+    Bullet,
 }
 
 #[derive(Debug, Clone)]
@@ -91,6 +92,7 @@ pub enum Component {
     Opacity(f64),
     VisionDistance(usize),
     DrawableKnowledge(RefCell<DrawableKnowledge>),
+    Bullet,
 }
 
 impl ToType<ComponentType> for Component {
@@ -110,6 +112,7 @@ impl ToType<ComponentType> for Component {
             Component::Opacity(_) => ComponentType::Opacity,
             Component::VisionDistance(_) => ComponentType::VisionDistance,
             Component::DrawableKnowledge(_) => ComponentType::DrawableKnowledge,
+            Component::Bullet => ComponentType::Bullet,
         }
     }
 }

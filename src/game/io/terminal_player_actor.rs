@@ -1,5 +1,6 @@
 use game::{
     EntityId,
+    Entity,
     EntityTable,
     MetaAction,
     UpdateSummary,
@@ -21,11 +22,17 @@ pub fn act<'a>(input_source: &InputSource<'a>,
                        entities: &EntityTable)
     -> Option<MetaAction>
 {
+    let entity = entities.get(entity_id);
+
     if let Some(event) = input_source.get_event() {
         if let Some(direction) = event_to_direction(event) {
-            Some(MetaAction::Update(actions::walk(entities.get(entity_id), direction)))
+            Some(MetaAction::Update(actions::walk(entity, direction)))
         } else {
-            event_to_meta_action(event, entity_id, entities)
+            if let Some(update) = event_to_action(event, entity, entities) {
+                Some(MetaAction::Update(update))
+            } else {
+                event_to_meta_action(event, entity, entities)
+            }
         }
     } else {
         None
@@ -53,8 +60,7 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn close_door(entity_id: EntityId, entities: &EntityTable) -> Option<UpdateSummary> {
-    let entity = entities.get(entity_id);
+fn close_door(entity: &Entity, entities: &EntityTable) -> Option<UpdateSummary> {
     let level = entities.get(entity.on_level().unwrap());
     let sh = level.level_spacial_hash().unwrap();
 
@@ -71,11 +77,18 @@ fn close_door(entity_id: EntityId, entities: &EntityTable) -> Option<UpdateSumma
     None
 }
 
-fn event_to_meta_action(event: Event, entity_id: EntityId, entities: &EntityTable) -> Option<MetaAction> {
+fn event_to_action(event: Event, entity: &Entity, entities: &EntityTable) -> Option<UpdateSummary> {
+    match event {
+        Event::Char('f') => Some(actions::fire_bullet(entity, Direction::North, entities)),
+        _ => None,
+    }
+}
+
+fn event_to_meta_action(event: Event, entity: &Entity, entities: &EntityTable) -> Option<MetaAction> {
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),
         Event::Char('q') => Some(MetaAction::Quit),
-        Event::Char('c') => close_door(entity_id, entities).map(|u| MetaAction::Update(u)),
+        Event::Char('c') => close_door(entity, entities).map(|u| MetaAction::Update(u)),
         _ => None,
     }
 }

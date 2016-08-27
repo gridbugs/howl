@@ -87,6 +87,17 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
     ]
 }
 
+pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
+    entity![
+        Position(Vector2::new(x, y)),
+        TransparentTile(Tile::new('*', ansi::RED)),
+        TileDepth(3),
+        OnLevel(level),
+        Collider,
+        Bullet,
+    ]
+}
+
 pub fn make_level(width: usize, height: usize) -> Entity {
     entity![
         LevelData(Level::new(width, height))

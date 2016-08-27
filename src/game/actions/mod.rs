@@ -2,11 +2,13 @@ use game::{
     EntityId,
     Entity,
     UpdateSummary,
+    EntityTable,
 };
 use game::Component::*;
 use game::ComponentType as CType;
 
 use game::components::DoorState;
+use game::entities;
 
 use geometry::direction::Direction;
 use renderer::Tile;
@@ -44,6 +46,19 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     });
     summary.add_component(door_id, Door(DoorState::Closed));
     summary.add_component(door_id, Opacity(1.0));
+
+    summary
+}
+
+pub fn fire_bullet(source: &Entity, direction: Direction, entities: &EntityTable) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    let start_coord = source.position().unwrap() + direction.vector();
+    let level = source.on_level().unwrap();
+
+    let bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+
+    summary.add_entity(entities.reserve_id(), bullet);
 
     summary
 }
