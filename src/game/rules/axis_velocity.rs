@@ -1,13 +1,9 @@
 use game::{
     actions,
-    Speed,
     UpdateSummary,
     EntityTable,
     RuleResult,
-    ComponentType,
 };
-
-use geometry::Direction;
 
 pub fn maintain_velocity_movement(summary: &UpdateSummary,
                                   entities: &EntityTable)
@@ -16,7 +12,7 @@ pub fn maintain_velocity_movement(summary: &UpdateSummary,
     let mut reactions = Vec::new();
 
     if summary.metadata.is_axis_velocity() {
-        for (entity_id, changes) in &summary.added_components {
+        for (entity_id, _) in &summary.added_components {
             let entity = entities.get(*entity_id);
             if let Some((direction, speed)) = entity.axis_velocity() {
                 reactions.push(actions::axis_velocity_move(entity, direction, speed));
