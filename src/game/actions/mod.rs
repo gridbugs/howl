@@ -24,6 +24,7 @@ pub fn walk(entity: &Entity, direction: Direction) -> UpdateSummary {
     let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
     summary.add_component(entity.id.unwrap(), Position(vec));
 
+    summary.set_metadata(Name("walk"));
     summary
 }
 
@@ -36,6 +37,7 @@ pub fn open_door(door_id: EntityId) -> UpdateSummary {
     summary.add_component(door_id, Door(DoorState::Open));
     summary.add_component(door_id, Opacity(0.0));
 
+    summary.set_metadata(Name("open_door"));
     summary
 }
 
@@ -51,6 +53,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     summary.add_component(door_id, Door(DoorState::Closed));
     summary.add_component(door_id, Opacity(1.0));
 
+    summary.set_metadata(Name("close_door"));
     summary
 }
 
@@ -70,6 +73,7 @@ pub fn fire_single_bullet(source: &Entity, direction: Direction, entities: &Enti
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
 
+    summary.set_metadata(Name("fire_single_bullet"));
     summary
 }
 
@@ -93,6 +97,7 @@ pub fn burst_fire_bullet(source: &Entity, direction: Direction,
     });
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
 
+    summary.set_metadata(Name("burst_fire_bullet"));
     summary
 }
 
@@ -113,6 +118,7 @@ pub fn fire_bullets_all_axes(source: &Entity, entities: &EntityTable) -> UpdateS
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
 
+    summary.set_metadata(Name("fire_bullets_all_axes"));
     summary
 }
 
@@ -125,6 +131,7 @@ pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: Speed) -
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
     summary.set_metadata(AxisVelocityMovement);
 
+    summary.set_metadata(Name("axis_velocity_move"));
     summary
 }
 
@@ -133,6 +140,7 @@ pub fn add_entity(entity: Entity, entities: &EntityTable) -> UpdateSummary {
 
     summary.add_entity(entities.reserve_id(), entity);
 
+    summary.set_metadata(Name("add_entity"));
     summary
 }
 
@@ -141,6 +149,7 @@ pub fn remove_entity(entity: &Entity) -> UpdateSummary {
 
     summary.remove_entity(entity.id.unwrap());
 
+    summary.set_metadata(Name("remove_entity"));
     summary
 }
 
@@ -150,5 +159,6 @@ pub fn delay(update: UpdateSummary, time_ms: u64) -> UpdateSummary {
     summary.set_metadata(Delay(update));
     summary.set_metadata(ActionTime(time_ms));
 
+    summary.set_metadata(Name("delay"));
     summary
 }

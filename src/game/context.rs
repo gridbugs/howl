@@ -168,16 +168,18 @@ impl<'a> GameContext<'a> {
                 }
             }
 
-            if time_delta != 0 {
-                self.render();
-                thread::sleep(Duration::from_millis(time_delta));
-            }
-
             no_commits = false;
 
             let action_time = update.metadata.action_time();
 
+            self.turn_count += 1;
+
             update.commit(&mut self.entities, self.turn_count);
+
+            if time_delta != 0 {
+                self.render();
+                thread::sleep(Duration::from_millis(time_delta));
+            }
 
             while let Some(update) = self.reaction_queue.pop_front() {
                 self.update_queue.insert(update, action_time);

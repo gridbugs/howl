@@ -72,4 +72,14 @@ impl<T> Schedule<T> {
             (entry.value, time_delta)
         })
     }
+
+    pub fn reset(&mut self) {
+        self.heap.clear();
+        self.abs_time = 0;
+        self.seq = 0;
+    }
+
+    pub fn time(&self) -> u64 {
+        self.abs_time
+    }
 }

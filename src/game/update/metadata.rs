@@ -12,6 +12,7 @@ pub type Metadata = Table<MetadatumType, Metadatum>;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum MetadatumType {
+    Name,
     TurnTime,
     ActionTime,
     AxisVelocityMovement,
@@ -21,6 +22,7 @@ pub enum MetadatumType {
 
 #[derive(Clone)]
 pub enum Metadatum {
+    Name(&'static str),
     TurnTime(u64),
     ActionTime(u64),
     AxisVelocityMovement,
@@ -31,6 +33,7 @@ pub enum Metadatum {
 impl ToType<MetadatumType> for Metadatum {
     fn to_type(&self) -> MetadatumType {
         match *self {
+            Metadatum::Name(_) => MetadatumType::Name,
             Metadatum::TurnTime(_) => MetadatumType::TurnTime,
             Metadatum::ActionTime(_) => MetadatumType::ActionTime,
             Metadatum::AxisVelocityMovement => MetadatumType::AxisVelocityMovement,

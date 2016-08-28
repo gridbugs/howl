@@ -4,9 +4,10 @@ use game::{
     EntityTable,
     ComponentType,
     UpdateSummary,
+    RuleResult,
 };
 
-use game::rule::RuleResult;
+use game::update::Metadatum::*;
 
 pub fn detect_collision(summary: &UpdateSummary,
                         entities: &EntityTable)
@@ -32,7 +33,9 @@ pub fn detect_collision(summary: &UpdateSummary,
         if let Some(cell) = spacial_hash.get(new_position.to_tuple()) {
             if cell.has(ComponentType::Solid) {
                 if entity.is_destroy_on_collision() {
-                    return rule::instead(actions::remove_entity(entity));
+                    let mut remove = actions::remove_entity(entity);
+                    remove.set_metadata(ActionTime(1));
+                    return rule::instead(remove);
                 } else {
                     return rule::fail();
                 }

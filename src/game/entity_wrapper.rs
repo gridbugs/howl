@@ -187,4 +187,8 @@ impl Entity {
     pub fn is_destroy_on_collision(&self) -> bool {
         self.has(ComponentType::DestroyOnCollision)
     }
+
+    pub fn is_bullet(&self) -> bool {
+        self.has(ComponentType::Bullet)
+    }
 }

@@ -53,4 +53,14 @@ impl Metadata {
             None
         }
     }
+
+    pub fn name(&self) -> Option<&'static str> {
+        if let Some(&Metadatum::Name(name)) =
+            self.get(MetadatumType::Name)
+        {
+            Some(name)
+        } else {
+            None
+        }
+    }
 }
