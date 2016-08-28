@@ -95,7 +95,6 @@ pub fn burst_fire_bullet(source: &Entity, direction: Direction,
         count: num_bullets,
         period: period,
     });
-    summary.set_metadata(ActionTime(speed.ms_per_cell()));
 
     summary.set_metadata(Name("burst_fire_bullet"));
     summary
