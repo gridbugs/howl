@@ -149,6 +149,12 @@ impl<'a> GameContext<'a> {
         self.update_queue.insert(update, 0);
 
         'outer: while let Some((update, time_delta)) = self.update_queue.next() {
+
+            if time_delta != 0 {
+                self.render();
+                thread::sleep(Duration::from_millis(time_delta));
+            }
+
             self.reaction_queue.clear();
             for rule in &self.rules {
                 let result = rule.check(&update, &self.entities);
@@ -175,11 +181,6 @@ impl<'a> GameContext<'a> {
             self.turn_count += 1;
 
             update.commit(&mut self.entities, self.turn_count);
-
-            if time_delta != 0 {
-                self.render();
-                thread::sleep(Duration::from_millis(time_delta));
-            }
 
             while let Some(update) = self.reaction_queue.pop_front() {
                 self.update_queue.insert(update, action_time);
