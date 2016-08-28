@@ -28,7 +28,7 @@ pub fn act<'a>(input_source: &InputSource<'a>,
         if let Some(direction) = event_to_direction(event) {
             Some(MetaAction::Update(actions::walk(entity, direction)))
         } else {
-            if let Some(update) = event_to_action(event, entity, entities) {
+            if let Some(update) = event_to_action(event, entity, entities, input_source) {
                 Some(MetaAction::Update(update))
             } else {
                 event_to_meta_action(event, entity, entities)
@@ -77,10 +77,26 @@ fn close_door(entity: &Entity, entities: &EntityTable) -> Option<UpdateSummary> 
     None
 }
 
-fn event_to_action(event: Event, entity: &Entity, entities: &EntityTable) -> Option<UpdateSummary> {
+fn get_direction(input_source: &InputSource) -> Option<Direction> {
+    if let Some(event) = input_source.get_event() {
+        event_to_direction(event)
+    } else {
+        None
+    }
+}
+
+fn event_to_action(event: Event, entity: &Entity, entities: &EntityTable, input_source: &InputSource) -> Option<UpdateSummary> {
     match event {
-        Event::Char('f') => Some(actions::fire_single_bullet(entity, Direction::North, entities)),
-        Event::Char('g') => Some(actions::burst_fire_bullet(entity, Direction::North, 6, 100)),
+        Event::Char('f') => {
+            get_direction(input_source).map(|d| {
+                actions::fire_single_bullet(entity, d, entities)
+            })
+        },
+        Event::Char('g') => {
+            get_direction(input_source).map(|d| {
+                actions::burst_fire_bullet(entity, d, 6, 100)
+            })
+        },
         Event::Char('F') => Some(actions::fire_bullets_all_axes(entity, entities)),
         _ => None,
     }
