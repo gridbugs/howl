@@ -45,11 +45,12 @@ impl<G> KnowledgeGrid<G>
         &mut self, entities: &EntityTable,
         grid: &S,
         report_iter: I,
-        turn_count: u64)
+        turn_count: u64) -> bool
         where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
               I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
               S: Grid<Item=SpacialHashCell>,
     {
+        let mut changed = false;
         for (coord, meta) in report_iter {
             let sh_cell = &grid.get(*coord).unwrap();
             let mut kn_cell = &mut self.grid.get_mut(*coord).unwrap();
@@ -61,12 +62,15 @@ impl<G> KnowledgeGrid<G>
             if sh_cell.last_updated < kn_cell.last_updated() {
                 kn_cell.set_last_updated(turn_count);
             } else {
+                changed = true;
                 kn_cell.clear();
                 for entity in entities.id_set_iter(&sh_cell.entities) {
                     kn_cell.update(entity, turn_count, meta);
                 }
             }
         }
+
+        changed
     }
 }
 
@@ -93,7 +97,7 @@ impl<G> LevelGridKnowledge<G>
         entities: &EntityTable,
         grid: &S,
         report_iter: I,
-        turn_count: u64)
+        turn_count: u64) -> bool
         where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
               I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
               S: Grid<Item=SpacialHashCell>,
@@ -102,7 +106,7 @@ impl<G> LevelGridKnowledge<G>
             self.levels.insert(level_id, KnowledgeGrid::new(grid.width(), grid.height()));
         }
 
-        self.levels.get_mut(&level_id).unwrap().update(entities, grid, report_iter, turn_count);
+        self.levels.get_mut(&level_id).unwrap().update(entities, grid, report_iter, turn_count)
     }
 
     pub fn grid(&self, level_id: EntityId) -> Option<&G> {

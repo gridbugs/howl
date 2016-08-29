@@ -16,7 +16,7 @@ pub struct DrawableObserver {
 }
 
 impl Observer for DrawableObserver {
-    fn observe(&mut self, entity_id: EntityId, entities: &EntityTable, turn_count: u64) {
+    fn observe(&mut self, entity_id: EntityId, entities: &EntityTable, turn_count: u64) -> bool{
         let entity = entities.get(entity_id);
         let level_id = entity.on_level().unwrap();
         let level = entities.get(level_id);
@@ -29,7 +29,7 @@ impl Observer for DrawableObserver {
         self.vision_system.detect_visible_area(eye, grid, info, &mut self.visibility_report);
 
         let mut knowledge = entity.drawable_knowledge_mut().unwrap();
-        knowledge.update(level_id, entities, grid, self.visibility_report.iter(), turn_count);
+        knowledge.update(level_id, entities, grid, self.visibility_report.iter(), turn_count)
     }
 }
 

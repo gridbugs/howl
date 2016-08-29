@@ -119,17 +119,21 @@ impl<'a> GameContext<'a> {
         self.entities.get(entity).has(Type::PlayerActor)
     }
 
-    pub fn observe_pc(&mut self) {
-        self.observer.observe(self.pc.unwrap(), &self.entities, self.turn_count);
+    pub fn observe_pc(&mut self) -> bool {
+        self.observer.observe(self.pc.unwrap(), &self.entities, self.turn_count)
     }
 
     pub fn render_pc_knowledge(&self) {
         self.renderer.render(&self.entities, self.pc.unwrap(), self.turn_count);
     }
 
-    pub fn render(&mut self) {
-        self.observe_pc();
-        self.render_pc_knowledge();
+    pub fn render(&mut self) -> bool {
+        if self.observe_pc() {
+            self.render_pc_knowledge();
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -151,8 +155,9 @@ impl<'a> GameContext<'a> {
         'outer: while let Some((update, time_delta)) = self.update_queue.next() {
 
             if time_delta != 0 {
-                self.render();
-                thread::sleep(Duration::from_millis(time_delta));
+                if self.render() {
+                    thread::sleep(Duration::from_millis(time_delta));
+                }
             }
 
             self.reaction_queue.clear();
