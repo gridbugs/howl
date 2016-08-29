@@ -16,8 +16,7 @@ use geometry::{
     Vector2,
     Direction,
 };
-use renderer::Tile;
-use colour::ansi::AnsiColour;
+use renderer::ComplexTile;
 
 use std::collections::HashSet;
 use std::collections::hash_set;
@@ -68,8 +67,7 @@ pub enum ComponentType {
     Solid,
     Collider,
     DestroyOnCollision,
-    SolidTile,
-    TransparentTile,
+    Tile,
     TileDepth,
     LevelData,
     PlayerActor,
@@ -90,8 +88,7 @@ pub enum Component {
     Solid,
     Collider,
     DestroyOnCollision,
-    SolidTile { tile: Tile, background: AnsiColour },
-    TransparentTile(Tile),
+    Tile(ComplexTile),
     TileDepth(isize),
     LevelData(Level),
     PlayerActor,
@@ -113,8 +110,7 @@ impl ToType<ComponentType> for Component {
             Component::Solid => ComponentType::Solid,
             Component::Collider => ComponentType::Collider,
             Component::DestroyOnCollision => ComponentType::DestroyOnCollision,
-            Component::SolidTile { tile: _, background: _ } => ComponentType::SolidTile,
-            Component::TransparentTile(_) => ComponentType::TransparentTile,
+            Component::Tile(_) => ComponentType::Tile,
             Component::TileDepth(_) => ComponentType::TileDepth,
             Component::LevelData(_) => ComponentType::LevelData,
             Component::PlayerActor => ComponentType::PlayerActor,

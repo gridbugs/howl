@@ -15,7 +15,7 @@ use game::entities;
 
 use geometry::direction::Direction;
 use geometry::direction;
-use renderer::Tile;
+use renderer::tile;
 use colour::ansi;
 
 pub fn walk(entity: &Entity, direction: Direction) -> UpdateSummary {
@@ -32,8 +32,7 @@ pub fn open_door(door_id: EntityId) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.remove_component(door_id, CType::Solid);
-    summary.remove_component(door_id, CType::SolidTile);
-    summary.add_component(door_id, TransparentTile(Tile::new('-', ansi::WHITE)));
+    summary.add_component(door_id, Tile(tile::foreground('-', ansi::WHITE)));
     summary.add_component(door_id, Door(DoorState::Open));
     summary.add_component(door_id, Opacity(0.0));
 
@@ -45,11 +44,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.add_component(door_id, Solid);
-    summary.remove_component(door_id, CType::TransparentTile);
-    summary.add_component(door_id, SolidTile {
-        tile: Tile::new('+', ansi::WHITE),
-        background: ansi::DARK_GREY,
-    });
+    summary.add_component(door_id, Tile(tile::full('+', ansi::WHITE, ansi::DARK_GREY)));
     summary.add_component(door_id, Door(DoorState::Closed));
     summary.add_component(door_id, Opacity(1.0));
 

@@ -8,8 +8,7 @@ use game::{
 };
 
 use best::BestMap;
-use renderer::Tile;
-use colour::ansi::AnsiColour;
+use renderer::ComplexTile;
 use object_pool::ObjectPool;
 use grid::StaticGrid;
 
@@ -20,8 +19,8 @@ pub type DrawableKnowledge = LevelGridKnowledge<StaticGrid<DrawableCell>>;
 #[derive(Debug)]
 pub struct DrawableCell {
     pub component_types: HashSet<CType>,
-    pub foreground: BestMap<isize, Tile>,
-    pub background: BestMap<isize, AnsiColour>,
+    pub foreground: BestMap<isize, ComplexTile>,
+    pub background: BestMap<isize, ComplexTile>,
     pub last_turn: u64,
     memory_pool: ObjectPool<Entity>,
 }
@@ -65,9 +64,9 @@ impl KnowledgeCell for DrawableCell {
         entity.tile_depth().map(|depth| {
             entity.tile().map(|tile| {
                 self.foreground.insert(depth, tile);
-            });
-            entity.background().map(|background| {
-                self.background.insert(depth, background);
+                if tile.opaque_bg() {
+                    self.background.insert(depth, tile);
+                }
             });
         });
 

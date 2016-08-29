@@ -8,7 +8,11 @@ use game::components::{
 use game::knowledge;
 
 use geometry::Vector2;
-use renderer::Tile;
+use renderer::{
+    tile,
+    ComplexTile,
+    SimpleTile,
+};
 use colour::ansi;
 
 use std::cell::RefCell;
@@ -17,10 +21,10 @@ pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
-        SolidTile {
-            tile: Tile::new('#', ansi::WHITE),
-            background: ansi::DARK_GREY
-        },
+        Tile(ComplexTile::Wall {
+            front: SimpleTile::Full { ch: '▄', fg: ansi::MAGENTA, bg: ansi::GREY },
+            back: SimpleTile::Foreground('█', ansi::GREY),
+        }),
         TileDepth(1),
         OnLevel(level),
         Opacity(1.0),
@@ -35,15 +39,12 @@ pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entit
     ];
 
     if state == DoorState::Open {
-        entity.add(TransparentTile(Tile::new('-', ansi::WHITE)));
+        entity.add(Tile(tile::foreground('-', ansi::WHITE)));
         entity.add(Door(DoorState::Open));
         entity.add(Opacity(0.0));
     } else {
         entity.add(Solid);
-        entity.add(SolidTile {
-            tile: Tile::new('+', ansi::WHITE),
-            background: ansi::DARK_GREY,
-        });
+        entity.add(Tile(tile::full('+', ansi::WHITE, ansi::DARK_GREY)));
         entity.add(Door(DoorState::Closed));
         entity.add(Opacity(1.0));
     }
@@ -55,7 +56,7 @@ pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
-        TransparentTile(Tile::new('&', ansi::GREEN)),
+        Tile(tile::foreground('&', ansi::GREEN)),
         TileDepth(1),
         OnLevel(level),
         Opacity(0.4),
@@ -65,10 +66,7 @@ pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
 pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
-        SolidTile {
-            tile: Tile::new('.', ansi::WHITE),
-            background: ansi::DARK_GREY
-        },
+        Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY)),
         TileDepth(0),
         OnLevel(level),
     ]
@@ -77,7 +75,7 @@ pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
 pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
-        TransparentTile(Tile::new('@', ansi::WHITE)),
+        Tile(tile::foreground('@', ansi::WHITE)),
         TileDepth(2),
         PlayerActor,
         OnLevel(level),
@@ -91,7 +89,7 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
 pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
-        TransparentTile(Tile::new('*', ansi::RED)),
+        Tile(tile::foreground('*', ansi::RED)),
         TileDepth(2),
         OnLevel(level),
         Collider,

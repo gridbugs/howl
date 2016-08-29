@@ -16,8 +16,7 @@ use geometry::{
     Vector2,
     Direction,
 };
-use renderer::Tile;
-use colour::ansi::AnsiColour;
+use renderer::ComplexTile;
 
 use std::cell::{
     Ref,
@@ -142,25 +141,11 @@ impl Entity {
         }
     }
 
-    pub fn tile(&self) -> Option<Tile> {
-         if let Some(&Component::TransparentTile(tile)) =
-            self.get(ComponentType::TransparentTile)
+    pub fn tile(&self) -> Option<ComplexTile> {
+         if let Some(&Component::Tile(tile)) =
+            self.get(ComponentType::Tile)
         {
             Some(tile)
-        } else if let Some(&Component::SolidTile {tile, background: _}) =
-            self.get(ComponentType::SolidTile)
-        {
-            Some(tile)
-        } else {
-            None
-        }
-    }
-
-    pub fn background(&self) -> Option<AnsiColour> {
-        if let Some(&Component::SolidTile {tile: _, background}) =
-            self.get(ComponentType::SolidTile)
-        {
-            Some(background)
         } else {
             None
         }

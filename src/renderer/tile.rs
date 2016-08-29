@@ -1,13 +1,75 @@
 use colour::ansi::AnsiColour;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Tile {
-    pub character: char,
-    pub colour: AnsiColour,
+pub enum SimpleTile {
+    SolidColour(AnsiColour),
+    Foreground(char, AnsiColour),
+    Full { ch: char, fg: AnsiColour, bg: AnsiColour },
 }
 
-impl Tile {
-    pub fn new(character: char, colour: AnsiColour) -> Tile {
-        Tile { character: character, colour: colour }
+#[derive(Clone, Copy, Debug)]
+pub enum ComplexTile {
+    Simple(SimpleTile),
+    Wall { front: SimpleTile, back: SimpleTile },
+}
+
+pub fn solid_colour(colour: AnsiColour) -> ComplexTile {
+    ComplexTile::Simple(SimpleTile::SolidColour(colour))
+}
+
+pub fn foreground(ch: char, colour: AnsiColour) -> ComplexTile {
+    ComplexTile::Simple(SimpleTile::Foreground(ch, colour))
+}
+
+pub fn full(ch: char, fg: AnsiColour, bg: AnsiColour) -> ComplexTile {
+    ComplexTile::Simple(SimpleTile::Full {
+        ch: ch,
+        fg: fg,
+        bg: bg,
+    })
+}
+
+impl SimpleTile {
+    pub fn opaque_bg(self) -> bool {
+        match self {
+            SimpleTile::SolidColour(_) => true,
+            SimpleTile::Foreground(_, _) => false,
+            SimpleTile::Full { ch: _, fg: _, bg: _ } => true,
+        }
+    }
+
+    pub fn background_colour(self) -> Option<AnsiColour> {
+        match self {
+            SimpleTile::SolidColour(c) => Some(c),
+            SimpleTile::Foreground(_, _) => None,
+            SimpleTile::Full { ch: _, fg: _, bg } => Some(bg),
+        }
+    }
+
+    pub fn foreground_colour(self) -> Option<AnsiColour> {
+        match self {
+            SimpleTile::SolidColour(_) => None,
+            SimpleTile::Foreground(_, c) => Some(c),
+            SimpleTile::Full { ch: _, fg, bg: _ } => Some(fg),
+        }
+    }
+
+    pub fn character(self) -> Option<char> {
+        match self {
+            SimpleTile::SolidColour(_) => None,
+            SimpleTile::Foreground(ch, _) => Some(ch),
+            SimpleTile::Full { ch, fg: _, bg: _ } => Some(ch),
+        }
+    }
+}
+
+impl ComplexTile {
+    pub fn opaque_bg(self) -> bool {
+        match self {
+            ComplexTile::Simple(s) => s.opaque_bg(),
+            ComplexTile::Wall { front, back } => {
+                front.opaque_bg() || back.opaque_bg()
+            }
+        }
     }
 }

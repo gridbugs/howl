@@ -7,6 +7,8 @@ use grid::{
     SomeNeiCoordIter,
 };
 
+use geometry::Direction;
+
 use std::marker::Sized;
 
 pub trait Grid {
@@ -17,6 +19,10 @@ pub trait Grid {
 
     fn get(&self, coord: Coord) -> Option<&Self::Item>;
     fn get_mut(&mut self, coord: Coord) -> Option<&mut Self::Item>;
+
+    fn get_nei(&self, coord: Coord, direction: Direction) -> Option<&Self::Item> {
+        self.get(coord + direction.vector())
+    }
 
     fn limits_min(&self) -> Coord;
     fn limits_max(&self) -> Coord;
