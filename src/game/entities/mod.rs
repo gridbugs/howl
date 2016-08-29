@@ -92,7 +92,7 @@ pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         TransparentTile(Tile::new('*', ansi::RED)),
-        TileDepth(1),
+        TileDepth(2),
         OnLevel(level),
         Collider,
         Bullet,
