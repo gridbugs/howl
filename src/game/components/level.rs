@@ -12,6 +12,11 @@ use grid::{
     DefaultGrid,
 };
 
+use perlin::{
+    Perlin3Grid,
+    PerlinWrapType,
+};
+
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::collections::hash_set;
@@ -27,6 +32,7 @@ pub struct Level {
     pub entities: HashSet<EntityId>,
     pub schedule: RefCell<TurnSchedule>,
     pub spacial_hash: RefCell<LevelSpacialHashMap>,
+    pub perlin: Perlin3Grid,
 }
 
 pub struct EntityIter<'a> {
@@ -53,6 +59,7 @@ impl Level {
             schedule: RefCell::new(TurnSchedule::new()),
             spacial_hash: RefCell::new(SpacialHashMap::new(
                     StaticGrid::new_default(width, height))),
+            perlin: Perlin3Grid::new(width, height, PerlinWrapType::Regenerate),
         }
     }
 

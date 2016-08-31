@@ -1,3 +1,6 @@
 mod perlin;
 
-pub use self::perlin::Perlin3Grid;
+pub use self::perlin::{
+    Perlin3Grid,
+    PerlinWrapType,
+};

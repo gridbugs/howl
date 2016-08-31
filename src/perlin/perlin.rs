@@ -27,13 +27,13 @@ impl Default for Perlin3Vector {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Perlin3Slice {
     grid: StaticGrid<Perlin3Vector>,
     z: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Perlin3Grid {
     slices: Vec<Perlin3Slice>,
     grid_width: usize,
