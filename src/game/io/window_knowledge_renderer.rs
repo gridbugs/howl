@@ -17,6 +17,8 @@ use renderer::{
 };
 use geometry::Direction;
 
+const MOONLIGHT_COLOUR: ansi::AnsiColour = ansi::MAGENTA;
+
 struct RendererCell {
     wall: bool,
 }
@@ -110,7 +112,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
             }
 
             if cell.moonlight {
-                bg = ansi::YELLOW;
+                bg = MOONLIGHT_COLOUR;
             }
 
             if cell.last_turn != turn_count {

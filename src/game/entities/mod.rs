@@ -23,7 +23,7 @@ pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
         Position(Vector2::new(x, y)),
         Solid,
         Tile(ComplexTile::Wall {
-            front: SimpleTile::Full { ch: '▄', fg: ansi::MAGENTA, bg: ansi::GREY },
+            front: SimpleTile::Full { ch: '▄', fg: ansi::YELLOW, bg: ansi::GREY },
             back: SimpleTile::Foreground('█', ansi::GREY),
         }),
         TileDepth(1),
