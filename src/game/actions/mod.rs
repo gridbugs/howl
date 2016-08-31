@@ -156,3 +156,9 @@ pub fn delay(update: UpdateSummary, time_ms: u64) -> UpdateSummary {
     summary.set_metadata(Name("delay"));
     summary
 }
+
+pub fn wait() -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+    summary.set_metadata(TurnTime(1));
+    summary
+}

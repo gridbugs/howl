@@ -98,6 +98,7 @@ fn event_to_action(event: Event, entity: &Entity, entities: &EntityTable, input_
             })
         },
         Event::Char('F') => Some(actions::fire_bullets_all_axes(entity, entities)),
+        Event::Char('.') => Some(actions::wait()),
         _ => None,
     }
 }
