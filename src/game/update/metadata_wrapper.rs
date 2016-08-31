@@ -4,15 +4,14 @@ use game::{
 };
 
 use game::update::{
-    Metadata,
     Metadatum,
     MetadatumType,
 };
 
-impl Metadata {
+impl UpdateSummary {
     pub fn action_time(&self) -> u64 {
         if let Some(&Metadatum::ActionTime(t)) =
-            self.get(MetadatumType::ActionTime)
+            self.metadata.get(MetadatumType::ActionTime)
         {
             t
         } else {
@@ -22,7 +21,7 @@ impl Metadata {
 
     pub fn turn_time(&self) -> u64 {
         if let Some(&Metadatum::TurnTime(t)) =
-            self.get(MetadatumType::TurnTime)
+            self.metadata.get(MetadatumType::TurnTime)
         {
             t
         } else {
@@ -31,12 +30,12 @@ impl Metadata {
     }
 
     pub fn is_axis_velocity(&self) -> bool {
-        self.has(MetadatumType::AxisVelocityMovement)
+        self.metadata.has(MetadatumType::AxisVelocityMovement)
     }
 
     pub fn burst_fire(&self) -> Option<(&Entity, u64, u64)> {
         if let Some(&Metadatum::BurstFire { ref prototype, count, period }) =
-            self.get(MetadatumType::BurstFire)
+            self.metadata.get(MetadatumType::BurstFire)
         {
             Some((prototype, count, period))
         } else {
@@ -46,7 +45,7 @@ impl Metadata {
 
     pub fn delay(&self) -> Option<&UpdateSummary> {
         if let Some(&Metadatum::Delay(ref update)) =
-            self.get(MetadatumType::Delay)
+            self.metadata.get(MetadatumType::Delay)
         {
             Some(update)
         } else {
@@ -56,7 +55,7 @@ impl Metadata {
 
     pub fn name(&self) -> Option<&'static str> {
         if let Some(&Metadatum::Name(name)) =
-            self.get(MetadatumType::Name)
+            self.metadata.get(MetadatumType::Name)
         {
             Some(name)
         } else {

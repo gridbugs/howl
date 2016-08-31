@@ -191,7 +191,7 @@ impl<'a> GameContext<'a> {
 
             no_commits = false;
 
-            let action_time = update.metadata.action_time();
+            let action_time = update.action_time();
 
             self.turn_count += 1;
 

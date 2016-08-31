@@ -11,7 +11,7 @@ pub fn burst_fire(ctx: RuleContext)
     -> RuleResult
 {
     if let Some((prototype, count, period)) =
-        ctx.update.metadata.burst_fire()
+        ctx.update.burst_fire()
     {
         let mut spawn_bullet =
             actions::add_entity(prototype.clone(), ctx.entities);

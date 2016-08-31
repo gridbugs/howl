@@ -9,7 +9,7 @@ pub fn maintain_velocity_movement(ctx: RuleContext)
 {
     let mut reactions = Vec::new();
 
-    if ctx.update.metadata.is_axis_velocity() {
+    if ctx.update.is_axis_velocity() {
         for (entity_id, _) in &ctx.update.added_components {
             let entity = ctx.entities.get(*entity_id);
             if let Some((direction, speed)) = entity.axis_velocity() {
