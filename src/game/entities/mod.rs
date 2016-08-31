@@ -100,6 +100,6 @@ pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
 
 pub fn make_level(width: usize, height: usize) -> Entity {
     entity![
-        LevelData(Level::new(width, height))
+        LevelData(Box::new(Level::new(width, height)))
     ]
 }

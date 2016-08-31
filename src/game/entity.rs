@@ -90,7 +90,7 @@ pub enum Component {
     DestroyOnCollision,
     Tile(ComplexTile),
     TileDepth(isize),
-    LevelData(Level),
+    LevelData(Box<Level>),
     PlayerActor,
     OnLevel(EntityId),
     Door(DoorState),
