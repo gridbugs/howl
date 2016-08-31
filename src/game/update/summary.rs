@@ -64,44 +64,32 @@ impl UpdateSummary {
         self.removed_components.get_mut(&entity).unwrap().insert(component_type);
     }
 
-    pub fn commit(mut self, entities: &mut EntityTable, turn_count: u64) -> Self {
+    pub fn commit(mut self, entities: &mut EntityTable, turn_count: u64) {
 
         self.update_spacial_hashes(entities, turn_count);
 
-        let mut revert = Self::new();
-
         for (_, entity) in self.added_entities.drain() {
-            let id = entities.add(entity);
-            revert.remove_entity(id);
+            entities.add(entity);
         }
 
         for entity_id in self.removed_entities.drain() {
-            let entity = entities.remove(entity_id).
+            entities.remove(entity_id).
                 expect("Tried to remove non-existent entity.");
-            revert.add_entity(entity_id, entity);
         }
 
         for (entity_id, mut changes) in self.added_components.drain() {
             let mut entity = entities.get_mut(entity_id);
-            for (component_type, component) in changes.slots.drain() {
-                if let Some(original) = entity.add(component) {
-                    revert.add_component(entity_id, original);
-                } else {
-                    revert.remove_component(entity_id, component_type);
-                }
+            for (_, component) in changes.slots.drain() {
+                entity.add(component);
             }
         }
 
         for (entity_id, mut component_types) in self.removed_components.drain() {
             let mut entity = entities.get_mut(entity_id);
             for component_type in component_types.drain() {
-                if let Some(component) = entity.remove(component_type) {
-                    revert.add_component(entity_id, component);
-                }
+                entity.remove(component_type);
             }
         }
-
-        revert
     }
 
     fn update_spacial_hashes(&self, entities: &EntityTable, turn_count: u64) {
