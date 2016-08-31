@@ -5,7 +5,10 @@ use game::{
     TurnSchedule,
     SpacialHashMap,
     SpacialHashCell,
+    UpdateSummary,
 };
+use game::Component::*;
+use game::components::Moonlight;
 
 use grid::{
     StaticGrid,
@@ -15,6 +18,11 @@ use grid::{
 use perlin::{
     Perlin3Grid,
     PerlinWrapType,
+};
+
+use geometry::{
+    Vector2,
+    Vector3,
 };
 
 use std::cell::RefCell;
@@ -32,7 +40,11 @@ pub struct Level {
     pub entities: HashSet<EntityId>,
     pub schedule: RefCell<TurnSchedule>,
     pub spacial_hash: RefCell<LevelSpacialHashMap>,
-    pub perlin: Perlin3Grid,
+    perlin: Perlin3Grid,
+    perlin_zoom: f64,
+    perlin_min: f64,
+    perlin_max: f64,
+    perlin_change: Vector3<f64>,
 }
 
 pub struct EntityIter<'a> {
@@ -60,6 +72,10 @@ impl Level {
             spacial_hash: RefCell::new(SpacialHashMap::new(
                     StaticGrid::new_default(width, height))),
             perlin: Perlin3Grid::new(width, height, PerlinWrapType::Regenerate),
+            perlin_zoom: 0.05,
+            perlin_min: -0.1,
+            perlin_max: 0.1,
+            perlin_change: Vector3::new(0.05, 0.02, 0.01),
         }
     }
 
@@ -85,5 +101,44 @@ impl Level {
             hash_set_iter: self.entities.iter(),
             entities: entities,
         }
+    }
+
+    pub fn apply_perlin_change(&mut self) {
+        self.perlin.scroll(self.perlin_change.x, self.perlin_change.y);
+        self.perlin.mutate(self.perlin_change.z);
+    }
+
+    fn noise(&self, x: isize, y: isize) -> Option<f64> {
+        self.perlin.noise((x as f64) * self.perlin_zoom, (y as f64) * self.perlin_zoom)
+    }
+
+    pub fn moonlight(&self, x: isize, y: isize) -> Moonlight {
+        if let Some(noise) = self.noise(x, y) {
+            if noise > self.perlin_min && noise < self.perlin_max {
+                Moonlight::Light
+            } else {
+                Moonlight::Dark
+            }
+        } else {
+            Moonlight::Dark
+        }
+    }
+
+    pub fn perlin_update(&self, entities: &EntityTable) -> UpdateSummary {
+        let mut update = UpdateSummary::new();
+
+        for entity in entities.id_set_iter(&self.entities) {
+            if let Some(Vector2 {x, y}) = entity.position() {
+                let new = self.moonlight(x, y);
+                if let Some(current) = entity.moonlight() {
+                    // only update the moonlight if it has changed
+                    if new != current {
+                        update.add_component(entity.id.unwrap(), MoonlightSlot(new));
+                    }
+                }
+            }
+        }
+
+        update
     }
 }

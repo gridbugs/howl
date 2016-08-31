@@ -1,4 +1,3 @@
-use game::Component::*;
 use game::ComponentType as Type;
 use game::{
     TurnSchedule,
@@ -82,11 +81,7 @@ impl<'a> GameContext<'a> {
     }
 
     fn pc_level_id(&self) -> EntityId {
-        let pc = self.pc.unwrap();
-        match self.entities.get(pc).get(Type::OnLevel).unwrap() {
-            &OnLevel(level) => level,
-            _ => unreachable!(),
-        }
+        self.entities.get(self.pc.unwrap()).on_level().unwrap()
     }
 
     fn pc_level_entity(&self) -> &Entity {
@@ -94,10 +89,12 @@ impl<'a> GameContext<'a> {
     }
 
     fn pc_level(&self) -> &Level {
-        match self.pc_level_entity().get(Type::LevelData).unwrap() {
-            &LevelData(ref level) => level,
-            _ => unreachable!()
-        }
+        self.pc_level_entity().level_data().unwrap()
+    }
+
+    fn pc_level_mut(&mut self) -> &mut Level {
+        let id = self.pc_level_id();
+        self.entities.get_mut(id).level_data_mut().unwrap()
     }
 
     fn pc_schedule(&self) -> cell::RefMut<TurnSchedule> {
@@ -138,10 +135,12 @@ impl<'a> GameContext<'a> {
     }
 }
 
+#[derive(Debug)]
 enum TurnError {
     Quit,
 }
 
+#[derive(Debug)]
 enum UpdateError {
     NothingApplied,
 }
@@ -213,6 +212,11 @@ impl<'a> GameContext<'a> {
     fn game_turn(&mut self) -> Result<(), TurnError> {
         self.turn_count += 1;
         let entity_id = self.pc_schedule_next();
+
+        self.pc_level_mut().apply_perlin_change();
+
+        let update = self.pc_level().perlin_update(&self.entities);
+        update.commit(&mut self.entities, self.turn_count);
 
         self.render();
 

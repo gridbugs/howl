@@ -188,6 +188,10 @@ impl Entity {
         }
     }
 
+    pub fn has_moonlight(&self) -> bool {
+        self.moonlight().is_some()
+    }
+
     pub fn is_moonlight_light(&self) -> bool {
         if let Some(Moonlight::Light) = self.moonlight() {
             true

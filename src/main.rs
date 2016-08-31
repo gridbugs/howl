@@ -28,10 +28,7 @@ use game::{
     GameContext,
 };
 use game::rules;
-use game::components::{
-    DoorState,
-    Moonlight,
-};
+use game::components::DoorState;
 
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;
@@ -84,12 +81,7 @@ fn populate(entities: &mut EntityTable) -> EntityId {
             let mut x = 0;
             for ch in line.chars() {
 
-                let noise = level.perlin.noise((x as f64) * 0.05, (y as f64) * 0.05).unwrap();
-                let moonlight = if noise > -0.1 && noise < 0.1 {
-                    Moonlight::Light
-                } else {
-                    Moonlight::Dark
-                };
+                let moonlight = level.moonlight(x, y);
 
                 match ch {
                     '#' => {
