@@ -31,6 +31,7 @@ mod rule;
 pub use self::rule::{
     Rule,
     RuleResult,
+    RuleContext,
 };
 
 mod spacial_hash;

@@ -6,6 +6,7 @@ use game::{
     MetaAction,
     Rule,
     RuleResult,
+    RuleContext,
     EntityTable,
     EntityId,
     Entity,
@@ -146,8 +147,13 @@ enum UpdateError {
 }
 
 impl<'a> GameContext<'a> {
-    fn apply_update(&mut self, update: UpdateSummary) -> Result<(), UpdateError> {
+    fn rule_context<'b: 'a>(&'b self, update: &'b UpdateSummary) -> RuleContext<'b> {
+        RuleContext::new(update, &self.entities)
+    }
 
+    fn apply_update(&mut self, update: UpdateSummary)
+        -> Result<(), UpdateError>
+    {
         let mut no_commits = true;
 
         self.update_queue.insert(update, 0);
@@ -160,22 +166,26 @@ impl<'a> GameContext<'a> {
                 }
             }
 
-            self.reaction_queue.clear();
-            for rule in &self.rules {
-                let result = rule.check(&update, &self.entities);
+            {
+                let rule_context = RuleContext::new(&update, &self.entities);
 
-                match result {
-                    RuleResult::Instead(mut updates) => {
-                        for u in updates.drain(..) {
-                            self.update_queue.insert(u, 0);
-                        }
-                        continue 'outer;
-                    },
-                    RuleResult::After(mut updates) => {
-                        for u in updates.drain(..) {
-                            self.reaction_queue.push_back(u);
-                        }
-                    },
+                self.reaction_queue.clear();
+                for rule in &self.rules {
+                    let result = rule.check(rule_context);
+
+                    match result {
+                        RuleResult::Instead(mut updates) => {
+                            for u in updates.drain(..) {
+                                self.update_queue.insert(u, 0);
+                            }
+                            continue 'outer;
+                        },
+                        RuleResult::After(mut updates) => {
+                            for u in updates.drain(..) {
+                                self.reaction_queue.push_back(u);
+                            }
+                        },
+                    }
                 }
             }
 

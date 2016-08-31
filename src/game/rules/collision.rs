@@ -1,31 +1,29 @@
 use game::{
     rule,
     actions,
-    EntityTable,
     ComponentType,
-    UpdateSummary,
     RuleResult,
+    RuleContext,
 };
 
 use game::update::Metadatum::*;
 
-pub fn detect_collision(summary: &UpdateSummary,
-                        entities: &EntityTable)
+pub fn detect_collision(ctx: RuleContext)
     -> RuleResult
 {
-    for (entity_id, changes) in &summary.added_components {
+    for (entity_id, changes) in &ctx.update.added_components {
 
         if !changes.has(ComponentType::Position) {
             continue;
         }
 
-        let entity = entities.get(*entity_id);
+        let entity = ctx.entities.get(*entity_id);
 
         if !entity.has(ComponentType::Collider) {
             continue;
         }
 
-        let level = entities.get(entity.on_level().unwrap());
+        let level = ctx.entities.get(entity.on_level().unwrap());
         let spacial_hash = level.level_spacial_hash().unwrap();
 
         let new_position = changes.position().unwrap();

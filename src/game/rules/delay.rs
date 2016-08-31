@@ -1,15 +1,13 @@
 use game::{
     rule,
-    UpdateSummary,
-    EntityTable,
     RuleResult,
+    RuleContext,
 };
 
-pub fn delay(summary: &UpdateSummary,
-             _: &EntityTable)
+pub fn delay(ctx: RuleContext)
     -> RuleResult
 {
-    if let Some(update) = summary.metadata.delay() {
+    if let Some(update) = ctx.update.metadata.delay() {
         rule::after(update.clone())
     } else {
         rule::pass()

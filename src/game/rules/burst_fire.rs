@@ -1,22 +1,20 @@
 use game::{
     rule,
     actions,
-    UpdateSummary,
-    EntityTable,
     RuleResult,
+    RuleContext,
 };
 
 use game::update::Metadatum::*;
 
-pub fn burst_fire(summary: &UpdateSummary,
-                  entities: &EntityTable)
+pub fn burst_fire(ctx: RuleContext)
     -> RuleResult
 {
     if let Some((prototype, count, period)) =
-        summary.metadata.burst_fire()
+        ctx.update.metadata.burst_fire()
     {
         let mut spawn_bullet =
-            actions::add_entity(prototype.clone(), entities);
+            actions::add_entity(prototype.clone(), ctx.entities);
         let (_, speed) = prototype.axis_velocity().unwrap();
 
         spawn_bullet.set_metadata(ActionTime(speed.ms_per_cell()));
@@ -24,7 +22,7 @@ pub fn burst_fire(summary: &UpdateSummary,
         let mut reactions = vec![spawn_bullet];
 
         if count > 0 {
-            let mut burst_rest = summary.clone();
+            let mut burst_rest = ctx.update.clone();
             burst_rest.set_metadata(BurstFire {
                 prototype: prototype.clone(),
                 count: count - 1,
