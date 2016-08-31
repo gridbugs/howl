@@ -28,7 +28,10 @@ use game::{
     GameContext,
 };
 use game::rules;
-use game::components::DoorState;
+use game::components::{
+    DoorState,
+    Moonlight,
+};
 
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;
@@ -37,30 +40,34 @@ use std::io;
 
 fn populate(entities: &mut EntityTable) -> EntityId {
     let strings = [
-        "####################################",
-        "#............#.....................#",
-        "#............#.....................#",
-        "#............#.....................#",
-        "#............#.....................#",
-        "#............+.....................#",
-        "#............#.....................#",
-        "#............#.....................#",
-        "#............#.....................#",
-        "#............#.....................#",
-        "#............#########+#############",
-        "#............#.....................#",
-        "#............#.....................#",
-        "#............#.....................#",
-        "########+#####.....................#",
-        "#..................................#",
-        "#..................................#",
-        "#..................................#",
-        "#.................@................#",
-        "#..................................#",
-        "#..................................#",
-        "#..................................#",
-        "####################################",
+        "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+        "&,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,&",
+        "&,,############################,,,,,,&",
+        "&,,#.........#................#,,&,,,&",
+        "&,,#.........#................#,,,&,,&",
+        "&,,#.........+................#,,&,,,&",
+        "&&,#.........#................#,,,,,,&",
+        "&,&#.........##########+#######,,,,,,&",
+        "&,,#.........#,,,,,,,,,,,,,,,,,,,,,,,&",
+        "&&,#.........#,,,,,,,,,&,,,,,,,&,&,&,&",
+        "&,,#.........#,,,,,&,,,,,,,,&,,,,,,,,&",
+        "&,,#.........+,,,,,,&,,,,,,,,,,,,,,,,&",
+        "&&,#.........#,,,,,&,,,,,,,,,&,,,,,,,&",
+        "&,,#.........#,,,,,,,,,,&,,&,,,&,&,,,&",
+        "&,&#.........#,,,,@,,,,&,,,,,,,,,,,,,&",
+        "&,,###########,,,,,,,&,,,,,,,&,&,,,,,&",
+        "&,,&,,,,,,,,,,,,,,,,,&,,,,&,,,,,,,,,,&",
+        "&,&,,,,,,,,,,,,&,,,,,,,,,,,,,,,,,,,,,&",
+        "&,,,&,,,,,,,,,,,,,,,,&,,,,,#########,&",
+        "&,&,,,&,,,,,&,,&,,,,&,,,,,,#.......#,&",
+        "&,,,,,&,,,,,,,,,&,,,,&,,,,,#.......#,&",
+        "&,,,,,,,,,&,,,,,,,,,,,,,&,,+.......#,&",
+        "&,&,&,,,,&&,,,&,&,,,,,,,&,,#.......#,&",
+        "&,,,,,,,,,,,,,,,,,,,&,,,,,,#.......#,&",
+        "&,,,&,,,,,,,&,,,,,,,,,,,,,,#########,&",
+        "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
     ];
+
 
     let height = strings.len();
     let width = strings[0].len();
@@ -69,34 +76,51 @@ fn populate(entities: &mut EntityTable) -> EntityId {
     entities.get_mut(level_id).level_data_mut().unwrap().set_id(level_id);
 
     let mut level_entities = Vec::new();
+    {
+        let level = entities.get(level_id).level_data().unwrap();
 
-    let mut y = 0;
-    for line in &strings {
-        let mut x = 0;
-        for ch in line.chars() {
+        let mut y = 0;
+        for line in &strings {
+            let mut x = 0;
+            for ch in line.chars() {
 
-            match ch {
-                '#' => {
-                    level_entities.push(make_wall(x, y, level_id));
-                    level_entities.push(make_floor(x, y, level_id));
-                },
-                '.' => {
-                    level_entities.push(make_floor(x, y, level_id));
-                },
-                '+' => {
-                    level_entities.push(make_door(x, y, level_id, DoorState::Closed));
-                    level_entities.push(make_floor(x, y, level_id));
-                },
-                '@' => {
-                    level_entities.push(make_pc(x, y, level_id));
-                    level_entities.push(make_floor(x, y, level_id));
-                },
-                _ => panic!(),
-            };
+                let noise = level.perlin.noise((x as f64) * 0.05, (y as f64) * 0.05).unwrap();
+                let moonlight = if noise > -0.1 && noise < 0.1 {
+                    Moonlight::Light
+                } else {
+                    Moonlight::Dark
+                };
 
-            x += 1;
+                match ch {
+                    '#' => {
+                        level_entities.push(make_wall(x, y, level_id));
+                        level_entities.push(make_floor(x, y, level_id));
+                    },
+                    '&' => {
+                        level_entities.push(make_tree(x, y, level_id));
+                        level_entities.push(make_floor_outside(x, y, level_id, moonlight));
+                    },
+                    '.' => {
+                        level_entities.push(make_floor(x, y, level_id));
+                    },
+                    ',' => {
+                        level_entities.push(make_floor_outside(x, y, level_id, moonlight));
+                    },
+                    '+' => {
+                        level_entities.push(make_door(x, y, level_id, DoorState::Closed));
+                        level_entities.push(make_floor(x, y, level_id));
+                    },
+                    '@' => {
+                        level_entities.push(make_pc(x, y, level_id));
+                        level_entities.push(make_floor_outside(x, y, level_id, moonlight));
+                    },
+                    _ => panic!(),
+                };
+
+                x += 1;
+            }
+            y += 1;
         }
-        y += 1;
     }
 
     let mut pc = None;
@@ -133,7 +157,7 @@ fn window_session() {
 
     debug::debug::init(&mut debug_buffer as &mut io::Write);
 
-    game(wm.make_input_source(), wm.make_window(0, 0, 80, 24));
+    game(wm.make_input_source(), wm.make_window(0, 0, 80, 30));
 }
 
 fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {

@@ -4,6 +4,7 @@ use game::entity::Component::*;
 use game::components::{
     Level,
     DoorState,
+    Moonlight,
 };
 use game::knowledge;
 
@@ -69,6 +70,16 @@ pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
         Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY)),
         TileDepth(0),
         OnLevel(level),
+    ]
+}
+
+pub fn make_floor_outside(x: isize, y: isize, level: EntityId, moonlight: Moonlight) -> Entity {
+    entity![
+        Position(Vector2::new(x, y)),
+        Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY)),
+        TileDepth(0),
+        OnLevel(level),
+        MoonlightSlot(moonlight),
     ]
 }
 

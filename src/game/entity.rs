@@ -2,6 +2,7 @@ use game::Speed;
 use game::components::{
     Level,
     DoorState,
+    Moonlight,
 };
 use game::knowledge::DrawableKnowledge;
 
@@ -79,6 +80,7 @@ pub enum ComponentType {
     DrawableKnowledge,
     Bullet,
     AxisVelocity,
+    MoonlightSlot,
 }
 
 #[derive(Debug, Clone)]
@@ -100,6 +102,7 @@ pub enum Component {
     DrawableKnowledge(RefCell<DrawableKnowledge>),
     Bullet,
     AxisVelocity { direction: Direction, speed: Speed },
+    MoonlightSlot(Moonlight),
 }
 
 impl ToType<ComponentType> for Component {
@@ -122,6 +125,7 @@ impl ToType<ComponentType> for Component {
             Component::DrawableKnowledge(_) => ComponentType::DrawableKnowledge,
             Component::Bullet => ComponentType::Bullet,
             Component::AxisVelocity { direction: _, speed: _ } => ComponentType::AxisVelocity,
+            Component::MoonlightSlot(_) => ComponentType::MoonlightSlot,
         }
     }
 }

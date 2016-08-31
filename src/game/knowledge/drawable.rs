@@ -21,6 +21,7 @@ pub struct DrawableCell {
     pub component_types: HashSet<CType>,
     pub foreground: BestMap<isize, ComplexTile>,
     pub background: BestMap<isize, ComplexTile>,
+    pub moonlight: bool,
     pub last_turn: u64,
     memory_pool: ObjectPool<Entity>,
 }
@@ -31,6 +32,7 @@ impl Default for DrawableCell {
             component_types: HashSet::new(),
             foreground: BestMap::new(),
             background: BestMap::new(),
+            moonlight: false,
             last_turn: 0,
             memory_pool: ObjectPool::new(),
         }
@@ -46,6 +48,7 @@ impl KnowledgeCell for DrawableCell {
         self.memory_pool.clear();
         self.foreground.clear();
         self.background.clear();
+        self.moonlight = false;
     }
 
     fn update(&mut self, entity: &Entity, turn_count: u64, _: &Self::MetaData) {
@@ -69,6 +72,9 @@ impl KnowledgeCell for DrawableCell {
                 }
             });
         });
+
+        // update moonlight
+        self.moonlight |= entity.is_moonlight_light();
 
         self.last_turn = turn_count;
     }

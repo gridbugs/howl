@@ -1,6 +1,6 @@
-use game::entity::{
+use game::{
     EntityTable,
-    EntityId
+    EntityId,
 };
 use game::knowledge::DrawableCell;
 
@@ -107,6 +107,10 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                 if let Some(c) = tile.character() {
                     ch = c;
                 }
+            }
+
+            if cell.moonlight {
+                bg = ansi::YELLOW;
             }
 
             if cell.last_turn != turn_count {

@@ -163,7 +163,7 @@ impl Perlin3Grid {
 
     }
 
-    pub fn noise(&mut self, global_x: f64, global_y: f64) -> Option<f64> {
+    pub fn noise(&self, global_x: f64, global_y: f64) -> Option<f64> {
         assert!(self.z >= 0.0 && self.z <= self.depth);
 
         let x = global_x + self.minor_offset.x;

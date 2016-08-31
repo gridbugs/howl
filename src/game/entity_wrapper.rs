@@ -9,6 +9,7 @@ use game::components::{
     Level,
     LevelSpacialHashMap,
     DoorState,
+    Moonlight,
 };
 use game::knowledge::DrawableKnowledge;
 
@@ -175,5 +176,23 @@ impl Entity {
 
     pub fn is_bullet(&self) -> bool {
         self.has(ComponentType::Bullet)
+    }
+
+    pub fn moonlight(&self) -> Option<Moonlight> {
+        if let Some(&Component::MoonlightSlot(moonlight)) =
+            self.get(ComponentType::MoonlightSlot)
+        {
+            Some(moonlight)
+        } else {
+            None
+        }
+    }
+
+    pub fn is_moonlight_light(&self) -> bool {
+        if let Some(Moonlight::Light) = self.moonlight() {
+            true
+        } else {
+            false
+        }
     }
 }
