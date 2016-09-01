@@ -20,6 +20,7 @@ use renderer::{
     SimpleTile,
 };
 use colour::ansi;
+use terminal::style;
 
 use std::cell::RefCell;
 
@@ -28,8 +29,8 @@ pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
         Position(Vector2::new(x, y)),
         Solid,
         Tile(ComplexTile::Wall {
-            front: SimpleTile::Full { ch: '▄', fg: ansi::YELLOW, bg: ansi::GREY },
-            back: SimpleTile::Foreground('█', ansi::GREY),
+            front: SimpleTile::Full { ch: '▄', fg: ansi::YELLOW, bg: ansi::GREY, style: style::NONE },
+            back: SimpleTile::Foreground('█', ansi::GREY, style::NONE),
         }),
         TileDepth(1),
         OnLevel(level),
