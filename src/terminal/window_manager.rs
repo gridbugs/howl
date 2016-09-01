@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::io::Error;
 use colour::ansi::AnsiColour;
+use terminal::Style;
 use terminal::bare_window_manager::{Event, BareWindowManager};
 use terminal::window_buffer::WindowBuffer;
 
@@ -82,7 +83,7 @@ impl<'a> WindowCell<'a> {
                            self.window_coord.1, bg);
     }
 
-    pub fn set(&'a self, ch: char, fg: AnsiColour, bg: AnsiColour) {
+    pub fn set(&'a self, ch: char, fg: AnsiColour, bg: AnsiColour, style: Style) {
         let w = self.window.manager.0.borrow();
         w.set_window_ch(self.window.id,
                         self.window_coord.0,
@@ -93,6 +94,9 @@ impl<'a> WindowCell<'a> {
         w.set_window_bg(self.window.id,
                         self.window_coord.0,
                         self.window_coord.1, bg);
+        w.set_window_style(self.window.id,
+                           self.window_coord.0,
+                           self.window_coord.1, style);
     }
 }
 

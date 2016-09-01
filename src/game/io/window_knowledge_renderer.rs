@@ -10,6 +10,7 @@ use grid::{
     Coord,
 };
 use terminal::window_manager::WindowRef;
+use terminal::style;
 use colour::ansi;
 use renderer::{
     ComplexTile,
@@ -90,6 +91,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
             let mut bg = ansi::DARK_GREY;
             let mut fg = ansi::DARK_GREY;
             let mut ch = ' ';
+            let mut style = style::NONE;
 
             if let Some(bg_tile) = cell.background.value() {
                 let tile = self.get_simple_tile(bg_tile, coord, grid);
@@ -98,6 +100,9 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                 }
                 if let Some(c) = tile.character() {
                     ch = c;
+                }
+                if let Some(s) = tile.style() {
+                    style = s;
                 }
             }
 
@@ -108,6 +113,9 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                 }
                 if let Some(c) = tile.character() {
                     ch = c;
+                }
+                if let Some(s) = tile.style() {
+                    style = s;
                 }
             }
 
@@ -120,7 +128,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                 bg = ansi::DARK_GREY;
             }
 
-            window_cell.set(ch, fg, bg);
+            window_cell.set(ch, fg, bg, style);
         }
 
         self.window.flush();

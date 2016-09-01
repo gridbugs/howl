@@ -3,6 +3,7 @@ use std::cell::RefCell;
 use allocator::allocator::Allocator;
 use colour::ansi::AnsiColour;
 use colour::ansi;
+use terminal::{Style, style};
 use grid::{
     Grid,
     DefaultGrid,
@@ -20,6 +21,7 @@ struct BufferCell {
     ch: char,
     fg: AnsiColour,
     bg: AnsiColour,
+    style: Style,
 }
 
 impl Default for BufferCell {
@@ -28,6 +30,7 @@ impl Default for BufferCell {
             ch: ' ',
             fg: ansi::WHITE,
             bg: ansi::BLACK,
+            style: style::NONE,
         }
     }
 }
@@ -53,6 +56,19 @@ impl Window {
         self.buffer.borrow_mut().get_mut(Vector2::new(x, y)).map(|buffer_cell| {
             buffer_cell.bg = bg;
         });
+    }
+    fn buffer_style(&self, x: isize, y: isize, style: Style) {
+        self.buffer.borrow_mut().get_mut(Vector2::new(x, y)).map(|buffer_cell| {
+            buffer_cell.style = style;
+        });
+    }
+}
+
+fn rustty_style(style: Style) -> rustty::Attr {
+    match style {
+        style::BOLD => rustty::Attr::Bold,
+        style::NONE => rustty::Attr::Default,
+        _ => unimplemented!(),
     }
 }
 
@@ -167,6 +183,7 @@ impl BareWindowManager {
                 cell.set_ch(buffer_cell.ch);
                 cell.set_fg(rustty::Color::Byte(buffer_cell.fg.code()));
                 cell.set_bg(rustty::Color::Byte(buffer_cell.bg.code()));
+                cell.set_attrs(rustty_style(buffer_cell.style));
             });
         }
     }
@@ -245,6 +262,25 @@ impl BareWindowManager {
                 });
             }
     }
+
+    pub fn set_window_style(&self, id: u64, x: isize, y: isize, style: Style) {
+        let (coord, size) = {
+            let window = self.get_window(id);
+            window.buffer_style(x, y, style);
+            (window.coord, window.size)
+        };
+
+        let global_coord = (x + coord.0, y + coord.1);
+
+        if self.is_top_window(global_coord.0, global_coord.1, id) &&
+            x >= 0 && y >= 0 && (x as usize) < size.0 && (y as usize) < size.1 {
+                self.with_cell(x + coord.0, y + coord.1, |cell| {
+                    cell.set_attrs(rustty_style(style));
+                });
+            }
+    }
+
+
 
     pub fn fill_window(&mut self, id: u64, ch: char, fg: AnsiColour, bg: AnsiColour) {
         let (width, height) = self.get_window(id).size;

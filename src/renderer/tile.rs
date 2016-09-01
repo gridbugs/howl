@@ -1,5 +1,5 @@
 use colour::ansi::AnsiColour;
-use terminal::{Style, style};
+use terminal::Style;
 
 #[derive(Clone, Copy, Debug)]
 pub enum SimpleTile {
@@ -18,16 +18,16 @@ pub fn solid_colour(colour: AnsiColour) -> ComplexTile {
     ComplexTile::Simple(SimpleTile::SolidColour(colour))
 }
 
-pub fn foreground(ch: char, colour: AnsiColour) -> ComplexTile {
-    ComplexTile::Simple(SimpleTile::Foreground(ch, colour, style::NONE))
+pub fn foreground(ch: char, colour: AnsiColour, style: Style) -> ComplexTile {
+    ComplexTile::Simple(SimpleTile::Foreground(ch, colour, style))
 }
 
-pub fn full(ch: char, fg: AnsiColour, bg: AnsiColour) -> ComplexTile {
+pub fn full(ch: char, fg: AnsiColour, bg: AnsiColour, style: Style) -> ComplexTile {
     ComplexTile::Simple(SimpleTile::Full {
         ch: ch,
         fg: fg,
         bg: bg,
-        style: style::NONE,
+        style: style,
     })
 }
 
@@ -61,6 +61,14 @@ impl SimpleTile {
             SimpleTile::SolidColour(_) => None,
             SimpleTile::Foreground(ch, _, _) => Some(ch),
             SimpleTile::Full { ch, fg: _, bg: _, style: _ } => Some(ch),
+        }
+    }
+
+    pub fn style(self) -> Option<Style> {
+        match self {
+            SimpleTile::SolidColour(_) => None,
+            SimpleTile::Foreground(_, _, style) => Some(style),
+            SimpleTile::Full { ch: _, fg: _, bg: _, style } => Some(style),
         }
     }
 }

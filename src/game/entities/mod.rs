@@ -46,12 +46,12 @@ pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entit
     ];
 
     if state == DoorState::Open {
-        entity.add(Tile(tile::foreground('-', ansi::WHITE)));
+        entity.add(Tile(tile::foreground('-', ansi::WHITE, style::NONE)));
         entity.add(Door(DoorState::Open));
         entity.add(Opacity(0.0));
     } else {
         entity.add(Solid);
-        entity.add(Tile(tile::full('+', ansi::WHITE, ansi::DARK_GREY)));
+        entity.add(Tile(tile::full('+', ansi::WHITE, ansi::DARK_GREY, style::NONE)));
         entity.add(Door(DoorState::Closed));
         entity.add(Opacity(1.0));
     }
@@ -63,7 +63,7 @@ pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
-        Tile(tile::foreground('&', ansi::GREEN)),
+        Tile(tile::foreground('&', ansi::GREEN, style::NONE)),
         TileDepth(1),
         OnLevel(level),
         Opacity(0.4),
@@ -73,7 +73,7 @@ pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
 pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
-        Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY)),
+        Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY, style::NONE)),
         TileDepth(0),
         OnLevel(level),
     ]
@@ -82,7 +82,7 @@ pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
 pub fn make_floor_outside(x: isize, y: isize, level: EntityId, moonlight: Moonlight) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
-        Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY)),
+        Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY, style::NONE)),
         TileDepth(0),
         OnLevel(level),
         MoonlightSlot(moonlight),
@@ -92,7 +92,7 @@ pub fn make_floor_outside(x: isize, y: isize, level: EntityId, moonlight: Moonli
 pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
-        Tile(tile::foreground('@', ansi::WHITE)),
+        Tile(tile::foreground('@', ansi::WHITE, style::BOLD)),
         TileDepth(2),
         PlayerActor,
         OnLevel(level),
@@ -108,7 +108,7 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
 pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
-        Tile(tile::foreground('*', ansi::RED)),
+        Tile(tile::foreground('*', ansi::RED, style::NONE)),
         TileDepth(2),
         OnLevel(level),
         Collider,
