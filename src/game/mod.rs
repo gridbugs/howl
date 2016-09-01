@@ -47,3 +47,6 @@ pub mod knowledge;
 
 mod speed;
 pub use self::speed::Speed;
+
+mod status;
+pub use self::status::StatusCounter;

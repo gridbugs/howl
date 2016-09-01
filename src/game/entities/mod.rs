@@ -1,10 +1,15 @@
 use game;
-use game::entity::{Entity, EntityId};
+use game::{
+    Entity,
+    EntityId,
+    StatusCounter,
+};
 use game::entity::Component::*;
 use game::components::{
     Level,
     DoorState,
     Moonlight,
+    Form,
 };
 use game::knowledge;
 
@@ -94,6 +99,8 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
         DoorOpener,
         VisionDistance(20),
         DrawableKnowledge(RefCell::new(knowledge::DrawableKnowledge::new())),
+        FormSlot(Form::Human),
+        BeastTransform(StatusCounter::new_max(6)),
     ]
 }
 

@@ -1,8 +1,12 @@
-use game::Speed;
+use game::{
+    Speed,
+    StatusCounter,
+};
 use game::components::{
     Level,
     DoorState,
     Moonlight,
+    Form,
 };
 use game::knowledge::DrawableKnowledge;
 
@@ -81,6 +85,9 @@ pub enum ComponentType {
     Bullet,
     AxisVelocity,
     MoonlightSlot,
+    BeastTransform,
+    HumanTransform,
+    FormSlot,
 }
 
 #[derive(Debug, Clone)]
@@ -103,6 +110,9 @@ pub enum Component {
     Bullet,
     AxisVelocity { direction: Direction, speed: Speed },
     MoonlightSlot(Moonlight),
+    BeastTransform(StatusCounter),
+    HumanTransform(StatusCounter),
+    FormSlot(Form),
 }
 
 impl ToType<ComponentType> for Component {
@@ -126,6 +136,9 @@ impl ToType<ComponentType> for Component {
             Component::Bullet => ComponentType::Bullet,
             Component::AxisVelocity { direction: _, speed: _ } => ComponentType::AxisVelocity,
             Component::MoonlightSlot(_) => ComponentType::MoonlightSlot,
+            Component::BeastTransform(_) => ComponentType::BeastTransform,
+            Component::HumanTransform(_) => ComponentType::HumanTransform,
+            Component::FormSlot(_) => ComponentType::FormSlot,
         }
     }
 }
