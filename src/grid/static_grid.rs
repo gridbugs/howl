@@ -53,7 +53,7 @@ impl<T: Default> DefaultGrid for StaticGrid<T> {
 }
 
 impl<T: Copy> StaticGrid<T> {
-    pub fn new_copy(width: usize, height: usize, example: T) -> StaticGrid<T> {
+    pub fn new_copy(width: usize, height: usize, example: T) -> Self {
         let mut grid = StaticGrid::new_uninitialised(width, height);
 
         for _ in 0..grid.size {
@@ -71,7 +71,23 @@ impl<T: Copy> StaticGrid<T> {
 }
 
 impl<T> StaticGrid<T> {
-    fn new_uninitialised(width: usize, height: usize) -> StaticGrid<T> {
+    pub fn new_call<F>(width: usize, height: usize, mut f: F) -> Self
+        where F: FnMut(isize, isize) -> T
+    {
+        let mut grid = StaticGrid::new_uninitialised(width, height);
+
+        for y in 0..height as isize {
+            for x in 0..width as isize {
+                grid.elements.push(f(x, y));
+            }
+        }
+
+        grid
+    }
+}
+
+impl<T> StaticGrid<T> {
+    fn new_uninitialised(width: usize, height: usize) -> Self {
 
         let size = (width as usize).checked_mul(height as usize)
             .expect("product of width and height overflows");

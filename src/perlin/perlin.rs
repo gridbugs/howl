@@ -1,14 +1,22 @@
 use grid::{
     StaticGrid,
-    DefaultGrid,
+    IterGrid,
 };
-use geometry::Dot;
-use geometry::Length;
-use geometry::Vector2;
-use geometry::Vector3;
+use geometry::{
+    Dot,
+    Length,
+    Vector2,
+    Vector3,
+};
 
-use rand;
-use rand::Rng;
+use rand::{
+    Rng,
+    StdRng,
+    SeedableRng,
+};
+
+use std::fmt;
+use std::io;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PerlinWrapType {
@@ -19,10 +27,10 @@ pub enum PerlinWrapType {
 #[derive(Clone, Copy, Debug)]
 struct Perlin3Vector(Vector3<f64>);
 
-impl Default for Perlin3Vector {
-    fn default() -> Self {
+impl Perlin3Vector {
+    fn new(rng: &mut StdRng) -> Self {
         // random number from 0 to 15
-        let index = rand::thread_rng().gen::<usize>() & GRADIENT_MASK;
+        let index = rng.gen::<usize>() & GRADIENT_MASK;
         Perlin3Vector(GRADIENTS[index].normalize())
     }
 }
@@ -33,7 +41,15 @@ struct Perlin3Slice {
     z: f64,
 }
 
-#[derive(Debug, Clone)]
+impl Perlin3Slice {
+    fn reset(&mut self, rng: &mut StdRng) {
+        for cell in self.grid.iter_mut() {
+            *cell = Perlin3Vector::new(rng);
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct Perlin3Grid {
     slices: Vec<Perlin3Slice>,
     grid_width: usize,
@@ -45,6 +61,7 @@ pub struct Perlin3Grid {
     minor_offset: Vector2<f64>,
     major_offset: Vector2<usize>,
     wrap_type: PerlinWrapType,
+    rng: StdRng,
 }
 
 const NUM_CORNERS: usize = 8;
@@ -54,7 +71,25 @@ pub fn ease_curve(x: f64) -> f64 {
 }
 
 impl Perlin3Grid {
-    pub fn new(width: usize, height: usize, wrap_type: PerlinWrapType) -> Perlin3Grid {
+
+    pub fn new(width: usize, height: usize, wrap_type: PerlinWrapType)
+        -> io::Result<Self>
+    {
+        let rng = try!(StdRng::new());
+        Ok(Perlin3Grid::new_with_rng(width, height, wrap_type, rng))
+    }
+
+    pub fn new_from_seed(width: usize, height: usize,
+                         wrap_type: PerlinWrapType, seed: usize) -> Self {
+        let rng = StdRng::from_seed(&[seed]);
+        Perlin3Grid::new_with_rng(width, height, wrap_type, rng)
+    }
+
+    fn new_with_rng(width: usize, height: usize,
+                        wrap_type: PerlinWrapType,
+                        mut rng: StdRng)
+        -> Perlin3Grid
+    {
         let grid_width = width + 2;
         let grid_height = height + 2;
         Perlin3Grid {
@@ -62,7 +97,9 @@ impl Perlin3Grid {
                 let mut v = Vec::with_capacity(2 as usize);
                 for i in 0..2 as isize {
                     v.push(Perlin3Slice {
-                        grid: StaticGrid::new_default(grid_width, grid_height),
+                        grid: StaticGrid::new_call(grid_width, grid_height, |_, _| {
+                            Perlin3Vector::new(&mut rng)
+                        }),
                         z: i as f64,
                     });
                 }
@@ -77,7 +114,12 @@ impl Perlin3Grid {
             minor_offset: Vector2::new(0.0, 0.0),
             major_offset: Vector2::new(0, 0),
             wrap_type: wrap_type,
+            rng: rng,
         }
+    }
+
+    fn make_vector(&mut self) -> Perlin3Vector {
+        Perlin3Vector::new(&mut self.rng)
     }
 
     fn swap_slices(&mut self) {
@@ -91,16 +133,16 @@ impl Perlin3Grid {
         self.z += value;
         if self.z > 1.0 && self.z <= 2.0 {
             self.z -= 1.0;
-            self.slices[0].grid.reset_all();
+            self.slices[0].reset(&mut self.rng);
             self.swap_slices();
         } else if self.z < 0.0 && self.z >= -1.0 {
             self.z += 1.0;
-            self.slices[1].grid.reset_all();
+            self.slices[1].reset(&mut self.rng);
             self.swap_slices();
         } else if self.z > 2.0 || self.z < -1.0 {
             self.z = 0.0;
             for slice in self.slices.iter_mut() {
-                slice.grid.reset_all();
+                slice.reset(&mut self.rng);
             }
         }
     }
@@ -120,15 +162,15 @@ impl Perlin3Grid {
                 if floor_i.x > 0 {
                     for i in (self.major_offset.x)..(self.major_offset.x + floor_i.x) {
                         for j in 0..self.grid_height {
-                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] = Default::default();
-                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] = Default::default();
+                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
+                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
                         }
                     }
                 } else {
                     for i in (self.major_offset.x + floor_i.x)..(self.major_offset.x) {
                         for j in 0..self.grid_height {
-                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] = Default::default();
-                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] = Default::default();
+                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
+                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
                         }
                     }
                 }
@@ -142,15 +184,15 @@ impl Perlin3Grid {
                 if floor_i.y > 0 {
                     for i in (self.major_offset.y)..(self.major_offset.y + floor_i.y) {
                         for j in 0..self.grid_width {
-                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] = Default::default();
-                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] = Default::default();
+                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
+                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
                         }
                     }
                 } else {
                     for i in (self.major_offset.y + floor_i.y)..(self.major_offset.y) {
                         for j in 0..self.grid_width {
-                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] = Default::default();
-                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] = Default::default();
+                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
+                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
                         }
                     }
                 }
@@ -236,6 +278,12 @@ impl Perlin3Grid {
         let avg = line_avgs[0] + weight_y * (line_avgs[1] - line_avgs[0]);
 
         Some(avg.max(-1.0).min(1.0))
+    }
+}
+
+impl fmt::Debug for Perlin3Grid {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Perlin3Grid")
     }
 }
 

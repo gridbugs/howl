@@ -71,7 +71,7 @@ impl Level {
             schedule: RefCell::new(TurnSchedule::new()),
             spacial_hash: RefCell::new(SpacialHashMap::new(
                     StaticGrid::new_default(width, height))),
-            perlin: Perlin3Grid::new(width, height, PerlinWrapType::Regenerate),
+            perlin: Perlin3Grid::new(width, height, PerlinWrapType::Regenerate).unwrap(),
             perlin_zoom: 0.05,
             perlin_min: -0.1,
             perlin_max: 0.1,
