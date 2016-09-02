@@ -19,10 +19,9 @@ impl Observer for DrawableObserver {
     fn observe(&mut self, entity_id: EntityId, entities: &EntityContext, turn_count: u64) -> bool{
         let entity = entities.get(entity_id).unwrap();
         let level_id = entity.on_level().unwrap();
-        let level = entities.get(level_id).unwrap();
 
         let eye = entity.position().unwrap();
-        let grid = &level.level_spacial_hash().unwrap().grid;
+        let grid = &entities.spacial_hash(level_id).unwrap().grid;
         let info = entity.vision_distance().unwrap();
 
         self.visibility_report.clear();

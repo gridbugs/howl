@@ -3,6 +3,7 @@ use game::{
     StatusCounter,
     Level,
     LevelId,
+    LevelSpacialHashMap,
 };
 use game::components::{
     DoorState,
@@ -30,6 +31,7 @@ use std::collections::{
     HashMap,
 };
 use std::cell::RefCell;
+use std::cell::Ref;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
@@ -62,6 +64,25 @@ impl EntityContext {
         }
     }
 
+    pub fn reserve_level_id(&self) -> LevelId {
+        self.reserve_id()
+    }
+
+    pub fn add_level(&mut self, mut level: Level) -> LevelId {
+
+        let id = if let Some(id) = level.id {
+            id
+        } else {
+            let id = self.reserve_level_id();
+            level.id = Some(id);
+            id
+        };
+
+        self.levels.insert(id, level);
+
+        id
+    }
+
     pub fn reserve_id(&self) -> EntityId {
         self.entities.reserve_id()
     }
@@ -88,6 +109,20 @@ impl EntityContext {
             entities: &self.entities,
         }
     }
+
+    pub fn level(&self, level_id: LevelId) -> Option<&Level> {
+        self.levels.get(&level_id)
+    }
+
+    pub fn level_mut(&mut self, level_id: LevelId) -> Option<&mut Level> {
+        self.levels.get_mut(&level_id)
+    }
+
+    pub fn spacial_hash(&self, level_id: LevelId) -> Option<Ref<LevelSpacialHashMap>> {
+        self.level(level_id).map(|level| {
+            level.spacial_hash.borrow()
+        })
+    }
 }
 
 macro_rules! entity {
@@ -109,7 +144,6 @@ pub enum ComponentType {
     DestroyOnCollision,
     Tile,
     TileDepth,
-    LevelData,
     PlayerActor,
     OnLevel,
     Door,
@@ -134,9 +168,8 @@ pub enum Component {
     DestroyOnCollision,
     Tile(ComplexTile),
     TileDepth(isize),
-    LevelData(Box<Level>),
     PlayerActor,
-    OnLevel(EntityId),
+    OnLevel(LevelId),
     Door(DoorState),
     DoorOpener,
     Opacity(f64),
@@ -160,7 +193,6 @@ impl ToType<ComponentType> for Component {
             Component::DestroyOnCollision => ComponentType::DestroyOnCollision,
             Component::Tile(_) => ComponentType::Tile,
             Component::TileDepth(_) => ComponentType::TileDepth,
-            Component::LevelData(_) => ComponentType::LevelData,
             Component::PlayerActor => ComponentType::PlayerActor,
             Component::OnLevel(_) => ComponentType::OnLevel,
             Component::Door(_) => ComponentType::Door,

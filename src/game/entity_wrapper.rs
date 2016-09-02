@@ -4,8 +4,7 @@ use game::{
     Component,
     ComponentType,
     Speed,
-    Level,
-    LevelSpacialHashMap,
+    LevelId,
 };
 use game::components::{
     DoorState,
@@ -42,7 +41,7 @@ impl Entity {
         }
     }
 
-    pub fn on_level(&self) -> Option<EntityId> {
+    pub fn on_level(&self) -> Option<LevelId> {
         if let Some(&Component::OnLevel(level_id)) =
             self.get(ComponentType::OnLevel)
         {
@@ -50,32 +49,6 @@ impl Entity {
         } else {
             None
         }
-    }
-
-    pub fn level_data(&self) -> Option<&Level> {
-        if let Some(&Component::LevelData(ref level)) =
-            self.get(ComponentType::LevelData)
-        {
-            Some(level)
-        } else {
-            None
-        }
-    }
-
-    pub fn level_data_mut(&mut self) -> Option<&mut Level> {
-        if let Some(&mut Component::LevelData(ref mut level)) =
-            self.get_mut(ComponentType::LevelData)
-        {
-            Some(level)
-        } else {
-            None
-        }
-    }
-
-    pub fn level_spacial_hash(&self) -> Option<Ref<LevelSpacialHashMap>> {
-        self.level_data().map(|level| {
-            level.spacial_hash.borrow()
-        })
     }
 
     pub fn is_pc(&self) -> bool {

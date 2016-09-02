@@ -26,6 +26,7 @@ use game::{
     EntityContext,
     EntityId,
     GameContext,
+    Level,
 };
 use game::rules;
 use game::components::DoorState;
@@ -69,13 +70,12 @@ fn populate(entities: &mut EntityContext) -> EntityId {
     let height = strings.len();
     let width = strings[0].len();
 
-    let level_id = entities.add(make_level(width, height));
-    entities.get_mut(level_id).unwrap().level_data_mut().unwrap().set_id(level_id);
+    let mut level = Level::new(width, height);
+    let level_id = entities.reserve_level_id();
+    level.set_id(level_id);
 
     let mut level_entities = Vec::new();
     {
-        let level = entities.get(level_id).unwrap().level_data().unwrap();
-
         let mut y = 0;
         for line in &strings {
             let mut x = 0;
@@ -119,16 +119,17 @@ fn populate(entities: &mut EntityContext) -> EntityId {
 
     for entity in level_entities.drain(..) {
         let id = entities.add(entity);
-        entities.get_mut(level_id).unwrap().level_data_mut().unwrap().add(id);
+        level.add(id);
 
         if entities.get(id).unwrap().is_pc() {
             assert!(pc == None, "Multiple player characters");
             pc = Some(id);
-            entities.get(level_id).unwrap().level_data().unwrap().schedule.borrow_mut().set_pc(id);
+            level.schedule.borrow_mut().set_pc(id);
         }
     }
 
-    entities.get(level_id).unwrap().level_data().unwrap().finalise(entities, 0);
+    level.finalise(entities, 0);
+    entities.add_level(level);
 
     pc.unwrap()
 }

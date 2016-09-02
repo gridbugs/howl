@@ -8,8 +8,8 @@ use game::{
     RuleContext,
     EntityContext,
     EntityId,
-    Entity,
     Level,
+    LevelId,
 };
 
 use game::io::{
@@ -76,25 +76,17 @@ impl<'a> GameContext<'a> {
         self
     }
 
-    pub fn entities(&self) -> &EntityContext {
-        &self.entities
-    }
-
-    fn pc_level_id(&self) -> EntityId {
+    fn pc_level_id(&self) -> LevelId {
         self.entities.get(self.pc.unwrap()).unwrap().on_level().unwrap()
     }
 
-    fn pc_level_entity(&self) -> &Entity {
-        self.entities.get(self.pc_level_id()).unwrap()
-    }
-
     fn pc_level(&self) -> &Level {
-        self.pc_level_entity().level_data().unwrap()
+        self.entities.level(self.pc_level_id()).unwrap()
     }
 
     fn pc_level_mut(&mut self) -> &mut Level {
         let id = self.pc_level_id();
-        self.entities.get_mut(id).unwrap().level_data_mut().unwrap()
+        self.entities.level_mut(id).unwrap()
     }
 
     fn pc_schedule(&self) -> cell::RefMut<TurnSchedule> {

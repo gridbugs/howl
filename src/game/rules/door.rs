@@ -23,8 +23,7 @@ pub fn detect_open(ctx: RuleContext)
             continue;
         }
 
-        let level = ctx.entities.get(entity.on_level().unwrap()).unwrap();
-        let spacial_hash = level.level_spacial_hash().unwrap();
+        let spacial_hash = ctx.entities.spacial_hash(entity.on_level().unwrap()).unwrap();
 
         let new_position = changes.position().unwrap();
 

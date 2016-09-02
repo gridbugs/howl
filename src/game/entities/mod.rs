@@ -3,7 +3,6 @@ use game::{
     Entity,
     EntityId,
     StatusCounter,
-    Level,
 };
 use game::entity::Component::*;
 use game::components::{
@@ -114,11 +113,5 @@ pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
         Collider,
         Bullet,
         DestroyOnCollision,
-    ]
-}
-
-pub fn make_level(width: usize, height: usize) -> Entity {
-    entity![
-        LevelData(Box::new(Level::new(width, height)))
     ]
 }
