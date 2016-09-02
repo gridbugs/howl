@@ -8,6 +8,7 @@ use game::{
     UpdateSummary,
 };
 use game::Component::*;
+use game::ComponentType as CType;
 use game::components::Moonlight;
 
 use grid::{
@@ -127,13 +128,16 @@ impl Level {
     pub fn perlin_update(&self, entities: &EntityTable) -> UpdateSummary {
         let mut update = UpdateSummary::new();
 
-        for entity in entities.id_set_iter(&self.entities) {
-            if let Some(Vector2 {x, y}) = entity.position() {
-                let new = self.moonlight(x, y);
-                if let Some(current) = entity.moonlight() {
-                    // only update the moonlight if it has changed
-                    if new != current {
-                        update.add_component(entity.id.unwrap(), MoonlightSlot(new));
+        if let Some(entity_ids) = self.spacial_hash.borrow().component_entities.get(&CType::MoonlightSlot) {
+
+            for entity in entities.id_set_iter(entity_ids) {
+                if let Some(Vector2 {x, y}) = entity.position() {
+                    let new = self.moonlight(x, y);
+                    if let Some(current) = entity.moonlight() {
+                        // only update the moonlight if it has changed
+                        if new != current {
+                            update.add_component(entity.id.unwrap(), MoonlightSlot(new));
+                        }
                     }
                 }
             }
