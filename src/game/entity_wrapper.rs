@@ -4,10 +4,10 @@ use game::{
     Component,
     ComponentType,
     Speed,
-};
-use game::components::{
     Level,
     LevelSpacialHashMap,
+};
+use game::components::{
     DoorState,
     Moonlight,
 };

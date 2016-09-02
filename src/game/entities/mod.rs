@@ -3,10 +3,10 @@ use game::{
     Entity,
     EntityId,
     StatusCounter,
+    Level,
 };
 use game::entity::Component::*;
 use game::components::{
-    Level,
     DoorState,
     Moonlight,
     Form,

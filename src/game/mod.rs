@@ -50,3 +50,9 @@ pub use self::speed::Speed;
 
 mod status;
 pub use self::status::StatusCounter;
+
+mod level;
+pub use self::level::{
+    Level,
+    LevelSpacialHashMap,
+};

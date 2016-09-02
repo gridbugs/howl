@@ -1,9 +1,9 @@
 use game::{
     Speed,
     StatusCounter,
+    Level,
 };
 use game::components::{
-    Level,
     DoorState,
     Moonlight,
     Form,

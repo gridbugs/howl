@@ -9,13 +9,13 @@ use game::{
     EntityTable,
     EntityId,
     Entity,
+    Level,
 };
 
 use game::io::{
     terminal_player_actor,
     WindowKnowledgeRenderer,
 };
-use game::components::Level;
 use game::observer::{
     DrawableObserver,
     Observer,
