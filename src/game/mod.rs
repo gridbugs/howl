@@ -5,6 +5,7 @@ pub use self::entity::{
     Component,
     ComponentType,
     EntityTable,
+    EntityContext,
 };
 
 pub mod io;
@@ -54,5 +55,6 @@ pub use self::status::StatusCounter;
 mod level;
 pub use self::level::{
     Level,
+    LevelId,
     LevelSpacialHashMap,
 };

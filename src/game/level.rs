@@ -1,7 +1,7 @@
 use game::{
     Entity,
     EntityId,
-    EntityTable,
+    EntityContext,
     TurnSchedule,
     SpacialHashMap,
     SpacialHashCell,
@@ -33,9 +33,11 @@ use std::collections::hash_set;
 pub type LevelSpacialHashMap =
     SpacialHashMap<StaticGrid<SpacialHashCell>>;
 
+pub type LevelId = u64;
+
 #[derive(Debug, Clone)]
 pub struct Level {
-    pub id: Option<EntityId>,
+    pub id: Option<LevelId>,
     pub width: usize,
     pub height: usize,
     pub entities: HashSet<EntityId>,
@@ -50,14 +52,14 @@ pub struct Level {
 
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
-    entities: &'a EntityTable,
+    entities: &'a EntityContext,
 }
 
 impl<'a> Iterator for EntityIter<'a> {
     type Item = &'a Entity;
     fn next(&mut self) -> Option<Self::Item> {
         self.hash_set_iter.next().map(|id| {
-            self.entities.get(*id)
+            self.entities.get(*id).unwrap()
         })
     }
 }
@@ -90,14 +92,14 @@ impl Level {
     }
 
     // Makes the bookkeeping info reflect the contents of entities
-    pub fn finalise(&self, entities: &EntityTable, turn_count: u64) {
+    pub fn finalise(&self, entities: &EntityContext, turn_count: u64) {
         let mut spacial_hash = self.spacial_hash.borrow_mut();
         for entity in self.entities(entities) {
             spacial_hash.add_entity(entity, turn_count);
         }
     }
 
-    pub fn entities<'a>(&'a self, entities: &'a EntityTable) -> EntityIter<'a> {
+    pub fn entities<'a>(&'a self, entities: &'a EntityContext) -> EntityIter<'a> {
         EntityIter {
             hash_set_iter: self.entities.iter(),
             entities: entities,
@@ -125,12 +127,13 @@ impl Level {
         }
     }
 
-    pub fn perlin_update(&self, entities: &EntityTable) -> UpdateSummary {
+    pub fn perlin_update(&self, entities: &EntityContext) -> UpdateSummary {
         let mut update = UpdateSummary::new();
 
         if let Some(entity_ids) = self.spacial_hash.borrow().component_entities.get(&CType::MoonlightSlot) {
 
             for entity in entities.id_set_iter(entity_ids) {
+                let entity = entity.unwrap();
                 if let Some(Vector2 {x, y}) = entity.position() {
                     let new = self.moonlight(x, y);
                     if let Some(current) = entity.moonlight() {

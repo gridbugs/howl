@@ -23,7 +23,7 @@ mod vision;
 
 use game::entities::*;
 use game::{
-    EntityTable,
+    EntityContext,
     EntityId,
     GameContext,
 };
@@ -35,7 +35,7 @@ use terminal::window_buffer::WindowBuffer;
 
 use std::io;
 
-fn populate(entities: &mut EntityTable) -> EntityId {
+fn populate(entities: &mut EntityContext) -> EntityId {
     let strings = [
         "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
         "&,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,&",
@@ -70,11 +70,11 @@ fn populate(entities: &mut EntityTable) -> EntityId {
     let width = strings[0].len();
 
     let level_id = entities.add(make_level(width, height));
-    entities.get_mut(level_id).level_data_mut().unwrap().set_id(level_id);
+    entities.get_mut(level_id).unwrap().level_data_mut().unwrap().set_id(level_id);
 
     let mut level_entities = Vec::new();
     {
-        let level = entities.get(level_id).level_data().unwrap();
+        let level = entities.get(level_id).unwrap().level_data().unwrap();
 
         let mut y = 0;
         for line in &strings {
@@ -119,16 +119,16 @@ fn populate(entities: &mut EntityTable) -> EntityId {
 
     for entity in level_entities.drain(..) {
         let id = entities.add(entity);
-        entities.get_mut(level_id).level_data_mut().unwrap().add(id);
+        entities.get_mut(level_id).unwrap().level_data_mut().unwrap().add(id);
 
-        if entities.get(id).is_pc() {
+        if entities.get(id).unwrap().is_pc() {
             assert!(pc == None, "Multiple player characters");
             pc = Some(id);
-            entities.get(level_id).level_data().unwrap().schedule.borrow_mut().set_pc(id);
+            entities.get(level_id).unwrap().level_data().unwrap().schedule.borrow_mut().set_pc(id);
         }
     }
 
-    entities.get(level_id).level_data().unwrap().finalise(entities, 0);
+    entities.get(level_id).unwrap().level_data().unwrap().finalise(entities, 0);
 
     pc.unwrap()
 }

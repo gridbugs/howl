@@ -54,16 +54,15 @@ impl<EntryType, Entry> TableTable<EntryType, Entry>
         self.tables.remove(&id)
     }
 
-    pub fn get(&self, id: TableId) -> &Table<EntryType, Entry> {
-        self.tables.get(&id).unwrap()
+    pub fn get(&self, id: TableId) -> Option<&Table<EntryType, Entry>> {
+        self.tables.get(&id)
     }
 
-    pub fn get_mut(&mut self, id: TableId) -> &mut Table<EntryType, Entry> {
-        self.tables.get_mut(&id).unwrap()
+    pub fn get_mut(&mut self, id: TableId) -> Option<&mut Table<EntryType, Entry>> {
+        self.tables.get_mut(&id)
     }
 
     pub fn tables(&self) -> hash_map::Values<TableId, Table<EntryType, Entry>> {
         self.tables.values()
     }
 }
-

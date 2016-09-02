@@ -3,7 +3,7 @@ use game::{
     Entity,
     ComponentType,
     Component,
-    EntityTable,
+    EntityContext,
 };
 use game::update::{
     Metadata,
@@ -64,7 +64,7 @@ impl UpdateSummary {
         self.removed_components.get_mut(&entity).unwrap().insert(component_type);
     }
 
-    pub fn commit(mut self, entities: &mut EntityTable, turn_count: u64) {
+    pub fn commit(mut self, entities: &mut EntityContext, turn_count: u64) {
 
         self.update_spacial_hashes(entities, turn_count);
 
@@ -78,34 +78,34 @@ impl UpdateSummary {
         }
 
         for (entity_id, mut changes) in self.added_components.drain() {
-            let mut entity = entities.get_mut(entity_id);
+            let mut entity = entities.get_mut(entity_id).unwrap();
             for (_, component) in changes.slots.drain() {
                 entity.add(component);
             }
         }
 
         for (entity_id, mut component_types) in self.removed_components.drain() {
-            let mut entity = entities.get_mut(entity_id);
+            let mut entity = entities.get_mut(entity_id).unwrap();
             for component_type in component_types.drain() {
                 entity.remove(component_type);
             }
         }
     }
 
-    fn update_spacial_hashes(&self, entities: &EntityTable, turn_count: u64) {
+    fn update_spacial_hashes(&self, entities: &EntityContext, turn_count: u64) {
         self.update_levels(entities);
         let levels = self.levels.borrow();
 
         for level_id in levels.iter() {
             let mut spacial_hash = {
-                let level = entities.get(*level_id).level_data().unwrap();
+                let level = entities.get(*level_id).unwrap().level_data().unwrap();
                 level.spacial_hash.borrow_mut()
             };
             spacial_hash.update(self, entities, turn_count);
         }
     }
 
-    fn update_levels(&self, entities: &EntityTable) {
+    fn update_levels(&self, entities: &EntityContext) {
         let mut levels = self.levels.borrow_mut();
         levels.clear();
 
@@ -116,21 +116,21 @@ impl UpdateSummary {
         }
 
         for entity_id in &self.removed_entities {
-            let entity = entities.get(*entity_id);
+            let entity = entities.get(*entity_id).unwrap();
             if let Some(level) = entity.on_level() {
                 levels.insert(level);
             }
         }
 
         for entity_id in self.added_components.keys() {
-            let entity = entities.get(*entity_id);
+            let entity = entities.get(*entity_id).unwrap();
             if let Some(level) = entity.on_level() {
                 levels.insert(level);
             }
         }
 
         for entity_id in self.removed_components.keys() {
-            let entity = entities.get(*entity_id);
+            let entity = entities.get(*entity_id).unwrap();
             if let Some(level) = entity.on_level() {
                 levels.insert(level);
             }

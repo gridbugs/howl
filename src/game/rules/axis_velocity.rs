@@ -11,7 +11,7 @@ pub fn maintain_velocity_movement(ctx: RuleContext)
 
     if ctx.update.is_axis_velocity() {
         for (entity_id, _) in &ctx.update.added_components {
-            let entity = ctx.entities.get(*entity_id);
+            let entity = ctx.entities.get(*entity_id).unwrap();
             if let Some((direction, speed)) = entity.axis_velocity() {
                 reactions.push(actions::axis_velocity_move(entity, direction, speed));
             }

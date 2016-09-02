@@ -2,6 +2,7 @@ use game::{
     Speed,
     StatusCounter,
     Level,
+    LevelId,
 };
 use game::components::{
     DoorState,
@@ -23,13 +24,71 @@ use geometry::{
 };
 use renderer::ComplexTile;
 
-use std::collections::HashSet;
-use std::collections::hash_set;
+use std::collections::{
+    HashSet,
+    hash_set,
+    HashMap,
+};
 use std::cell::RefCell;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
 pub type EntityTable = TableTable<ComponentType, Component>;
+
+pub struct EntityIter<'a> {
+    hash_set_iter: hash_set::Iter<'a, EntityId>,
+    entities: &'a EntityTable,
+}
+
+impl<'a> Iterator for EntityIter<'a> {
+    type Item = Option<&'a Entity>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.hash_set_iter.next().map(|id| {
+            self.entities.get(*id)
+        })
+    }
+}
+
+pub struct EntityContext {
+    pub entities: EntityTable,
+    pub levels: HashMap<LevelId, Level>,
+}
+
+impl EntityContext {
+    pub fn new() -> Self {
+        EntityContext {
+            entities: EntityTable::new(),
+            levels: HashMap::new(),
+        }
+    }
+
+    pub fn reserve_id(&self) -> EntityId {
+        self.entities.reserve_id()
+    }
+
+    pub fn add(&mut self, entity: Entity) -> EntityId {
+        self.entities.add(entity)
+    }
+
+    pub fn remove(&mut self, id: EntityId) -> Option<Entity> {
+        self.entities.remove(id)
+    }
+
+    pub fn get(&self, id: EntityId) -> Option<&Entity> {
+        self.entities.get(id)
+    }
+
+    pub fn get_mut(&mut self, id: EntityId) -> Option<&mut Entity> {
+        self.entities.get_mut(id)
+    }
+
+    pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>) -> EntityIter<'a> {
+        EntityIter {
+            hash_set_iter: set.iter(),
+            entities: &self.entities,
+        }
+    }
+}
 
 macro_rules! entity {
     () => { game::entity::Entity::new() };
@@ -40,30 +99,6 @@ macro_rules! entity {
         entity
     }};
 }
-
-pub struct EntityIter<'a> {
-    hash_set_iter: hash_set::Iter<'a, EntityId>,
-    entities: &'a EntityTable,
-}
-
-impl<'a> Iterator for EntityIter<'a> {
-    type Item = &'a Entity;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.hash_set_iter.next().map(|id| {
-            self.entities.get(*id)
-        })
-    }
-}
-
-impl EntityTable {
-    pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>) -> EntityIter<'a> {
-        EntityIter {
-            hash_set_iter: set.iter(),
-            entities: self,
-        }
-    }
-}
-
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum ComponentType {

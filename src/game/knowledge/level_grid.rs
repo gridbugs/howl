@@ -1,7 +1,7 @@
 use game::{
     Entity,
     EntityId,
-    EntityTable,
+    EntityContext,
     SpacialHashCell,
 };
 
@@ -42,7 +42,7 @@ impl<G> KnowledgeGrid<G>
     }
 
     fn update<'a, I, S>(
-        &mut self, entities: &EntityTable,
+        &mut self, entities: &EntityContext,
         grid: &S,
         report_iter: I,
         turn_count: u64) -> bool
@@ -65,7 +65,7 @@ impl<G> KnowledgeGrid<G>
                 changed = true;
                 kn_cell.clear();
                 for entity in entities.id_set_iter(&sh_cell.entities) {
-                    kn_cell.update(entity, turn_count, meta);
+                    kn_cell.update(entity.unwrap(), turn_count, meta);
                 }
             }
         }
@@ -94,7 +94,7 @@ impl<G> LevelGridKnowledge<G>
 
     pub fn update<'a, I, S>(
         &mut self, level_id: EntityId,
-        entities: &EntityTable,
+        entities: &EntityContext,
         grid: &S,
         report_iter: I,
         turn_count: u64) -> bool

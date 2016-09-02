@@ -3,7 +3,7 @@ use game::{
     EntityId,
     Component,
     ComponentType,
-    EntityTable,
+    EntityContext,
     UpdateSummary,
 };
 
@@ -147,10 +147,10 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    fn get_entity<'a, 'b>(&'a self, entity_id: EntityId, entities: &'b EntityTable) -> Option<&'b Entity> {
-        let entity = entities.get(entity_id);
+    fn get_entity<'a, 'b>(&'a self, entity_id: EntityId, entities: &'b EntityContext) -> Option<&'b Entity> {
+        let entity = entities.get(entity_id).unwrap();
         if self.entity_is_on_level(entity) {
-            Some(entities.get(entity_id))
+            Some(entities.get(entity_id).unwrap())
         } else {
             None
         }
@@ -288,7 +288,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
     }
 
     /// Update the spacial hash's metadata. This should be called before the update is applied.
-    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable, turn_count: u64) {
+    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityContext, turn_count: u64) {
         for entity in update.added_entities.values() {
             if self.entity_is_on_level(entity) {
                 self.add_entity(entity, turn_count);
@@ -296,21 +296,21 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
 
         for entity_id in &update.removed_entities {
-            let entity = entities.get(*entity_id);
+            let entity = entities.get(*entity_id).unwrap();
             if self.entity_is_on_level(entity) {
                 self.remove_entity(entity, turn_count);
             }
         }
 
         for (entity_id, changes) in &update.added_components {
-            let entity = entities.get(*entity_id);
+            let entity = entities.get(*entity_id).unwrap();
             if self.entity_is_on_level(entity) {
                 self.add_components(entity, changes, turn_count);
             }
         }
 
         for (entity_id, component_types) in &update.removed_components {
-            let entity = entities.get(*entity_id);
+            let entity = entities.get(*entity_id).unwrap();
             if self.entity_is_on_level(entity) {
                 self.remove_components(entity, component_types, turn_count);
             }

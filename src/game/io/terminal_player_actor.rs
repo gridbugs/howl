@@ -1,7 +1,7 @@
 use game::{
     EntityId,
     Entity,
-    EntityTable,
+    EntityContext,
     MetaAction,
     UpdateSummary,
 };
@@ -19,10 +19,10 @@ const ETX: char = '\u{3}';
 
 pub fn act<'a>(input_source: &InputSource<'a>,
                        entity_id: EntityId,
-                       entities: &EntityTable)
+                       entities: &EntityContext)
     -> Option<MetaAction>
 {
-    let entity = entities.get(entity_id);
+    let entity = entities.get(entity_id).unwrap();
 
     if let Some(event) = input_source.get_event() {
         if let Some(direction) = event_to_direction(event) {
@@ -60,15 +60,15 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn close_door(entity: &Entity, entities: &EntityTable) -> Option<UpdateSummary> {
-    let level = entities.get(entity.on_level().unwrap());
+fn close_door(entity: &Entity, entities: &EntityContext) -> Option<UpdateSummary> {
+    let level = entities.get(entity.on_level().unwrap()).unwrap();
     let sh = level.level_spacial_hash().unwrap();
 
     for cell in sh.grid.some_nei_iter(entity.position().unwrap()) {
         if cell.has(CType::Door) {
             for e in entities.id_set_iter(&cell.entities) {
-                if let Some(DoorState::Open) = e.door_state() {
-                    return Some(actions::close_door(e.id()));
+                if let Some(DoorState::Open) = e.unwrap().door_state() {
+                    return Some(actions::close_door(e.unwrap().id()));
                 }
             }
         }
@@ -85,7 +85,7 @@ fn get_direction(input_source: &InputSource) -> Option<Direction> {
     }
 }
 
-fn event_to_action(event: Event, entity: &Entity, entities: &EntityTable, input_source: &InputSource) -> Option<UpdateSummary> {
+fn event_to_action(event: Event, entity: &Entity, entities: &EntityContext, input_source: &InputSource) -> Option<UpdateSummary> {
     match event {
         Event::Char('f') => {
             get_direction(input_source).map(|d| {
@@ -103,7 +103,7 @@ fn event_to_action(event: Event, entity: &Entity, entities: &EntityTable, input_
     }
 }
 
-fn event_to_meta_action(event: Event, entity: &Entity, entities: &EntityTable) -> Option<MetaAction> {
+fn event_to_meta_action(event: Event, entity: &Entity, entities: &EntityContext) -> Option<MetaAction> {
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),
         Event::Char('q') => Some(MetaAction::Quit),

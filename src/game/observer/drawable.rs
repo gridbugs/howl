@@ -1,7 +1,7 @@
 use game::{
     Observer,
     EntityId,
-    EntityTable,
+    EntityContext,
 };
 
 use vision::{
@@ -16,10 +16,10 @@ pub struct DrawableObserver {
 }
 
 impl Observer for DrawableObserver {
-    fn observe(&mut self, entity_id: EntityId, entities: &EntityTable, turn_count: u64) -> bool{
-        let entity = entities.get(entity_id);
+    fn observe(&mut self, entity_id: EntityId, entities: &EntityContext, turn_count: u64) -> bool{
+        let entity = entities.get(entity_id).unwrap();
         let level_id = entity.on_level().unwrap();
-        let level = entities.get(level_id);
+        let level = entities.get(level_id).unwrap();
 
         let eye = entity.position().unwrap();
         let grid = &level.level_spacial_hash().unwrap().grid;

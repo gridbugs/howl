@@ -17,13 +17,13 @@ pub fn detect_collision(ctx: RuleContext)
             continue;
         }
 
-        let entity = ctx.entities.get(*entity_id);
+        let entity = ctx.entities.get(*entity_id).unwrap();
 
         if !entity.has(ComponentType::Collider) {
             continue;
         }
 
-        let level = ctx.entities.get(entity.on_level().unwrap());
+        let level = ctx.entities.get(entity.on_level().unwrap()).unwrap();
         let spacial_hash = level.level_spacial_hash().unwrap();
 
         let new_position = changes.position().unwrap();

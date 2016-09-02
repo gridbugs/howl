@@ -1,5 +1,5 @@
 use game::{
-    EntityTable,
+    EntityContext,
     EntityId,
 };
 use game::knowledge::DrawableCell;
@@ -73,11 +73,11 @@ impl<'a> WindowKnowledgeRenderer<'a> {
     }
 
     pub fn render(&self,
-                  entities: &EntityTable,
+                  entities: &EntityContext,
                   entity_id: EntityId,
                   turn_count: u64)
     {
-        let entity = entities.get(entity_id);
+        let entity = entities.get(entity_id).unwrap();
         let level_id = entity.on_level().unwrap();
         let knowledge = entity.drawable_knowledge().unwrap();
         let grid = knowledge.grid(level_id).unwrap();

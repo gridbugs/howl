@@ -6,7 +6,7 @@ use game::{
     Rule,
     RuleResult,
     RuleContext,
-    EntityTable,
+    EntityContext,
     EntityId,
     Entity,
     Level,
@@ -34,7 +34,7 @@ use std::thread;
 use std::time::Duration;
 
 pub struct GameContext<'a> {
-    pub entities: EntityTable,
+    pub entities: EntityContext,
     pub pc: Option<EntityId>,
 
     // io
@@ -57,7 +57,7 @@ pub struct GameContext<'a> {
 impl<'a> GameContext<'a> {
     pub fn new(input_source: InputSource<'a>, game_window: WindowRef<'a>) -> Self {
         GameContext {
-            entities: EntityTable::new(),
+            entities: EntityContext::new(),
             pc: None,
             input_source: input_source,
             game_window: game_window,
@@ -76,16 +76,16 @@ impl<'a> GameContext<'a> {
         self
     }
 
-    pub fn entities(&self) -> &EntityTable {
+    pub fn entities(&self) -> &EntityContext {
         &self.entities
     }
 
     fn pc_level_id(&self) -> EntityId {
-        self.entities.get(self.pc.unwrap()).on_level().unwrap()
+        self.entities.get(self.pc.unwrap()).unwrap().on_level().unwrap()
     }
 
     fn pc_level_entity(&self) -> &Entity {
-        self.entities.get(self.pc_level_id())
+        self.entities.get(self.pc_level_id()).unwrap()
     }
 
     fn pc_level(&self) -> &Level {
@@ -94,7 +94,7 @@ impl<'a> GameContext<'a> {
 
     fn pc_level_mut(&mut self) -> &mut Level {
         let id = self.pc_level_id();
-        self.entities.get_mut(id).level_data_mut().unwrap()
+        self.entities.get_mut(id).unwrap().level_data_mut().unwrap()
     }
 
     fn pc_schedule(&self) -> cell::RefMut<TurnSchedule> {
@@ -114,7 +114,7 @@ impl<'a> GameContext<'a> {
     }
 
     pub fn entity_is_pc(&self, entity: EntityId) -> bool {
-        self.entities.get(entity).has(Type::PlayerActor)
+        self.entities.get(entity).unwrap().has(Type::PlayerActor)
     }
 
     pub fn observe_pc(&mut self) -> bool {

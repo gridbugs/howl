@@ -2,7 +2,7 @@ use game::{
     EntityId,
     Entity,
     UpdateSummary,
-    EntityTable,
+    EntityContext,
     Speed,
 };
 use game::Component::*;
@@ -53,7 +53,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     summary
 }
 
-pub fn fire_single_bullet(source: &Entity, direction: Direction, entities: &EntityTable) -> UpdateSummary {
+pub fn fire_single_bullet(source: &Entity, direction: Direction, entities: &EntityContext) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
@@ -96,7 +96,7 @@ pub fn burst_fire_bullet(source: &Entity, direction: Direction,
     summary
 }
 
-pub fn fire_bullets_all_axes(source: &Entity, entities: &EntityTable) -> UpdateSummary {
+pub fn fire_bullets_all_axes(source: &Entity, entities: &EntityContext) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let level = source.on_level().unwrap();
@@ -130,7 +130,7 @@ pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: Speed) -
     summary
 }
 
-pub fn add_entity(entity: Entity, entities: &EntityTable) -> UpdateSummary {
+pub fn add_entity(entity: Entity, entities: &EntityContext) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.add_entity(entities.reserve_id(), entity);
