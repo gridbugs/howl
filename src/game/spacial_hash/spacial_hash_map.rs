@@ -3,7 +3,7 @@ use game::{
     EntityId,
     Component,
     ComponentType,
-    EntityContext,
+    EntityTable,
     UpdateSummary,
 };
 
@@ -147,7 +147,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    fn get_entity<'a, 'b>(&'a self, entity_id: EntityId, entities: &'b EntityContext) -> Option<&'b Entity> {
+    fn get_entity<'a, 'b>(&'a self, entity_id: EntityId, entities: &'b EntityTable) -> Option<&'b Entity> {
         let entity = entities.get(entity_id).unwrap();
         if self.entity_is_on_level(entity) {
             Some(entities.get(entity_id).unwrap())
@@ -288,7 +288,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
     }
 
     /// Update the spacial hash's metadata. This should be called before the update is applied.
-    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityContext, turn_count: u64) {
+    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable, turn_count: u64) {
         for entity in update.added_entities.values() {
             if self.entity_is_on_level(entity) {
                 self.add_entity(entity, turn_count);

@@ -2,6 +2,7 @@ use game::{
     Entity,
     EntityId,
     EntityContext,
+    EntityTable,
     TurnSchedule,
     SpacialHashMap,
     SpacialHashCell,
@@ -42,7 +43,7 @@ pub struct Level {
     pub height: usize,
     pub entities: HashSet<EntityId>,
     pub schedule: RefCell<TurnSchedule>,
-    pub spacial_hash: RefCell<LevelSpacialHashMap>,
+    pub spacial_hash: LevelSpacialHashMap,
     perlin: Perlin3Grid,
     perlin_zoom: f64,
     perlin_min: f64,
@@ -72,8 +73,8 @@ impl Level {
             height: height,
             entities: HashSet::new(),
             schedule: RefCell::new(TurnSchedule::new()),
-            spacial_hash: RefCell::new(SpacialHashMap::new(
-                    StaticGrid::new_default(width, height))),
+            spacial_hash: SpacialHashMap::new(
+                    StaticGrid::new_default(width, height)),
             perlin: Perlin3Grid::new(width, height, PerlinWrapType::Regenerate).unwrap(),
             perlin_zoom: 0.05,
             perlin_min: -0.1,
@@ -84,7 +85,7 @@ impl Level {
 
     pub fn set_id(&mut self, id: EntityId) {
         self.id = Some(id);
-        self.spacial_hash.borrow_mut().set_id(id);
+        self.spacial_hash.set_id(id);
     }
 
     pub fn add(&mut self, id: EntityId) {
@@ -92,10 +93,10 @@ impl Level {
     }
 
     // Makes the bookkeeping info reflect the contents of entities
-    pub fn finalise(&self, entities: &EntityContext, turn_count: u64) {
-        let mut spacial_hash = self.spacial_hash.borrow_mut();
-        for entity in self.entities(entities) {
-            spacial_hash.add_entity(entity, turn_count);
+    pub fn finalise(&mut self, entities: &EntityTable, turn_count: u64) {
+        for entity_id in self.entities.clone() {
+            let entity = entities.get(entity_id).unwrap();
+            self.spacial_hash.add_entity(entity, turn_count);
         }
     }
 
@@ -127,10 +128,14 @@ impl Level {
         }
     }
 
+    pub fn component_entities(&self, component_type: CType) -> Option<&HashSet<EntityId>> {
+        self.spacial_hash.component_entities.get(&component_type)
+    }
+
     pub fn perlin_update(&self, entities: &EntityContext) -> UpdateSummary {
         let mut update = UpdateSummary::new();
 
-        if let Some(entity_ids) = self.spacial_hash.borrow().component_entities.get(&CType::MoonlightSlot) {
+        if let Some(entity_ids) = self.component_entities(CType::MoonlightSlot) {
 
             for entity in entities.id_set_iter(entity_ids) {
                 let entity = entity.unwrap();

@@ -128,7 +128,7 @@ fn populate(entities: &mut EntityContext) -> EntityId {
         }
     }
 
-    level.finalise(entities, 0);
+    level.finalise(&entities.entities, 0);
     entities.add_level(level);
 
     pc.unwrap()

@@ -4,6 +4,9 @@ use game::{
     ComponentType,
     Component,
     EntityContext,
+    EntityTable,
+    LevelId,
+    Level,
 };
 use game::update::{
     Metadata,
@@ -66,7 +69,7 @@ impl UpdateSummary {
 
     pub fn commit(mut self, entities: &mut EntityContext, turn_count: u64) {
 
-        self.update_spacial_hashes(entities, turn_count);
+        self.update_spacial_hashes(&mut entities.levels, &entities.entities, turn_count);
 
         for (_, entity) in self.added_entities.drain() {
             entities.add(entity);
@@ -92,20 +95,22 @@ impl UpdateSummary {
         }
     }
 
-    fn update_spacial_hashes(&self, entities: &EntityContext, turn_count: u64) {
+    fn update_spacial_hashes(&self, levels: &mut HashMap<LevelId, Level>, entities: &EntityTable, turn_count: u64) {
         self.update_levels(entities);
-        let levels = self.levels.borrow();
 
-        for level_id in levels.iter() {
+        for level_id in self.levels.borrow().iter() {
+            let mut level = levels.get_mut(level_id).unwrap();
+        /*
             let mut spacial_hash = {
                 let level = entities.level(*level_id).unwrap();
                 level.spacial_hash.borrow_mut()
             };
-            spacial_hash.update(self, entities, turn_count);
+        */
+            level.spacial_hash.update(self, entities, turn_count);
         }
     }
 
-    fn update_levels(&self, entities: &EntityContext) {
+    fn update_levels(&self, entities: &EntityTable) {
         let mut levels = self.levels.borrow_mut();
         levels.clear();
 

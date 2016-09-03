@@ -31,7 +31,6 @@ use std::collections::{
     HashMap,
 };
 use std::cell::RefCell;
-use std::cell::Ref;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
@@ -118,9 +117,9 @@ impl EntityContext {
         self.levels.get_mut(&level_id)
     }
 
-    pub fn spacial_hash(&self, level_id: LevelId) -> Option<Ref<LevelSpacialHashMap>> {
+    pub fn spacial_hash(&self, level_id: LevelId) -> Option<&LevelSpacialHashMap> {
         self.level(level_id).map(|level| {
-            level.spacial_hash.borrow()
+            &level.spacial_hash
         })
     }
 }
