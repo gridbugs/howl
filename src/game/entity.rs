@@ -7,7 +7,6 @@ use game::{
 };
 use game::components::{
     DoorState,
-    Moonlight,
     Form,
 };
 use game::knowledge::DrawableKnowledge;
@@ -152,10 +151,11 @@ pub enum ComponentType {
     DrawableKnowledge,
     Bullet,
     AxisVelocity,
-    MoonlightSlot,
     BeastTransform,
     HumanTransform,
     FormSlot,
+    Outside,
+    Moon,
 }
 
 #[derive(Debug, Clone)]
@@ -176,10 +176,11 @@ pub enum Component {
     DrawableKnowledge(RefCell<DrawableKnowledge>),
     Bullet,
     AxisVelocity { direction: Direction, speed: Speed },
-    MoonlightSlot(Moonlight),
     BeastTransform(StatusCounter),
     HumanTransform(StatusCounter),
     FormSlot(Form),
+    Outside,
+    Moon,
 }
 
 impl ToType<ComponentType> for Component {
@@ -201,10 +202,11 @@ impl ToType<ComponentType> for Component {
             Component::DrawableKnowledge(_) => ComponentType::DrawableKnowledge,
             Component::Bullet => ComponentType::Bullet,
             Component::AxisVelocity { direction: _, speed: _ } => ComponentType::AxisVelocity,
-            Component::MoonlightSlot(_) => ComponentType::MoonlightSlot,
             Component::BeastTransform(_) => ComponentType::BeastTransform,
             Component::HumanTransform(_) => ComponentType::HumanTransform,
             Component::FormSlot(_) => ComponentType::FormSlot,
+            Component::Outside => ComponentType::Outside,
+            Component::Moon => ComponentType::Moon,
         }
     }
 }

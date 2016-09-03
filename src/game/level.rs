@@ -10,7 +10,6 @@ use game::{
 };
 use game::Component::*;
 use game::ComponentType as CType;
-use game::components::Moonlight;
 
 use grid::{
     StaticGrid,
@@ -116,15 +115,15 @@ impl Level {
         self.perlin.noise((x as f64) * self.perlin_zoom, (y as f64) * self.perlin_zoom)
     }
 
-    pub fn moonlight(&self, x: isize, y: isize) -> Moonlight {
+    pub fn moonlight(&self, x: isize, y: isize) -> bool {
         if let Some(noise) = self.noise(x, y) {
             if noise > self.perlin_min && noise < self.perlin_max {
-                Moonlight::Light
+                true
             } else {
-                Moonlight::Dark
+                false
             }
         } else {
-            Moonlight::Dark
+            false
         }
     }
 
@@ -135,17 +134,22 @@ impl Level {
     pub fn perlin_update(&self, entities: &EntityContext) -> UpdateSummary {
         let mut update = UpdateSummary::new();
 
-        if let Some(entity_ids) = self.component_entities(CType::MoonlightSlot) {
+        if let Some(entity_ids) = self.component_entities(CType::Outside) {
 
             for entity in entities.id_set_iter(entity_ids) {
                 let entity = entity.unwrap();
                 if let Some(Vector2 {x, y}) = entity.position() {
                     let new = self.moonlight(x, y);
-                    if let Some(current) = entity.moonlight() {
-                        // only update the moonlight if it has changed
-                        if new != current {
-                            update.add_component(entity.id.unwrap(), MoonlightSlot(new));
-                        }
+                    let current = entity.has(CType::Moon);
+
+                    if new == current {
+                        continue;
+                    }
+
+                    if new {
+                        update.add_component(entity.id.unwrap(), Moon);
+                    } else {
+                        update.remove_component(entity.id.unwrap(), CType::Moon);
                     }
                 }
             }

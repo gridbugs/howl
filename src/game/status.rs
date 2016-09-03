@@ -19,7 +19,7 @@ impl StatusCounter {
     }
 
     pub fn increase(&mut self, value: usize) {
-        self.current = cmp::max(self.current + value, self.max);
+        self.current = cmp::min(self.current + value, self.max);
     }
 
     pub fn decrease(&mut self, value: usize) {
@@ -27,6 +27,14 @@ impl StatusCounter {
             self.current = 0;
         } else {
             self.current -= value;
+        }
+    }
+
+    pub fn change(&mut self, value: isize) {
+        if value > 0 {
+            self.increase(value as usize);
+        } else if value < 0 {
+            self.decrease((-value) as usize);
         }
     }
 

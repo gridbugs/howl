@@ -74,7 +74,7 @@ impl KnowledgeCell for DrawableCell {
         });
 
         // update moonlight
-        self.moonlight |= entity.is_moonlight_light();
+        self.moonlight |= entity.has_moon();
 
         self.last_turn = turn_count;
     }

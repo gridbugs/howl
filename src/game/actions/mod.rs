@@ -4,13 +4,17 @@ use game::{
     UpdateSummary,
     EntityContext,
     Speed,
+    StatusCounter,
 };
 use game::Component::*;
 use game::ComponentType as CType;
 
 use game::update::Metadatum::*;
 
-use game::components::DoorState;
+use game::components::{
+    DoorState,
+    Form,
+};
 use game::entities;
 
 use geometry::direction::Direction;
@@ -161,5 +165,56 @@ pub fn delay(update: UpdateSummary, time_ms: u64) -> UpdateSummary {
 pub fn wait() -> UpdateSummary {
     let mut summary = UpdateSummary::new();
     summary.set_metadata(TurnTime(1));
+    summary
+}
+
+pub fn beast_transform_progress(entity: &Entity, progress: isize) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    let mut counter = entity.beast_transform().unwrap();
+    counter.change(progress);
+
+    summary.add_component(entity.id.unwrap(), BeastTransform(counter));
+
+    summary.set_metadata(Name("beast_transform_progress"));
+    summary
+}
+
+pub fn human_transform_progress(entity: &Entity, progress: isize) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    let mut counter = entity.human_transform().unwrap();
+    counter.change(progress);
+
+    summary.add_component(entity.id.unwrap(), HumanTransform(counter));
+
+    summary.set_metadata(Name("human_transform_progress"));
+    summary
+}
+
+pub fn beast_transform(entity_id: EntityId) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.add_component(entity_id,
+        Tile(tile::foreground('@', ansi::RED, style::BOLD)));
+
+    summary.remove_component(entity_id, CType::BeastTransform);
+    summary.add_component(entity_id,
+        HumanTransform(StatusCounter::new_max(6)));
+    summary.add_component(entity_id, FormSlot(Form::Beast));
+
+    summary
+}
+
+pub fn human_transform(entity_id: EntityId) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.add_component(entity_id,
+        Tile(tile::foreground('@', ansi::WHITE, style::BOLD)));
+    summary.remove_component(entity_id, CType::HumanTransform);
+    summary.add_component(entity_id,
+        BeastTransform(StatusCounter::new_max(6)));
+    summary.add_component(entity_id, FormSlot(Form::Human));
+
     summary
 }

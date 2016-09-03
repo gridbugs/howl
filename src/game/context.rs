@@ -1,4 +1,3 @@
-use game::ComponentType as Type;
 use game::{
     TurnSchedule,
     UpdateSummary,
@@ -10,7 +9,10 @@ use game::{
     EntityId,
     Level,
     LevelId,
+    ComponentType,
+    actions,
 };
+use game::components::Form;
 
 use game::io::{
     terminal_player_actor,
@@ -106,7 +108,7 @@ impl<'a> GameContext<'a> {
     }
 
     pub fn entity_is_pc(&self, entity: EntityId) -> bool {
-        self.entities.get(entity).unwrap().has(Type::PlayerActor)
+        self.entities.get(entity).unwrap().has(ComponentType::PlayerActor)
     }
 
     pub fn observe_pc(&mut self) -> bool {
@@ -142,10 +144,8 @@ impl<'a> GameContext<'a> {
         RuleContext::new(update, &self.entities)
     }
 
-    fn apply_update(&mut self, update: UpdateSummary)
-        -> Result<(), UpdateError>
-    {
-        let mut no_commits = true;
+    fn apply_update(&mut self, update: UpdateSummary) -> usize {
+        let mut commit_count = 0;
 
         self.update_queue.insert(update, 0);
 
@@ -180,35 +180,64 @@ impl<'a> GameContext<'a> {
                 }
             }
 
-            no_commits = false;
-
             let action_time = update.action_time();
 
             self.turn_count += 1;
 
             update.commit(&mut self.entities, self.turn_count);
+            commit_count += 1;
 
             while let Some(update) = self.reaction_queue.pop_front() {
                 self.update_queue.insert(update, action_time);
             }
         }
 
-        if no_commits {
-            Err(UpdateError::NothingApplied)
-        } else {
-            self.render();
-            Ok(())
+        self.render();
+
+        commit_count
+    }
+
+    fn cloud_progress(&mut self) -> UpdateSummary {
+        self.pc_level_mut().apply_perlin_change();
+        self.pc_level().perlin_update(&self.entities)
+    }
+
+    fn transformation_progress(&mut self, id: EntityId) -> Option<UpdateSummary> {
+        let entity = self.entities.get(id).unwrap();
+        if let Some(form) = entity.form() {
+            if let Some(position) = entity.position() {
+                if let Some(level_id) = entity.on_level() {
+                    let sh = self.entities.spacial_hash(level_id).unwrap();
+                    let sh_cell = sh.get((position.x, position.y)).unwrap();
+                    if sh_cell.has(ComponentType::Moon) {
+                        if form == Form::Human {
+                            return Some(actions::beast_transform_progress(entity, -1));
+                        } else {
+                            return Some(actions::human_transform_progress(entity, 1));
+                        }
+                    } else {
+                        if form == Form::Human {
+                            return Some(actions::beast_transform_progress(entity, 1));
+                        } else {
+                            return Some(actions::human_transform_progress(entity, -1));
+                        }
+                    }
+                }
+            }
         }
+
+        None
     }
 
     fn game_turn(&mut self) -> Result<(), TurnError> {
         self.turn_count += 1;
         let entity_id = self.pc_schedule_next();
 
-        self.pc_level_mut().apply_perlin_change();
+        self.cloud_progress().commit(&mut self.entities, self.turn_count);
 
-        let update = self.pc_level().perlin_update(&self.entities);
-        update.commit(&mut self.entities, self.turn_count);
+        if let Some(update) = self.transformation_progress(entity_id) {
+            self.apply_update(update);
+        }
 
         self.render();
 
@@ -220,20 +249,9 @@ impl<'a> GameContext<'a> {
             match self.act(entity_id) {
                 MetaAction::Quit => return Err(TurnError::Quit),
                 MetaAction::Update(update) => {
-                    if let Err(err) = self.apply_update(update) {
-                        match err {
-                            UpdateError::NothingApplied => {
-                                if self.entity_is_pc(entity_id) {
-                                    // the player can choose a new action
-                                    continue;
-                                } else {
-                                    // Other actors skip their turn.
-                                    // This is to prevent infinite loops in the
-                                    // face of buggy ai.
-                                    break;
-                                }
-                            },
-                        }
+                    let commit_count = self.apply_update(update);
+                    if commit_count == 0 && self.entity_is_pc(entity_id) {
+                        continue;
                     } else {
                         break;
                     }

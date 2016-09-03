@@ -5,10 +5,11 @@ use game::{
     ComponentType,
     Speed,
     LevelId,
+    StatusCounter,
 };
 use game::components::{
     DoorState,
-    Moonlight,
+    Form,
 };
 use game::knowledge::DrawableKnowledge;
 
@@ -151,25 +152,37 @@ impl Entity {
         self.has(ComponentType::Bullet)
     }
 
-    pub fn moonlight(&self) -> Option<Moonlight> {
-        if let Some(&Component::MoonlightSlot(moonlight)) =
-            self.get(ComponentType::MoonlightSlot)
+    pub fn has_moon(&self) -> bool {
+        self.has(ComponentType::Moon)
+    }
+
+    pub fn form(&self) -> Option<Form> {
+        if let Some(&Component::FormSlot(form)) =
+            self.get(ComponentType::FormSlot)
         {
-            Some(moonlight)
+            Some(form)
         } else {
             None
         }
     }
 
-    pub fn has_moonlight(&self) -> bool {
-        self.moonlight().is_some()
+    pub fn beast_transform(&self) -> Option<StatusCounter> {
+        if let Some(&Component::BeastTransform(counter)) =
+            self.get(ComponentType::BeastTransform)
+        {
+            Some(counter)
+        } else {
+            None
+        }
     }
 
-    pub fn is_moonlight_light(&self) -> bool {
-        if let Some(Moonlight::Light) = self.moonlight() {
-            true
+    pub fn human_transform(&self) -> Option<StatusCounter> {
+        if let Some(&Component::HumanTransform(counter)) =
+            self.get(ComponentType::HumanTransform)
+        {
+            Some(counter)
         } else {
-            false
+            None
         }
     }
 }
