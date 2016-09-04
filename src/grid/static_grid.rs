@@ -175,77 +175,77 @@ impl<'a, T: 'a> RowGrid<'a> for StaticGrid<T> {
 impl<'a, T> Index<&'a Coord> for StaticGrid<T> {
     type Output = T;
     fn index<'b>(&'b self, index: &'a Coord) -> &'b T {
-        self.get(*index).unwrap()
+        &self.elements[(index.x as usize) + (index.y as usize) * self.width]
     }
 }
 
 impl<'a, T> IndexMut<&'a Coord> for StaticGrid<T> {
     fn index_mut<'b>(&'b mut self, index: &'a Coord) -> &'b mut T {
-        self.get_mut(*index).unwrap()
+        &mut self.elements[(index.x as usize) + (index.y as usize) * self.width]
     }
 }
 
 impl<T> Index<Coord> for StaticGrid<T> {
     type Output = T;
     fn index<'a>(&'a self, index: Coord) -> &'a T {
-        self.get(index).unwrap()
+        &self.elements[(index.x as usize) + (index.y as usize) * self.width]
     }
 }
 
 impl<T> IndexMut<Coord> for StaticGrid<T> {
     fn index_mut<'a>(&'a mut self, index: Coord) -> &'a mut T {
-        self.get_mut(index).unwrap()
+        &mut self.elements[(index.x as usize) + (index.y as usize) * self.width]
     }
 }
 
 impl<'a, T> Index<&'a Vector2<usize>> for StaticGrid<T> {
     type Output = T;
     fn index<'b>(&'b self, index: &'a Vector2<usize>) -> &'b T {
-        self.get(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+        &self.elements[index.x + index.y * self.width]
     }
 }
 
 impl<'a, T> IndexMut<&'a Vector2<usize>> for StaticGrid<T> {
     fn index_mut<'b>(&'b mut self, index: &'a Vector2<usize>) -> &'b mut T {
-        self.get_mut(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+        &mut self.elements[index.x + index.y * self.width]
     }
 }
 
 impl<T> Index<(isize, isize)> for StaticGrid<T> {
     type Output = T;
     fn index<'a>(&'a self, (x, y): (isize, isize)) -> &'a T {
-        &self[Coord { x: x, y: y }]
+        &self.elements[(x as usize) + (y as usize) * self.width]
     }
 }
 
 impl<T> IndexMut<(isize, isize)> for StaticGrid<T> {
     fn index_mut<'a>(&'a mut self, (x, y): (isize, isize)) -> &'a mut T {
-        &mut self[Coord { x: x, y: y }]
+        &mut self.elements[(x as usize) + (y as usize) * self.width]
     }
 }
 
 impl<T> Index<Vector2<usize>> for StaticGrid<T> {
     type Output = T;
     fn index<'a>(&'a self, index: Vector2<usize>) -> &'a T {
-        self.get(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+        &self.elements[index.x + index.y * self.width]
     }
 }
 
 impl<T> IndexMut<Vector2<usize>> for StaticGrid<T> {
     fn index_mut<'a>(&'a mut self, index: Vector2<usize>) -> &'a mut T {
-        self.get_mut(Vector2::new(index.x as isize, index.y as isize)).unwrap()
+        &mut self.elements[index.x + index.y * self.width]
     }
 }
 
 impl<T> Index<(usize, usize)> for StaticGrid<T> {
     type Output = T;
     fn index<'a>(&'a self, (x, y): (usize, usize)) -> &'a T {
-        &self[Coord { x: x as isize, y: y as isize }]
+        &self.elements[x + y * self.width]
     }
 }
 
 impl<T> IndexMut<(usize, usize)> for StaticGrid<T> {
     fn index_mut<'a>(&'a mut self, (x, y): (usize, usize)) -> &'a mut T {
-        &mut self[Coord { x: x as isize, y: y as isize}]
+        &mut self.elements[x + y * self.width]
     }
 }
