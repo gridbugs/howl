@@ -144,14 +144,14 @@ impl<'a> GameContext<'a> {
         RuleContext::new(update, &self.entities)
     }
 
-    fn apply_update(&mut self, update: UpdateSummary) -> usize {
+    fn apply_update(&mut self, update: UpdateSummary, render: bool) -> usize {
         let mut commit_count = 0;
 
         self.update_queue.insert(update, 0);
 
         'outer: while let Some((update, time_delta)) = self.update_queue.next() {
 
-            if time_delta != 0 {
+            if render && time_delta != 0 {
                 if self.render() {
                     thread::sleep(Duration::from_millis(time_delta));
                 }
@@ -192,7 +192,9 @@ impl<'a> GameContext<'a> {
             }
         }
 
-        self.render();
+        if render {
+            self.render();
+        }
 
         commit_count
     }
@@ -236,7 +238,7 @@ impl<'a> GameContext<'a> {
         self.cloud_progress().commit(&mut self.entities, self.turn_count);
 
         if let Some(update) = self.transformation_progress(entity_id) {
-            self.apply_update(update);
+            self.apply_update(update, false);
         }
 
         self.render();
@@ -249,7 +251,7 @@ impl<'a> GameContext<'a> {
             match self.act(entity_id) {
                 MetaAction::Quit => return Err(TurnError::Quit),
                 MetaAction::Update(update) => {
-                    let commit_count = self.apply_update(update);
+                    let commit_count = self.apply_update(update, true);
                     if commit_count == 0 && self.entity_is_pc(entity_id) {
                         continue;
                     } else {
