@@ -152,16 +152,6 @@ pub fn remove_entity(entity: &Entity) -> UpdateSummary {
     summary
 }
 
-pub fn delay(update: UpdateSummary, time_ms: u64) -> UpdateSummary {
-    let mut summary = UpdateSummary::new();
-
-    summary.set_metadata(Delay(update));
-    summary.set_metadata(ActionTime(time_ms));
-
-    summary.set_metadata(Name("delay"));
-    summary
-}
-
 pub fn wait() -> UpdateSummary {
     let mut summary = UpdateSummary::new();
     summary.set_metadata(TurnTime(1));

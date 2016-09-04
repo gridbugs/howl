@@ -46,7 +46,7 @@ pub struct GameContext<'a> {
 
     // rule application
     update_queue: Schedule<UpdateSummary>,
-    reaction_queue: VecDeque<UpdateSummary>,
+    reaction_queue: VecDeque<(u64, UpdateSummary)>,
     rules: Vec<Box<Rule>>,
 
     // observation
@@ -166,14 +166,14 @@ impl<'a> GameContext<'a> {
 
                     match result {
                         RuleResult::Instead(mut updates) => {
-                            for u in updates.drain(..) {
-                                self.update_queue.insert(u, 0);
+                            for (time, update) in updates.drain(..) {
+                                self.update_queue.insert(update, time);
                             }
                             continue 'outer;
                         },
                         RuleResult::After(mut updates) => {
-                            for u in updates.drain(..) {
-                                self.reaction_queue.push_back(u);
+                            for (time, update) in updates.drain(..) {
+                                self.reaction_queue.push_back((time, update));
                             }
                         },
                     }
@@ -187,8 +187,8 @@ impl<'a> GameContext<'a> {
             update.commit(&mut self.entities, self.turn_count);
             commit_count += 1;
 
-            while let Some(update) = self.reaction_queue.pop_front() {
-                self.update_queue.insert(update, action_time);
+            while let Some((time, update)) = self.reaction_queue.pop_front() {
+                self.update_queue.insert(update, action_time + time);
             }
         }
 

@@ -19,7 +19,7 @@ pub fn burst_fire(ctx: RuleContext)
 
         spawn_bullet.set_metadata(ActionTime(speed.ms_per_cell()));
 
-        let mut reactions = vec![spawn_bullet];
+        let mut reactions = vec![(0, spawn_bullet)];
 
         if count > 0 {
             let mut burst_rest = ctx.update.clone();
@@ -28,7 +28,7 @@ pub fn burst_fire(ctx: RuleContext)
                 count: count - 1,
                 period: period,
             });
-            reactions.push(actions::delay(burst_rest, period));
+            reactions.push((period, burst_rest));
         }
 
         RuleResult::After(reactions)

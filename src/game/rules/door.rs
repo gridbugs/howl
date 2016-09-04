@@ -32,7 +32,7 @@ pub fn detect_open(ctx: RuleContext)
                 for entity_id in &cell.entities {
                     if let Some(&Door(DoorState::Closed)) = ctx.entities.get(*entity_id).unwrap().get(ComponentType::Door) {
                         return RuleResult::Instead(vec![
-                            actions::open_door(*entity_id)
+                            (0, actions::open_door(*entity_id))
                         ]);
                     }
                 }
