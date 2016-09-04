@@ -65,6 +65,8 @@ pub struct Perlin3Grid {
 }
 
 const NUM_CORNERS: usize = 8;
+const NUM_SLICE_CORNERS: usize = 4;
+const NUM_SLICES: usize = 2;
 
 pub fn ease_curve(x: f64) -> f64 {
     6.0 * x.powi(5) - 15.0 * x.powi(4) + 10.0 * x.powi(3)
@@ -94,7 +96,7 @@ impl Perlin3Grid {
         let grid_height = height + 2;
         Perlin3Grid {
             slices: {
-                let mut v = Vec::with_capacity(2 as usize);
+                let mut v = Vec::with_capacity(NUM_SLICES);
                 for i in 0..2 as isize {
                     v.push(Perlin3Slice {
                         grid: StaticGrid::new_call(grid_width, grid_height, |_, _| {
@@ -243,12 +245,12 @@ impl Perlin3Grid {
 
         let mut dots: [f64; NUM_CORNERS] = [0.0; NUM_CORNERS];
 
-        for (dot, (slice, (corner_coord_i, corner_coord_f))) in
-            izip!(&mut dots,
-                  iproduct!(&self.slices,
-                            izip!(&corner_coords_i,
-                                  &corner_coords_f)))
-        {
+        let mut i = 0;
+        while i != NUM_CORNERS {
+            let slice = &self.slices[i / NUM_SLICE_CORNERS];
+            let corner_coord_i = corner_coords_i[i % NUM_SLICE_CORNERS];
+            let corner_coord_f = corner_coords_f[i % NUM_SLICE_CORNERS];
+
             let gradient = slice.grid[corner_coord_i].0;
             let corner_coord_f3 = Vector3::new(
                 corner_coord_f.x,
@@ -256,7 +258,9 @@ impl Perlin3Grid {
                 slice.z
             );
             let relative = global_coord - corner_coord_f3;
-            *dot = gradient.dot(relative);
+            dots[i] = gradient.dot(relative);
+
+            i += 1;
         }
 
         let weight_x = ease_curve(x - top_left_f.x);
