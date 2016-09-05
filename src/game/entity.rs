@@ -14,8 +14,9 @@ use game::knowledge::DrawableKnowledge;
 use table::{
     Table,
     TableId,
+    TableRef,
     ToType,
-    TableTable
+    TableTable,
 };
 
 use geometry::{
@@ -28,48 +29,13 @@ use std::collections::{
     HashSet,
     hash_set,
     HashMap,
-    hash_map,
 };
 use std::cell::RefCell;
 
 pub type EntityId = TableId;
+pub type EntityRef<'a> = TableRef<'a, ComponentType, Component>;
 pub type Entity = Table<ComponentType, Component>;
 pub type EntityTable = TableTable<ComponentType, Component>;
-
-#[derive(Clone, Copy)]
-pub struct EntityRef<'a>(&'a Entity);
-
-impl<'a> EntityRef<'a> {
-
-    // TODO: remove this
-    pub fn new(entity: &'a Entity) -> Self {
-        EntityRef(entity)
-    }
-
-    pub fn has(self, component_type: ComponentType) -> bool {
-        self.0.has(component_type)
-    }
-
-    pub fn get(self, component_type: ComponentType) -> Option<&'a Component> {
-        self.0.get(component_type)
-    }
-
-    pub fn id(self) -> Option<EntityId> {
-        self.0.id
-    }
-
-    pub fn slots(self) -> hash_map::Iter<'a, ComponentType, Component> {
-        self.0.slots()
-    }
-
-    pub fn entries(self) -> hash_map::Values<'a, ComponentType, Component> {
-        self.0.entries()
-    }
-
-    pub fn types(self) -> hash_map::Keys<'a, ComponentType, Component> {
-        self.0.types()
-    }
-}
 
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
@@ -130,7 +96,7 @@ impl EntityContext {
     }
 
     pub fn get(&self, id: EntityId) -> Option<EntityRef> {
-        self.entities.get(id).map(EntityRef)
+        self.entities.get(id).map(TableRef::new)
     }
 
     pub fn get_mut(&mut self, id: EntityId) -> Option<&mut Entity> {

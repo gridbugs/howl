@@ -100,12 +100,6 @@ impl UpdateSummary {
 
         for level_id in self.levels.borrow().iter() {
             let mut level = levels.get_mut(level_id).unwrap();
-        /*
-            let mut spacial_hash = {
-                let level = entities.level(*level_id).unwrap();
-                level.spacial_hash.borrow_mut()
-            };
-        */
             level.spacial_hash.update(self, entities, turn_count);
         }
     }
