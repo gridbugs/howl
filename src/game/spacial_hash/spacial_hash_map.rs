@@ -288,21 +288,21 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
 
         for entity_id in &update.removed_entities {
-            let entity = EntityRef::new(entities.get(*entity_id).unwrap());
+            let entity = entities.get(*entity_id).unwrap();
             if self.entity_is_on_level(entity) {
                 self.remove_entity(entity, turn_count);
             }
         }
 
         for (entity_id, changes) in &update.added_components {
-            let entity = EntityRef::new(entities.get(*entity_id).unwrap());
+            let entity = entities.get(*entity_id).unwrap();
             if self.entity_is_on_level(entity) {
                 self.add_components(entity, EntityRef::new(changes), turn_count);
             }
         }
 
         for (entity_id, component_types) in &update.removed_components {
-            let entity = EntityRef::new(entities.get(*entity_id).unwrap());
+            let entity = entities.get(*entity_id).unwrap();
             if self.entity_is_on_level(entity) {
                 self.remove_components(entity, component_types, turn_count);
             }

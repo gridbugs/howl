@@ -12,4 +12,5 @@ pub use self::table_table::{
 };
 pub use self::table_ref::{
     TableRef,
+    TableMutRef,
 };

@@ -94,7 +94,7 @@ impl Level {
     // Makes the bookkeeping info reflect the contents of entities
     pub fn finalise(&mut self, entities: &EntityTable, turn_count: u64) {
         for entity_id in self.entities.clone() {
-            let entity = EntityRef::new(entities.get(entity_id).unwrap());
+            let entity = entities.get(entity_id).unwrap();
             self.spacial_hash.add_entity(entity, turn_count);
         }
     }

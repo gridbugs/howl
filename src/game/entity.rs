@@ -15,6 +15,7 @@ use table::{
     Table,
     TableId,
     TableRef,
+    TableMutRef,
     ToType,
     TableTable,
 };
@@ -34,6 +35,7 @@ use std::cell::RefCell;
 
 pub type EntityId = TableId;
 pub type EntityRef<'a> = TableRef<'a, ComponentType, Component>;
+pub type EntityMutRef<'a> = TableMutRef<'a, ComponentType, Component>;
 pub type Entity = Table<ComponentType, Component>;
 pub type EntityTable = TableTable<ComponentType, Component>;
 
@@ -96,10 +98,10 @@ impl EntityContext {
     }
 
     pub fn get(&self, id: EntityId) -> Option<EntityRef> {
-        self.entities.get(id).map(TableRef::new)
+        self.entities.get(id)
     }
 
-    pub fn get_mut(&mut self, id: EntityId) -> Option<&mut Entity> {
+    pub fn get_mut(&mut self, id: EntityId) -> Option<EntityMutRef> {
         self.entities.get_mut(id)
     }
 

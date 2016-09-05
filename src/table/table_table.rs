@@ -1,7 +1,9 @@
-use table::table::{
+use table::{
     TableId,
     Table,
     ToType,
+    TableRef,
+    TableMutRef,
 };
 
 use std::collections::hash_map;
@@ -54,12 +56,12 @@ impl<EntryType, Entry> TableTable<EntryType, Entry>
         self.tables.remove(&id)
     }
 
-    pub fn get(&self, id: TableId) -> Option<&Table<EntryType, Entry>> {
-        self.tables.get(&id)
+    pub fn get(&self, id: TableId) -> Option<TableRef<EntryType, Entry>> {
+        self.tables.get(&id).map(TableRef::new)
     }
 
-    pub fn get_mut(&mut self, id: TableId) -> Option<&mut Table<EntryType, Entry>> {
-        self.tables.get_mut(&id)
+    pub fn get_mut(&mut self, id: TableId) -> Option<TableMutRef<EntryType, Entry>> {
+        self.tables.get_mut(&id).map(TableMutRef::new)
     }
 
     pub fn tables(&self) -> hash_map::Values<TableId, Table<EntryType, Entry>> {
