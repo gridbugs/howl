@@ -1,22 +1,22 @@
 use table::{
-    Table,
     TableId,
     ToType,
+    HashMapTable,
 };
 
 use std::collections::hash_map;
 use std::hash::Hash;
 
-pub struct TableMutRef<'a, EntryType, Entry>(&'a mut Table<EntryType, Entry>)
+pub struct HashMapTableMutRef<'a, EntryType, Entry>(&'a mut HashMapTable<EntryType, Entry>)
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>;
 
-impl<'a, EntryType, Entry> TableMutRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> HashMapTableMutRef<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
-    pub fn new(table: &'a mut Table<EntryType, Entry>) -> Self {
-        TableMutRef(table)
+    pub fn new(table: &'a mut HashMapTable<EntryType, Entry>) -> Self {
+        HashMapTableMutRef(table)
     }
 
     pub fn add(&mut self, entry: Entry) -> Option<Entry> {
@@ -32,31 +32,31 @@ where EntryType: 'a + Eq + Hash,
     }
 }
 
-pub struct TableRef<'a, EntryType, Entry>(&'a Table<EntryType, Entry>)
+pub struct HashMapTableRef<'a, EntryType, Entry>(&'a HashMapTable<EntryType, Entry>)
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>;
 
-impl<'a, EntryType, Entry> Clone for TableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> Clone for HashMapTableRef<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
     fn clone(&self) -> Self {
-        TableRef(self.0)
+        HashMapTableRef(self.0)
     }
 }
 
-impl<'a, EntryType, Entry> Copy for TableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> Copy for HashMapTableRef<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>
 {}
 
 
-impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> HashMapTableRef<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
-    pub fn new(table: &'a Table<EntryType, Entry>) -> Self {
-        TableRef(table)
+    pub fn new(table: &'a HashMapTable<EntryType, Entry>) -> Self {
+        HashMapTableRef(table)
     }
 
     pub fn has(self, entry_type: EntryType) -> bool {

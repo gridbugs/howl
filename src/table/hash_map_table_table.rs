@@ -1,9 +1,9 @@
 use table::{
     TableId,
-    Table,
     ToType,
-    TableRef,
-    TableMutRef,
+    HashMapTable,
+    HashMapTableRef,
+    HashMapTableMutRef,
 };
 
 use std::collections::hash_map;
@@ -12,20 +12,20 @@ use std::hash::Hash;
 use std::cell::Cell;
 
 #[derive(Debug, Clone)]
-pub struct TableTable<EntryType, Entry>
+pub struct HashMapTableTable<EntryType, Entry>
     where EntryType: Eq + Hash,
           Entry: ToType<EntryType>,
 {
     next_id: Cell<TableId>,
-    tables: HashMap<TableId, Table<EntryType, Entry>>,
+    tables: HashMap<TableId, HashMapTable<EntryType, Entry>>,
 }
 
-impl<EntryType, Entry> TableTable<EntryType, Entry>
+impl<EntryType, Entry> HashMapTableTable<EntryType, Entry>
     where EntryType: Eq + Hash,
           Entry: ToType<EntryType>,
 {
     pub fn new() -> Self {
-        TableTable {
+        HashMapTableTable {
             next_id: Cell::new(0),
             tables: HashMap::new(),
         }
@@ -37,7 +37,7 @@ impl<EntryType, Entry> TableTable<EntryType, Entry>
         id
     }
 
-    pub fn add(&mut self, mut table: Table<EntryType, Entry>) -> TableId {
+    pub fn add(&mut self, mut table: HashMapTable<EntryType, Entry>) -> TableId {
 
         let id = if let Some(id) = table.id {
             id
@@ -52,19 +52,19 @@ impl<EntryType, Entry> TableTable<EntryType, Entry>
         id
     }
 
-    pub fn remove(&mut self, id: TableId) -> Option<Table<EntryType, Entry>> {
+    pub fn remove(&mut self, id: TableId) -> Option<HashMapTable<EntryType, Entry>> {
         self.tables.remove(&id)
     }
 
-    pub fn get(&self, id: TableId) -> Option<TableRef<EntryType, Entry>> {
-        self.tables.get(&id).map(TableRef::new)
+    pub fn get(&self, id: TableId) -> Option<HashMapTableRef<EntryType, Entry>> {
+        self.tables.get(&id).map(HashMapTableRef::new)
     }
 
-    pub fn get_mut(&mut self, id: TableId) -> Option<TableMutRef<EntryType, Entry>> {
-        self.tables.get_mut(&id).map(TableMutRef::new)
+    pub fn get_mut(&mut self, id: TableId) -> Option<HashMapTableMutRef<EntryType, Entry>> {
+        self.tables.get_mut(&id).map(HashMapTableMutRef::new)
     }
 
-    pub fn tables(&self) -> hash_map::Values<TableId, Table<EntryType, Entry>> {
+    pub fn tables(&self) -> hash_map::Values<TableId, HashMapTable<EntryType, Entry>> {
         self.tables.values()
     }
 }

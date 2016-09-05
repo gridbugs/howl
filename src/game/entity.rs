@@ -12,12 +12,12 @@ use game::components::{
 use game::knowledge::DrawableKnowledge;
 
 use table::{
-    Table,
     TableId,
-    TableRef,
-    TableMutRef,
     ToType,
-    TableTable,
+    HashMapTable,
+    HashMapTableRef,
+    HashMapTableMutRef,
+    HashMapTableTable,
 };
 
 use geometry::{
@@ -34,10 +34,10 @@ use std::collections::{
 use std::cell::RefCell;
 
 pub type EntityId = TableId;
-pub type EntityRef<'a> = TableRef<'a, ComponentType, Component>;
-pub type EntityMutRef<'a> = TableMutRef<'a, ComponentType, Component>;
-pub type Entity = Table<ComponentType, Component>;
-pub type EntityTable = TableTable<ComponentType, Component>;
+pub type EntityRef<'a> = HashMapTableRef<'a, ComponentType, Component>;
+pub type EntityMutRef<'a> = HashMapTableMutRef<'a, ComponentType, Component>;
+pub type Entity = HashMapTable<ComponentType, Component>;
+pub type EntityTable = HashMapTableTable<ComponentType, Component>;
 
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
