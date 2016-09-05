@@ -4,7 +4,9 @@ use game::{
     ComponentType,
     Component,
     EntityContext,
-    HashMapEntityTable,
+    EntityRef,
+    IterEntityRef,
+    EntityTable,
     LevelId,
     Level,
     EntityWrapper,
@@ -104,7 +106,11 @@ impl UpdateSummary {
         }
     }
 
-    fn update_spacial_hashes(&self, levels: &mut HashMap<LevelId, Level>, entities: &HashMapEntityTable, turn_count: u64) {
+    fn update_spacial_hashes<'a, T>(&self, levels: &mut HashMap<LevelId, Level>,
+                                    entities: &'a T, turn_count: u64)
+    where T: EntityTable<'a>,
+          <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
+    {
         self.update_levels(entities);
 
         for level_id in self.levels.borrow().iter() {
@@ -113,7 +119,10 @@ impl UpdateSummary {
         }
     }
 
-    fn update_levels(&self, entities: &HashMapEntityTable) {
+    fn update_levels<'a, T>(&self, entities: &'a T)
+    where T: EntityTable<'a>,
+          <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
+    {
         let mut levels = self.levels.borrow_mut();
         levels.clear();
 

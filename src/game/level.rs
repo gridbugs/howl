@@ -1,7 +1,11 @@
 use game::{
     EntityId,
     EntityContext,
-    HashMapEntityTable,
+    Component,
+    ComponentType,
+    EntityRef,
+    IterEntityRef,
+    EntityTable,
     TurnSchedule,
     SpacialHashMap,
     SpacialHashCell,
@@ -82,7 +86,10 @@ impl Level {
     }
 
     // Makes the bookkeeping info reflect the contents of entities
-    pub fn finalise(&mut self, entities: &HashMapEntityTable, turn_count: u64) {
+    pub fn finalise<'a, T>(&mut self, entities: &'a T, turn_count: u64)
+    where T: EntityTable<'a>,
+          <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
+    {
         for entity_id in self.entities.clone() {
             let entity = entities.get(entity_id).unwrap();
             self.spacial_hash.add_entity(entity, turn_count);
