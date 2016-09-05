@@ -9,7 +9,10 @@ use game::{
     IterEntityRef,
 };
 
-use table::ToType;
+use table::{
+    ToType,
+    TableTable,
+};
 use vision::Opacity;
 use grid::Grid;
 use geometry::Vector2;

@@ -20,6 +20,7 @@ mod best;
 mod clear;
 mod object_pool;
 mod vision;
+mod reserver;
 
 use game::entities::*;
 use game::{

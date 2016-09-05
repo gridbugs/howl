@@ -8,6 +8,12 @@ pub use self::entity::{
     Component,
     ComponentType,
     EntityTable,
+    HashMapEntityRef,
+    HashMapEntityRefMut,
+};
+
+mod entity_context;
+pub use self::entity_context::{
     EntityContext,
 };
 

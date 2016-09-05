@@ -18,6 +18,7 @@ use game::update::{
 use table::{
     TableRef,
     TableRefMut,
+    TableTable,
 };
 
 use std::collections::{

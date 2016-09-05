@@ -2,11 +2,11 @@ use table::{
     TableId,
     ToType,
     Table,
+    TableTable,
     HashMapTableRef,
     HashMapTableRefMut,
 };
 
-use std::collections::hash_map;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::cell::Cell;
@@ -21,8 +21,8 @@ pub struct HashMapTableTable<EntryType, Entry>
 }
 
 impl<EntryType, Entry> HashMapTableTable<EntryType, Entry>
-    where EntryType: Eq + Hash,
-          Entry: ToType<EntryType>,
+where EntryType: Eq + Hash,
+      Entry: ToType<EntryType>,
 {
     pub fn new() -> Self {
         HashMapTableTable {
@@ -30,41 +30,39 @@ impl<EntryType, Entry> HashMapTableTable<EntryType, Entry>
             tables: HashMap::new(),
         }
     }
+}
 
-    pub fn reserve_id(&self) -> TableId {
-        let id = self.next_id.get();
-        self.next_id.set(id + 1);
-        id
-    }
+impl<'a, EntryType, Entry> TableTable<'a, EntryType, Entry>
+for HashMapTableTable<EntryType, Entry>
+where EntryType: 'a + Eq + Hash,
+      Entry: 'a + ToType<EntryType>,
+{
+    type Ref = HashMapTableRef<'a, EntryType, Entry>;
+    type RefMut = HashMapTableRefMut<'a, EntryType, Entry>;
 
-    pub fn add(&mut self, mut table: Table<EntryType, Entry>) -> TableId {
-
+    fn add(&mut self, table_id: TableId, mut table: Table<EntryType, Entry>)
+        -> Option<Table<EntryType, Entry>>
+    {
         let id = if let Some(id) = table.id {
+            assert_eq!(table_id, id);
             id
         } else {
-            let id = self.reserve_id();
-            table.id = Some(id);
-            id
+            table.id = Some(table_id);
+            table_id
         };
 
-        self.tables.insert(id, table);
-
-        id
+        self.tables.insert(id, table)
     }
 
-    pub fn remove(&mut self, id: TableId) -> Option<Table<EntryType, Entry>> {
+    fn remove(&mut self, id: TableId) -> Option<Table<EntryType, Entry>> {
         self.tables.remove(&id)
     }
 
-    pub fn get(&self, id: TableId) -> Option<HashMapTableRef<EntryType, Entry>> {
+    fn get(&'a self, id: TableId) -> Option<Self::Ref> {
         self.tables.get(&id).map(HashMapTableRef::new)
     }
 
-    pub fn get_mut(&mut self, id: TableId) -> Option<HashMapTableRefMut<EntryType, Entry>> {
+    fn get_mut(&'a mut self, id: TableId) -> Option<Self::RefMut> {
         self.tables.get_mut(&id).map(HashMapTableRefMut::new)
-    }
-
-    pub fn tables(&self) -> hash_map::Values<TableId, Table<EntryType, Entry>> {
-        self.tables.values()
     }
 }

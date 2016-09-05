@@ -77,7 +77,7 @@ pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
 
     bullet.add(AxisVelocity { direction: direction, speed: speed });
 
-    summary.add_entity(entities.reserve_id(), bullet);
+    summary.add_entity(entities.reserve_entity_id(), bullet);
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
 
@@ -122,7 +122,7 @@ pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
         let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
         bullet.add(AxisVelocity { direction: dir, speed: speed });
 
-        summary.add_entity(entities.reserve_id(), bullet);
+        summary.add_entity(entities.reserve_entity_id(), bullet);
     }
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
@@ -147,7 +147,7 @@ pub fn axis_velocity_move(entity_id: EntityId, position: Vector2<isize>, directi
 pub fn add_entity(entity: Entity, entities: &EntityContext) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
-    summary.add_entity(entities.reserve_id(), entity);
+    summary.add_entity(entities.reserve_entity_id(), entity);
 
     summary.set_metadata(Name("add_entity"));
     summary

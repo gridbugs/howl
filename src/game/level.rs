@@ -26,7 +26,10 @@ use geometry::{
     Vector3,
 };
 
-use table::TableRef;
+use table::{
+    TableRef,
+    TableTable,
+};
 
 use std::cell::RefCell;
 use std::collections::HashSet;

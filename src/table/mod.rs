@@ -3,6 +3,7 @@ mod hash_map_table_ref;
 mod to_type;
 mod table;
 mod table_ref;
+mod table_table;
 
 pub use self::table::{
     TableId,
@@ -21,4 +22,7 @@ pub use self::table_ref::{
     TableRef,
     IterTableRef,
     TableRefMut,
+};
+pub use self::table_table::{
+    TableTable,
 };

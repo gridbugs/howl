@@ -1,9 +1,7 @@
 use game::{
     Speed,
     StatusCounter,
-    Level,
     LevelId,
-    LevelSpacialHashMap,
 };
 use game::components::{
     DoorState,
@@ -29,11 +27,6 @@ use geometry::{
 };
 use renderer::ComplexTile;
 
-use std::collections::{
-    HashSet,
-    hash_set,
-    HashMap,
-};
 use std::cell::RefCell;
 
 pub type HashMapEntityRef<'a> = HashMapTableRef<'a, ComponentType, Component>;
@@ -55,94 +48,6 @@ impl<'a> EntityRefMut<'a> for &'a mut Entity {}
 impl<'a> EntityRef<'a> for HashMapEntityRef<'a> {}
 impl<'a> IterEntityRef<'a> for HashMapEntityRef<'a> {}
 impl<'a> EntityRefMut<'a> for HashMapEntityRefMut<'a> {}
-
-pub struct EntityIter<'a> {
-    hash_set_iter: hash_set::Iter<'a, EntityId>,
-    entities: &'a EntityContext,
-}
-
-impl<'a> Iterator for EntityIter<'a> {
-    type Item = Option<HashMapEntityRef<'a>>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.hash_set_iter.next().map(|id| {
-            self.entities.get(*id)
-        })
-    }
-}
-
-pub struct EntityContext {
-    pub entities: EntityTable,
-    pub levels: HashMap<LevelId, Level>,
-}
-
-impl EntityContext {
-    pub fn new() -> Self {
-        EntityContext {
-            entities: EntityTable::new(),
-            levels: HashMap::new(),
-        }
-    }
-
-    pub fn reserve_level_id(&self) -> LevelId {
-        self.reserve_id()
-    }
-
-    pub fn add_level(&mut self, mut level: Level) -> LevelId {
-
-        let id = if let Some(id) = level.id {
-            id
-        } else {
-            let id = self.reserve_level_id();
-            level.id = Some(id);
-            id
-        };
-
-        self.levels.insert(id, level);
-
-        id
-    }
-
-    pub fn reserve_id(&self) -> EntityId {
-        self.entities.reserve_id()
-    }
-
-    pub fn add(&mut self, entity: Entity) -> EntityId {
-        self.entities.add(entity)
-    }
-
-    pub fn remove(&mut self, id: EntityId) -> Option<Entity> {
-        self.entities.remove(id)
-    }
-
-    pub fn get(&self, id: EntityId) -> Option<HashMapEntityRef> {
-        self.entities.get(id)
-    }
-
-    pub fn get_mut(&mut self, id: EntityId) -> Option<HashMapEntityRefMut> {
-        self.entities.get_mut(id)
-    }
-
-    pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>) -> EntityIter<'a> {
-        EntityIter {
-            hash_set_iter: set.iter(),
-            entities: &self,
-        }
-    }
-
-    pub fn level(&self, level_id: LevelId) -> Option<&Level> {
-        self.levels.get(&level_id)
-    }
-
-    pub fn level_mut(&mut self, level_id: LevelId) -> Option<&mut Level> {
-        self.levels.get_mut(&level_id)
-    }
-
-    pub fn spacial_hash(&self, level_id: LevelId) -> Option<&LevelSpacialHashMap> {
-        self.level(level_id).map(|level| {
-            &level.spacial_hash
-        })
-    }
-}
 
 macro_rules! entity {
     () => { game::entity::Entity::new() };
