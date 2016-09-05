@@ -1,9 +1,9 @@
 use table::{
     TableId,
     ToType,
-    HashMapTable,
+    Table,
     HashMapTableRef,
-    HashMapTableMutRef,
+    HashMapTableRefMut,
 };
 
 use std::collections::hash_map;
@@ -17,7 +17,7 @@ pub struct HashMapTableTable<EntryType, Entry>
           Entry: ToType<EntryType>,
 {
     next_id: Cell<TableId>,
-    tables: HashMap<TableId, HashMapTable<EntryType, Entry>>,
+    tables: HashMap<TableId, Table<EntryType, Entry>>,
 }
 
 impl<EntryType, Entry> HashMapTableTable<EntryType, Entry>
@@ -37,7 +37,7 @@ impl<EntryType, Entry> HashMapTableTable<EntryType, Entry>
         id
     }
 
-    pub fn add(&mut self, mut table: HashMapTable<EntryType, Entry>) -> TableId {
+    pub fn add(&mut self, mut table: Table<EntryType, Entry>) -> TableId {
 
         let id = if let Some(id) = table.id {
             id
@@ -52,7 +52,7 @@ impl<EntryType, Entry> HashMapTableTable<EntryType, Entry>
         id
     }
 
-    pub fn remove(&mut self, id: TableId) -> Option<HashMapTable<EntryType, Entry>> {
+    pub fn remove(&mut self, id: TableId) -> Option<Table<EntryType, Entry>> {
         self.tables.remove(&id)
     }
 
@@ -60,11 +60,11 @@ impl<EntryType, Entry> HashMapTableTable<EntryType, Entry>
         self.tables.get(&id).map(HashMapTableRef::new)
     }
 
-    pub fn get_mut(&mut self, id: TableId) -> Option<HashMapTableMutRef<EntryType, Entry>> {
-        self.tables.get_mut(&id).map(HashMapTableMutRef::new)
+    pub fn get_mut(&mut self, id: TableId) -> Option<HashMapTableRefMut<EntryType, Entry>> {
+        self.tables.get_mut(&id).map(HashMapTableRefMut::new)
     }
 
-    pub fn tables(&self) -> hash_map::Values<TableId, HashMapTable<EntryType, Entry>> {
+    pub fn tables(&self) -> hash_map::Values<TableId, Table<EntryType, Entry>> {
         self.tables.values()
     }
 }

@@ -2,7 +2,10 @@ use game::{
     actions,
     RuleResult,
     RuleContext,
+    EntityWrapper,
 };
+
+use table::TableRef;
 
 pub fn maintain_velocity_movement(ctx: RuleContext)
     -> RuleResult

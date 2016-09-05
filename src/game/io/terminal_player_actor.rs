@@ -1,9 +1,10 @@
 use game::{
     EntityId,
-    EntityRef,
     EntityContext,
     MetaAction,
     UpdateSummary,
+    EntityWrapper,
+    EntityRef,
 };
 use game::ComponentType as CType;
 
@@ -14,6 +15,7 @@ use grid::Grid;
 use rustty::Event;
 use terminal::window_manager::InputSource;
 use geometry::direction::Direction;
+use table::TableRef;
 
 const ETX: char = '\u{3}';
 
@@ -60,7 +62,7 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn close_door(entity: EntityRef, entities: &EntityContext) -> Option<UpdateSummary> {
+fn close_door<'a, E: EntityRef<'a>>(entity: E, entities: &EntityContext) -> Option<UpdateSummary> {
     let sh = entities.spacial_hash(entity.on_level().unwrap()).unwrap();
 
     for cell in sh.grid.some_nei_iter(entity.position().unwrap()) {
@@ -84,7 +86,11 @@ fn get_direction(input_source: &InputSource) -> Option<Direction> {
     }
 }
 
-fn event_to_action(event: Event, entity: EntityRef, entities: &EntityContext, input_source: &InputSource) -> Option<UpdateSummary> {
+fn event_to_action<'a, E: EntityRef<'a>>(
+    event: Event, entity: E,
+    entities: &EntityContext,
+    input_source: &InputSource) -> Option<UpdateSummary>
+{
     match event {
         Event::Char('f') => {
             get_direction(input_source).map(|d| {
@@ -102,7 +108,9 @@ fn event_to_action(event: Event, entity: EntityRef, entities: &EntityContext, in
     }
 }
 
-fn event_to_meta_action(event: Event, entity: EntityRef, entities: &EntityContext) -> Option<MetaAction> {
+fn event_to_meta_action<'a, E: EntityRef<'a>>(
+    event: Event, entity: E, entities: &EntityContext) -> Option<MetaAction>
+{
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),
         Event::Char('q') => Some(MetaAction::Quit),

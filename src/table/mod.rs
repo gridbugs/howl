@@ -1,15 +1,12 @@
-mod hash_map_table;
 mod hash_map_table_table;
 mod hash_map_table_ref;
 mod to_type;
 mod table;
+mod table_ref;
 
 pub use self::table::{
     TableId,
-};
-
-pub use self::hash_map_table::{
-    HashMapTable,
+    Table,
 };
 
 pub use self::hash_map_table_table::{
@@ -17,6 +14,11 @@ pub use self::hash_map_table_table::{
 };
 pub use self::hash_map_table_ref::{
     HashMapTableRef,
-    HashMapTableMutRef,
+    HashMapTableRefMut,
 };
 pub use self::to_type::ToType;
+pub use self::table_ref::{
+    TableRef,
+    IterTableRef,
+    TableRefMut,
+};

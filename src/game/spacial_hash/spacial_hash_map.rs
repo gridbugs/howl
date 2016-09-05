@@ -1,10 +1,12 @@
 use game::{
     EntityId,
-    EntityRef,
     Component,
     ComponentType,
     EntityTable,
     UpdateSummary,
+    EntityWrapper,
+    EntityRef,
+    IterEntityRef,
 };
 
 use table::ToType;
@@ -73,23 +75,23 @@ impl SpacialHashCell {
         self.set_count(component_type, count - 1);
     }
 
-    fn add_entity(&mut self, entity: EntityRef) {
+    fn add_entity<'a, E: IterEntityRef<'a> + EntityRef<'a>>(&mut self, entity: E) {
         if self.entities.insert(entity.id().unwrap()) {
             for component in entity.entries() {
-                self.add_component(entity, component);
+                self.add_component(component);
             }
         }
     }
 
-    fn remove_entity(&mut self, entity: EntityRef) {
+    fn remove_entity<'a, E: IterEntityRef<'a> + EntityRef<'a>>(&mut self, entity: E) {
         if self.entities.remove(&entity.id().unwrap()) {
             for component in entity.entries() {
-                self.remove_component(entity, component);
+                self.remove_component(component);
             }
         }
     }
 
-    fn change_component(&mut self, _: EntityRef, old: &Component, new: &Component) {
+    fn change_component(&mut self, old: &Component, new: &Component) {
         if let &Component::Opacity(old_opacity) = old {
             if let &Component::Opacity(new_opacity) = new {
                 self.opacity += new_opacity - old_opacity;
@@ -97,7 +99,7 @@ impl SpacialHashCell {
         }
     }
 
-    fn add_component(&mut self, _: EntityRef, component: &Component) {
+    fn add_component(&mut self, component: &Component) {
         self.increment_count(component.to_type());
 
         if let &Component::Opacity(opacity) = component {
@@ -105,7 +107,7 @@ impl SpacialHashCell {
         }
     }
 
-    fn remove_component(&mut self , _: EntityRef, component: &Component) {
+    fn remove_component(&mut self , component: &Component) {
         self.decrement_count(component.to_type());
 
         if let &Component::Opacity(opacity) = component {
@@ -135,7 +137,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         self.id = Some(id);
     }
 
-    fn entity_is_on_level(&self, entity: EntityRef) -> bool {
+    fn entity_is_on_level<'a, E: EntityRef<'a>>(&self, entity: E) -> bool {
         if let Some(id) = entity.on_level() {
             if id == self.id.unwrap() {
                 true
@@ -177,7 +179,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn add_entity(&mut self, entity: EntityRef, turn_count: u64) {
+    pub fn add_entity<'a, E: EntityRef<'a> + IterEntityRef<'a>>(&mut self, entity: E, turn_count: u64) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut_unsafe(vec.to_tuple());
             cell.add_entity(entity);
@@ -190,7 +192,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn remove_entity(&mut self, entity: EntityRef, turn_count: u64) {
+    pub fn remove_entity<'a, E: EntityRef<'a> + IterEntityRef<'a>>(&mut self, entity: E, turn_count: u64) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut_unsafe(vec.to_tuple());
             cell.remove_entity(entity);
@@ -203,10 +205,12 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn add_components(&mut self,
-                          entity: EntityRef,
-                          changes: EntityRef,
-                          turn_count: u64)
+    pub fn add_components<'a, 'b, E: EntityRef<'a> + IterEntityRef<'a>,
+                                  C: EntityRef<'b> + IterEntityRef<'b>>(
+        &mut self,
+        entity: E,
+        changes: C,
+        turn_count: u64)
     {
         // position will be set to the position of entity after the change
         let position = if let Some(new_position) = changes.position() {
@@ -242,10 +246,10 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
                 }
 
                 if let Some(ref old_component) = entity.get(*component_type) {
-                    cell.change_component(entity, old_component, new_component);
+                    cell.change_component(old_component, new_component);
                 } else {
                     // only update the component count if the component is being added
-                    cell.add_component(entity, new_component);
+                    cell.add_component(new_component);
                 }
 
             }
@@ -260,10 +264,11 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn remove_components(&mut self,
-                             entity: EntityRef,
-                             component_types: &HashSet<ComponentType>,
-                             turn_count: u64)
+    pub fn remove_components<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+        &mut self,
+        entity: E,
+        component_types: &HashSet<ComponentType>,
+        turn_count: u64)
     {
         if let Some(position) = entity.position() {
             if component_types.contains(&ComponentType::Position) {
@@ -273,7 +278,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
                 let mut cell = self.get_mut_unsafe(position.to_tuple());
                 for component_type in component_types {
                     if let Some(ref component) = entity.get(*component_type) {
-                        cell.remove_component(entity, component);
+                        cell.remove_component(component);
                     }
                 }
                 cell.last_updated = turn_count;
@@ -289,9 +294,8 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
     /// Update the spacial hash's metadata. This should be called before the update is applied.
     pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable, turn_count: u64) {
         for entity in update.added_entities.values() {
-            // TODO remove explicit EntityRef
-            if self.entity_is_on_level(EntityRef::new(entity)) {
-                self.add_entity(EntityRef::new(entity), turn_count);
+            if self.entity_is_on_level(entity) {
+                self.add_entity(entity, turn_count);
             }
         }
 
@@ -305,7 +309,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         for (entity_id, changes) in &update.added_components {
             let entity = entities.get(*entity_id).unwrap();
             if self.entity_is_on_level(entity) {
-                self.add_components(entity, EntityRef::new(changes), turn_count);
+                self.add_components(entity, changes, turn_count);
             }
         }
 

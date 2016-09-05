@@ -19,6 +19,7 @@ use renderer::{
 };
 use colour::ansi;
 use terminal::style;
+use table::TableRefMut;
 
 use std::cell::RefCell;
 

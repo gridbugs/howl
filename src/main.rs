@@ -27,6 +27,7 @@ use game::{
     EntityId,
     GameContext,
     Level,
+    EntityWrapper,
 };
 use game::rules;
 use game::components::DoorState;

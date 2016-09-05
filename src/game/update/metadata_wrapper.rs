@@ -8,6 +8,8 @@ use game::update::{
     MetadatumType,
 };
 
+use table::TableRef;
+
 impl UpdateSummary {
     pub fn action_time(&self) -> u64 {
         if let Some(&Metadatum::ActionTime(t)) =

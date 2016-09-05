@@ -7,6 +7,7 @@ use game::{
     EntityTable,
     LevelId,
     Level,
+    EntityWrapper,
 };
 use game::update::{
     Metadata,
@@ -14,8 +15,15 @@ use game::update::{
     MetadatumType,
 };
 
-use std::collections::HashSet;
-use std::collections::HashMap;
+use table::{
+    TableRef,
+    TableRefMut,
+};
+
+use std::collections::{
+    HashSet,
+    HashMap,
+};
 use std::cell::RefCell;
 
 #[derive(Clone)]

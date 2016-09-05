@@ -2,11 +2,14 @@ use game::{
     ComponentType,
     RuleResult,
     RuleContext,
+    actions,
+    rule,
+    EntityWrapper,
 };
 use game::entity::Component::*;
 use game::components::DoorState;
-use game::actions;
-use game::rule;
+
+use table::TableRef;
 
 pub fn detect_open(ctx: RuleContext)
     -> RuleResult

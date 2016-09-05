@@ -2,6 +2,8 @@
 pub use self::entity::{
     EntityId,
     EntityRef,
+    IterEntityRef,
+    EntityRefMut,
     Entity,
     Component,
     ComponentType,
@@ -28,6 +30,7 @@ mod context;
 pub use self::context::GameContext;
 
 mod entity_wrapper;
+pub use self::entity_wrapper::EntityWrapper;
 
 mod rule;
 pub use self::rule::{

@@ -14,10 +14,13 @@ use game::knowledge::DrawableKnowledge;
 use table::{
     TableId,
     ToType,
-    HashMapTable,
+    Table,
     HashMapTableRef,
-    HashMapTableMutRef,
+    HashMapTableRefMut,
     HashMapTableTable,
+    TableRef,
+    IterTableRef,
+    TableRefMut,
 };
 
 use geometry::{
@@ -33,11 +36,25 @@ use std::collections::{
 };
 use std::cell::RefCell;
 
+pub type HashMapEntityRef<'a> = HashMapTableRef<'a, ComponentType, Component>;
+pub type HashMapEntityRefMut<'a> = HashMapTableRefMut<'a, ComponentType, Component>;
+
 pub type EntityId = TableId;
-pub type EntityRef<'a> = HashMapTableRef<'a, ComponentType, Component>;
-pub type EntityMutRef<'a> = HashMapTableMutRef<'a, ComponentType, Component>;
-pub type Entity = HashMapTable<ComponentType, Component>;
+pub type Entity = Table<ComponentType, Component>;
 pub type EntityTable = HashMapTableTable<ComponentType, Component>;
+
+pub trait EntityRef<'a>: TableRef<'a, ComponentType, Component> {}
+pub trait IterEntityRef<'a>: IterTableRef<'a, ComponentType, Component> {}
+pub trait EntityRefMut<'a>: TableRefMut<'a, ComponentType, Component> {}
+
+impl<'a> EntityRef<'a> for &'a Entity {}
+impl<'a> IterEntityRef<'a> for &'a Entity {}
+impl<'a> EntityRefMut<'a> for Entity {}
+impl<'a> EntityRefMut<'a> for &'a mut Entity {}
+
+impl<'a> EntityRef<'a> for HashMapEntityRef<'a> {}
+impl<'a> IterEntityRef<'a> for HashMapEntityRef<'a> {}
+impl<'a> EntityRefMut<'a> for HashMapEntityRefMut<'a> {}
 
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
@@ -45,7 +62,7 @@ pub struct EntityIter<'a> {
 }
 
 impl<'a> Iterator for EntityIter<'a> {
-    type Item = Option<EntityRef<'a>>;
+    type Item = Option<HashMapEntityRef<'a>>;
     fn next(&mut self) -> Option<Self::Item> {
         self.hash_set_iter.next().map(|id| {
             self.entities.get(*id)
@@ -97,11 +114,11 @@ impl EntityContext {
         self.entities.remove(id)
     }
 
-    pub fn get(&self, id: EntityId) -> Option<EntityRef> {
+    pub fn get(&self, id: EntityId) -> Option<HashMapEntityRef> {
         self.entities.get(id)
     }
 
-    pub fn get_mut(&mut self, id: EntityId) -> Option<EntityMutRef> {
+    pub fn get_mut(&mut self, id: EntityId) -> Option<HashMapEntityRefMut> {
         self.entities.get_mut(id)
     }
 

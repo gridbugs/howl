@@ -4,14 +4,17 @@ use game::knowledge::{
 };
 use game::{
     Entity,
-    EntityRef,
     ComponentType as CType,
+    EntityWrapper,
+    EntityRef,
+    IterEntityRef,
 };
 
 use best::BestMap;
 use renderer::ComplexTile;
 use object_pool::ObjectPool;
 use grid::StaticGrid;
+use table::TableRefMut;
 
 use std::collections::HashSet;
 
@@ -52,7 +55,12 @@ impl KnowledgeCell for DrawableCell {
         self.moonlight = false;
     }
 
-    fn update(&mut self, entity: EntityRef, turn_count: u64, _: &Self::MetaData) {
+    fn update<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+        &mut self,
+        entity: E,
+        turn_count: u64,
+        _: &Self::MetaData)
+    {
         // update set of component types
         for component_type in entity.types() {
             self.component_types.insert(*component_type);
@@ -87,7 +95,7 @@ impl KnowledgeCell for DrawableCell {
 }
 
 impl DrawableCell {
-    fn update_memory(memory: &mut Entity, entity: EntityRef) {
+    fn update_memory<'a, E: EntityRef<'a>>(memory: &mut Entity, entity: E) {
         entity.get(CType::Solid).map(|c| memory.add(c.clone()));
     }
 }

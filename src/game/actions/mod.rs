@@ -6,6 +6,8 @@ use game::{
     EntityContext,
     Speed,
     StatusCounter,
+    entities,
+    EntityWrapper,
 };
 use game::Component::*;
 use game::ComponentType as CType;
@@ -16,7 +18,6 @@ use game::components::{
     DoorState,
     Form,
 };
-use game::entities;
 
 use geometry::{
     direction,
@@ -26,8 +27,9 @@ use geometry::{
 use renderer::tile;
 use colour::ansi;
 use terminal::style;
+use table::TableRefMut;
 
-pub fn walk(entity: EntityRef, direction: Direction) -> UpdateSummary {
+pub fn walk<'a, E: EntityRef<'a>>(entity: E, direction: Direction) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
@@ -61,7 +63,9 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     summary
 }
 
-pub fn fire_single_bullet(source: EntityRef, direction: Direction, entities: &EntityContext) -> UpdateSummary {
+pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
+    source: E, direction: Direction, entities: &EntityContext) -> UpdateSummary
+{
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
@@ -81,9 +85,9 @@ pub fn fire_single_bullet(source: EntityRef, direction: Direction, entities: &En
     summary
 }
 
-pub fn burst_fire_bullet(source: EntityRef, direction: Direction,
-                         num_bullets: u64, period: u64)
-    -> UpdateSummary
+pub fn burst_fire_bullet<'a, E: EntityRef<'a>>(
+    source: E, direction: Direction,
+    num_bullets: u64, period: u64) -> UpdateSummary
 {
     let mut summary = UpdateSummary::new();
 
@@ -104,7 +108,9 @@ pub fn burst_fire_bullet(source: EntityRef, direction: Direction,
     summary
 }
 
-pub fn fire_bullets_all_axes(source: EntityRef, entities: &EntityContext) -> UpdateSummary {
+pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
+    source: E, entities: &EntityContext) -> UpdateSummary
+{
     let mut summary = UpdateSummary::new();
 
     let level = source.on_level().unwrap();
@@ -147,7 +153,7 @@ pub fn add_entity(entity: Entity, entities: &EntityContext) -> UpdateSummary {
     summary
 }
 
-pub fn remove_entity(entity: EntityRef) -> UpdateSummary {
+pub fn remove_entity<'a, E: EntityRef<'a>>(entity: E) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.remove_entity(entity.id().unwrap());
@@ -162,7 +168,9 @@ pub fn wait() -> UpdateSummary {
     summary
 }
 
-pub fn beast_transform_progress(entity: EntityRef, progress: isize) -> UpdateSummary {
+pub fn beast_transform_progress<'a, E: EntityRef<'a>>(
+    entity: E, progress: isize) -> UpdateSummary
+{
     let mut summary = UpdateSummary::new();
 
     let mut counter = entity.beast_transform().unwrap();
@@ -174,7 +182,7 @@ pub fn beast_transform_progress(entity: EntityRef, progress: isize) -> UpdateSum
     summary
 }
 
-pub fn human_transform_progress(entity: EntityRef, progress: isize) -> UpdateSummary {
+pub fn human_transform_progress<'a, E: EntityRef<'a>>(entity: E, progress: isize) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let mut counter = entity.human_transform().unwrap();

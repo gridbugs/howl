@@ -4,11 +4,11 @@ use game::{
 };
 
 use table::{
-    HashMapTable,
+    Table,
     ToType,
 };
 
-pub type Metadata = HashMapTable<MetadatumType, Metadatum>;
+pub type Metadata = Table<MetadatumType, Metadatum>;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum MetadatumType {

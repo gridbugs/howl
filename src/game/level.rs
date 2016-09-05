@@ -1,12 +1,12 @@
 use game::{
     EntityId,
-    EntityRef,
     EntityContext,
     EntityTable,
     TurnSchedule,
     SpacialHashMap,
     SpacialHashCell,
     UpdateSummary,
+    EntityWrapper,
 };
 use game::Component::*;
 use game::ComponentType as CType;
@@ -26,9 +26,10 @@ use geometry::{
     Vector3,
 };
 
+use table::TableRef;
+
 use std::cell::RefCell;
 use std::collections::HashSet;
-use std::collections::hash_set;
 
 pub type LevelSpacialHashMap =
     SpacialHashMap<StaticGrid<SpacialHashCell>>;
@@ -48,20 +49,6 @@ pub struct Level {
     perlin_min: f64,
     perlin_max: f64,
     perlin_change: Vector3<f64>,
-}
-
-pub struct EntityIter<'a> {
-    hash_set_iter: hash_set::Iter<'a, EntityId>,
-    entities: &'a EntityContext,
-}
-
-impl<'a> Iterator for EntityIter<'a> {
-    type Item = EntityRef<'a>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.hash_set_iter.next().map(|id| {
-            self.entities.get(*id).unwrap()
-        })
-    }
 }
 
 impl Level {
@@ -96,13 +83,6 @@ impl Level {
         for entity_id in self.entities.clone() {
             let entity = entities.get(entity_id).unwrap();
             self.spacial_hash.add_entity(entity, turn_count);
-        }
-    }
-
-    pub fn entities<'a>(&'a self, entities: &'a EntityContext) -> EntityIter<'a> {
-        EntityIter {
-            hash_set_iter: self.entities.iter(),
-            entities: entities,
         }
     }
 

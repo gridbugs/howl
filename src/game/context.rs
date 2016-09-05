@@ -11,6 +11,7 @@ use game::{
     LevelId,
     ComponentType,
     actions,
+    EntityWrapper,
 };
 use game::components::Form;
 
@@ -29,6 +30,8 @@ use terminal::window_manager::{
     WindowRef,
     InputSource
 };
+
+use table::TableRef;
 
 use std::cell;
 use std::collections::VecDeque;

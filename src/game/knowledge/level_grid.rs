@@ -1,6 +1,7 @@
 use game::{
     EntityId,
     EntityRef,
+    IterEntityRef,
     EntityContext,
     SpacialHashCell,
 };
@@ -18,7 +19,11 @@ pub trait KnowledgeCell: Default {
     type MetaData;
 
     fn clear(&mut self);
-    fn update(&mut self, entity: EntityRef, turn_count: u64, meta: &Self::MetaData);
+    fn update<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+        &mut self,
+        entity: E,
+        turn_count: u64,
+        meta: &Self::MetaData);
     fn last_updated(&self) -> u64;
     fn set_last_updated(&mut self, last_updated: u64);
 }

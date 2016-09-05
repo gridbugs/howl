@@ -2,6 +2,7 @@ use game::{
     Observer,
     EntityId,
     EntityContext,
+    EntityWrapper,
 };
 
 use vision::{

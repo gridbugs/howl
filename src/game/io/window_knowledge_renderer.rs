@@ -1,6 +1,7 @@
 use game::{
     EntityContext,
     EntityId,
+    EntityWrapper,
 };
 use game::knowledge::DrawableCell;
 

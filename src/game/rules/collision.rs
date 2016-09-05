@@ -4,9 +4,12 @@ use game::{
     ComponentType,
     RuleResult,
     RuleContext,
+    EntityWrapper,
 };
 
 use game::update::Metadatum::*;
+
+use table::TableRef;
 
 pub fn detect_collision(ctx: RuleContext)
     -> RuleResult

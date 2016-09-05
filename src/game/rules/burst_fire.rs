@@ -3,6 +3,7 @@ use game::{
     actions,
     RuleResult,
     RuleContext,
+    EntityWrapper,
 };
 
 use game::update::Metadatum::*;

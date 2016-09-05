@@ -3,6 +3,7 @@ use game::{
     rule,
     RuleResult,
     RuleContext,
+    EntityWrapper,
 };
 
 pub fn beast_transformation(ctx: RuleContext) -> RuleResult {
