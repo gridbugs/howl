@@ -28,6 +28,7 @@ use std::collections::{
     HashSet,
     hash_set,
     HashMap,
+    hash_map,
 };
 use std::cell::RefCell;
 
@@ -35,13 +36,48 @@ pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
 pub type EntityTable = TableTable<ComponentType, Component>;
 
+#[derive(Clone, Copy)]
+pub struct EntityRef<'a>(&'a Entity);
+
+impl<'a> EntityRef<'a> {
+
+    // TODO: remove this
+    pub fn new(entity: &'a Entity) -> Self {
+        EntityRef(entity)
+    }
+
+    pub fn has(self, component_type: ComponentType) -> bool {
+        self.0.has(component_type)
+    }
+
+    pub fn get(self, component_type: ComponentType) -> Option<&'a Component> {
+        self.0.get(component_type)
+    }
+
+    pub fn id(self) -> Option<EntityId> {
+        self.0.id
+    }
+
+    pub fn slots(self) -> hash_map::Iter<'a, ComponentType, Component> {
+        self.0.slots()
+    }
+
+    pub fn entries(self) -> hash_map::Values<'a, ComponentType, Component> {
+        self.0.entries()
+    }
+
+    pub fn types(self) -> hash_map::Keys<'a, ComponentType, Component> {
+        self.0.types()
+    }
+}
+
 pub struct EntityIter<'a> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
-    entities: &'a EntityTable,
+    entities: &'a EntityContext,
 }
 
 impl<'a> Iterator for EntityIter<'a> {
-    type Item = Option<&'a Entity>;
+    type Item = Option<EntityRef<'a>>;
     fn next(&mut self) -> Option<Self::Item> {
         self.hash_set_iter.next().map(|id| {
             self.entities.get(*id)
@@ -93,8 +129,8 @@ impl EntityContext {
         self.entities.remove(id)
     }
 
-    pub fn get(&self, id: EntityId) -> Option<&Entity> {
-        self.entities.get(id)
+    pub fn get(&self, id: EntityId) -> Option<EntityRef> {
+        self.entities.get(id).map(EntityRef)
     }
 
     pub fn get_mut(&mut self, id: EntityId) -> Option<&mut Entity> {
@@ -104,7 +140,7 @@ impl EntityContext {
     pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>) -> EntityIter<'a> {
         EntityIter {
             hash_set_iter: set.iter(),
-            entities: &self.entities,
+            entities: &self,
         }
     }
 

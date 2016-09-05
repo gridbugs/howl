@@ -1,6 +1,7 @@
 use clear::Clear;
 
 use std::collections::HashMap;
+use std::collections::hash_map;
 use std::hash::Hash;
 
 pub trait ToType<EntryType> {
@@ -47,6 +48,18 @@ impl<EntryType, Entry> Table<EntryType, Entry>
 
     pub fn has(&self, t: EntryType) -> bool {
         self.slots.contains_key(&t)
+    }
+
+    pub fn slots<'a>(&'a self) -> hash_map::Iter<'a, EntryType, Entry> {
+        self.slots.iter()
+    }
+
+    pub fn entries<'a>(&'a self) -> hash_map::Values<'a, EntryType, Entry> {
+        self.slots.values()
+    }
+
+    pub fn types<'a>(&'a self) -> hash_map::Keys<'a, EntryType, Entry> {
+        self.slots.keys()
     }
 }
 

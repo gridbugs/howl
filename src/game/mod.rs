@@ -1,6 +1,7 @@
 #[macro_use] mod entity;
 pub use self::entity::{
     EntityId,
+    EntityRef,
     Entity,
     Component,
     ComponentType,

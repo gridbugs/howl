@@ -4,6 +4,7 @@ use game::knowledge::{
 };
 use game::{
     Entity,
+    EntityRef,
     ComponentType as CType,
 };
 
@@ -51,9 +52,9 @@ impl KnowledgeCell for DrawableCell {
         self.moonlight = false;
     }
 
-    fn update(&mut self, entity: &Entity, turn_count: u64, _: &Self::MetaData) {
+    fn update(&mut self, entity: EntityRef, turn_count: u64, _: &Self::MetaData) {
         // update set of component types
-        for component_type in entity.slots.keys() {
+        for component_type in entity.types() {
             self.component_types.insert(*component_type);
         }
 
@@ -86,7 +87,7 @@ impl KnowledgeCell for DrawableCell {
 }
 
 impl DrawableCell {
-    fn update_memory(memory: &mut Entity, entity: &Entity) {
+    fn update_memory(memory: &mut Entity, entity: EntityRef) {
         entity.get(CType::Solid).map(|c| memory.add(c.clone()));
     }
 }

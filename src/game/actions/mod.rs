@@ -1,5 +1,6 @@
 use game::{
     EntityId,
+    EntityRef,
     Entity,
     UpdateSummary,
     EntityContext,
@@ -23,11 +24,11 @@ use renderer::tile;
 use colour::ansi;
 use terminal::style;
 
-pub fn walk(entity: &Entity, direction: Direction) -> UpdateSummary {
+pub fn walk(entity: EntityRef, direction: Direction) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
-    summary.add_component(entity.id.unwrap(), Position(vec));
+    summary.add_component(entity.id().unwrap(), Position(vec));
 
     summary.set_metadata(Name("walk"));
     summary
@@ -57,7 +58,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     summary
 }
 
-pub fn fire_single_bullet(source: &Entity, direction: Direction, entities: &EntityContext) -> UpdateSummary {
+pub fn fire_single_bullet(source: EntityRef, direction: Direction, entities: &EntityContext) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
@@ -77,7 +78,7 @@ pub fn fire_single_bullet(source: &Entity, direction: Direction, entities: &Enti
     summary
 }
 
-pub fn burst_fire_bullet(source: &Entity, direction: Direction,
+pub fn burst_fire_bullet(source: EntityRef, direction: Direction,
                          num_bullets: u64, period: u64)
     -> UpdateSummary
 {
@@ -100,7 +101,7 @@ pub fn burst_fire_bullet(source: &Entity, direction: Direction,
     summary
 }
 
-pub fn fire_bullets_all_axes(source: &Entity, entities: &EntityContext) -> UpdateSummary {
+pub fn fire_bullets_all_axes(source: EntityRef, entities: &EntityContext) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let level = source.on_level().unwrap();
@@ -121,11 +122,11 @@ pub fn fire_bullets_all_axes(source: &Entity, entities: &EntityContext) -> Updat
     summary
 }
 
-pub fn axis_velocity_move(entity: &Entity, direction: Direction, speed: Speed) -> UpdateSummary {
+pub fn axis_velocity_move(entity: EntityRef, direction: Direction, speed: Speed) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
-    summary.add_component(entity.id.unwrap(), Position(vec));
+    summary.add_component(entity.id().unwrap(), Position(vec));
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
     summary.set_metadata(AxisVelocityMovement);
@@ -143,10 +144,10 @@ pub fn add_entity(entity: Entity, entities: &EntityContext) -> UpdateSummary {
     summary
 }
 
-pub fn remove_entity(entity: &Entity) -> UpdateSummary {
+pub fn remove_entity(entity: EntityRef) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
-    summary.remove_entity(entity.id.unwrap());
+    summary.remove_entity(entity.id().unwrap());
 
     summary.set_metadata(Name("remove_entity"));
     summary
@@ -158,25 +159,25 @@ pub fn wait() -> UpdateSummary {
     summary
 }
 
-pub fn beast_transform_progress(entity: &Entity, progress: isize) -> UpdateSummary {
+pub fn beast_transform_progress(entity: EntityRef, progress: isize) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let mut counter = entity.beast_transform().unwrap();
     counter.change(progress);
 
-    summary.add_component(entity.id.unwrap(), BeastTransform(counter));
+    summary.add_component(entity.id().unwrap(), BeastTransform(counter));
 
     summary.set_metadata(Name("beast_transform_progress"));
     summary
 }
 
-pub fn human_transform_progress(entity: &Entity, progress: isize) -> UpdateSummary {
+pub fn human_transform_progress(entity: EntityRef, progress: isize) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let mut counter = entity.human_transform().unwrap();
     counter.change(progress);
 
-    summary.add_component(entity.id.unwrap(), HumanTransform(counter));
+    summary.add_component(entity.id().unwrap(), HumanTransform(counter));
 
     summary.set_metadata(Name("human_transform_progress"));
     summary

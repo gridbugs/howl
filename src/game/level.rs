@@ -1,6 +1,6 @@
 use game::{
-    Entity,
     EntityId,
+    EntityRef,
     EntityContext,
     EntityTable,
     TurnSchedule,
@@ -56,7 +56,7 @@ pub struct EntityIter<'a> {
 }
 
 impl<'a> Iterator for EntityIter<'a> {
-    type Item = &'a Entity;
+    type Item = EntityRef<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.hash_set_iter.next().map(|id| {
             self.entities.get(*id).unwrap()
@@ -94,7 +94,7 @@ impl Level {
     // Makes the bookkeeping info reflect the contents of entities
     pub fn finalise(&mut self, entities: &EntityTable, turn_count: u64) {
         for entity_id in self.entities.clone() {
-            let entity = entities.get(entity_id).unwrap();
+            let entity = EntityRef::new(entities.get(entity_id).unwrap());
             self.spacial_hash.add_entity(entity, turn_count);
         }
     }
@@ -147,9 +147,9 @@ impl Level {
                     }
 
                     if new {
-                        update.add_component(entity.id.unwrap(), Moon);
+                        update.add_component(entity.id().unwrap(), Moon);
                     } else {
-                        update.remove_component(entity.id.unwrap(), CType::Moon);
+                        update.remove_component(entity.id().unwrap(), CType::Moon);
                     }
                 }
             }

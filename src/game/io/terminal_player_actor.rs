@@ -1,6 +1,6 @@
 use game::{
     EntityId,
-    Entity,
+    EntityRef,
     EntityContext,
     MetaAction,
     UpdateSummary,
@@ -60,14 +60,14 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn close_door(entity: &Entity, entities: &EntityContext) -> Option<UpdateSummary> {
+fn close_door(entity: EntityRef, entities: &EntityContext) -> Option<UpdateSummary> {
     let sh = entities.spacial_hash(entity.on_level().unwrap()).unwrap();
 
     for cell in sh.grid.some_nei_iter(entity.position().unwrap()) {
         if cell.has(CType::Door) {
             for e in entities.id_set_iter(&cell.entities) {
                 if let Some(DoorState::Open) = e.unwrap().door_state() {
-                    return Some(actions::close_door(e.unwrap().id()));
+                    return Some(actions::close_door(e.unwrap().id().unwrap()));
                 }
             }
         }
@@ -84,7 +84,7 @@ fn get_direction(input_source: &InputSource) -> Option<Direction> {
     }
 }
 
-fn event_to_action(event: Event, entity: &Entity, entities: &EntityContext, input_source: &InputSource) -> Option<UpdateSummary> {
+fn event_to_action(event: Event, entity: EntityRef, entities: &EntityContext, input_source: &InputSource) -> Option<UpdateSummary> {
     match event {
         Event::Char('f') => {
             get_direction(input_source).map(|d| {
@@ -102,7 +102,7 @@ fn event_to_action(event: Event, entity: &Entity, entities: &EntityContext, inpu
     }
 }
 
-fn event_to_meta_action(event: Event, entity: &Entity, entities: &EntityContext) -> Option<MetaAction> {
+fn event_to_meta_action(event: Event, entity: EntityRef, entities: &EntityContext) -> Option<MetaAction> {
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),
         Event::Char('q') => Some(MetaAction::Quit),
