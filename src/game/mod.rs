@@ -5,9 +5,10 @@ pub use self::entity::{
     IterEntityRef,
     EntityRefMut,
     Entity,
+    EntityTable,
     Component,
     ComponentType,
-    EntityTable,
+    HashMapEntityTable,
     HashMapEntityRef,
     HashMapEntityRefMut,
 };

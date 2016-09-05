@@ -2,11 +2,12 @@ use game::{
     EntityId,
     HashMapEntityRef,
     HashMapEntityRefMut,
-    EntityTable,
+    HashMapEntityTable,
     Level,
     LevelId,
     Entity,
     LevelSpacialHashMap,
+    EntityTable,
 };
 
 use reserver::LeakyReserver;
@@ -21,22 +22,24 @@ use std::collections::{
 
 use std::cell::RefCell;
 
-pub struct EntityIter<'a> {
+pub struct EntityIter<'a, Tab: 'a + EntityTable<'a>> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
-    entities: &'a EntityContext,
+    entities: &'a Tab,
 }
 
-impl<'a> Iterator for EntityIter<'a> {
-    type Item = Option<HashMapEntityRef<'a>>;
+impl<'a, Tab: 'a + EntityTable<'a>> Iterator for EntityIter<'a, Tab> {
+    type Item = Option<Tab::Ref>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.hash_set_iter.next().map(|id| {
-            self.entities.get(*id)
-        })
+        if let Some(id) = self.hash_set_iter.next() {
+            Some(self.entities.get(*id))
+        } else {
+            None
+        }
     }
 }
 
 pub struct EntityContext {
-    pub entities: EntityTable,
+    pub entities: HashMapEntityTable,
     pub levels: HashMap<LevelId, Level>,
     level_reserver: RefCell<LeakyReserver>,
     entity_reserver: RefCell<LeakyReserver>,
@@ -45,7 +48,7 @@ pub struct EntityContext {
 impl EntityContext {
     pub fn new() -> Self {
         EntityContext {
-            entities: EntityTable::new(),
+            entities: HashMapEntityTable::new(),
             levels: HashMap::new(),
             level_reserver: RefCell::new(LeakyReserver::new()),
             entity_reserver: RefCell::new(LeakyReserver::new()),
@@ -102,10 +105,12 @@ impl EntityContext {
         self.entities.get_mut(id)
     }
 
-    pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>) -> EntityIter<'a> {
+    pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>)
+        -> EntityIter<'a, HashMapEntityTable>
+    {
         EntityIter {
             hash_set_iter: set.iter(),
-            entities: &self,
+            entities: &self.entities,
         }
     }
 

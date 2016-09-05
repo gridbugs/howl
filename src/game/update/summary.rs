@@ -4,7 +4,7 @@ use game::{
     ComponentType,
     Component,
     EntityContext,
-    EntityTable,
+    HashMapEntityTable,
     LevelId,
     Level,
     EntityWrapper,
@@ -104,7 +104,7 @@ impl UpdateSummary {
         }
     }
 
-    fn update_spacial_hashes(&self, levels: &mut HashMap<LevelId, Level>, entities: &EntityTable, turn_count: u64) {
+    fn update_spacial_hashes(&self, levels: &mut HashMap<LevelId, Level>, entities: &HashMapEntityTable, turn_count: u64) {
         self.update_levels(entities);
 
         for level_id in self.levels.borrow().iter() {
@@ -113,7 +113,7 @@ impl UpdateSummary {
         }
     }
 
-    fn update_levels(&self, entities: &EntityTable) {
+    fn update_levels(&self, entities: &HashMapEntityTable) {
         let mut levels = self.levels.borrow_mut();
         levels.clear();
 

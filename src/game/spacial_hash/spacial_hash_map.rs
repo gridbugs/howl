@@ -2,7 +2,7 @@ use game::{
     EntityId,
     Component,
     ComponentType,
-    EntityTable,
+    HashMapEntityTable,
     UpdateSummary,
     EntityWrapper,
     EntityRef,
@@ -295,7 +295,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
     }
 
     /// Update the spacial hash's metadata. This should be called before the update is applied.
-    pub fn update(&mut self, update: &UpdateSummary, entities: &EntityTable, turn_count: u64) {
+    pub fn update(&mut self, update: &UpdateSummary, entities: &HashMapEntityTable, turn_count: u64) {
         for entity in update.added_entities.values() {
             if self.entity_is_on_level(entity) {
                 self.add_entity(entity, turn_count);

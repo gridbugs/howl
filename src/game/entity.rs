@@ -13,6 +13,7 @@ use table::{
     TableId,
     ToType,
     Table,
+    TableTable,
     HashMapTableRef,
     HashMapTableRefMut,
     HashMapTableTable,
@@ -31,10 +32,14 @@ use std::cell::RefCell;
 
 pub type HashMapEntityRef<'a> = HashMapTableRef<'a, ComponentType, Component>;
 pub type HashMapEntityRefMut<'a> = HashMapTableRefMut<'a, ComponentType, Component>;
+pub type HashMapEntityTable = HashMapTableTable<ComponentType, Component>;
 
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
-pub type EntityTable = HashMapTableTable<ComponentType, Component>;
+
+pub trait EntityTable<'a>: TableTable<'a, ComponentType, Component> {}
+
+impl<'a> EntityTable<'a> for HashMapEntityTable {}
 
 pub trait EntityRef<'a>: TableRef<'a, ComponentType, Component> {}
 pub trait IterEntityRef<'a>: IterTableRef<'a, ComponentType, Component> {}
