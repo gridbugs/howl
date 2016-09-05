@@ -18,8 +18,11 @@ use game::components::{
 };
 use game::entities;
 
-use geometry::direction::Direction;
-use geometry::direction;
+use geometry::{
+    direction,
+    Direction,
+    Vector2,
+};
 use renderer::tile;
 use colour::ansi;
 use terminal::style;
@@ -122,11 +125,11 @@ pub fn fire_bullets_all_axes(source: EntityRef, entities: &EntityContext) -> Upd
     summary
 }
 
-pub fn axis_velocity_move(entity: EntityRef, direction: Direction, speed: Speed) -> UpdateSummary {
+pub fn axis_velocity_move(entity_id: EntityId, position: Vector2<isize>, direction: Direction, speed: Speed) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
-    let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
-    summary.add_component(entity.id().unwrap(), Position(vec));
+    let vec = position + direction.vector();
+    summary.add_component(entity_id, Position(vec));
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
     summary.set_metadata(AxisVelocityMovement);

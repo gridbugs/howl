@@ -30,6 +30,10 @@ impl<EntryType, Entry> Table<EntryType, Entry>
         }
     }
 
+    pub fn id(&self) -> Option<TableId> {
+        self.id
+    }
+
     pub fn add(&mut self, entry: Entry) -> Option<Entry> {
         self.slots.insert(entry.to_type(), entry)
     }
