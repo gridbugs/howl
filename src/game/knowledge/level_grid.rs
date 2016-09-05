@@ -52,8 +52,8 @@ impl<G> KnowledgeGrid<G>
     {
         let mut changed = false;
         for (coord, meta) in report_iter {
-            let sh_cell = &grid.get(*coord).unwrap();
-            let mut kn_cell = &mut self.grid.get_mut(*coord).unwrap();
+            let sh_cell = &grid.get_unsafe(*coord);
+            let mut kn_cell = &mut self.grid.get_mut_unsafe(*coord);
 
             // If the last update to the cell was before the last
             // time the cell was observed, we can skip updating

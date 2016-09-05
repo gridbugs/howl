@@ -101,12 +101,8 @@ impl<T> StaticGrid<T> {
         }
     }
 
-    fn to_index(&self, coord: Coord) -> Option<usize> {
-        if self.is_valid_coord(coord) {
-            Some((coord.x + coord.y * (self.width as isize)) as usize)
-        } else {
-            None
-        }
+    fn to_index(&self, coord: Coord) -> usize {
+        coord.x as usize + (coord.y as usize) * self.width
     }
 }
 
@@ -122,12 +118,29 @@ impl<T> Grid for StaticGrid<T> {
         }
     }
 
+    fn get_unsafe(&self, coord: Coord) -> &Self::Item {
+        &self.elements[self.to_index(coord)]
+    }
+
+    fn get_mut_unsafe(&mut self, coord: Coord) -> &mut Self::Item {
+        let index = self.to_index(coord);
+        &mut self.elements[index]
+    }
+
     fn get(&self, coord: Coord) -> Option<&T> {
-        self.to_index(coord).map(|index| { &self.elements[index] })
+        if self.is_valid_coord(coord) {
+            Some(self.get_unsafe(coord))
+        } else {
+            None
+        }
     }
 
     fn get_mut(&mut self, coord: Coord) -> Option<&mut T> {
-        self.to_index(coord).map(move |index| { &mut self.elements[index] })
+        if self.is_valid_coord(coord) {
+            Some(self.get_mut_unsafe(coord))
+        } else {
+            None
+        }
     }
 
     fn limits_min(&self) -> Coord {

@@ -379,7 +379,7 @@ impl Shadowcast {
             }
 
             // look up the cell with opacity
-            let cell = args.grid.get(coord).unwrap();
+            let cell = args.grid.get_unsafe(coord);
 
             // compute current visibility
             let current_visibility = (scan.frame.visibility - cell.opacity()).max(0.0);

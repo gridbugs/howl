@@ -147,12 +147,20 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
+    pub fn get_unsafe(&self, coord: (isize, isize)) -> &SpacialHashCell {
+        self.grid.get_unsafe(Vector2::from_tuple(coord))
+    }
+
     pub fn get(&self, coord: (isize, isize)) -> Option<&SpacialHashCell> {
         self.grid.get(Vector2::from_tuple(coord))
     }
 
     fn get_mut(&mut self, coord: (isize, isize)) -> Option<&mut SpacialHashCell> {
         self.grid.get_mut(Vector2::from_tuple(coord))
+    }
+
+    fn get_mut_unsafe(&mut self, coord: (isize, isize)) -> &mut SpacialHashCell {
+        self.grid.get_mut_unsafe(Vector2::from_tuple(coord))
     }
 
     fn add_component_entity(&mut self, component_type: ComponentType, entity_id: EntityId) {
@@ -171,7 +179,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
 
     pub fn add_entity(&mut self, entity: EntityRef, turn_count: u64) {
         if let Some(vec) = entity.position() {
-            let cell = self.get_mut(vec.to_tuple()).unwrap();
+            let cell = self.get_mut_unsafe(vec.to_tuple());
             cell.add_entity(entity);
             cell.last_updated = turn_count;
         }
@@ -184,7 +192,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
 
     pub fn remove_entity(&mut self, entity: EntityRef, turn_count: u64) {
         if let Some(vec) = entity.position() {
-            let cell = self.get_mut(vec.to_tuple()).unwrap();
+            let cell = self.get_mut_unsafe(vec.to_tuple());
             cell.remove_entity(entity);
             cell.last_updated = turn_count;
         }
@@ -206,14 +214,14 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
             // position is special as it indicates which cell to update
             if let Some(old_position) = entity.position() {
                 // entity is moving from old_position to new_position
-                let mut cell = self.get_mut(old_position.to_tuple()).unwrap();
+                let mut cell = self.get_mut_unsafe(old_position.to_tuple());
                 cell.remove_entity(entity);
                 cell.last_updated = turn_count;
             }
 
             // the entity's position is changing or the entity is gaining a position
             // in either case, add the entity to the position's cell
-            self.get_mut(new_position.to_tuple()).unwrap().add_entity(entity);
+            self.get_mut_unsafe(new_position.to_tuple()).add_entity(entity);
 
             // entity will eventually end up here
             Some(new_position)
@@ -226,7 +234,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         };
 
         if let Some(position) = position {
-            let mut cell = self.get_mut(position.to_tuple()).unwrap();
+            let mut cell = self.get_mut_unsafe(position.to_tuple());
             for (component_type, new_component) in changes.slots() {
                 if *component_type == ComponentType::Position {
                     // this has already been handled
@@ -262,7 +270,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
                 // removing position - remove the entity
                 self.remove_entity(entity, turn_count);
             } else {
-                let mut cell = self.get_mut(position.to_tuple()).unwrap();
+                let mut cell = self.get_mut_unsafe(position.to_tuple());
                 for component_type in component_types {
                     if let Some(ref component) = entity.get(*component_type) {
                         cell.remove_component(entity, component);

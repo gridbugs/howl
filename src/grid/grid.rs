@@ -20,6 +20,9 @@ pub trait Grid {
     fn get(&self, coord: Coord) -> Option<&Self::Item>;
     fn get_mut(&mut self, coord: Coord) -> Option<&mut Self::Item>;
 
+    fn get_unsafe(&self, coord: Coord) -> &Self::Item;
+    fn get_mut_unsafe(&mut self, coord: Coord) -> &mut Self::Item;
+
     fn get_nei(&self, coord: Coord, direction: Direction) -> Option<&Self::Item> {
         self.get(coord + direction.vector())
     }
