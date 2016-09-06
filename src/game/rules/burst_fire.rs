@@ -15,7 +15,7 @@ pub fn burst_fire(ctx: RuleContext)
         ctx.update.burst_fire()
     {
         let mut spawn_bullet =
-            actions::add_entity(prototype.clone(), ctx.entities);
+            actions::add_entity(prototype.clone(), ctx.entity_context);
         let (_, speed) = prototype.axis_velocity().unwrap();
 
         spawn_bullet.set_metadata(ActionTime(speed.ms_per_cell()));

@@ -6,10 +6,8 @@ use game::{
     EntityContext,
     EntityRef,
     IterEntityRef,
-    IdEntityRef,
     EntityTable,
     LevelId,
-    Level,
     EntityWrapper,
 };
 use game::update::{
@@ -78,44 +76,31 @@ impl UpdateSummary {
         self.removed_components.get_mut(&entity).unwrap().insert(component_type);
     }
 
-    pub fn commit(mut self, entities: &mut EntityContext, turn_count: u64) {
+    pub fn commit(mut self, entities: &mut EntityContext, level_id: LevelId, turn_count: u64) {
 
-        self.update_spacial_hashes(&mut entities.levels, &entities.entities, turn_count);
+        entities.level_mut(level_id).unwrap().update_spacial_hash(&self, turn_count);
 
         for (id, entity) in self.added_entities.drain() {
-            entities.add(id, entity);
+            entities.add(id, level_id, entity);
         }
 
         for entity_id in self.removed_entities.drain() {
-            entities.remove(entity_id).
+            entities.remove(entity_id, level_id).
                 expect("Tried to remove non-existent entity.");
         }
 
         for (entity_id, mut changes) in self.added_components.drain() {
-            let mut entity = entities.get_mut(entity_id).unwrap();
+            let mut entity = entities.get_mut(entity_id, level_id).unwrap();
             for (_, component) in changes.slots.drain() {
                 entity.add(component);
             }
         }
 
         for (entity_id, mut component_types) in self.removed_components.drain() {
-            let mut entity = entities.get_mut(entity_id).unwrap();
+            let mut entity = entities.get_mut(entity_id, level_id).unwrap();
             for component_type in component_types.drain() {
                 entity.remove(component_type);
             }
-        }
-    }
-
-    fn update_spacial_hashes<'a, T>(&self, levels: &mut Vec<Level>,
-                                    entities: &'a T, turn_count: u64)
-    where T: EntityTable<'a>,
-          <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,
-    {
-        self.update_levels(entities);
-
-        for level_id in self.levels.borrow().iter() {
-            let mut level = &mut levels[*level_id];
-            level.spacial_hash.update(self, entities, turn_count);
         }
     }
 

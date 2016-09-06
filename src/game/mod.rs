@@ -1,4 +1,5 @@
 #[macro_use] mod entity;
+
 pub use self::entity::{
     EntityId,
     EntityRef,
@@ -17,6 +18,11 @@ pub use self::entity::{
 mod entity_context;
 pub use self::entity_context::{
     EntityContext,
+};
+
+mod entity_store;
+pub use self::entity_store::{
+    EntityStore,
 };
 
 pub mod io;
@@ -54,7 +60,6 @@ pub use self::spacial_hash::{
 };
 
 pub mod observer;
-pub use self::observer::Observer;
 
 pub mod knowledge;
 

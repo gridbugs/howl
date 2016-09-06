@@ -1,7 +1,8 @@
 use game::{
-    EntityContext,
+    Level,
     EntityId,
     EntityWrapper,
+    EntityStore,
 };
 use game::knowledge::DrawableCell;
 
@@ -74,7 +75,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
     }
 
     pub fn render(&self,
-                  entities: &EntityContext,
+                  entities: &Level,
                   entity_id: EntityId,
                   turn_count: u64)
     {

@@ -5,6 +5,9 @@ use game::{
     UpdateSummary,
     EntityWrapper,
     EntityRef,
+    EntityStore,
+    LevelId,
+    Level,
 };
 use game::ComponentType as CType;
 
@@ -20,19 +23,22 @@ const ETX: char = '\u{3}';
 
 pub fn act<'a>(input_source: &InputSource<'a>,
                        entity_id: EntityId,
-                       entities: &EntityContext)
+                       level_id: LevelId,
+                       ctx: &EntityContext)
     -> Option<MetaAction>
 {
-    let entity = entities.get(entity_id).unwrap();
+    let level = ctx.level(level_id).unwrap();
+    let entity = level.get(entity_id).unwrap();
+
 
     if let Some(event) = input_source.get_event() {
         if let Some(direction) = event_to_direction(event) {
             Some(MetaAction::Update(actions::walk(entity, direction)))
         } else {
-            if let Some(update) = event_to_action(event, entity, entities, input_source) {
+            if let Some(update) = event_to_action(event, entity, ctx, input_source) {
                 Some(MetaAction::Update(update))
             } else {
-                event_to_meta_action(event, entity, entities)
+                event_to_meta_action(event, entity, level)
             }
         }
     } else {
@@ -61,8 +67,8 @@ fn event_to_direction(event: Event) -> Option<Direction> {
     }
 }
 
-fn close_door<'a, E: EntityRef<'a>>(entity: E, entities: &EntityContext) -> Option<UpdateSummary> {
-    let sh = entities.spacial_hash(entity.on_level().unwrap()).unwrap();
+fn close_door<'a, E: EntityRef<'a>>(entity: E, entities: &Level) -> Option<UpdateSummary> {
+    let sh = entities.spacial_hash();
 
     for cell in sh.grid.some_nei_iter(entity.position().unwrap()) {
         if cell.has(CType::Door) {
@@ -108,7 +114,7 @@ fn event_to_action<'a, E: EntityRef<'a>>(
 }
 
 fn event_to_meta_action<'a, E: EntityRef<'a>>(
-    event: Event, entity: E, entities: &EntityContext) -> Option<MetaAction>
+    event: Event, entity: E, entities: &Level) -> Option<MetaAction>
 {
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),

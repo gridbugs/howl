@@ -3,6 +3,7 @@ use game::{
     RuleResult,
     RuleContext,
     EntityWrapper,
+    EntityStore,
 };
 
 pub fn maintain_velocity_movement(ctx: RuleContext)
@@ -12,7 +13,7 @@ pub fn maintain_velocity_movement(ctx: RuleContext)
 
     if ctx.update.is_axis_velocity() {
         for (entity_id, _) in &ctx.update.added_components {
-            let entity = ctx.entities.get(*entity_id).unwrap();
+            let entity = ctx.level.get(*entity_id).unwrap();
             if let Some((direction, speed)) = entity.axis_velocity() {
                 let position = entity.position().unwrap();
                 reactions.push((0, actions::axis_velocity_move(*entity_id, position, direction, speed)));

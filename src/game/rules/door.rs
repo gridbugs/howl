@@ -5,6 +5,7 @@ use game::{
     actions,
     rule,
     EntityWrapper,
+    EntityStore,
 };
 use game::entity::Component::*;
 use game::components::DoorState;
@@ -20,20 +21,20 @@ pub fn detect_open(ctx: RuleContext)
             continue;
         }
 
-        let entity = ctx.entities.get(*entity_id).unwrap();
+        let entity = ctx.level.get(*entity_id).unwrap();
 
         if !entity.is_collider() || !entity.is_door_opener() {
             continue;
         }
 
-        let spacial_hash = ctx.entities.spacial_hash(entity.on_level().unwrap()).unwrap();
+        let spacial_hash = ctx.level.spacial_hash();
 
         let new_position = changes.position().unwrap();
 
         if let Some(cell) = spacial_hash.get(new_position.to_tuple()) {
             if cell.has(ComponentType::Door) && cell.has(ComponentType::Solid) {
                 for entity_id in &cell.entities {
-                    if let Some(&Door(DoorState::Closed)) = ctx.entities.get(*entity_id).unwrap().get(ComponentType::Door) {
+                    if let Some(&Door(DoorState::Closed)) = ctx.level.get(*entity_id).unwrap().get(ComponentType::Door) {
                         return RuleResult::Instead(vec![
                             (0, actions::open_door(*entity_id))
                         ]);

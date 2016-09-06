@@ -1,19 +1,22 @@
 use game::{
     EntityContext,
     UpdateSummary,
+    Level,
 };
 
 #[derive(Clone, Copy)]
 pub struct RuleContext<'a> {
     pub update: &'a UpdateSummary,
-    pub entities: &'a EntityContext,
+    pub level: &'a Level,
+    pub entity_context: &'a EntityContext,
 }
 
 impl<'a> RuleContext<'a> {
-    pub fn new(update: &'a UpdateSummary, entities: &'a EntityContext) -> Self {
+    pub fn new(update: &'a UpdateSummary, level: &'a Level, entity_context: &'a EntityContext) -> Self {
         RuleContext {
             update: update,
-            entities: entities,
+            level: level,
+            entity_context: entity_context,
         }
     }
 }

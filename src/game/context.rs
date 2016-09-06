@@ -12,6 +12,7 @@ use game::{
     ComponentType,
     actions,
     EntityWrapper,
+    EntityStore,
 };
 use game::components::Form;
 
@@ -19,10 +20,7 @@ use game::io::{
     terminal_player_actor,
     WindowKnowledgeRenderer,
 };
-use game::observer::{
-    DrawableObserver,
-    Observer,
-};
+use game::observer::DrawableObserver;
 
 use schedule::Schedule;
 
@@ -41,6 +39,7 @@ use std::time::Duration;
 pub struct GameContext<'a> {
     pub entities: EntityContext,
     pub pc: Option<EntityId>,
+    pc_level_id: LevelId,
 
     // io
     input_source: InputSource<'a>,
@@ -64,6 +63,7 @@ impl<'a> GameContext<'a> {
         GameContext {
             entities: EntityContext::new(),
             pc: None,
+            pc_level_id: 0,
             input_source: input_source,
             game_window: game_window,
             renderer: WindowKnowledgeRenderer::new(game_window),
@@ -82,7 +82,7 @@ impl<'a> GameContext<'a> {
     }
 
     fn pc_level_id(&self) -> LevelId {
-        self.entities.get(self.pc.unwrap()).unwrap().on_level().unwrap()
+        self.pc_level_id
     }
 
     fn pc_level(&self) -> &Level {
@@ -104,22 +104,22 @@ impl<'a> GameContext<'a> {
 
     pub fn act(&mut self, entity_id: EntityId) -> MetaAction {
         loop {
-            if let Some(meta_action) = terminal_player_actor::act(&self.input_source, entity_id, &self.entities) {
+            if let Some(meta_action) = terminal_player_actor::act(&self.input_source, entity_id, self.pc_level_id(), &self.entities) {
                 return meta_action;
             }
         }
     }
 
     pub fn entity_is_pc(&self, entity: EntityId) -> bool {
-        self.entities.get(entity).unwrap().has(ComponentType::PlayerActor)
+        self.entities.get_from_level(entity, self.pc_level_id()).unwrap().has(ComponentType::PlayerActor)
     }
 
     pub fn observe_pc(&mut self) -> bool {
-        self.observer.observe(self.pc.unwrap(), &self.entities, self.turn_count)
+        self.observer.observe(self.pc.unwrap(), self.entities.level(self.pc_level_id).unwrap(), self.turn_count)
     }
 
     pub fn render_pc_knowledge(&self) {
-        self.renderer.render(&self.entities, self.pc.unwrap(), self.turn_count);
+        self.renderer.render(&self.pc_level(), self.pc.unwrap(), self.turn_count);
     }
 
     pub fn render(&mut self) -> bool {
@@ -143,10 +143,6 @@ enum UpdateError {
 }
 
 impl<'a> GameContext<'a> {
-    fn rule_context<'b: 'a>(&'b self, update: &'b UpdateSummary) -> RuleContext<'b> {
-        RuleContext::new(update, &self.entities)
-    }
-
     fn apply_update(&mut self, update: UpdateSummary, render: bool) -> usize {
         let mut commit_count = 0;
 
@@ -161,7 +157,7 @@ impl<'a> GameContext<'a> {
             }
 
             {
-                let rule_context = RuleContext::new(&update, &self.entities);
+                let rule_context = RuleContext::new(&update, self.entities.level(self.pc_level_id).unwrap(), &self.entities);
 
                 self.reaction_queue.clear();
                 for rule in &self.rules {
@@ -187,7 +183,8 @@ impl<'a> GameContext<'a> {
 
             self.turn_count += 1;
 
-            update.commit(&mut self.entities, self.turn_count);
+            let level_id = self.pc_level_id();
+            update.commit(&mut self.entities, level_id, self.turn_count);
             commit_count += 1;
 
             while let Some((time, update)) = self.reaction_queue.pop_front() {
@@ -204,28 +201,26 @@ impl<'a> GameContext<'a> {
 
     fn cloud_progress(&mut self) -> UpdateSummary {
         self.pc_level_mut().apply_perlin_change();
-        self.pc_level().perlin_update(&self.entities)
+        self.pc_level().perlin_update()
     }
 
-    fn transformation_progress(&mut self, id: EntityId) -> Option<UpdateSummary> {
-        let entity = self.entities.get(id).unwrap();
+    fn transformation_progress(&mut self, id: EntityId, level_id: LevelId) -> Option<UpdateSummary> {
+        let entity = self.entities.get_from_level(id, level_id).unwrap();
         if let Some(form) = entity.form() {
             if let Some(position) = entity.position() {
-                if let Some(level_id) = entity.on_level() {
-                    let sh = self.entities.spacial_hash(level_id).unwrap();
-                    let sh_cell = sh.get((position.x, position.y)).unwrap();
-                    if sh_cell.has(ComponentType::Moon) {
-                        if form == Form::Human {
-                            return Some(actions::beast_transform_progress(entity, -1));
-                        } else {
-                            return Some(actions::human_transform_progress(entity, 1));
-                        }
+                let sh = self.entities.level(level_id).unwrap().spacial_hash();
+                let sh_cell = sh.get((position.x, position.y)).unwrap();
+                if sh_cell.has(ComponentType::Moon) {
+                    if form == Form::Human {
+                        return Some(actions::beast_transform_progress(entity, -1));
                     } else {
-                        if form == Form::Human {
-                            return Some(actions::beast_transform_progress(entity, 1));
-                        } else {
-                            return Some(actions::human_transform_progress(entity, -1));
-                        }
+                        return Some(actions::human_transform_progress(entity, 1));
+                    }
+                } else {
+                    if form == Form::Human {
+                        return Some(actions::beast_transform_progress(entity, 1));
+                    } else {
+                        return Some(actions::human_transform_progress(entity, -1));
                     }
                 }
             }
@@ -238,16 +233,17 @@ impl<'a> GameContext<'a> {
         self.turn_count += 1;
         let entity_id = self.pc_schedule_next();
 
-        self.cloud_progress().commit(&mut self.entities, self.turn_count);
+        let level_id = self.pc_level_id();
+        self.cloud_progress().commit(&mut self.entities, level_id, self.turn_count);
 
-        if let Some(update) = self.transformation_progress(entity_id) {
+        if let Some(update) = self.transformation_progress(entity_id, level_id) {
             self.apply_update(update, false);
         }
 
         self.render();
 
         if !self.entity_is_pc(entity_id) {
-            self.observer.observe(entity_id, &self.entities, self.turn_count);
+            self.observer.observe(entity_id, self.entities.level(self.pc_level_id).unwrap(), self.turn_count);
         }
 
         loop {

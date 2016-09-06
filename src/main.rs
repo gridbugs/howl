@@ -29,9 +29,12 @@ use game::{
     GameContext,
     Level,
     EntityWrapper,
+    EntityStore,
 };
 use game::rules;
 use game::components::DoorState;
+
+use table::TableTable;
 
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;
@@ -121,17 +124,17 @@ fn populate(entities: &mut EntityContext) -> EntityId {
 
     for entity in level_entities.drain(..) {
         let id = entities.reserve_entity_id();
-        entities.add(id, entity);
+        level.entities.add(id, entity);
         level.add(id);
 
-        if entities.get(id).unwrap().is_pc() {
+        if level.get(id).unwrap().is_pc() {
             assert!(pc == None, "Multiple player characters");
             pc = Some(id);
             level.schedule.borrow_mut().set_pc(id);
         }
     }
 
-    level.finalise(&entities.entities, 0);
+    level.finalise(0);
     entities.add_level(level);
 
     pc.unwrap()

@@ -2,43 +2,18 @@ use game::{
     EntityId,
     HashMapEntityRef,
     HashMapEntityRefMut,
-    HashMapEntityTable,
     Level,
     LevelId,
     Entity,
-    LevelSpacialHashMap,
-    EntityTable,
 };
 
 use reserver::LeakyReserver;
 
 use table::TableTable;
 
-use std::collections::{
-    HashSet,
-    hash_set,
-};
-
 use std::cell::RefCell;
 
-pub struct EntityIter<'a, Tab: 'a + EntityTable<'a>> {
-    hash_set_iter: hash_set::Iter<'a, EntityId>,
-    entities: &'a Tab,
-}
-
-impl<'a, Tab: 'a + EntityTable<'a>> Iterator for EntityIter<'a, Tab> {
-    type Item = (EntityId, Option<Tab::Ref>);
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(id) = self.hash_set_iter.next() {
-            Some((*id, self.entities.get(*id)))
-        } else {
-            None
-        }
-    }
-}
-
 pub struct EntityContext {
-    pub entities: HashMapEntityTable,
     pub levels: Vec<Level>,
     level_reserver: RefCell<LeakyReserver<LevelId>>,
     entity_reserver: RefCell<LeakyReserver<EntityId>>,
@@ -47,7 +22,6 @@ pub struct EntityContext {
 impl EntityContext {
     pub fn new() -> Self {
         EntityContext {
-            entities: HashMapEntityTable::new(),
             levels: Vec::new(),
             level_reserver: RefCell::new(LeakyReserver::new()),
             entity_reserver: RefCell::new(LeakyReserver::new()),
@@ -77,29 +51,20 @@ impl EntityContext {
         id
     }
 
-    pub fn add(&mut self, id: EntityId, entity: Entity) -> Option<Entity> {
-        self.entities.add(id, entity)
+    pub fn add(&mut self, id: EntityId, level_id: LevelId, entity: Entity) -> Option<Entity> {
+        self.levels[level_id].entities.add(id, entity)
     }
 
-    pub fn remove(&mut self, id: EntityId) -> Option<Entity> {
-        self.entities.remove(id)
+    pub fn remove(&mut self, id: EntityId, level_id: LevelId) -> Option<Entity> {
+        self.levels[level_id].entities.remove(id)
     }
 
-    pub fn get(&self, id: EntityId) -> Option<HashMapEntityRef> {
-        self.entities.get(id)
+    pub fn get_mut(&mut self, id: EntityId, level_id: LevelId) -> Option<HashMapEntityRefMut> {
+        self.levels[level_id].entities.get_mut(id)
     }
 
-    pub fn get_mut(&mut self, id: EntityId) -> Option<HashMapEntityRefMut> {
-        self.entities.get_mut(id)
-    }
-
-    pub fn id_set_iter<'a>(&'a self, set: &'a HashSet<EntityId>)
-        -> EntityIter<'a, HashMapEntityTable>
-    {
-        EntityIter {
-            hash_set_iter: set.iter(),
-            entities: &self.entities,
-        }
+    pub fn get_from_level(&self, id: EntityId, level_id: LevelId) -> Option<HashMapEntityRef> {
+        self.levels[level_id].entities.get(id)
     }
 
     pub fn level(&self, level_id: LevelId) -> Option<&Level> {
@@ -108,11 +73,5 @@ impl EntityContext {
 
     pub fn level_mut(&mut self, level_id: LevelId) -> Option<&mut Level> {
         Some(&mut self.levels[level_id])
-    }
-
-    pub fn spacial_hash(&self, level_id: LevelId) -> Option<&LevelSpacialHashMap> {
-        self.level(level_id).map(|level| {
-            &level.spacial_hash
-        })
     }
 }

@@ -5,6 +5,7 @@ use game::{
     RuleResult,
     RuleContext,
     EntityWrapper,
+    EntityStore,
 };
 
 use game::update::Metadatum::*;
@@ -20,13 +21,13 @@ pub fn detect_collision(ctx: RuleContext)
             continue;
         }
 
-        let entity = ctx.entities.get(*entity_id).unwrap();
+        let entity = ctx.level.get(*entity_id).unwrap();
 
         if !entity.has(ComponentType::Collider) {
             continue;
         }
 
-        let spacial_hash = ctx.entities.spacial_hash(entity.on_level().unwrap()).unwrap();
+        let spacial_hash = ctx.level.spacial_hash();
 
         let new_position = changes.position().unwrap();
 

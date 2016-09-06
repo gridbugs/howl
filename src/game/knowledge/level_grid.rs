@@ -1,8 +1,9 @@
 use game::{
     IterEntityRef,
-    EntityContext,
     SpacialHashCell,
     LevelId,
+    EntityStore,
+    Level,
 };
 
 use grid::{
@@ -46,7 +47,7 @@ impl<G> KnowledgeGrid<G>
     }
 
     fn update<'a, I, S>(
-        &mut self, entities: &EntityContext,
+        &mut self, entities: &Level,
         grid: &S,
         report_iter: I,
         turn_count: u64) -> bool
@@ -98,7 +99,7 @@ impl<G> LevelGridKnowledge<G>
 
     pub fn update<'a, I, S>(
         &mut self, level_id: LevelId,
-        entities: &EntityContext,
+        entities: &Level,
         grid: &S,
         report_iter: I,
         turn_count: u64) -> bool

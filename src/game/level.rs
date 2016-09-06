@@ -1,15 +1,13 @@
 use game::{
     EntityId,
-    EntityContext,
-    Component,
-    ComponentType,
-    IterEntityRef,
-    EntityTable,
     TurnSchedule,
     SpacialHashMap,
     SpacialHashCell,
     UpdateSummary,
     EntityWrapper,
+    EntityStore,
+    HashMapEntityTable,
+    HashMapEntityRef,
 };
 use game::Component::*;
 use game::ComponentType as CType;
@@ -47,14 +45,26 @@ pub struct Level {
     pub id: Option<LevelId>,
     pub width: usize,
     pub height: usize,
-    pub entities: HashSet<EntityId>,
     pub schedule: RefCell<TurnSchedule>,
     pub spacial_hash: LevelSpacialHashMap,
+    pub entities: HashMapEntityTable,
+    entity_ids: HashSet<EntityId>,
     perlin: Perlin3Grid,
     perlin_zoom: f64,
     perlin_min: f64,
     perlin_max: f64,
     perlin_change: Vector3<f64>,
+}
+
+impl<'a> EntityStore<'a> for Level {
+    type Ref = HashMapEntityRef<'a>;
+    fn get(&'a self, id: EntityId) -> Option<Self::Ref> {
+        self.entities.get(id)
+    }
+
+    fn spacial_hash(&self) -> &LevelSpacialHashMap {
+        &self.spacial_hash
+    }
 }
 
 impl Level {
@@ -63,10 +73,11 @@ impl Level {
             id: None,
             width: width,
             height: height,
-            entities: HashSet::new(),
             schedule: RefCell::new(TurnSchedule::new()),
             spacial_hash: SpacialHashMap::new(
                     StaticGrid::new_default(width, height)),
+            entity_ids: HashSet::new(),
+            entities: HashMapEntityTable::new(),
             perlin: Perlin3Grid::new(width, height, PerlinWrapType::Regenerate).unwrap(),
             perlin_zoom: 0.05,
             perlin_min: -0.1,
@@ -81,16 +92,14 @@ impl Level {
     }
 
     pub fn add(&mut self, id: EntityId) {
-        self.entities.insert(id);
+        self.entity_ids.insert(id);
     }
 
     // Makes the bookkeeping info reflect the contents of entities
-    pub fn finalise<'a, T>(&mut self, entities: &'a T, turn_count: u64)
-    where T: EntityTable<'a>,
-          <T as TableTable<'a, ComponentType, Component>>::Ref: IterEntityRef<'a>,
+    pub fn finalise(&mut self, turn_count: u64)
     {
-        for entity_id in self.entities.clone() {
-            let entity = entities.get(entity_id).unwrap();
+        for entity_id in self.entity_ids.clone() {
+            let entity = self.entities.get(entity_id).unwrap();
             self.spacial_hash.add_entity(entity_id, entity, turn_count);
         }
     }
@@ -120,13 +129,13 @@ impl Level {
         self.spacial_hash.component_entities.get(&component_type)
     }
 
-    pub fn perlin_update(&self, entities: &EntityContext) -> UpdateSummary {
+    pub fn perlin_update(&self) -> UpdateSummary {
         let mut update = UpdateSummary::new();
 
         if let Some(entity_ids) = self.component_entities(CType::Outside) {
 
             for entity_id in entity_ids.iter() {
-                let entity = entities.get(*entity_id).unwrap();
+                let entity = self.entities.get(*entity_id).unwrap();
                 if let Some(Vector2 {x, y}) = entity.position() {
                     let new = self.moonlight(x, y);
                     let current = entity.has(CType::Moon);
@@ -145,5 +154,9 @@ impl Level {
         }
 
         update
+    }
+
+    pub fn update_spacial_hash(&mut self, update: &UpdateSummary, turn_count: u64) {
+        self.spacial_hash.update(update, &self.entities, turn_count);
     }
 }
