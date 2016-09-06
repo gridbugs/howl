@@ -5,6 +5,7 @@ use game::{
     SpacialHashMap,
     SpacialHashCell,
     Entity,
+    EntityId,
 };
 
 use geometry::Vector2;
@@ -12,6 +13,8 @@ use grid::{
     StaticGrid,
     DefaultGrid,
 };
+
+use table::TableRefMut;
 
 use std::collections::HashSet;
 
@@ -54,14 +57,14 @@ fn creation() {
 #[test]
 fn add_entity() {
     let mut s = make_spacial_hash();
-    let e = make_entity(0, 0);
+    let (id, e) = (0, make_entity(0, 0));
 
-    s.add_entity(&e, 0);
+    s.add_entity(id, &e, 0);
 
     let cell = s.get((0, 0)).unwrap();
 
     assert_eq!(cell.entities.len(), 1);
-    assert!(cell.entities.contains(&e.id.unwrap()));
+    assert!(cell.entities.contains(&id));
     assert!(cell.has(CType::Solid));
     assert!(cell.has(CType::Position));
 }
@@ -70,15 +73,15 @@ fn add_entity() {
 #[test]
 fn remove_entity() {
     let mut s = make_spacial_hash();
-    let e = make_entity(0, 0);
+    let (id, e) = (0, make_entity(0, 0));
 
-    s.add_entity(&e, 0);
+    s.add_entity(id, &e, 0);
     s.remove_entity(&e, 0);
 
     let cell = s.get((0, 0)).unwrap();
 
     assert_eq!(cell.entities.len(), 0);
-    assert!(!cell.entities.contains(&e.id.unwrap()));
+    assert!(!cell.entities.contains(&id));
     assert!(!cell.has(CType::Solid));
     assert!(!cell.has(CType::Position));
 }
@@ -86,28 +89,28 @@ fn remove_entity() {
 /// Add several entities, then remove them all, ensuring consistent component counts.
 #[test]
 fn add_remove_many_entities() {
-    const NUM_ENTITIES: usize = 100;
+    const NUM_ENTITIES: EntityId = 100;
     let mut s = make_spacial_hash();
-    let mut entities = Vec::with_capacity(NUM_ENTITIES);
+    let mut entities = Vec::with_capacity(NUM_ENTITIES as usize);
 
     // create entities
     for i in 0..NUM_ENTITIES {
-        let mut e = make_entity(0, 0);
+        let (id, mut e) = (i, make_entity(0, 0));
         e.id = Some(i as u64);
-        entities.push(e);
+        entities.push((id, e));
     }
 
     // add entities to spacial hash
-    for e in &entities {
-        s.add_entity(&e, 0);
+    for e in entities.iter() {
+        s.add_entity(e.0, &e.1, 0);
     }
 
     // assert that entities are in spacial hash
     {
         let cell = s.get((0, 0)).unwrap();
-        assert_eq!(cell.entities.len(), NUM_ENTITIES);
+        assert_eq!(cell.entities.len(), NUM_ENTITIES as usize);
         for e in &entities {
-            assert!(cell.entities.contains(&e.id.unwrap()));
+            assert!(cell.entities.contains(&e.0));
         }
         assert!(cell.has(CType::Solid));
         assert!(cell.has(CType::Position));
@@ -115,7 +118,7 @@ fn add_remove_many_entities() {
 
     // remove entities from spacial hash
     for e in &entities {
-        s.remove_entity(&e, 0);
+        s.remove_entity(&e.1, 0);
     }
 
     // assert that the entities are gone from spacial hash
@@ -123,7 +126,7 @@ fn add_remove_many_entities() {
         let cell = s.get((0, 0)).unwrap();
         assert_eq!(cell.entities.len(), 0);
         for e in &entities {
-            assert!(!cell.entities.contains(&e.id.unwrap()));
+            assert!(!cell.entities.contains(&e.0));
         }
         assert!(!cell.has(CType::Solid));
         assert!(!cell.has(CType::Position));
@@ -134,9 +137,9 @@ fn add_remove_many_entities() {
 #[test]
 fn change_entity() {
     let mut s = make_spacial_hash();
-    let e = make_entity(0, 0);
+    let (id, e) = (0, make_entity(0, 0));
 
-    s.add_entity(&e, 0);
+    s.add_entity(id, &e, 0);
 
     s.add_components(&e, &entity![
         Collider,
@@ -178,9 +181,9 @@ fn add_remove_components() {
 #[test]
 fn move_entity() {
     let mut s = make_spacial_hash();
-    let e = make_entity(0, 0);
+    let (id, e) = (0, make_entity(0, 0));
 
-    s.add_entity(&e, 0);
+    s.add_entity(id, &e, 0);
 
     s.add_components(&e, &entity![
         Position(Vector2::new(1, 1)),
@@ -205,9 +208,9 @@ fn move_entity() {
 #[test]
 fn move_entity_adding_component() {
     let mut s = make_spacial_hash();
-    let e = make_entity(0, 0);
+    let (id, e) = (0, make_entity(0, 0));
 
-    s.add_entity(&e, 0);
+    s.add_entity(id, &e, 0);
 
     s.add_components(&e, &entity![
         Position(Vector2::new(1, 1)),
@@ -234,13 +237,13 @@ fn move_entity_adding_component() {
 #[test]
 fn add_entities_remove_components() {
     let mut s = make_spacial_hash();
-    let mut e0 = make_entity(0, 0);
+    let (id0, mut e0) = (0, make_entity(0, 0));
     e0.id = Some(0);
-    let mut e1 = make_entity(0, 0);
+    let (id1, mut e1) = (1, make_entity(0, 0));
     e1.id = Some(1);
 
-    s.add_entity(&e0, 0);
-    s.add_entity(&e1, 0);
+    s.add_entity(id0, &e0, 0);
+    s.add_entity(id1, &e1, 0);
     assert!(s.get((0, 0)).unwrap().has(CType::Solid));
 
     s.remove_components(&e1, &set_from_vec(vec![CType::Solid]), 0);
@@ -259,16 +262,16 @@ fn add_entities_remove_components() {
 fn opacity() {
     let mut s = make_spacial_hash();
 
-    let mut e0 = make_entity(0, 0);
+    let (id0, mut e0) = (0, make_entity(0, 0));
     e0.id = Some(0);
-    let mut e1 = make_entity(0, 0);
+    let (id1, mut e1) = (1, make_entity(0, 0));
     e1.id = Some(1);
 
     e0.add(Opacity(0.1));
     e1.add(Opacity(0.2));
 
-    s.add_entity(&e0, 0);
-    s.add_entity(&e1, 0);
+    s.add_entity(id0, &e0, 0);
+    s.add_entity(id1, &e1, 0);
 
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.3*10.0);
 

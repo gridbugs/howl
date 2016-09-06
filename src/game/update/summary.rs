@@ -51,8 +51,7 @@ impl UpdateSummary {
         }
     }
 
-    pub fn add_entity(&mut self, id: EntityId, mut entity: Entity) {
-        entity.id = Some(id);
+    pub fn add_entity(&mut self, id: EntityId, entity: Entity) {
         self.added_entities.insert(id, entity);
     }
 
@@ -82,8 +81,8 @@ impl UpdateSummary {
 
         self.update_spacial_hashes(&mut entities.levels, &entities.entities, turn_count);
 
-        for (_, entity) in self.added_entities.drain() {
-            entities.add(entity);
+        for (id, entity) in self.added_entities.drain() {
+            entities.add(id, entity);
         }
 
         for entity_id in self.removed_entities.drain() {

@@ -78,19 +78,12 @@ impl EntityContext {
         id
     }
 
-    pub fn add(&mut self, mut entity: Entity) -> EntityId {
+    pub fn add(&mut self, id: EntityId, mut entity: Entity) -> Option<Entity> {
 
-        let id = if let Some(id) = entity.id {
-            id
-        } else {
-            let id = self.reserve_entity_id();
-            entity.id = Some(id);
-            id
-        };
+        // TODO remove this
+        entity.id = Some(id);
 
-        self.entities.add(id, entity);
-
-        id
+        self.entities.add(id, entity)
     }
 
     pub fn remove(&mut self, id: EntityId) -> Option<Entity> {

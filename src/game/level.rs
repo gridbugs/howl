@@ -92,7 +92,7 @@ impl Level {
     {
         for entity_id in self.entities.clone() {
             let entity = entities.get(entity_id).unwrap();
-            self.spacial_hash.add_entity(entity, turn_count);
+            self.spacial_hash.add_entity(entity_id, entity, turn_count);
         }
     }
 
@@ -126,8 +126,8 @@ impl Level {
 
         if let Some(entity_ids) = self.component_entities(CType::Outside) {
 
-            for entity in entities.id_set_iter(entity_ids) {
-                let entity = entity.unwrap();
+            for entity_id in entity_ids.iter() {
+                let entity = entities.get(*entity_id).unwrap();
                 if let Some(Vector2 {x, y}) = entity.position() {
                     let new = self.moonlight(x, y);
                     let current = entity.has(CType::Moon);
@@ -137,9 +137,9 @@ impl Level {
                     }
 
                     if new {
-                        update.add_component(entity.id().unwrap(), Moon);
+                        update.add_component(*entity_id, Moon);
                     } else {
-                        update.remove_component(entity.id().unwrap(), CType::Moon);
+                        update.remove_component(*entity_id, CType::Moon);
                     }
                 }
             }

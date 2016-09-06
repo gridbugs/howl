@@ -1,5 +1,6 @@
 use game::{
     EntityId,
+    Entity,
     Component,
     ComponentType,
     EntityTable,
@@ -12,6 +13,7 @@ use game::{
 use table::{
     ToType,
     TableTable,
+    IterTableRef,
 };
 use vision::Opacity;
 use grid::Grid;
@@ -78,8 +80,8 @@ impl SpacialHashCell {
         self.set_count(component_type, count - 1);
     }
 
-    fn add_entity<'a, E: IterEntityRef<'a> + EntityRef<'a>>(&mut self, entity: E) {
-        if self.entities.insert(entity.id().unwrap()) {
+    fn add_entity<'a, E: IterEntityRef<'a> + EntityRef<'a>>(&mut self, id: EntityId, entity: E) {
+        if self.entities.insert(id) {
             for component in entity.entries() {
                 self.add_component(component);
             }
@@ -182,14 +184,15 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn add_entity<'a, E: EntityRef<'a> + IterEntityRef<'a>>(&mut self, entity: E, turn_count: u64) {
+    pub fn add_entity<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+        &mut self, id: EntityId, entity: E, turn_count: u64)
+    {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut_unsafe(vec.to_tuple());
-            cell.add_entity(entity);
+            cell.add_entity(id, entity);
             cell.last_updated = turn_count;
         }
 
-        let id = entity.id().unwrap();
         for component_type in entity.types() {
             self.add_component_entity(*component_type, id);
         }
@@ -208,13 +211,14 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn add_components<'a, 'b, E: EntityRef<'a> + IterEntityRef<'a>,
-                                  C: EntityRef<'b> + IterEntityRef<'b>>(
+    pub fn add_components<'a, 'b, E: EntityRef<'a> + IterEntityRef<'a>>(
         &mut self,
         entity: E,
-        changes: C,
+        changes: &Entity,
         turn_count: u64)
     {
+        let id = entity.id().unwrap();
+
         // position will be set to the position of entity after the change
         let position = if let Some(new_position) = changes.position() {
 
@@ -228,7 +232,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
 
             // the entity's position is changing or the entity is gaining a position
             // in either case, add the entity to the position's cell
-            self.get_mut_unsafe(new_position.to_tuple()).add_entity(entity);
+            self.get_mut_unsafe(new_position.to_tuple()).add_entity(id, entity);
 
             // entity will eventually end up here
             Some(new_position)
@@ -299,9 +303,9 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
     where T: EntityTable<'a>,
           <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
     {
-        for entity in update.added_entities.values() {
+        for (id, entity) in update.added_entities.iter() {
             if self.entity_is_on_level(entity) {
-                self.add_entity(entity, turn_count);
+                self.add_entity(*id, entity, turn_count);
             }
         }
 

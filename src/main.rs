@@ -120,7 +120,8 @@ fn populate(entities: &mut EntityContext) -> EntityId {
     let mut pc = None;
 
     for entity in level_entities.drain(..) {
-        let id = entities.add(entity);
+        let id = entities.reserve_entity_id();
+        entities.add(id, entity);
         level.add(id);
 
         if entities.get(id).unwrap().is_pc() {
