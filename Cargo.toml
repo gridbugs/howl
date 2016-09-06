@@ -10,4 +10,4 @@ num = "0.1.32"
 rustty = { git = "https://github.com/stevebob/rustty.git" }
 
 [features]
-hash_map_table = []
+flat_table = []

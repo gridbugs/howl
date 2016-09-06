@@ -18,18 +18,18 @@ pub use self::entity::{
     HashMapEntityRefMut,
 };
 
-#[cfg(not(feature = "hash_map_table"))]
+#[cfg(feature = "flat_table")]
 pub type LevelEntityTable = FlatEntityTable;
-#[cfg(not(feature = "hash_map_table"))]
+#[cfg(feature = "flat_table")]
 pub type LevelEntityRef<'a> = FlatEntityRef<'a>;
-#[cfg(not(feature = "hash_map_table"))]
+#[cfg(feature = "flat_table")]
 pub type LevelEntityRefMut<'a> = FlatEntityRefMut<'a>;
 
-#[cfg(feature = "hash_map_table")]
+#[cfg(not(feature = "flat_table"))]
 pub type LevelEntityTable = HashMapEntityTable;
-#[cfg(feature = "hash_map_table")]
+#[cfg(not(feature = "flat_table"))]
 pub type LevelEntityRef<'a> = HashMapEntityRef<'a>;
-#[cfg(feature = "hash_map_table")]
+#[cfg(not(feature = "flat_table"))]
 pub type LevelEntityRefMut<'a> = HashMapEntityRefMut<'a>;
 
 
