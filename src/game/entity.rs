@@ -42,7 +42,7 @@ pub trait EntityTable<'a>: TableTable<'a, ComponentType, Component> {}
 impl<'a> EntityTable<'a> for HashMapEntityTable {}
 
 pub trait EntityRef<'a>: TableRef<'a, ComponentType, Component> {}
-pub trait IterEntityRef<'a>: IterTableRef<'a, ComponentType, Component> {}
+pub trait IterEntityRef<'a>: IterTableRef<'a, ComponentType, Component> + EntityRef<'a> {}
 pub trait EntityRefMut<'a>: TableRefMut<'a, ComponentType, Component> {}
 
 impl<'a> EntityRef<'a> for &'a Entity {}

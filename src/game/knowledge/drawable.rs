@@ -55,7 +55,7 @@ impl KnowledgeCell for DrawableCell {
         self.moonlight = false;
     }
 
-    fn update<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+    fn update<'a, E: IterEntityRef<'a>>(
         &mut self,
         entity: E,
         turn_count: u64,

@@ -1,6 +1,5 @@
 use game::{
     EntityId,
-    EntityRef,
     IterEntityRef,
     EntityContext,
     SpacialHashCell,
@@ -19,7 +18,7 @@ pub trait KnowledgeCell: Default {
     type MetaData;
 
     fn clear(&mut self);
-    fn update<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+    fn update<'a, E: IterEntityRef<'a>>(
         &mut self,
         entity: E,
         turn_count: u64,

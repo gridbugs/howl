@@ -3,7 +3,6 @@ use game::{
     EntityContext,
     Component,
     ComponentType,
-    EntityRef,
     IterEntityRef,
     EntityTable,
     TurnSchedule,
@@ -88,7 +87,7 @@ impl Level {
     // Makes the bookkeeping info reflect the contents of entities
     pub fn finalise<'a, T>(&mut self, entities: &'a T, turn_count: u64)
     where T: EntityTable<'a>,
-          <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
+          <T as TableTable<'a, ComponentType, Component>>::Ref: IterEntityRef<'a>,
     {
         for entity_id in self.entities.clone() {
             let entity = entities.get(entity_id).unwrap();

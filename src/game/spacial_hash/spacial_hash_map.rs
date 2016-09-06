@@ -80,7 +80,7 @@ impl SpacialHashCell {
         self.set_count(component_type, count - 1);
     }
 
-    fn add_entity<'a, E: IterEntityRef<'a> + EntityRef<'a>>(&mut self, id: EntityId, entity: E) {
+    fn add_entity<'a, E: IterEntityRef<'a>>(&mut self, id: EntityId, entity: E) {
         if self.entities.insert(id) {
             for component in entity.entries() {
                 self.add_component(component);
@@ -88,7 +88,7 @@ impl SpacialHashCell {
         }
     }
 
-    fn remove_entity<'a, E: IterEntityRef<'a> + EntityRef<'a>>(&mut self, entity: E) {
+    fn remove_entity<'a, E: IterEntityRef<'a>>(&mut self, entity: E) {
         if self.entities.remove(&entity.id().unwrap()) {
             for component in entity.entries() {
                 self.remove_component(component);
@@ -184,7 +184,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn add_entity<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+    pub fn add_entity<'a, E: IterEntityRef<'a>>(
         &mut self, id: EntityId, entity: E, turn_count: u64)
     {
         if let Some(vec) = entity.position() {
@@ -198,7 +198,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn remove_entity<'a, E: EntityRef<'a> + IterEntityRef<'a>>(&mut self, entity: E, turn_count: u64) {
+    pub fn remove_entity<'a, E: IterEntityRef<'a>>(&mut self, entity: E, turn_count: u64) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut_unsafe(vec.to_tuple());
             cell.remove_entity(entity);
@@ -211,7 +211,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn add_components<'a, 'b, E: EntityRef<'a> + IterEntityRef<'a>>(
+    pub fn add_components<'a, 'b, E: IterEntityRef<'a>>(
         &mut self,
         entity: E,
         changes: &Entity,
@@ -271,7 +271,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn remove_components<'a, E: EntityRef<'a> + IterEntityRef<'a>>(
+    pub fn remove_components<'a, E: IterEntityRef<'a>>(
         &mut self,
         entity: E,
         component_types: &HashSet<ComponentType>,

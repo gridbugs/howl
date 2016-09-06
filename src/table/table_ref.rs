@@ -13,7 +13,7 @@ pub trait TableRef<'a, EntryType, Entry>: Clone + Copy
     fn get(self, entry_type: EntryType) -> Option<&'a Entry>;
 }
 
-pub trait IterTableRef<'a, EntryType, Entry>: Clone + Copy
+pub trait IterTableRef<'a, EntryType, Entry>: TableRef<'a, EntryTrpe, Entry>
     where EntryType: 'a + Eq + Hash,
           Entry: 'a + ToType<EntryType>,
 {
