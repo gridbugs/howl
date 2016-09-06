@@ -106,7 +106,7 @@ impl UpdateSummary {
         }
     }
 
-    fn update_spacial_hashes<'a, T>(&self, levels: &mut HashMap<LevelId, Level>,
+    fn update_spacial_hashes<'a, T>(&self, levels: &mut Vec<Level>,
                                     entities: &'a T, turn_count: u64)
     where T: EntityTable<'a>,
           <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,
@@ -114,7 +114,7 @@ impl UpdateSummary {
         self.update_levels(entities);
 
         for level_id in self.levels.borrow().iter() {
-            let mut level = levels.get_mut(level_id).unwrap();
+            let mut level = &mut levels[*level_id];
             level.spacial_hash.update(self, entities, turn_count);
         }
     }

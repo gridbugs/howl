@@ -17,7 +17,6 @@ use table::TableTable;
 use std::collections::{
     HashSet,
     hash_set,
-    HashMap,
 };
 
 use std::cell::RefCell;
@@ -40,7 +39,7 @@ impl<'a, Tab: 'a + EntityTable<'a>> Iterator for EntityIter<'a, Tab> {
 
 pub struct EntityContext {
     pub entities: HashMapEntityTable,
-    pub levels: HashMap<LevelId, Level>,
+    pub levels: Vec<Level>,
     level_reserver: RefCell<LeakyReserver<LevelId>>,
     entity_reserver: RefCell<LeakyReserver<EntityId>>,
 }
@@ -49,7 +48,7 @@ impl EntityContext {
     pub fn new() -> Self {
         EntityContext {
             entities: HashMapEntityTable::new(),
-            levels: HashMap::new(),
+            levels: Vec::new(),
             level_reserver: RefCell::new(LeakyReserver::new()),
             entity_reserver: RefCell::new(LeakyReserver::new()),
         }
@@ -73,7 +72,7 @@ impl EntityContext {
             id
         };
 
-        self.levels.insert(id, level);
+        self.levels.push(level);
 
         id
     }
@@ -104,11 +103,11 @@ impl EntityContext {
     }
 
     pub fn level(&self, level_id: LevelId) -> Option<&Level> {
-        self.levels.get(&level_id)
+        Some(&self.levels[level_id])
     }
 
     pub fn level_mut(&mut self, level_id: LevelId) -> Option<&mut Level> {
-        self.levels.get_mut(&level_id)
+        Some(&mut self.levels[level_id])
     }
 
     pub fn spacial_hash(&self, level_id: LevelId) -> Option<&LevelSpacialHashMap> {
