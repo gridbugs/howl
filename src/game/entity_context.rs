@@ -5,11 +5,10 @@ use game::{
     Level,
     LevelId,
     Entity,
+    EntityStore,
 };
 
 use reserver::LeakyReserver;
-
-use table::TableTable;
 
 use std::cell::RefCell;
 
@@ -52,19 +51,19 @@ impl EntityContext {
     }
 
     pub fn add(&mut self, id: EntityId, level_id: LevelId, entity: Entity) -> Option<Entity> {
-        self.levels[level_id].entities.add(id, entity)
+        self.levels[level_id].add(id, entity)
     }
 
     pub fn remove(&mut self, id: EntityId, level_id: LevelId) -> Option<Entity> {
-        self.levels[level_id].entities.remove(id)
+        self.levels[level_id].remove(id)
     }
 
     pub fn get_mut(&mut self, id: EntityId, level_id: LevelId) -> Option<HashMapEntityRefMut> {
-        self.levels[level_id].entities.get_mut(id)
+        self.levels[level_id].get_mut(id)
     }
 
     pub fn get_from_level(&self, id: EntityId, level_id: LevelId) -> Option<HashMapEntityRef> {
-        self.levels[level_id].entities.get(id)
+        self.levels[level_id].get(id)
     }
 
     pub fn level(&self, level_id: LevelId) -> Option<&Level> {

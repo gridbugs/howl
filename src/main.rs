@@ -34,8 +34,6 @@ use game::{
 use game::rules;
 use game::components::DoorState;
 
-use table::TableTable;
-
 use terminal::window_manager::{WindowManager, WindowRef, InputSource};
 use terminal::window_buffer::WindowBuffer;
 
@@ -124,8 +122,7 @@ fn populate(entities: &mut EntityContext) -> EntityId {
 
     for entity in level_entities.drain(..) {
         let id = entities.reserve_entity_id();
-        level.entities.add(id, entity);
-        level.add(id);
+        level.add(id, entity);
 
         if level.get(id).unwrap().is_pc() {
             assert!(pc == None, "Multiple player characters");

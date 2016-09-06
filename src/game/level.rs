@@ -1,4 +1,5 @@
 use game::{
+    Entity,
     EntityId,
     TurnSchedule,
     SpacialHashMap,
@@ -8,6 +9,7 @@ use game::{
     EntityStore,
     HashMapEntityTable,
     HashMapEntityRef,
+    HashMapEntityRefMut,
 };
 use game::Component::*;
 use game::ComponentType as CType;
@@ -47,7 +49,7 @@ pub struct Level {
     pub height: usize,
     pub schedule: RefCell<TurnSchedule>,
     pub spacial_hash: LevelSpacialHashMap,
-    pub entities: HashMapEntityTable,
+    entities: HashMapEntityTable,
     entity_ids: HashSet<EntityId>,
     perlin: Perlin3Grid,
     perlin_zoom: f64,
@@ -91,8 +93,18 @@ impl Level {
         self.spacial_hash.set_id(id);
     }
 
-    pub fn add(&mut self, id: EntityId) {
+    pub fn add(&mut self, id: EntityId, entity: Entity) -> Option<Entity> {
         self.entity_ids.insert(id);
+        self.entities.add(id, entity)
+    }
+
+    pub fn remove(&mut self, id: EntityId) -> Option<Entity> {
+        self.entity_ids.remove(&id);
+        self.entities.remove(id)
+    }
+
+    pub fn get_mut(&mut self, id: EntityId) -> Option<HashMapEntityRefMut> {
+        self.entities.get_mut(id)
     }
 
     // Makes the bookkeeping info reflect the contents of entities
