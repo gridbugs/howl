@@ -150,11 +150,11 @@ where EntryType: 'a + Eq + Hash,
         self.table.slots()
     }
 
-    fn entries(self) -> hash_map::Values<'a, EntryType, Entry> {
+    fn entries(self) -> Self::EntryIter {
         self.table.entries()
     }
 
-    fn types(self) -> hash_map::Keys<'a, EntryType, Entry> {
+    fn types(self) -> Self::TypeIter {
         self.table.types()
     }
 }
