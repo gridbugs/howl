@@ -17,6 +17,9 @@ use table::{
     HashMapTableRef,
     HashMapTableRefMut,
     HashMapTableTable,
+    FlatTableRef,
+    FlatTableRefMut,
+    FlatTableTable,
     TableRef,
     IterTableRef,
     TableRefMut,
@@ -35,12 +38,17 @@ pub type HashMapEntityRef<'a> = HashMapTableRef<'a, ComponentType, Component>;
 pub type HashMapEntityRefMut<'a> = HashMapTableRefMut<'a, ComponentType, Component>;
 pub type HashMapEntityTable = HashMapTableTable<ComponentType, Component>;
 
+pub type FlatEntityRef<'a> = FlatTableRef<'a, ComponentType, Component>;
+pub type FlatEntityRefMut<'a> = FlatTableRefMut<'a, ComponentType, Component>;
+pub type FlatEntityTable = FlatTableTable<ComponentType, Component>;
+
 pub type EntityId = TableId;
 pub type Entity = Table<ComponentType, Component>;
 
 pub trait EntityTable<'a>: TableTable<'a, ComponentType, Component> {}
 
 impl<'a> EntityTable<'a> for HashMapEntityTable {}
+impl<'a> EntityTable<'a> for FlatEntityTable {}
 
 pub trait EntityRef<'a>: TableRef<'a, ComponentType, Component> {}
 pub trait IterEntityRef<'a>: IterTableRef<'a, ComponentType, Component> + EntityRef<'a> {}
@@ -56,6 +64,11 @@ impl<'a> EntityRef<'a> for HashMapEntityRef<'a> {}
 impl<'a> IterEntityRef<'a> for HashMapEntityRef<'a> {}
 impl<'a> EntityRefMut<'a> for HashMapEntityRefMut<'a> {}
 impl<'a> IdEntityRef<'a> for HashMapEntityRef<'a> {}
+
+impl<'a> EntityRef<'a> for FlatEntityRef<'a> {}
+impl<'a> IterEntityRef<'a> for FlatEntityRef<'a> {}
+impl<'a> EntityRefMut<'a> for FlatEntityRefMut<'a> {}
+impl<'a> IdEntityRef<'a> for FlatEntityRef<'a> {}
 
 macro_rules! entity {
     () => { game::entity::Entity::new() };
