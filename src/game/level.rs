@@ -7,10 +7,11 @@ use game::{
     UpdateSummary,
     EntityWrapper,
     EntityStore,
-    HashMapEntityTable,
-    HashMapEntityRef,
-    HashMapEntityRefMut,
+    LevelEntityTable,
+    LevelEntityRef,
+    LevelEntityRefMut,
 };
+
 use game::Component::*;
 use game::ComponentType as CType;
 
@@ -49,7 +50,7 @@ pub struct Level {
     pub height: usize,
     pub schedule: RefCell<TurnSchedule>,
     pub spacial_hash: LevelSpacialHashMap,
-    entities: HashMapEntityTable,
+    entities: LevelEntityTable,
     entity_ids: HashSet<EntityId>,
     perlin: Perlin3Grid,
     perlin_zoom: f64,
@@ -59,7 +60,7 @@ pub struct Level {
 }
 
 impl<'a> EntityStore<'a> for Level {
-    type Ref = HashMapEntityRef<'a>;
+    type Ref = LevelEntityRef<'a>;
     fn get(&'a self, id: EntityId) -> Option<Self::Ref> {
         self.entities.get(id)
     }
@@ -79,7 +80,7 @@ impl Level {
             spacial_hash: SpacialHashMap::new(
                     StaticGrid::new_default(width, height)),
             entity_ids: HashSet::new(),
-            entities: HashMapEntityTable::new(),
+            entities: LevelEntityTable::new(),
             perlin: Perlin3Grid::new(width, height, PerlinWrapType::Regenerate).unwrap(),
             perlin_zoom: 0.05,
             perlin_min: -0.1,
@@ -103,7 +104,7 @@ impl Level {
         self.entities.remove(id)
     }
 
-    pub fn get_mut(&mut self, id: EntityId) -> Option<HashMapEntityRefMut> {
+    pub fn get_mut(&mut self, id: EntityId) -> Option<LevelEntityRefMut> {
         self.entities.get_mut(id)
     }
 

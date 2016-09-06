@@ -1,11 +1,11 @@
 use game::{
     EntityId,
-    HashMapEntityRef,
-    HashMapEntityRefMut,
     Level,
     LevelId,
     Entity,
     EntityStore,
+    LevelEntityRef,
+    LevelEntityRefMut,
 };
 
 use reserver::LeakyReserver;
@@ -58,11 +58,11 @@ impl EntityContext {
         self.levels[level_id].remove(id)
     }
 
-    pub fn get_mut(&mut self, id: EntityId, level_id: LevelId) -> Option<HashMapEntityRefMut> {
+    pub fn get_mut(&mut self, id: EntityId, level_id: LevelId) -> Option<LevelEntityRefMut> {
         self.levels[level_id].get_mut(id)
     }
 
-    pub fn get_from_level(&self, id: EntityId, level_id: LevelId) -> Option<HashMapEntityRef> {
+    pub fn get_from_level(&self, id: EntityId, level_id: LevelId) -> Option<LevelEntityRef> {
         self.levels[level_id].get(id)
     }
 

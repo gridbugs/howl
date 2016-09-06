@@ -10,10 +10,28 @@ pub use self::entity::{
     EntityTable,
     Component,
     ComponentType,
+    FlatEntityTable,
+    FlatEntityRef,
+    FlatEntityRefMut,
     HashMapEntityTable,
     HashMapEntityRef,
     HashMapEntityRefMut,
 };
+
+#[cfg(not(feature = "hash_map_table"))]
+pub type LevelEntityTable = FlatEntityTable;
+#[cfg(not(feature = "hash_map_table"))]
+pub type LevelEntityRef<'a> = FlatEntityRef<'a>;
+#[cfg(not(feature = "hash_map_table"))]
+pub type LevelEntityRefMut<'a> = FlatEntityRefMut<'a>;
+
+#[cfg(feature = "hash_map_table")]
+pub type LevelEntityTable = HashMapEntityTable;
+#[cfg(feature = "hash_map_table")]
+pub type LevelEntityRef<'a> = HashMapEntityRef<'a>;
+#[cfg(feature = "hash_map_table")]
+pub type LevelEntityRefMut<'a> = HashMapEntityRefMut<'a>;
+
 
 mod entity_context;
 pub use self::entity_context::{
