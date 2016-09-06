@@ -1,7 +1,7 @@
 use game;
 use game::{
     Entity,
-    EntityId,
+    LevelId,
     StatusCounter,
 };
 use game::entity::Component::*;
@@ -23,7 +23,7 @@ use table::TableRefMut;
 
 use std::cell::RefCell;
 
-pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
+pub fn make_wall(x: isize, y: isize, level: LevelId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
@@ -37,7 +37,7 @@ pub fn make_wall(x: isize, y: isize, level: EntityId) -> Entity {
     ]
 }
 
-pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entity {
+pub fn make_door(x: isize, y: isize, level: LevelId, state: DoorState) -> Entity {
     let mut entity = entity![
         Position(Vector2::new(x, y)),
         TileDepth(1),
@@ -58,7 +58,7 @@ pub fn make_door(x: isize, y: isize, level: EntityId, state: DoorState) -> Entit
     entity
 }
 
-pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
+pub fn make_tree(x: isize, y: isize, level: LevelId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
@@ -69,7 +69,7 @@ pub fn make_tree(x: isize, y: isize, level: EntityId) -> Entity {
     ]
 }
 
-pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
+pub fn make_floor(x: isize, y: isize, level: LevelId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY, style::NONE)),
@@ -78,7 +78,7 @@ pub fn make_floor(x: isize, y: isize, level: EntityId) -> Entity {
     ]
 }
 
-pub fn make_floor_outside(x: isize, y: isize, level: EntityId, moonlight: bool) -> Entity {
+pub fn make_floor_outside(x: isize, y: isize, level: LevelId, moonlight: bool) -> Entity {
     let mut entity = entity![
         Position(Vector2::new(x, y)),
         Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY, style::NONE)),
@@ -94,7 +94,7 @@ pub fn make_floor_outside(x: isize, y: isize, level: EntityId, moonlight: bool) 
     entity
 }
 
-pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
+pub fn make_pc(x: isize, y: isize, level: LevelId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Tile(tile::foreground('@', ansi::WHITE, style::BOLD)),
@@ -110,7 +110,7 @@ pub fn make_pc(x: isize, y: isize, level: EntityId) -> Entity {
     ]
 }
 
-pub fn make_bullet(x: isize, y: isize, level: EntityId) -> Entity {
+pub fn make_bullet(x: isize, y: isize, level: LevelId) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Tile(tile::foreground('*', ansi::RED, style::NONE)),

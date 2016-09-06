@@ -1,8 +1,8 @@
 use game::{
-    EntityId,
     IterEntityRef,
     EntityContext,
     SpacialHashCell,
+    LevelId,
 };
 
 use grid::{
@@ -83,7 +83,7 @@ pub struct LevelGridKnowledge<G>
     where G: DefaultGrid,
           G::Item: KnowledgeCell
 {
-    levels: HashMap<EntityId, KnowledgeGrid<G>>,
+    levels: HashMap<LevelId, KnowledgeGrid<G>>,
 }
 
 impl<G> LevelGridKnowledge<G>
@@ -97,7 +97,7 @@ impl<G> LevelGridKnowledge<G>
     }
 
     pub fn update<'a, I, S>(
-        &mut self, level_id: EntityId,
+        &mut self, level_id: LevelId,
         entities: &EntityContext,
         grid: &S,
         report_iter: I,
@@ -113,7 +113,7 @@ impl<G> LevelGridKnowledge<G>
         self.levels.get_mut(&level_id).unwrap().update(entities, grid, report_iter, turn_count)
     }
 
-    pub fn grid(&self, level_id: EntityId) -> Option<&G> {
+    pub fn grid(&self, level_id: LevelId) -> Option<&G> {
         self.levels.get(&level_id).map(|g| &g.grid)
     }
 }

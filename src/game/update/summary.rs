@@ -36,7 +36,7 @@ pub struct UpdateSummary {
     pub removed_entities: HashSet<EntityId>,
     pub added_components: HashMap<EntityId, Entity>,
     pub removed_components: HashMap<EntityId, HashSet<ComponentType>>,
-    levels: RefCell<HashSet<EntityId>>,
+    levels: RefCell<HashSet<LevelId>>,
     pub metadata: Metadata,
 }
 

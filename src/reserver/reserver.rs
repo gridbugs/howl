@@ -1,13 +1,15 @@
-pub struct LeakyReserver(u64);
+use num::Integer;
 
-impl LeakyReserver {
+pub struct LeakyReserver<T: Integer>(T);
+
+impl<T: Integer + Copy> LeakyReserver<T> {
     pub fn new() -> Self {
-        LeakyReserver(0)
+        LeakyReserver(T::zero())
     }
 
-    pub fn reserve(&mut self) -> u64 {
+    pub fn reserve(&mut self) -> T {
         let ret = self.0;
-        self.0 += 1;
+        self.0 = self.0 + T::one();
         ret
     }
 }

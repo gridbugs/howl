@@ -1,5 +1,6 @@
 use game::{
     EntityId,
+    LevelId,
     Entity,
     Component,
     ComponentType,
@@ -125,7 +126,7 @@ impl SpacialHashCell {
 
 #[derive(Debug, Clone)]
 pub struct SpacialHashMap<G: Grid<Item=SpacialHashCell>> {
-    pub id: Option<EntityId>,
+    pub id: Option<LevelId>,
     pub grid: G,
     pub component_entities: HashMap<ComponentType, HashSet<EntityId>>,
 }
@@ -139,7 +140,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn set_id(&mut self, id: EntityId) {
+    pub fn set_id(&mut self, id: LevelId) {
         self.id = Some(id);
     }
 

@@ -40,7 +40,7 @@ use std::collections::HashSet;
 pub type LevelSpacialHashMap =
     SpacialHashMap<StaticGrid<SpacialHashCell>>;
 
-pub type LevelId = u64;
+pub type LevelId = usize;
 
 #[derive(Debug, Clone)]
 pub struct Level {
@@ -75,7 +75,7 @@ impl Level {
         }
     }
 
-    pub fn set_id(&mut self, id: EntityId) {
+    pub fn set_id(&mut self, id: LevelId) {
         self.id = Some(id);
         self.spacial_hash.set_id(id);
     }

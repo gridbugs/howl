@@ -41,8 +41,8 @@ impl<'a, Tab: 'a + EntityTable<'a>> Iterator for EntityIter<'a, Tab> {
 pub struct EntityContext {
     pub entities: HashMapEntityTable,
     pub levels: HashMap<LevelId, Level>,
-    level_reserver: RefCell<LeakyReserver>,
-    entity_reserver: RefCell<LeakyReserver>,
+    level_reserver: RefCell<LeakyReserver<LevelId>>,
+    entity_reserver: RefCell<LeakyReserver<EntityId>>,
 }
 
 impl EntityContext {
