@@ -8,7 +8,6 @@ pub trait TableRef<'a, EntryType, Entry>: Clone + Copy
     where EntryType: 'a + Eq + Hash,
           Entry: 'a + ToType<EntryType>,
 {
-    fn _id(self) -> Option<TableId>;
     fn has(self, entry_type: EntryType) -> bool;
     fn get(self, entry_type: EntryType) -> Option<&'a Entry>;
 }

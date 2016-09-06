@@ -43,9 +43,6 @@ struct TestRef {
 }
 
 impl<'a> TableRef<'a, ComponentType, Component> for &'a TestRef {
-    fn _id(self) -> Option<TableId> {
-        self.entity._id()
-    }
     fn has(self, entry_type: ComponentType) -> bool {
         self.entity.has(entry_type)
     }
@@ -107,11 +104,10 @@ fn make_spacial_hash()
 }
 
 fn make_entity(id: EntityId, x: isize, y: isize) -> TestRef {
-    let mut e = entity![
+    let e = entity![
         Position(Vector2::new(x, y)),
         Solid,
     ];
-    e.id = Some(id);
 
     TestRef {
         entity: e,

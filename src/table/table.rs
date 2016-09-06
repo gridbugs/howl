@@ -17,7 +17,6 @@ pub struct Table<EntryType, Entry>
     where EntryType: Eq + Hash,
           Entry: ToType<EntryType>,
 {
-    pub id: Option<TableId>,
     pub slots: HashMap<EntryType, Entry>,
 }
 
@@ -27,7 +26,6 @@ impl<EntryType, Entry> Table<EntryType, Entry>
 {
     pub fn new() -> Self {
         Table {
-            id: None,
             slots: HashMap::new(),
         }
     }
@@ -37,10 +35,6 @@ impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry> for &'a Table<EntryTyp
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
-    fn _id(self) -> Option<TableId> {
-        self.id
-    }
-
     fn get(self, t: EntryType) -> Option<&'a Entry> {
         self.slots.get(&t)
     }

@@ -14,7 +14,26 @@ use std::collections::{
     hash_map,
 };
 use std::hash::Hash;
-use std::cell::Cell;
+
+pub struct HashMapTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash,
+      Entry: 'a + ToType<EntryType>,
+{
+    id: TableId,
+    table: &'a Table<EntryType, Entry>,
+}
+
+impl<'a, EntryType, Entry> HashMapTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash,
+      Entry: 'a + ToType<EntryType>,
+{
+    fn new(id: TableId, table: &'a Table<EntryType, Entry>) -> Self {
+        HashMapTableRef {
+            id: id,
+            table: table,
+        }
+    }
+}
 
 pub struct HashMapTableRefMut<'a, EntryType, Entry>(&'a mut Table<EntryType, Entry>)
 where EntryType: 'a + Eq + Hash,
@@ -34,7 +53,6 @@ pub struct HashMapTableTable<EntryType, Entry>
     where EntryType: Eq + Hash,
           Entry: ToType<EntryType>,
 {
-    next_id: Cell<TableId>,
     tables: HashMap<TableId, Table<EntryType, Entry>>,
 }
 
@@ -44,7 +62,6 @@ where EntryType: Eq + Hash,
 {
     pub fn new() -> Self {
         HashMapTableTable {
-            next_id: Cell::new(0),
             tables: HashMap::new(),
         }
     }
@@ -58,18 +75,10 @@ where EntryType: 'a + Eq + Hash,
     type Ref = HashMapTableRef<'a, EntryType, Entry>;
     type RefMut = HashMapTableRefMut<'a, EntryType, Entry>;
 
-    fn add(&mut self, table_id: TableId, mut table: Table<EntryType, Entry>)
+    fn add(&mut self, table_id: TableId, table: Table<EntryType, Entry>)
         -> Option<Table<EntryType, Entry>>
     {
-        let id = if let Some(id) = table.id {
-            assert_eq!(table_id, id);
-            id
-        } else {
-            table.id = Some(table_id);
-            table_id
-        };
-
-        self.tables.insert(id, table)
+        self.tables.insert(table_id, table)
     }
 
     fn remove(&mut self, id: TableId) -> Option<Table<EntryType, Entry>> {
@@ -77,7 +86,7 @@ where EntryType: 'a + Eq + Hash,
     }
 
     fn get(&'a self, id: TableId) -> Option<Self::Ref> {
-        self.tables.get(&id).map(HashMapTableRef::new)
+        self.tables.get(&id).map(|t| HashMapTableRef::new(id, t))
     }
 
     fn get_mut(&'a mut self, id: TableId) -> Option<Self::RefMut> {
@@ -102,16 +111,12 @@ where EntryType: 'a + Eq + Hash,
     }
 }
 
-pub struct HashMapTableRef<'a, EntryType, Entry>(&'a Table<EntryType, Entry>)
-where EntryType: 'a + Eq + Hash,
-      Entry: 'a + ToType<EntryType>;
-
 impl<'a, EntryType, Entry> Clone for HashMapTableRef<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
     fn clone(&self) -> Self {
-        HashMapTableRef(self.0)
+        HashMapTableRef::new(self.id, self.table)
     }
 }
 
@@ -124,16 +129,12 @@ impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry> for HashMapTableRef<'a
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
-    fn _id(self) -> Option<TableId> {
-        self.0.id
-    }
-
     fn get(self, entry_type: EntryType) -> Option<&'a Entry> {
-        self.0.get(entry_type)
+        self.table.get(entry_type)
     }
 
     fn has(self, entry_type: EntryType) -> bool {
-        self.0.has(entry_type)
+        self.table.has(entry_type)
     }
 }
 
@@ -146,15 +147,15 @@ where EntryType: 'a + Eq + Hash,
     type EntryIter = hash_map::Values<'a, EntryType, Entry>;
 
     fn slots(self) -> Self::Iter {
-        self.0.slots()
+        self.table.slots()
     }
 
     fn entries(self) -> hash_map::Values<'a, EntryType, Entry> {
-        self.0.entries()
+        self.table.entries()
     }
 
     fn types(self) -> hash_map::Keys<'a, EntryType, Entry> {
-        self.0.types()
+        self.table.types()
     }
 }
 
@@ -163,15 +164,6 @@ where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
     fn id(self) -> TableId {
-        self._id().unwrap()
-    }
-}
-
-impl<'a, EntryType, Entry> HashMapTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash,
-      Entry: 'a + ToType<EntryType>,
-{
-    pub fn new(table: &'a Table<EntryType, Entry>) -> Self {
-        HashMapTableRef(table)
+        self.id
     }
 }

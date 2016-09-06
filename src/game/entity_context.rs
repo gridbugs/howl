@@ -78,11 +78,7 @@ impl EntityContext {
         id
     }
 
-    pub fn add(&mut self, id: EntityId, mut entity: Entity) -> Option<Entity> {
-
-        // TODO remove this
-        entity.id = Some(id);
-
+    pub fn add(&mut self, id: EntityId, entity: Entity) -> Option<Entity> {
         self.entities.add(id, entity)
     }
 
