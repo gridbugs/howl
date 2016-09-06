@@ -8,12 +8,12 @@ pub trait TableRef<'a, EntryType, Entry>: Clone + Copy
     where EntryType: 'a + Eq + Hash,
           Entry: 'a + ToType<EntryType>,
 {
-    fn id(self) -> Option<TableId>;
+    fn _id(self) -> Option<TableId>;
     fn has(self, entry_type: EntryType) -> bool;
     fn get(self, entry_type: EntryType) -> Option<&'a Entry>;
 }
 
-pub trait IterTableRef<'a, EntryType, Entry>: TableRef<'a, EntryTrpe, Entry>
+pub trait IterTableRef<'a, EntryType, Entry>: TableRef<'a, EntryType, Entry>
     where EntryType: 'a + Eq + Hash,
           Entry: 'a + ToType<EntryType>,
 {
@@ -33,4 +33,11 @@ pub trait TableRefMut<'a, EntryType, Entry>
     fn add(&mut self, entry: Entry) -> Option<Entry>;
     fn remove(&mut self, entry_type: EntryType) -> Option<Entry>;
     fn get_mut(&mut self, entry_type: EntryType) -> Option<&mut Entry>;
+}
+
+pub trait IdTableRef<'a, EntryType, Entry>: IterTableRef<'a, EntryType, Entry>
+    where EntryType: 'a + Eq + Hash,
+          Entry: 'a + ToType<EntryType>,
+{
+    fn id(self) -> TableId;
 }

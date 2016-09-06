@@ -28,10 +28,10 @@ pub struct EntityIter<'a, Tab: 'a + EntityTable<'a>> {
 }
 
 impl<'a, Tab: 'a + EntityTable<'a>> Iterator for EntityIter<'a, Tab> {
-    type Item = Option<Tab::Ref>;
+    type Item = (EntityId, Option<Tab::Ref>);
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(id) = self.hash_set_iter.next() {
-            Some(self.entities.get(*id))
+            Some((*id, self.entities.get(*id)))
         } else {
             None
         }

@@ -5,6 +5,7 @@ use table::{
     TableRef,
     IterTableRef,
     TableRefMut,
+    IdTableRef,
 };
 
 use std::collections::hash_map;
@@ -62,7 +63,7 @@ impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry> for HashMapTableRef<'a
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
-    fn id(self) -> Option<TableId> {
+    fn _id(self) -> Option<TableId> {
         self.0.id
     }
 
@@ -93,6 +94,15 @@ where EntryType: 'a + Eq + Hash,
 
     fn types(self) -> hash_map::Keys<'a, EntryType, Entry> {
         self.0.types()
+    }
+}
+
+impl<'a, EntryType, Entry> IdTableRef<'a, EntryType, Entry> for HashMapTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash,
+      Entry: 'a + ToType<EntryType>,
+{
+    fn id(self) -> TableId {
+        self._id().unwrap()
     }
 }
 

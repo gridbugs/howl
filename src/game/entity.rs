@@ -20,6 +20,7 @@ use table::{
     TableRef,
     IterTableRef,
     TableRefMut,
+    IdTableRef,
 };
 
 use geometry::{
@@ -44,6 +45,7 @@ impl<'a> EntityTable<'a> for HashMapEntityTable {}
 pub trait EntityRef<'a>: TableRef<'a, ComponentType, Component> {}
 pub trait IterEntityRef<'a>: IterTableRef<'a, ComponentType, Component> + EntityRef<'a> {}
 pub trait EntityRefMut<'a>: TableRefMut<'a, ComponentType, Component> {}
+pub trait IdEntityRef<'a>: IdTableRef<'a, ComponentType, Component> + IterEntityRef<'a> {}
 
 impl<'a> EntityRef<'a> for &'a Entity {}
 impl<'a> IterEntityRef<'a> for &'a Entity {}
@@ -53,6 +55,7 @@ impl<'a> EntityRefMut<'a> for &'a mut Entity {}
 impl<'a> EntityRef<'a> for HashMapEntityRef<'a> {}
 impl<'a> IterEntityRef<'a> for HashMapEntityRef<'a> {}
 impl<'a> EntityRefMut<'a> for HashMapEntityRefMut<'a> {}
+impl<'a> IdEntityRef<'a> for HashMapEntityRef<'a> {}
 
 macro_rules! entity {
     () => { game::entity::Entity::new() };

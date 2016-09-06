@@ -68,7 +68,7 @@ impl<G> KnowledgeGrid<G>
             } else {
                 changed = true;
                 kn_cell.clear();
-                for entity in entities.id_set_iter(&sh_cell.entities) {
+                for (_, entity) in entities.id_set_iter(&sh_cell.entities) {
                     kn_cell.update(entity.unwrap(), turn_count, meta);
                 }
             }

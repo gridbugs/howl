@@ -37,7 +37,7 @@ impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry> for &'a Table<EntryTyp
 where EntryType: 'a + Eq + Hash,
       Entry: 'a + ToType<EntryType>,
 {
-    fn id(self) -> Option<TableId> {
+    fn _id(self) -> Option<TableId> {
         self.id
     }
 

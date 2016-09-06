@@ -15,7 +15,6 @@ use grid::Grid;
 use rustty::Event;
 use terminal::window_manager::InputSource;
 use geometry::direction::Direction;
-use table::TableRef;
 
 const ETX: char = '\u{3}';
 
@@ -67,9 +66,9 @@ fn close_door<'a, E: EntityRef<'a>>(entity: E, entities: &EntityContext) -> Opti
 
     for cell in sh.grid.some_nei_iter(entity.position().unwrap()) {
         if cell.has(CType::Door) {
-            for e in entities.id_set_iter(&cell.entities) {
+            for (id, e) in entities.id_set_iter(&cell.entities) {
                 if let Some(DoorState::Open) = e.unwrap().door_state() {
-                    return Some(actions::close_door(e.unwrap().id().unwrap()));
+                    return Some(actions::close_door(id));
                 }
             }
         }

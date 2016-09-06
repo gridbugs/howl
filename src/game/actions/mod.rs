@@ -1,6 +1,7 @@
 use game::{
     EntityId,
     EntityRef,
+    IdEntityRef,
     Entity,
     UpdateSummary,
     EntityContext,
@@ -29,11 +30,11 @@ use colour::ansi;
 use terminal::style;
 use table::TableRefMut;
 
-pub fn walk<'a, E: EntityRef<'a>>(entity: E, direction: Direction) -> UpdateSummary {
+pub fn walk<'a, E: IdEntityRef<'a>>(entity: E, direction: Direction) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let vec = entity.position().unwrap() + direction.vector().convert::<isize>();
-    summary.add_component(entity.id().unwrap(), Position(vec));
+    summary.add_component(entity.id(), Position(vec));
 
     summary.set_metadata(Name("walk"));
     summary
@@ -153,10 +154,10 @@ pub fn add_entity(entity: Entity, entities: &EntityContext) -> UpdateSummary {
     summary
 }
 
-pub fn remove_entity<'a, E: EntityRef<'a>>(entity: E) -> UpdateSummary {
+pub fn remove_entity<'a, E: IdEntityRef<'a>>(entity: E) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
-    summary.remove_entity(entity.id().unwrap());
+    summary.remove_entity(entity.id());
 
     summary.set_metadata(Name("remove_entity"));
     summary
@@ -168,7 +169,7 @@ pub fn wait() -> UpdateSummary {
     summary
 }
 
-pub fn beast_transform_progress<'a, E: EntityRef<'a>>(
+pub fn beast_transform_progress<'a, E: IdEntityRef<'a>>(
     entity: E, progress: isize) -> UpdateSummary
 {
     let mut summary = UpdateSummary::new();
@@ -176,19 +177,19 @@ pub fn beast_transform_progress<'a, E: EntityRef<'a>>(
     let mut counter = entity.beast_transform().unwrap();
     counter.change(progress);
 
-    summary.add_component(entity.id().unwrap(), BeastTransform(counter));
+    summary.add_component(entity.id(), BeastTransform(counter));
 
     summary.set_metadata(Name("beast_transform_progress"));
     summary
 }
 
-pub fn human_transform_progress<'a, E: EntityRef<'a>>(entity: E, progress: isize) -> UpdateSummary {
+pub fn human_transform_progress<'a, E: IdEntityRef<'a>>(entity: E, progress: isize) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let mut counter = entity.human_transform().unwrap();
     counter.change(progress);
 
-    summary.add_component(entity.id().unwrap(), HumanTransform(counter));
+    summary.add_component(entity.id(), HumanTransform(counter));
 
     summary.set_metadata(Name("human_transform_progress"));
     summary

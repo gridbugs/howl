@@ -4,6 +4,7 @@ pub use self::entity::{
     EntityRef,
     IterEntityRef,
     EntityRefMut,
+    IdEntityRef,
     Entity,
     EntityTable,
     Component,

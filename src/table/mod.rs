@@ -22,6 +22,7 @@ pub use self::table_ref::{
     TableRef,
     IterTableRef,
     TableRefMut,
+    IdTableRef,
 };
 pub use self::table_table::{
     TableTable,

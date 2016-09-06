@@ -6,6 +6,7 @@ use game::{
     EntityContext,
     EntityRef,
     IterEntityRef,
+    IdEntityRef,
     EntityTable,
     LevelId,
     Level,
@@ -108,7 +109,7 @@ impl UpdateSummary {
     fn update_spacial_hashes<'a, T>(&self, levels: &mut HashMap<LevelId, Level>,
                                     entities: &'a T, turn_count: u64)
     where T: EntityTable<'a>,
-          <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
+          <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,
     {
         self.update_levels(entities);
 

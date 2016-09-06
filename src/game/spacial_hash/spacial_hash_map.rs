@@ -8,6 +8,7 @@ use game::{
     EntityWrapper,
     EntityRef,
     IterEntityRef,
+    IdEntityRef,
 };
 
 use table::{
@@ -88,8 +89,8 @@ impl SpacialHashCell {
         }
     }
 
-    fn remove_entity<'a, E: IterEntityRef<'a>>(&mut self, entity: E) {
-        if self.entities.remove(&entity.id().unwrap()) {
+    fn remove_entity<'a, E: IdEntityRef<'a>>(&mut self, entity: E) {
+        if self.entities.remove(&entity.id()) {
             for component in entity.entries() {
                 self.remove_component(component);
             }
@@ -198,26 +199,26 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn remove_entity<'a, E: IterEntityRef<'a>>(&mut self, entity: E, turn_count: u64) {
+    pub fn remove_entity<'a, E: IdEntityRef<'a>>(&mut self, entity: E, turn_count: u64) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut_unsafe(vec.to_tuple());
             cell.remove_entity(entity);
             cell.last_updated = turn_count;
         }
 
-        let id = entity.id().unwrap();
+        let id = entity.id();
         for component_type in entity.types() {
             self.remove_component_entity(*component_type, id);
         }
     }
 
-    pub fn add_components<'a, 'b, E: IterEntityRef<'a>>(
+    pub fn add_components<'a, 'b, E: IdEntityRef<'a>>(
         &mut self,
         entity: E,
         changes: &Entity,
         turn_count: u64)
     {
-        let id = entity.id().unwrap();
+        let id = entity.id();
 
         // position will be set to the position of entity after the change
         let position = if let Some(new_position) = changes.position() {
@@ -263,7 +264,6 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
             cell.last_updated = turn_count;
         }
 
-        let id  = entity.id().unwrap();
         for component_type in changes.types() {
             if !entity.has(*component_type) {
                 self.add_component_entity(*component_type, id);
@@ -271,7 +271,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn remove_components<'a, E: IterEntityRef<'a>>(
+    pub fn remove_components<'a, E: IdEntityRef<'a>>(
         &mut self,
         entity: E,
         component_types: &HashSet<ComponentType>,
@@ -292,7 +292,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
             }
         }
 
-        let id  = entity.id().unwrap();
+        let id  = entity.id();
         for component_type in component_types {
             self.remove_component_entity(*component_type, id);
         }
@@ -301,7 +301,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
     /// Update the spacial hash's metadata. This should be called before the update is applied.
     pub fn update<'a, T>(&mut self, update: &UpdateSummary, entities: &'a T, turn_count: u64)
     where T: EntityTable<'a>,
-          <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
+          <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,
     {
         for (id, entity) in update.added_entities.iter() {
             if self.entity_is_on_level(entity) {
