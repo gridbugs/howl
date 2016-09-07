@@ -7,6 +7,8 @@ use table::{
     TableRefMut,
     IterTableRef,
     IdTableRef,
+    TypeIdMap,
+    EntryTypeTableRef,
 };
 
 use std::collections::{
@@ -39,6 +41,7 @@ where EntryType: Eq + Hash + Copy,
 {
     tables: HashMap<Key<EntryType>, Entry>,
     entry_types: HashMap<TableId, HashSet<EntryType>>,
+    entry_type_map: TypeIdMap<EntryType>,
 }
 
 impl<EntryType, Entry> FlatTableTable<EntryType, Entry>
@@ -49,6 +52,7 @@ where EntryType: Eq + Hash + Copy,
         FlatTableTable {
             tables: HashMap::new(),
             entry_types: HashMap::new(),
+            entry_type_map: TypeIdMap::new(),
         }
     }
 
@@ -61,11 +65,13 @@ where EntryType: Eq + Hash + Copy,
     fn add_type(&mut self, id: TableId, entry_type: EntryType) {
         self.ensure_entry_type(id);
         self.entry_types.get_mut(&id).unwrap().insert(entry_type);
+        self.entry_type_map.add(id, entry_type);
     }
 
     fn remove_type(&mut self, id: TableId, entry_type: EntryType) {
         self.ensure_entry_type(id);
         self.entry_types.get_mut(&id).unwrap().remove(&entry_type);
+        self.entry_type_map.remove(id, entry_type);
     }
 }
 
@@ -239,6 +245,7 @@ where EntryType: 'a + Eq + Hash + Copy,
 {
     type Ref = FlatTableRef<'a, EntryType, Entry>;
     type RefMut = FlatTableRefMut<'a, EntryType, Entry>;
+    type EntryTypeRef = FlatEntryTypeTableRef<'a, EntryType, Entry>;
 
     fn add(&mut self, id: TableId, mut table: Table<EntryType, Entry>)
         -> Option<Table<EntryType, Entry>>
@@ -285,5 +292,94 @@ where EntryType: 'a + Eq + Hash + Copy,
             None
         }
     }
+
+    fn entry_type(&'a self, entry_type: EntryType) -> Option<Self::EntryTypeRef> {
+        if let Some(ids) = self.entry_type_map.get(entry_type) {
+            Some(FlatEntryTypeTableRef::new(entry_type, &self, ids))
+        } else {
+            None
+        }
+    }
 }
 
+pub struct FlatEntryTypeTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash + Copy,
+      Entry: 'a + ToType<EntryType>,
+{
+    entry_type: EntryType,
+    table_table: &'a FlatTableTable<EntryType, Entry>,
+    ids: &'a HashSet<TableId>,
+}
+
+impl<'a, EntryType, Entry> FlatEntryTypeTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash + Copy,
+      Entry: 'a + ToType<EntryType>,
+{
+    fn new(entry_type: EntryType,
+           table_table: &'a FlatTableTable<EntryType, Entry>,
+           ids: &'a HashSet<TableId>) -> Self
+    {
+        FlatEntryTypeTableRef {
+            entry_type: entry_type,
+            table_table: table_table,
+            ids: ids,
+        }
+    }
+}
+
+impl<'a, EntryType, Entry> Clone for FlatEntryTypeTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash + Copy,
+      Entry: 'a + ToType<EntryType>,
+{
+    fn clone(&self) -> Self {
+        FlatEntryTypeTableRef::new(self.entry_type, self.table_table, self.ids)
+    }
+}
+
+impl<'a, EntryType, Entry> Copy for FlatEntryTypeTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash + Copy,
+      Entry: 'a + ToType<EntryType>
+{}
+
+pub struct FlatEntryIter<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash + Copy,
+      Entry: 'a + ToType<EntryType>,
+{
+    entry_type_table_ref: FlatEntryTypeTableRef<'a, EntryType, Entry>,
+    iter: hash_set::Iter<'a, TableId>,
+}
+
+impl<'a, EntryType, Entry> Iterator for FlatEntryIter<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash + Copy,
+      Entry: 'a + ToType<EntryType>,
+{
+    type Item = FlatTableRef<'a, EntryType, Entry>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(id) = self.iter.next() {
+            Some(self.entry_type_table_ref.table_table.get(*id).unwrap())
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a, EntryType, Entry> EntryTypeTableRef <'a, EntryType, Entry>
+for FlatEntryTypeTableRef<'a, EntryType, Entry>
+where EntryType: 'a + Eq + Hash + Copy,
+      Entry: 'a + ToType<EntryType>,
+{
+    type Ref = FlatTableRef<'a, EntryType, Entry>;
+    type IdIter = hash_set::Iter<'a, TableId>;
+    type Iter = FlatEntryIter<'a, EntryType, Entry>;
+
+    fn iter(self) -> Self::Iter {
+        FlatEntryIter {
+            entry_type_table_ref: self,
+            iter: self.id_iter(),
+        }
+    }
+
+    fn id_iter(self) -> Self::IdIter {
+        self.ids.iter()
+    }
+}

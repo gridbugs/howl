@@ -33,6 +33,8 @@ use geometry::{
 use table::{
     TableRef,
     TableTable,
+    IdTableRef,
+    EntryTypeTableRef,
 };
 
 use std::cell::RefCell;
@@ -138,17 +140,11 @@ impl Level {
         }
     }
 
-    pub fn component_entities(&self, component_type: CType) -> Option<&HashSet<EntityId>> {
-        self.spacial_hash.component_entities.get(&component_type)
-    }
-
     pub fn perlin_update(&self) -> UpdateSummary {
         let mut update = UpdateSummary::new();
 
-        if let Some(entity_ids) = self.component_entities(CType::Outside) {
-
-            for entity_id in entity_ids.iter() {
-                let entity = self.entities.get(*entity_id).unwrap();
+        if let Some(outside_entities) = self.entities.entry_type(CType::Outside) {
+            for entity in outside_entities.iter() {
                 if let Some(Vector2 {x, y}) = entity.position() {
                     let new = self.moonlight(x, y);
                     let current = entity.has(CType::Moon);
@@ -158,9 +154,9 @@ impl Level {
                     }
 
                     if new {
-                        update.add_component(*entity_id, Moon);
+                        update.add_component(entity.id(), Moon);
                     } else {
-                        update.remove_component(*entity_id, CType::Moon);
+                        update.remove_component(entity.id(), CType::Moon);
                     }
                 }
             }

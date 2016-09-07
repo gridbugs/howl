@@ -40,3 +40,15 @@ pub trait IdTableRef<'a, EntryType, Entry>: IterTableRef<'a, EntryType, Entry>
 {
     fn id(self) -> TableId;
 }
+
+pub trait EntryTypeTableRef<'a, EntryType, Entry>: Clone + Copy
+    where EntryType: 'a + Eq + Hash,
+          Entry: 'a + ToType<EntryType>,
+{
+    type Ref: 'a + IdTableRef<'a, EntryType, Entry>;
+    type IdIter: Iterator<Item=&'a TableId>;
+    type Iter: Iterator<Item=Self::Ref>;
+
+    fn iter(self) -> Self::Iter;
+    fn id_iter(self) -> Self::IdIter;
+}
