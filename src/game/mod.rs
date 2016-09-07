@@ -71,10 +71,10 @@ pub use self::rule::{
     RuleContext,
 };
 
-mod spacial_hash;
-pub use self::spacial_hash::{
-    SpacialHashMap,
-    SpacialHashCell,
+mod spatial_hash;
+pub use self::spatial_hash::{
+    SpatialHashMap,
+    SpatialHashCell,
 };
 
 pub mod observer;
@@ -91,5 +91,5 @@ mod level;
 pub use self::level::{
     Level,
     LevelId,
-    LevelSpacialHashMap,
+    LevelSpatialHashMap,
 };

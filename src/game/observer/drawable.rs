@@ -29,7 +29,7 @@ impl DrawableObserver {
         let level_id = entity.on_level().unwrap();
 
         let eye = entity.position().unwrap();
-        let grid = &entities.spacial_hash().grid;
+        let grid = &entities.spatial_hash().grid;
         let info = entity.vision_distance().unwrap();
 
         self.visibility_report.clear();

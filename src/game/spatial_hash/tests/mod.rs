@@ -4,8 +4,8 @@ use game::ComponentType as CType;
 use game::{
     Component,
     ComponentType,
-    SpacialHashMap,
-    SpacialHashCell,
+    SpatialHashMap,
+    SpatialHashCell,
     Entity,
     EntityId,
     EntityRef,
@@ -97,10 +97,10 @@ impl<'a> EntityRefMut<'a> for TestRef {}
 
 // helper fns
 
-fn make_spacial_hash() 
-    -> SpacialHashMap<StaticGrid<SpacialHashCell>>
+fn make_spatial_hash() 
+    -> SpatialHashMap<StaticGrid<SpatialHashCell>>
 {
-    SpacialHashMap::new(StaticGrid::new_default(WIDTH, HEIGHT))
+    SpatialHashMap::new(StaticGrid::new_default(WIDTH, HEIGHT))
 }
 
 fn make_entity(id: EntityId, x: isize, y: isize) -> TestRef {
@@ -123,16 +123,16 @@ fn set_from_vec(mut v: Vec<CType>) -> HashSet<CType> {
     s
 }
 
-/// Create a new spacial hash.
+/// Create a new spatial hash.
 #[test]
 fn creation() {
-    make_spacial_hash();
+    make_spatial_hash();
 }
 
-/// Add an entity to a spacial hash, ensuring the component counts are updated.
+/// Add an entity to a spatial hash, ensuring the component counts are updated.
 #[test]
 fn add_entity() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let e = make_entity(0, 0, 0);
 
     s.add_entity(e.id, &e, 0);
@@ -148,7 +148,7 @@ fn add_entity() {
 /// Add then immediatly remove an entity, ensuring consistent component counts.
 #[test]
 fn remove_entity() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let e = make_entity(0, 0, 0);
 
     s.add_entity(e.id, &e, 0);
@@ -166,7 +166,7 @@ fn remove_entity() {
 #[test]
 fn add_remove_many_entities() {
     const NUM_ENTITIES: EntityId = 100;
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let mut entities = Vec::with_capacity(NUM_ENTITIES as usize);
 
     // create entities
@@ -175,12 +175,12 @@ fn add_remove_many_entities() {
         entities.push(e);
     }
 
-    // add entities to spacial hash
+    // add entities to spatial hash
     for e in entities.iter() {
         s.add_entity(e.id, e, 0);
     }
 
-    // assert that entities are in spacial hash
+    // assert that entities are in spatial hash
     {
         let cell = s.get((0, 0)).unwrap();
         assert_eq!(cell.entities.len(), NUM_ENTITIES as usize);
@@ -191,12 +191,12 @@ fn add_remove_many_entities() {
         assert!(cell.has(CType::Position));
     }
 
-    // remove entities from spacial hash
+    // remove entities from spatial hash
     for e in &entities {
         s.remove_entity(e, 0);
     }
 
-    // assert that the entities are gone from spacial hash
+    // assert that the entities are gone from spatial hash
     {
         let cell = s.get((0, 0)).unwrap();
         assert_eq!(cell.entities.len(), 0);
@@ -211,7 +211,7 @@ fn add_remove_many_entities() {
 /// Add an entity, then change its components, ensuring consistent component counts.
 #[test]
 fn change_entity() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let e = make_entity(0, 0, 0);
 
     s.add_entity(e.id, &e, 0);
@@ -231,7 +231,7 @@ fn change_entity() {
 /// component counts.
 #[test]
 fn add_remove_components() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let mut e = make_entity(0, 0, 0);
 
     s.add_components(&e, &entity![
@@ -255,7 +255,7 @@ fn add_remove_components() {
 /// Add an entity, then change its position, ensuring consistent component counts.
 #[test]
 fn move_entity() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let e = make_entity(0, 0, 0);
 
     s.add_entity(e.id, &e, 0);
@@ -282,7 +282,7 @@ fn move_entity() {
 /// consistent component counts.
 #[test]
 fn move_entity_adding_component() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let e = make_entity(0, 0, 0);
 
     s.add_entity(e.id, &e, 0);
@@ -311,7 +311,7 @@ fn move_entity_adding_component() {
 /// ensuring consistent component counts.
 #[test]
 fn add_entities_remove_components() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
     let e0 = make_entity(0, 0, 0);
     let mut e1 = make_entity(1, 0, 0);
 
@@ -330,10 +330,10 @@ fn add_entities_remove_components() {
 }
 
 /// Add entities to a cell, change one of their opacity, then remove one, ensuring the opacity
-/// tracked by the the spacial hash cell remains consistent.
+/// tracked by the the spatial hash cell remains consistent.
 #[test]
 fn opacity() {
-    let mut s = make_spacial_hash();
+    let mut s = make_spatial_hash();
 
     let mut e0 = make_entity(0, 0, 0);
     let mut e1 = make_entity(1, 0, 0);

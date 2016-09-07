@@ -1,6 +1,6 @@
 use game::{
     IterEntityRef,
-    SpacialHashCell,
+    SpatialHashCell,
     LevelId,
     EntityStore,
     Level,
@@ -53,7 +53,7 @@ impl<G> KnowledgeGrid<G>
         turn_count: u64) -> bool
         where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
               I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
-              S: Grid<Item=SpacialHashCell>,
+              S: Grid<Item=SpatialHashCell>,
     {
         let mut changed = false;
         for (coord, meta) in report_iter {
@@ -105,7 +105,7 @@ impl<G> LevelGridKnowledge<G>
         turn_count: u64) -> bool
         where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
               I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
-              S: Grid<Item=SpacialHashCell>,
+              S: Grid<Item=SpatialHashCell>,
     {
         if !self.levels.contains_key(&level_id) {
             self.levels.insert(level_id, KnowledgeGrid::new(grid.width(), grid.height()));

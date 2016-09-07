@@ -208,7 +208,7 @@ impl<'a> GameContext<'a> {
         let entity = self.entities.get_from_level(id, level_id).unwrap();
         if let Some(form) = entity.form() {
             if let Some(position) = entity.position() {
-                let sh = self.entities.level(level_id).unwrap().spacial_hash();
+                let sh = self.entities.level(level_id).unwrap().spatial_hash();
                 let sh_cell = sh.get((position.x, position.y)).unwrap();
                 if sh_cell.has(ComponentType::Moon) {
                     if form == Form::Human {

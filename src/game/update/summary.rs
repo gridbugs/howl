@@ -78,7 +78,7 @@ impl UpdateSummary {
 
     pub fn commit(mut self, entities: &mut EntityContext, level_id: LevelId, turn_count: u64) {
 
-        entities.level_mut(level_id).unwrap().update_spacial_hash(&self, turn_count);
+        entities.level_mut(level_id).unwrap().update_spatial_hash(&self, turn_count);
 
         for (id, entity) in self.added_entities.drain() {
             entities.add(id, level_id, entity);

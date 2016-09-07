@@ -25,20 +25,20 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
-pub struct SpacialHashCell {
+pub struct SpatialHashCell {
     pub entities: HashSet<EntityId>,
     pub components: HashMap<ComponentType, usize>,
     pub opacity: f64,
     pub last_updated: u64,
 }
 
-impl Opacity for SpacialHashCell {
+impl Opacity for SpatialHashCell {
     fn opacity(&self) -> f64 { self.opacity }
 }
 
-impl Default for SpacialHashCell {
+impl Default for SpatialHashCell {
     fn default() -> Self {
-        SpacialHashCell {
+        SpatialHashCell {
             entities: HashSet::new(),
             components: HashMap::new(),
             opacity: 0.0,
@@ -47,7 +47,7 @@ impl Default for SpacialHashCell {
     }
 }
 
-impl SpacialHashCell {
+impl SpatialHashCell {
     pub fn has(&self, component_type: ComponentType) -> bool {
         if let Some(count) = self.components.get(&component_type) {
             *count != 0
@@ -125,14 +125,14 @@ impl SpacialHashCell {
 
 
 #[derive(Debug, Clone)]
-pub struct SpacialHashMap<G: Grid<Item=SpacialHashCell>> {
+pub struct SpatialHashMap<G: Grid<Item=SpatialHashCell>> {
     pub id: Option<LevelId>,
     pub grid: G,
 }
 
-impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
+impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
     pub fn new(grid: G) -> Self {
-        SpacialHashMap {
+        SpatialHashMap {
             id: None,
             grid: grid,
         }
@@ -154,19 +154,19 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    pub fn get_unsafe(&self, coord: (isize, isize)) -> &SpacialHashCell {
+    pub fn get_unsafe(&self, coord: (isize, isize)) -> &SpatialHashCell {
         self.grid.get_unsafe(Vector2::from_tuple(coord))
     }
 
-    pub fn get(&self, coord: (isize, isize)) -> Option<&SpacialHashCell> {
+    pub fn get(&self, coord: (isize, isize)) -> Option<&SpatialHashCell> {
         self.grid.get(Vector2::from_tuple(coord))
     }
 
-    fn get_mut(&mut self, coord: (isize, isize)) -> Option<&mut SpacialHashCell> {
+    fn get_mut(&mut self, coord: (isize, isize)) -> Option<&mut SpatialHashCell> {
         self.grid.get_mut(Vector2::from_tuple(coord))
     }
 
-    fn get_mut_unsafe(&mut self, coord: (isize, isize)) -> &mut SpacialHashCell {
+    fn get_mut_unsafe(&mut self, coord: (isize, isize)) -> &mut SpatialHashCell {
         self.grid.get_mut_unsafe(Vector2::from_tuple(coord))
     }
 
@@ -217,7 +217,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
             // entity isn't moving, so use its current position
             Some(current_position)
         } else {
-            // entity has no position, so the spacial hash won't be updated
+            // entity has no position, so the spatial hash won't be updated
             None
         };
 
@@ -263,7 +263,7 @@ impl<G: Grid<Item=SpacialHashCell>> SpacialHashMap<G> {
         }
     }
 
-    /// Update the spacial hash's metadata. This should be called before the update is applied.
+    /// Update the spatial hash's metadata. This should be called before the update is applied.
     pub fn update<'a, T>(&mut self, update: &UpdateSummary, entities: &'a T, turn_count: u64)
     where T: EntityTable<'a>,
           <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,

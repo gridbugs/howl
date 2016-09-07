@@ -27,11 +27,11 @@ pub fn detect_open(ctx: RuleContext)
             continue;
         }
 
-        let spacial_hash = ctx.level.spacial_hash();
+        let spatial_hash = ctx.level.spatial_hash();
 
         let new_position = changes.position().unwrap();
 
-        if let Some(cell) = spacial_hash.get(new_position.to_tuple()) {
+        if let Some(cell) = spatial_hash.get(new_position.to_tuple()) {
             if cell.has(ComponentType::Door) && cell.has(ComponentType::Solid) {
                 for entity_id in &cell.entities {
                     if let Some(&Door(DoorState::Closed)) = ctx.level.get(*entity_id).unwrap().get(ComponentType::Door) {

@@ -76,7 +76,7 @@ pub struct BareWindowManager {
     terminal: RefCell<rustty::Terminal>,
     allocator: Allocator<Window>,
     order: Vec<u64>,
-    spacial_hash: HashMap<(isize, isize), u64>,
+    spatial_hash: HashMap<(isize, isize), u64>,
 }
 
 impl BareWindowManager {
@@ -87,7 +87,7 @@ impl BareWindowManager {
                 terminal: RefCell::new(t),
                 allocator: Allocator::new(),
                 order: Vec::new(),
-                spacial_hash: HashMap::new(),
+                spatial_hash: HashMap::new(),
             }
         })
     }
@@ -108,22 +108,22 @@ impl BareWindowManager {
 
         self.order.push(id);
 
-        self.spacial_hash_add_window(id);
+        self.spatial_hash_add_window(id);
 
         id
     }
 
-    fn spacial_hash_update(&mut self) {
-        self.spacial_hash.clear();
+    fn spatial_hash_update(&mut self) {
+        self.spatial_hash.clear();
 
         let order_copy = self.order.to_vec();
 
         for id in &order_copy {
-            self.spacial_hash_add_window(*id);
+            self.spatial_hash_add_window(*id);
         }
     }
 
-    fn spacial_hash_add_window(&mut self, id: u64) {
+    fn spatial_hash_add_window(&mut self, id: u64) {
         let ((x, y), (width, height)) = {
             let window = self.get_window(id);
             (window.coord, window.size)
@@ -131,7 +131,7 @@ impl BareWindowManager {
         for i in 0..(height as isize) {
             for j in 0..(width as isize) {
                 let coord = (x + j, y + i);
-                self.spacial_hash.insert(coord, id);
+                self.spatial_hash.insert(coord, id);
             }
         }
 
@@ -151,7 +151,7 @@ impl BareWindowManager {
     pub fn window_delete(&mut self, id: u64) {
         let index = self.order_index_of(id);
         self.order.remove(index);
-        self.spacial_hash_update();
+        self.spatial_hash_update();
         self.redraw_window_buffers();
     }
 
@@ -159,7 +159,7 @@ impl BareWindowManager {
         let index = self.order_index_of(id);
         self.order.remove(index);
         self.order.push(id);
-        self.spacial_hash_update();
+        self.spatial_hash_update();
         self.redraw_window_buffers();
     }
 
@@ -167,7 +167,7 @@ impl BareWindowManager {
         let index = self.order_index_of(id);
         self.order.remove(index);
         self.order.insert(0, id);
-        self.spacial_hash_update();
+        self.spatial_hash_update();
         self.redraw_window_buffers();
     }
 
@@ -201,7 +201,7 @@ impl BareWindowManager {
     }
 
     fn get_top_window_id(&self, x: isize, y: isize) -> Option<u64> {
-        self.spacial_hash.get(&(x, y)).map(|id| {*id})
+        self.spatial_hash.get(&(x, y)).map(|id| {*id})
     }
 
     fn is_top_window(&self, x: isize, y: isize, id: u64) -> bool {

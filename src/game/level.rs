@@ -2,8 +2,8 @@ use game::{
     Entity,
     EntityId,
     TurnSchedule,
-    SpacialHashMap,
-    SpacialHashCell,
+    SpatialHashMap,
+    SpatialHashCell,
     UpdateSummary,
     EntityWrapper,
     EntityStore,
@@ -40,8 +40,8 @@ use table::{
 use std::cell::RefCell;
 use std::collections::HashSet;
 
-pub type LevelSpacialHashMap =
-    SpacialHashMap<StaticGrid<SpacialHashCell>>;
+pub type LevelSpatialHashMap =
+    SpatialHashMap<StaticGrid<SpatialHashCell>>;
 
 pub type LevelId = usize;
 
@@ -51,7 +51,7 @@ pub struct Level {
     pub width: usize,
     pub height: usize,
     pub schedule: RefCell<TurnSchedule>,
-    pub spacial_hash: LevelSpacialHashMap,
+    pub spatial_hash: LevelSpatialHashMap,
     entities: LevelEntityTable,
     entity_ids: HashSet<EntityId>,
     perlin: Perlin3Grid,
@@ -67,8 +67,8 @@ impl<'a> EntityStore<'a> for Level {
         self.entities.get(id)
     }
 
-    fn spacial_hash(&self) -> &LevelSpacialHashMap {
-        &self.spacial_hash
+    fn spatial_hash(&self) -> &LevelSpatialHashMap {
+        &self.spatial_hash
     }
 }
 
@@ -79,7 +79,7 @@ impl Level {
             width: width,
             height: height,
             schedule: RefCell::new(TurnSchedule::new()),
-            spacial_hash: SpacialHashMap::new(
+            spatial_hash: SpatialHashMap::new(
                     StaticGrid::new_default(width, height)),
             entity_ids: HashSet::new(),
             entities: LevelEntityTable::new(),
@@ -93,7 +93,7 @@ impl Level {
 
     pub fn set_id(&mut self, id: LevelId) {
         self.id = Some(id);
-        self.spacial_hash.set_id(id);
+        self.spatial_hash.set_id(id);
     }
 
     pub fn add(&mut self, id: EntityId, entity: Entity) -> Option<Entity> {
@@ -115,7 +115,7 @@ impl Level {
     {
         for entity_id in self.entity_ids.clone() {
             let entity = self.entities.get(entity_id).unwrap();
-            self.spacial_hash.add_entity(entity_id, entity, turn_count);
+            self.spatial_hash.add_entity(entity_id, entity, turn_count);
         }
     }
 
@@ -165,7 +165,7 @@ impl Level {
         update
     }
 
-    pub fn update_spacial_hash(&mut self, update: &UpdateSummary, turn_count: u64) {
-        self.spacial_hash.update(update, &self.entities, turn_count);
+    pub fn update_spatial_hash(&mut self, update: &UpdateSummary, turn_count: u64) {
+        self.spatial_hash.update(update, &self.entities, turn_count);
     }
 }

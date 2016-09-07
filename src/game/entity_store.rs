@@ -1,7 +1,7 @@
 use game::{
     IdEntityRef,
     EntityId,
-    LevelSpacialHashMap,
+    LevelSpatialHashMap,
 };
 
 use std::collections::{
@@ -30,7 +30,7 @@ pub trait EntityStore<'a> {
     type Ref: IdEntityRef<'a>;
 
     fn get(&'a self, id: EntityId) -> Option<Self::Ref>;
-    fn spacial_hash(&self) -> &LevelSpacialHashMap;
+    fn spatial_hash(&self) -> &LevelSpatialHashMap;
 
     fn id_set_iter(&'a self, set: &'a HashSet<EntityId>)
         -> EntityIter<'a, Self>
