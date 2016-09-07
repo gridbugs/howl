@@ -64,6 +64,9 @@ pub use self::context::GameContext;
 mod entity_wrapper;
 pub use self::entity_wrapper::EntityWrapper;
 
+mod component_wrapper;
+pub use self::component_wrapper::ComponentWrapper;
+
 mod rule;
 pub use self::rule::{
     Rule,

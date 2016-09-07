@@ -7,15 +7,16 @@ use table::{
     TableRefMut,
     IterTableRef,
     IdTableRef,
-    EntryTypeTableRef,
+    EntryAccessor,
     TypeIdMap,
+    TableIdIter,
+    AccessorIter,
+    AccessorEntryIter,
 };
 
 use std::collections::{
     HashMap,
     hash_map,
-    HashSet,
-    hash_set,
 };
 use std::hash::Hash;
 
@@ -116,7 +117,7 @@ where EntryType: 'a + Eq + Hash + Copy,
 {
     type Ref = HashMapTableRef<'a, EntryType, Entry>;
     type RefMut = HashMapTableRefMut<'a, EntryType, Entry>;
-    type EntryTypeRef = HashMapEntryTypeTableRef<'a, EntryType, Entry>;
+    type Accessor = HashMapEntryAccessor<'a, EntryType, Entry>;
 
     fn add(&mut self, table_id: TableId, table: Table<EntryType, Entry>)
         -> Option<Table<EntryType, Entry>>
@@ -154,12 +155,8 @@ where EntryType: 'a + Eq + Hash + Copy,
         }
     }
 
-    fn entry_type(&'a self, entry_type: EntryType) -> Option<Self::EntryTypeRef> {
-        if let Some(ids) = self.entry_type_map.get(entry_type) {
-            Some(HashMapEntryTypeTableRef::new(entry_type, &self, ids))
-        } else {
-            None
-        }
+    fn accessor(&'a self, entry_type: EntryType) -> Self::Accessor {
+        HashMapEntryAccessor::new(entry_type, self)
     }
 }
 
@@ -239,84 +236,81 @@ where EntryType: 'a + Eq + Hash + Copy,
     }
 }
 
-pub struct HashMapEntryTypeTableRef<'a, EntryType, Entry>
+pub struct HashMapEntryAccessor<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash + Copy,
       Entry: 'a + ToType<EntryType>,
 {
     entry_type: EntryType,
     table_table: &'a HashMapTableTable<EntryType, Entry>,
-    ids: &'a HashSet<TableId>,
 }
 
-impl<'a, EntryType, Entry> HashMapEntryTypeTableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> HashMapEntryAccessor<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash + Copy,
       Entry: 'a + ToType<EntryType>,
 {
     fn new(entry_type: EntryType,
-           table_table: &'a HashMapTableTable<EntryType, Entry>,
-           ids: &'a HashSet<TableId>) -> Self
+           table_table: &'a HashMapTableTable<EntryType, Entry>) -> Self
     {
-        HashMapEntryTypeTableRef {
+        HashMapEntryAccessor {
             entry_type: entry_type,
             table_table: table_table,
-            ids: ids,
         }
     }
 }
 
-impl<'a, EntryType, Entry> Clone for HashMapEntryTypeTableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> Clone for HashMapEntryAccessor<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash + Copy,
       Entry: 'a + ToType<EntryType>,
 {
     fn clone(&self) -> Self {
-        HashMapEntryTypeTableRef::new(self.entry_type, self.table_table, self.ids)
+        HashMapEntryAccessor::new(self.entry_type, self.table_table)
     }
 }
 
-impl<'a, EntryType, Entry> Copy for HashMapEntryTypeTableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> Copy for HashMapEntryAccessor<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash + Copy,
       Entry: 'a + ToType<EntryType>
 {}
 
-pub struct HashMapEntryIter<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> EntryAccessor <'a, EntryType, Entry>
+for HashMapEntryAccessor<'a, EntryType, Entry>
 where EntryType: 'a + Eq + Hash + Copy,
       Entry: 'a + ToType<EntryType>,
 {
-    entry_type_table_ref: HashMapEntryTypeTableRef<'a, EntryType, Entry>,
-    iter: hash_set::Iter<'a, TableId>,
-}
 
-impl<'a, EntryType, Entry> Iterator for HashMapEntryIter<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy,
-      Entry: 'a + ToType<EntryType>,
-{
-    type Item = HashMapTableRef<'a, EntryType, Entry>;
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(id) = self.iter.next() {
-            Some(self.entry_type_table_ref.table_table.get(*id).unwrap())
+    type IdIter = TableIdIter<'a>;
+    type EntryIter = AccessorEntryIter<'a, Self, EntryType, Entry>;
+    type Iter = AccessorIter<'a, Self, EntryType, Entry>;
+
+    fn ids(self) -> Self::IdIter {
+        self.table_table.entry_type_map.ids(self.entry_type)
+    }
+
+    fn entries(self) -> Self::EntryIter {
+        AccessorEntryIter::new(self)
+    }
+
+    fn iter(self) -> Self::Iter {
+        AccessorIter::new(self)
+    }
+
+    fn entry_type(self) -> EntryType {
+        self.entry_type
+    }
+
+    fn access(self, id: TableId) -> Option<&'a Entry> {
+        if let Some(t) = self.table_table.get(id) {
+            t.get(self.entry_type)
         } else {
             None
         }
     }
-}
 
-impl<'a, EntryType, Entry> EntryTypeTableRef <'a, EntryType, Entry>
-for HashMapEntryTypeTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy,
-      Entry: 'a + ToType<EntryType>,
-{
-    type Ref = HashMapTableRef<'a, EntryType, Entry>;
-    type IdIter = hash_set::Iter<'a, TableId>;
-    type Iter = HashMapEntryIter<'a, EntryType, Entry>;
-
-    fn iter(self) -> Self::Iter {
-        HashMapEntryIter {
-            entry_type_table_ref: self,
-            iter: self.id_iter(),
+    fn has(self, id: TableId) -> bool {
+        if let Some(t) = self.table_table.get(id) {
+            t.has(self.entry_type)
+        } else {
+            false
         }
-    }
-
-    fn id_iter(self) -> Self::IdIter {
-        self.ids.iter()
     }
 }

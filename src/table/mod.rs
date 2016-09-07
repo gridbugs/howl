@@ -8,6 +8,7 @@ mod type_id_map;
 
 pub use self::type_id_map::{
     TypeIdMap,
+    TableIdIter,
 };
 
 pub use self::table::{
@@ -18,7 +19,6 @@ pub use self::hash_map_table_table::{
     HashMapTableTable,
     HashMapTableRef,
     HashMapTableRefMut,
-    HashMapEntryTypeTableRef,
 };
 pub use self::flat_table_table::{
     FlatTableTable,
@@ -31,7 +31,9 @@ pub use self::table_ref::{
     IterTableRef,
     TableRefMut,
     IdTableRef,
-    EntryTypeTableRef,
+    EntryAccessor,
+    AccessorIter,
+    AccessorEntryIter,
 };
 pub use self::table_table::{
     TableTable,

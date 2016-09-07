@@ -5,9 +5,23 @@ use table::{
 use std::collections::{
     HashMap,
     HashSet,
+    hash_set,
 };
 
 use std::hash::Hash;
+
+pub struct TableIdIter<'a>(Option<hash_set::Iter<'a, TableId>>);
+
+impl<'a> Iterator for TableIdIter<'a> {
+    type Item = &'a TableId;
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(ref mut iter) = self.0 {
+            iter.next()
+        } else {
+            None
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct TypeIdMap<EntryType>(HashMap<EntryType, HashSet<TableId>>)
@@ -38,5 +52,9 @@ where EntryType: Eq + Hash + Copy,
 
     pub fn get(&self, entry_type: EntryType) -> Option<&HashSet<TableId>> {
         self.0.get(&entry_type)
+    }
+
+    pub fn ids(&self, entry_type: EntryType) -> TableIdIter {
+        TableIdIter(self.get(entry_type).map(|s| s.iter()))
     }
 }

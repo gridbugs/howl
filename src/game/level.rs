@@ -6,6 +6,7 @@ use game::{
     SpatialHashCell,
     UpdateSummary,
     EntityWrapper,
+    ComponentWrapper,
     EntityStore,
     LevelEntityTable,
     LevelEntityRef,
@@ -33,8 +34,7 @@ use geometry::{
 use table::{
     TableRef,
     TableTable,
-    IdTableRef,
-    EntryTypeTableRef,
+    EntryAccessor,
 };
 
 use std::cell::RefCell;
@@ -143,21 +143,23 @@ impl Level {
     pub fn perlin_update(&self) -> UpdateSummary {
         let mut update = UpdateSummary::new();
 
-        if let Some(outside_entities) = self.entities.entry_type(CType::Outside) {
-            for entity in outside_entities.iter() {
-                if let Some(Vector2 {x, y}) = entity.position() {
-                    let new = self.moonlight(x, y);
-                    let current = entity.has(CType::Moon);
+        let outside = self.entities.accessor(CType::Outside);
+        let position = self.entities.accessor(CType::Position);
+        let moonlight = self.entities.accessor(CType::Moon);
 
-                    if new == current {
-                        continue;
-                    }
+        for id in outside.ids() {
+            if let Some(Vector2 {x, y}) = position.access(*id).position() {
+                let new = self.moonlight(x, y);
+                let current = moonlight.has(*id);
 
-                    if new {
-                        update.add_component(entity.id(), Moon);
-                    } else {
-                        update.remove_component(entity.id(), CType::Moon);
-                    }
+                if new == current {
+                    continue;
+                }
+
+                if new {
+                    update.add_component(*id, Moon);
+                } else {
+                    update.remove_component(*id, CType::Moon);
                 }
             }
         }
