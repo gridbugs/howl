@@ -34,6 +34,10 @@ where EntryType: Eq + Hash + Copy,
         TypeIdMap(HashMap::new())
     }
 
+    fn get(&self, entry_type: EntryType) -> Option<&HashSet<TableId>> {
+        self.0.get(&entry_type)
+    }
+
     fn ensure_entry_type_map(&mut self, entry_type: EntryType) {
         if !self.0.contains_key(&entry_type) {
             self.0.insert(entry_type, HashSet::new());
@@ -50,9 +54,6 @@ where EntryType: Eq + Hash + Copy,
         self.0.get_mut(&entry_type).unwrap().remove(&id);
     }
 
-    pub fn get(&self, entry_type: EntryType) -> Option<&HashSet<TableId>> {
-        self.0.get(&entry_type)
-    }
 
     pub fn ids(&self, entry_type: EntryType) -> TableIdIter {
         TableIdIter(self.get(entry_type).map(|s| s.iter()))

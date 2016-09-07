@@ -8,16 +8,16 @@ use table::{
     IterTableRef,
     IdTableRef,
     TypeIdMap,
+    IdTypeMap,
     EntryAccessor,
     TableIdIter,
+    EntryTypeIter,
     AccessorIter,
     AccessorEntryIter,
 };
 
 use std::collections::{
     HashMap,
-    HashSet,
-    hash_set,
 };
 
 use std::hash::Hash;
@@ -43,7 +43,7 @@ where EntryType: Eq + Hash + Copy,
       Entry: ToType<EntryType>,
 {
     tables: HashMap<Key<EntryType>, Entry>,
-    entry_types: HashMap<TableId, HashSet<EntryType>>,
+    entry_types: IdTypeMap<EntryType>,
     entry_type_map: TypeIdMap<EntryType>,
 }
 
@@ -54,26 +54,18 @@ where EntryType: Eq + Hash + Copy,
     pub fn new() -> Self {
         FlatTableTable {
             tables: HashMap::new(),
-            entry_types: HashMap::new(),
+            entry_types: IdTypeMap::new(),
             entry_type_map: TypeIdMap::new(),
         }
     }
 
-    fn ensure_entry_type(&mut self, id: TableId) {
-        if !self.entry_types.contains_key(&id) {
-            self.entry_types.insert(id, HashSet::new());
-        }
-    }
-
     fn add_type(&mut self, id: TableId, entry_type: EntryType) {
-        self.ensure_entry_type(id);
-        self.entry_types.get_mut(&id).unwrap().insert(entry_type);
+        self.entry_types.add(id, entry_type);
         self.entry_type_map.add(id, entry_type);
     }
 
     fn remove_type(&mut self, id: TableId, entry_type: EntryType) {
-        self.ensure_entry_type(id);
-        self.entry_types.get_mut(&id).unwrap().remove(&entry_type);
+        self.entry_types.remove(id, entry_type);
         self.entry_type_map.remove(id, entry_type);
     }
 }
@@ -171,7 +163,7 @@ where EntryType: 'a + Eq + Hash + Copy,
       Entry: 'a + ToType<EntryType>,
 {
     id: TableId,
-    hash_set_iter: hash_set::Iter<'a, EntryType>,
+    iter: EntryTypeIter<'a, EntryType>,
     table_table: &'a FlatTableTable<EntryType, Entry>,
 }
 
@@ -181,7 +173,7 @@ where EntryType: 'a + Eq + Hash + Copy,
 {
     type Item = (&'a EntryType, &'a Entry);
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(entry_type) = self.hash_set_iter.next() {
+        if let Some(entry_type) = self.iter.next() {
             Some((entry_type, self.table_table.tables.get(&Key::new(self.id, *entry_type)).unwrap()))
         } else {
             None
@@ -212,13 +204,13 @@ where EntryType: 'a + Eq + Hash + Copy,
       Entry: 'a + ToType<EntryType>,
 {
     type Iter = FlatTableIter<'a, EntryType, Entry>;
-    type TypeIter = hash_set::Iter<'a, EntryType>;
+    type TypeIter = EntryTypeIter<'a, EntryType>;
     type EntryIter = FlatTableEntryIter<'a, EntryType, Entry>;
 
     fn slots(self) -> Self::Iter {
         FlatTableIter {
             id: self.id,
-            hash_set_iter: self.types(),
+            iter: self.types(),
             table_table: self.table_table,
         }
     }
@@ -228,7 +220,7 @@ where EntryType: 'a + Eq + Hash + Copy,
     }
 
     fn types(self) -> Self::TypeIter {
-        self.table_table.entry_types.get(&self.id).unwrap().iter()
+        self.table_table.entry_types.types(self.id)
     }
 }
 
@@ -267,7 +259,7 @@ where EntryType: 'a + Eq + Hash + Copy,
     }
 
     fn remove(&mut self, id: TableId) -> Option<Table<EntryType, Entry>> {
-        if let Some(mut entry_types) = self.entry_types.remove(&id) {
+        if let Some(mut entry_types) = self.entry_types.remove_types(id) {
             let mut table = Table::<EntryType, Entry>::new();
             for entry_type in entry_types.drain() {
                 let key = Key::new(id, entry_type);
@@ -281,7 +273,7 @@ where EntryType: 'a + Eq + Hash + Copy,
     }
 
     fn get(&'a self, id: TableId) -> Option<Self::Ref> {
-        if self.entry_types.contains_key(&id) {
+        if self.entry_types.contains_id(id) {
             Some(FlatTableRef::new(id, self))
         } else {
             None
@@ -289,7 +281,7 @@ where EntryType: 'a + Eq + Hash + Copy,
     }
 
     fn get_mut(&'a mut self, id: TableId) -> Option<Self::RefMut> {
-        if self.entry_types.contains_key(&id) {
+        if self.entry_types.contains_id(id) {
             Some(FlatTableRefMut::new(id, self))
         } else {
             None

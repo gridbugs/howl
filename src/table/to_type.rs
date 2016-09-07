@@ -1,3 +1,3 @@
-pub trait ToType<EntryType> {
-    fn to_type(&self) -> EntryType;
+pub trait ToType<T> {
+    fn to_type(&self) -> T;
 }

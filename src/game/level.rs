@@ -5,7 +5,6 @@ use game::{
     SpatialHashMap,
     SpatialHashCell,
     UpdateSummary,
-    EntityWrapper,
     ComponentWrapper,
     EntityStore,
     LevelEntityTable,
@@ -32,7 +31,6 @@ use geometry::{
 };
 
 use table::{
-    TableRef,
     TableTable,
     EntryAccessor,
 };

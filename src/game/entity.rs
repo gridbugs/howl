@@ -12,6 +12,7 @@ use game::knowledge::DrawableKnowledge;
 use table::{
     TableId,
     ToType,
+    ToIndex,
     Table,
     TableTable,
     HashMapTableRef,
@@ -105,6 +106,8 @@ pub enum ComponentType {
     Moon,
 }
 
+pub const NUM_COMPONENTS: usize = 21;
+
 #[derive(Debug, Clone)]
 pub enum Component {
     NullComponent,
@@ -155,5 +158,15 @@ impl ToType<ComponentType> for Component {
             Component::Outside => ComponentType::Outside,
             Component::Moon => ComponentType::Moon,
         }
+    }
+}
+
+impl ToIndex for ComponentType {
+    fn num_indices() -> usize {
+        NUM_COMPONENTS
+    }
+
+    fn to_index(&self) -> usize {
+        *self as usize
     }
 }
