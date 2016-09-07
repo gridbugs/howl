@@ -15,12 +15,6 @@ use table::{
     ToIndex,
     Table,
     TableTable,
-    HashMapTableRef,
-    HashMapTableRefMut,
-    HashMapTableTable,
-    FlatTableRef,
-    FlatTableRefMut,
-    FlatTableTable,
     InvertedTableRef,
     InvertedTableRefMut,
     InvertedTableTable,
@@ -38,14 +32,6 @@ use renderer::ComplexTile;
 
 use std::cell::RefCell;
 
-pub type HashMapEntityRef<'a> = HashMapTableRef<'a, ComponentType, Component>;
-pub type HashMapEntityRefMut<'a> = HashMapTableRefMut<'a, ComponentType, Component>;
-pub type HashMapEntityTable = HashMapTableTable<ComponentType, Component>;
-
-pub type FlatEntityRef<'a> = FlatTableRef<'a, ComponentType, Component>;
-pub type FlatEntityRefMut<'a> = FlatTableRefMut<'a, ComponentType, Component>;
-pub type FlatEntityTable = FlatTableTable<ComponentType, Component>;
-
 pub type InvertedEntityRef<'a> = InvertedTableRef<'a, ComponentType, Component>;
 pub type InvertedEntityRefMut<'a> = InvertedTableRefMut<'a, ComponentType, Component>;
 pub type InvertedEntityTable = InvertedTableTable<ComponentType, Component>;
@@ -55,8 +41,6 @@ pub type Entity = Table<ComponentType, Component>;
 
 pub trait EntityTable<'a>: TableTable<'a, ComponentType, Component> {}
 
-impl<'a> EntityTable<'a> for HashMapEntityTable {}
-impl<'a> EntityTable<'a> for FlatEntityTable {}
 impl<'a> EntityTable<'a> for InvertedEntityTable {}
 
 pub trait EntityRef<'a>: TableRef<'a, ComponentType, Component> {}
@@ -68,16 +52,6 @@ impl<'a> EntityRef<'a> for &'a Entity {}
 impl<'a> IterEntityRef<'a> for &'a Entity {}
 impl<'a> EntityRefMut<'a> for Entity {}
 impl<'a> EntityRefMut<'a> for &'a mut Entity {}
-
-impl<'a> EntityRef<'a> for HashMapEntityRef<'a> {}
-impl<'a> IterEntityRef<'a> for HashMapEntityRef<'a> {}
-impl<'a> EntityRefMut<'a> for HashMapEntityRefMut<'a> {}
-impl<'a> IdEntityRef<'a> for HashMapEntityRef<'a> {}
-
-impl<'a> EntityRef<'a> for FlatEntityRef<'a> {}
-impl<'a> IterEntityRef<'a> for FlatEntityRef<'a> {}
-impl<'a> EntityRefMut<'a> for FlatEntityRefMut<'a> {}
-impl<'a> IdEntityRef<'a> for FlatEntityRef<'a> {}
 
 impl<'a> EntityRef<'a> for InvertedEntityRef<'a> {}
 impl<'a> IterEntityRef<'a> for InvertedEntityRef<'a> {}

@@ -1,5 +1,3 @@
-mod hash_map_table_table;
-mod flat_table_table;
 mod to_type;
 mod to_index;
 mod table;
@@ -29,16 +27,6 @@ pub use self::id_type_map::{
 pub use self::table::{
     TableId,
     Table,
-};
-pub use self::hash_map_table_table::{
-    HashMapTableTable,
-    HashMapTableRef,
-    HashMapTableRefMut,
-};
-pub use self::flat_table_table::{
-    FlatTableTable,
-    FlatTableRef,
-    FlatTableRefMut,
 };
 pub use self::inverted_table_table::{
     InvertedTableTable,

@@ -10,31 +10,14 @@ pub use self::entity::{
     EntityTable,
     Component,
     ComponentType,
-    FlatEntityTable,
-    FlatEntityRef,
-    FlatEntityRefMut,
     InvertedEntityTable,
     InvertedEntityRef,
     InvertedEntityRefMut,
-    HashMapEntityTable,
-    HashMapEntityRef,
-    HashMapEntityRefMut,
 };
 
-#[cfg(feature = "flat_table")]
 pub type LevelEntityTable = InvertedEntityTable;
-#[cfg(feature = "flat_table")]
 pub type LevelEntityRef<'a> = InvertedEntityRef<'a>;
-#[cfg(feature = "flat_table")]
 pub type LevelEntityRefMut<'a> = InvertedEntityRefMut<'a>;
-
-#[cfg(not(feature = "flat_table"))]
-pub type LevelEntityTable = HashMapEntityTable;
-#[cfg(not(feature = "flat_table"))]
-pub type LevelEntityRef<'a> = HashMapEntityRef<'a>;
-#[cfg(not(feature = "flat_table"))]
-pub type LevelEntityRefMut<'a> = HashMapEntityRefMut<'a>;
-
 
 mod entity_context;
 pub use self::entity_context::{
