@@ -8,6 +8,13 @@ mod table_table;
 mod type_id_map;
 mod id_type_map;
 mod inverted_table_table;
+mod accessor;
+
+pub use self::accessor::{
+    EntryAccessor,
+    AccessorIter,
+    AccessorEntryIter,
+};
 
 pub use self::type_id_map::{
     TypeIdMap,
@@ -45,9 +52,6 @@ pub use self::table_ref::{
     IterTableRef,
     TableRefMut,
     IdTableRef,
-    EntryAccessor,
-    AccessorIter,
-    AccessorEntryIter,
 };
 pub use self::table_table::{
     TableTable,

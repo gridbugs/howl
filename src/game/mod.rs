@@ -13,17 +13,20 @@ pub use self::entity::{
     FlatEntityTable,
     FlatEntityRef,
     FlatEntityRefMut,
+    InvertedEntityTable,
+    InvertedEntityRef,
+    InvertedEntityRefMut,
     HashMapEntityTable,
     HashMapEntityRef,
     HashMapEntityRefMut,
 };
 
 #[cfg(feature = "flat_table")]
-pub type LevelEntityTable = FlatEntityTable;
+pub type LevelEntityTable = InvertedEntityTable;
 #[cfg(feature = "flat_table")]
-pub type LevelEntityRef<'a> = FlatEntityRef<'a>;
+pub type LevelEntityRef<'a> = InvertedEntityRef<'a>;
 #[cfg(feature = "flat_table")]
-pub type LevelEntityRefMut<'a> = FlatEntityRefMut<'a>;
+pub type LevelEntityRefMut<'a> = InvertedEntityRefMut<'a>;
 
 #[cfg(not(feature = "flat_table"))]
 pub type LevelEntityTable = HashMapEntityTable;
