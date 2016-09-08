@@ -11,8 +11,10 @@ use grid::{
     IterGrid,
     Coord,
 };
-use terminal::window_manager::WindowRef;
-use terminal::style;
+use terminal::{
+    Window,
+    style,
+};
 use colour::ansi;
 use renderer::{
     ComplexTile,
@@ -35,7 +37,7 @@ impl Default for RendererCell {
 }
 
 pub struct WindowKnowledgeRenderer<'a> {
-    window: WindowRef<'a>,
+    window: Window<'a>,
 }
 
 fn cell_has_wall(cell: &DrawableCell) -> bool {
@@ -49,7 +51,7 @@ fn cell_has_wall(cell: &DrawableCell) -> bool {
 }
 
 impl<'a> WindowKnowledgeRenderer<'a> {
-    pub fn new(window: WindowRef<'a>) -> Self {
+    pub fn new(window: Window<'a>) -> Self {
         WindowKnowledgeRenderer {
             window: window,
         }
@@ -74,7 +76,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
         }
     }
 
-    pub fn render(&self,
+    pub fn render(&mut self,
                   entities: &Level,
                   entity_id: EntityId,
                   turn_count: u64)
@@ -88,8 +90,6 @@ impl<'a> WindowKnowledgeRenderer<'a> {
             grid.coord_iter(),
             grid.iter())
         {
-            let window_cell = self.window.get_cell(coord.x, coord.y);
-
             let mut bg = ansi::DARK_GREY;
             let mut fg = ansi::DARK_GREY;
             let mut ch = ' ';
@@ -130,7 +130,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                 bg = ansi::DARK_GREY;
             }
 
-            window_cell.set(ch, fg, bg, style);
+            self.window.get_cell(coord.x, coord.y).set(ch, fg, bg, style);
         }
 
         self.window.flush();

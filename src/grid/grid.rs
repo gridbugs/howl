@@ -87,6 +87,14 @@ pub trait DefaultGrid : Grid
     fn reset_all(&mut self);
 }
 
+pub trait CopyGrid : Grid
+    where <Self as Grid>::Item: Copy,
+{
+    fn new_copy(width: usize, height: usize, example: Self::Item) -> Self;
+    fn set_all(&mut self, example: Self::Item);
+    fn copy_from(&mut self, other: &Self);
+}
+
 pub trait IterGrid<'a> : Grid
     where <Self as Grid>::Item: 'a,
 {

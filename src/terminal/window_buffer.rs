@@ -1,9 +1,10 @@
 use std::io;
 use colour::ansi;
-use terminal::window_manager::WindowRef;
+use terminal::Window;
+use terminal::style;
 
 pub struct WindowBuffer<'a> {
-    window: WindowRef<'a>,
+    window: Window<'a>,
     lines: Vec<String>,
     current_line: usize,
     cursor_pos: (isize, isize),
@@ -16,10 +17,10 @@ pub struct WindowBuffer<'a> {
 }
 
 impl<'a> WindowBuffer<'a> {
-    pub fn new(window: WindowRef<'a>, border_x: usize, border_y: usize) -> Self {
-        let (width, height) = window.get_size();
+    pub fn new(mut window: Window<'a>, border_x: usize, border_y: usize) -> Self {
+        let (width, height) = window.size();
 
-        window.fill(' ', ansi::WHITE, ansi::BLACK);
+        window.fill(' ', ansi::WHITE, ansi::BLACK, style::NONE);
 
         WindowBuffer {
             window: window,
@@ -41,7 +42,7 @@ impl<'a> WindowBuffer<'a> {
         }
     }
 
-    pub fn draw_borders(&'a self) {
+    pub fn draw_borders(&mut self) {
         self.window.get_cell(0, 0).set_ch('+');
         self.window.get_cell(self.width as isize - 1, 0).set_ch('+');
         self.window.get_cell(0, self.height as isize - 1).set_ch('+');
@@ -58,7 +59,7 @@ impl<'a> WindowBuffer<'a> {
         self.window.flush();
     }
 
-    fn clear(&self) {
+    fn clear(&mut self) {
         for i in self.border_y..(self.height - self.border_y) {
             for j in self.border_x..(self.width - self.border_x) {
                 self.window.get_cell(j as isize, i as isize).set_ch(' ');
@@ -92,10 +93,6 @@ impl<'a> WindowBuffer<'a> {
         self.current_line = (self.current_line + 1) % self.num_lines;
         self.get_current_string().clear();
     }
-
-    pub fn delete(&self) { self.window.delete(); }
-    pub fn bring_to_front(&self) { self.window.bring_to_front(); }
-    pub fn send_to_back(&self) { self.window.send_to_back(); }
 }
 
 impl<'a> io::Write for WindowBuffer<'a> {

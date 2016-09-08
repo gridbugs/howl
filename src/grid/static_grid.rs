@@ -7,6 +7,7 @@ use geometry::Vector2;
 use grid::{
     Grid,
     DefaultGrid,
+    CopyGrid,
     IterGrid,
     RowGrid,
     Coord,
@@ -52,8 +53,8 @@ impl<T: Default> DefaultGrid for StaticGrid<T> {
     }
 }
 
-impl<T: Copy> StaticGrid<T> {
-    pub fn new_copy(width: usize, height: usize, example: T) -> Self {
+impl<T: Copy> CopyGrid for StaticGrid<T> {
+    fn new_copy(width: usize, height: usize, example: T) -> Self {
         let mut grid = StaticGrid::new_uninitialised(width, height);
 
         for _ in 0..grid.size {
@@ -63,10 +64,14 @@ impl<T: Copy> StaticGrid<T> {
         grid
     }
 
-    pub fn set_all(&mut self, example: T) {
+    fn set_all(&mut self, example: T) {
         for x in self.iter_mut() {
             *x = example;
         }
+    }
+
+    fn copy_from(&mut self, other: &Self) {
+        self.elements.copy_from_slice(&other.elements);
     }
 }
 

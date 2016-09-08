@@ -15,7 +15,6 @@ mod schedule;
 mod grid;
 mod colour;
 mod terminal;
-mod allocator;
 mod best;
 mod clear;
 mod object_pool;
@@ -34,8 +33,13 @@ use game::{
 use game::rules;
 use game::components::DoorState;
 
-use terminal::window_manager::{WindowManager, WindowRef, InputSource};
-use terminal::window_buffer::WindowBuffer;
+use terminal::{
+    Window,
+    InputSource,
+    WindowAllocator,
+    BufferType,
+    WindowBuffer,
+};
 
 use std::io;
 
@@ -145,18 +149,18 @@ fn main() {
 }
 
 fn window_session() {
-    let wm = terminal::window_manager::WindowManager::new().unwrap();
+    let wa = WindowAllocator::new().unwrap();
 
     // Initialise debug window
-    let mut debug_buffer = make_debug_window(&wm, DEBUG_WINDOW_WIDTH,
+    let mut debug_buffer = make_debug_window(&wa, DEBUG_WINDOW_WIDTH,
                                                   DEBUG_WINDOW_HEIGHT);
 
     debug::debug::init(&mut debug_buffer as &mut io::Write);
 
-    game(wm.make_input_source(), wm.make_window(0, 0, 80, 30));
+    game(wa.make_input_source(), wa.make_window(0, 0, 80, 30, BufferType::Double));
 }
 
-fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
+fn game<'a>(input_source: InputSource<'a>, game_window: Window<'a>) {
     let mut game_context = GameContext::new(input_source, game_window);
 
     game_context.pc = Some(populate(&mut game_context.entities));
@@ -173,13 +177,14 @@ fn game<'a>(input_source: InputSource<'a>, game_window: WindowRef<'a>) {
     game_context.game_loop();
 }
 
-fn make_debug_window<'a>(wm: &'a WindowManager, width: usize, height: usize)
+fn make_debug_window<'a>(wa: &'a WindowAllocator, width: usize, height: usize)
     -> WindowBuffer<'a>
 {
-    let debug_buffer = wm.make_window_buffer(
-        (wm.get_width() - width) as isize,
-        (wm.get_height() - height) as isize,
+    let mut debug_buffer = wa.make_window_buffer(
+        (wa.width() - width) as isize,
+        (wa.height() - height) as isize,
         width, height, 2, 1);
+
 
     debug_buffer.draw_borders();
 

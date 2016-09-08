@@ -24,8 +24,8 @@ use game::observer::DrawableObserver;
 
 use schedule::Schedule;
 
-use terminal::window_manager::{
-    WindowRef,
+use terminal::{
+    Window,
     InputSource
 };
 
@@ -43,7 +43,6 @@ pub struct GameContext<'a> {
 
     // io
     input_source: InputSource<'a>,
-    game_window: WindowRef<'a>,
     renderer: WindowKnowledgeRenderer<'a>,
 
     // rule application
@@ -59,13 +58,12 @@ pub struct GameContext<'a> {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn new(input_source: InputSource<'a>, game_window: WindowRef<'a>) -> Self {
+    pub fn new(input_source: InputSource<'a>, game_window: Window<'a>) -> Self {
         GameContext {
             entities: EntityContext::new(),
             pc: None,
             pc_level_id: 0,
             input_source: input_source,
-            game_window: game_window,
             renderer: WindowKnowledgeRenderer::new(game_window),
             update_queue: Schedule::new(),
             reaction_queue: VecDeque::new(),
@@ -118,8 +116,8 @@ impl<'a> GameContext<'a> {
         self.observer.observe(self.pc.unwrap(), self.entities.level(self.pc_level_id).unwrap(), self.turn_count)
     }
 
-    pub fn render_pc_knowledge(&self) {
-        self.renderer.render(&self.pc_level(), self.pc.unwrap(), self.turn_count);
+    pub fn render_pc_knowledge(&mut self) {
+        self.renderer.render(self.entities.level(self.pc_level_id).unwrap(), self.pc.unwrap(), self.turn_count);
     }
 
     pub fn render(&mut self) -> bool {

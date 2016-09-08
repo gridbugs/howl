@@ -16,7 +16,7 @@ use game::components::DoorState;
 
 use grid::Grid;
 use rustty::Event;
-use terminal::window_manager::InputSource;
+use terminal::InputSource;
 use geometry::direction::Direction;
 
 const ETX: char = '\u{3}';

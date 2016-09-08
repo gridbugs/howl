@@ -1,5 +1,6 @@
 use grid::{
     Grid,
+    CopyGrid,
     IterGrid,
     StaticGrid,
     Coord,

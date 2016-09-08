@@ -12,6 +12,7 @@ mod grid;
 pub use self::grid::{
     Grid,
     DefaultGrid,
+    CopyGrid,
     IterGrid,
     RowGrid,
 };
