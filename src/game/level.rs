@@ -45,7 +45,7 @@ pub type LevelId = usize;
 
 #[derive(Debug, Clone)]
 pub struct Level {
-    pub id: Option<LevelId>,
+    id: LevelId,
     pub width: usize,
     pub height: usize,
     pub schedule: RefCell<TurnSchedule>,
@@ -71,9 +71,9 @@ impl<'a> EntityStore<'a> for Level {
 }
 
 impl Level {
-    pub fn new(width: usize, height: usize) -> Level {
+    pub fn new(width: usize, height: usize, id: LevelId) -> Level {
         Level {
-            id: None,
+            id: id,
             width: width,
             height: height,
             schedule: RefCell::new(TurnSchedule::new()),
@@ -89,9 +89,8 @@ impl Level {
         }
     }
 
-    pub fn set_id(&mut self, id: LevelId) {
-        self.id = Some(id);
-        self.spatial_hash.set_id(id);
+    pub fn id(&self) -> LevelId {
+        self.id
     }
 
     pub fn add(&mut self, id: EntityId, entity: Entity) -> Option<Entity> {

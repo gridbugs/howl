@@ -98,7 +98,7 @@ impl<G> LevelGridKnowledge<G>
     }
 
     pub fn update<'a, I, S>(
-        &mut self, level_id: LevelId,
+        &mut self,
         entities: &Level,
         grid: &S,
         report_iter: I,
@@ -107,6 +107,7 @@ impl<G> LevelGridKnowledge<G>
               I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
               S: Grid<Item=SpatialHashCell>,
     {
+        let level_id = entities.id();
         if !self.levels.contains_key(&level_id) {
             self.levels.insert(level_id, KnowledgeGrid::new(grid.width(), grid.height()));
         }

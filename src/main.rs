@@ -77,9 +77,8 @@ fn populate(entities: &mut EntityContext) -> EntityId {
     let height = strings.len();
     let width = strings[0].len();
 
-    let mut level = Level::new(width, height);
     let level_id = entities.reserve_level_id();
-    level.set_id(level_id);
+    let mut level = Level::new(width, height, level_id);
 
     let mut level_entities = Vec::new();
     {
@@ -92,26 +91,26 @@ fn populate(entities: &mut EntityContext) -> EntityId {
 
                 match ch {
                     '#' => {
-                        level_entities.push(make_wall(x, y, level_id));
-                        level_entities.push(make_floor(x, y, level_id));
+                        level_entities.push(make_wall(x, y));
+                        level_entities.push(make_floor(x, y));
                     },
                     '&' => {
-                        level_entities.push(make_tree(x, y, level_id));
-                        level_entities.push(make_floor_outside(x, y, level_id, moonlight));
+                        level_entities.push(make_tree(x, y));
+                        level_entities.push(make_floor_outside(x, y, moonlight));
                     },
                     '.' => {
-                        level_entities.push(make_floor(x, y, level_id));
+                        level_entities.push(make_floor(x, y));
                     },
                     ',' => {
-                        level_entities.push(make_floor_outside(x, y, level_id, moonlight));
+                        level_entities.push(make_floor_outside(x, y, moonlight));
                     },
                     '+' => {
-                        level_entities.push(make_door(x, y, level_id, DoorState::Closed));
-                        level_entities.push(make_floor(x, y, level_id));
+                        level_entities.push(make_door(x, y, DoorState::Closed));
+                        level_entities.push(make_floor(x, y));
                     },
                     '@' => {
-                        level_entities.push(make_pc(x, y, level_id));
-                        level_entities.push(make_floor_outside(x, y, level_id, moonlight));
+                        level_entities.push(make_pc(x, y));
+                        level_entities.push(make_floor_outside(x, y, moonlight));
                     },
                     _ => panic!(),
                 };

@@ -7,7 +7,6 @@ use game::{
     EntityTable,
     UpdateSummary,
     EntityWrapper,
-    EntityRef,
     IterEntityRef,
     IdEntityRef,
 };
@@ -142,18 +141,6 @@ impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
         self.id = Some(id);
     }
 
-    fn entity_is_on_level<'a, E: EntityRef<'a>>(&self, entity: E) -> bool {
-        if let Some(id) = entity.on_level() {
-            if id == self.id.unwrap() {
-                true
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
     pub fn get_unsafe(&self, coord: (isize, isize)) -> &SpatialHashCell {
         self.grid.get_unsafe(Vector2::from_tuple(coord))
     }
@@ -269,30 +256,22 @@ impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
           <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,
     {
         for (id, entity) in update.added_entities.iter() {
-            if self.entity_is_on_level(entity) {
-                self.add_entity(*id, entity, turn_count);
-            }
+            self.add_entity(*id, entity, turn_count);
         }
 
         for entity_id in &update.removed_entities {
             let entity = entities.get(*entity_id).unwrap();
-            if self.entity_is_on_level(entity) {
-                self.remove_entity(entity, turn_count);
-            }
+            self.remove_entity(entity, turn_count);
         }
 
         for (entity_id, changes) in &update.added_components {
             let entity = entities.get(*entity_id).unwrap();
-            if self.entity_is_on_level(entity) {
-                self.add_components(entity, changes, turn_count);
-            }
+            self.add_components(entity, changes, turn_count);
         }
 
         for (entity_id, component_types) in &update.removed_components {
             let entity = entities.get(*entity_id).unwrap();
-            if self.entity_is_on_level(entity) {
-                self.remove_components(entity, component_types, turn_count);
-            }
+            self.remove_components(entity, component_types, turn_count);
         }
     }
 }

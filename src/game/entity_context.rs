@@ -35,19 +35,8 @@ impl EntityContext {
         self.entity_reserver.borrow_mut().reserve()
     }
 
-    pub fn add_level(&mut self, mut level: Level) -> LevelId {
-
-        let id = if let Some(id) = level.id {
-            id
-        } else {
-            let id = self.reserve_level_id();
-            level.id = Some(id);
-            id
-        };
-
+    pub fn add_level(&mut self, level: Level) {
         self.levels.push(level);
-
-        id
     }
 
     pub fn add(&mut self, id: EntityId, level_id: LevelId, entity: Entity) -> Option<Entity> {

@@ -1,7 +1,6 @@
 use game;
 use game::{
     Entity,
-    LevelId,
     StatusCounter,
 };
 use game::entity::Component::*;
@@ -23,7 +22,7 @@ use table::TableRefMut;
 
 use std::cell::RefCell;
 
-pub fn make_wall(x: isize, y: isize, level: LevelId) -> Entity {
+pub fn make_wall(x: isize, y: isize) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
@@ -32,16 +31,14 @@ pub fn make_wall(x: isize, y: isize, level: LevelId) -> Entity {
             back: SimpleTile::Foreground('█', ansi::GREY, style::NONE),
         }),
         TileDepth(1),
-        OnLevel(level),
         Opacity(1.0),
     ]
 }
 
-pub fn make_door(x: isize, y: isize, level: LevelId, state: DoorState) -> Entity {
+pub fn make_door(x: isize, y: isize, state: DoorState) -> Entity {
     let mut entity = entity![
         Position(Vector2::new(x, y)),
         TileDepth(1),
-        OnLevel(level),
     ];
 
     if state == DoorState::Open {
@@ -58,32 +55,29 @@ pub fn make_door(x: isize, y: isize, level: LevelId, state: DoorState) -> Entity
     entity
 }
 
-pub fn make_tree(x: isize, y: isize, level: LevelId) -> Entity {
+pub fn make_tree(x: isize, y: isize) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Solid,
         Tile(tile::foreground('&', ansi::GREEN, style::NONE)),
         TileDepth(1),
-        OnLevel(level),
         Opacity(0.4),
     ]
 }
 
-pub fn make_floor(x: isize, y: isize, level: LevelId) -> Entity {
+pub fn make_floor(x: isize, y: isize) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY, style::NONE)),
         TileDepth(0),
-        OnLevel(level),
     ]
 }
 
-pub fn make_floor_outside(x: isize, y: isize, level: LevelId, moonlight: bool) -> Entity {
+pub fn make_floor_outside(x: isize, y: isize, moonlight: bool) -> Entity {
     let mut entity = entity![
         Position(Vector2::new(x, y)),
         Tile(tile::full('.', ansi::WHITE, ansi::DARK_GREY, style::NONE)),
         TileDepth(0),
-        OnLevel(level),
         Outside,
     ];
 
@@ -94,13 +88,12 @@ pub fn make_floor_outside(x: isize, y: isize, level: LevelId, moonlight: bool) -
     entity
 }
 
-pub fn make_pc(x: isize, y: isize, level: LevelId) -> Entity {
+pub fn make_pc(x: isize, y: isize) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Tile(tile::foreground('@', ansi::WHITE, style::BOLD)),
         TileDepth(2),
         PlayerActor,
-        OnLevel(level),
         Collider,
         DoorOpener,
         VisionDistance(20),
@@ -110,13 +103,11 @@ pub fn make_pc(x: isize, y: isize, level: LevelId) -> Entity {
     ]
 }
 
-pub fn make_bullet(x: isize, y: isize, level: LevelId) -> Entity {
+pub fn make_bullet(x: isize, y: isize) -> Entity {
     entity![
         Position(Vector2::new(x, y)),
         Tile(tile::foreground('*', ansi::RED, style::NONE)),
         TileDepth(2),
-        OnLevel(level),
-        Collider,
         Bullet,
         DestroyOnCollision,
     ]

@@ -2,7 +2,6 @@ use game::{
     Component,
     ComponentType,
     Speed,
-    LevelId,
     StatusCounter,
     EntityRef,
 };
@@ -27,7 +26,6 @@ use std::cell::{
 
 pub trait EntityWrapper<'a> {
     fn position(&self) -> Option<Vector2<isize>>;
-    fn on_level(&self) -> Option<LevelId>;
     fn is_pc(&self) -> bool;
     fn door_state(&self) -> Option<DoorState>;
     fn opacity(&self) -> f64;
@@ -55,16 +53,6 @@ where E: EntityRef<'a>
             self.get(ComponentType::Position)
         {
             Some(*vec)
-        } else {
-            None
-        }
-    }
-
-    fn on_level(&self) -> Option<LevelId> {
-        if let Some(&Component::OnLevel(level_id)) =
-            self.get(ComponentType::OnLevel)
-        {
-            Some(level_id)
         } else {
             None
         }

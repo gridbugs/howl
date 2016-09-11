@@ -26,7 +26,6 @@ impl DrawableObserver {
 
     pub fn observe(&mut self, entity_id: EntityId, entities: &Level, turn_count: u64) -> bool{
         let entity = entities.get(entity_id).unwrap();
-        let level_id = entity.on_level().unwrap();
 
         let eye = entity.position().unwrap();
         let grid = &entities.spatial_hash().grid;
@@ -36,6 +35,6 @@ impl DrawableObserver {
         self.vision_system.detect_visible_area(eye, grid, info, &mut self.visibility_report);
 
         let mut knowledge = entity.drawable_knowledge_mut().unwrap();
-        knowledge.update(level_id, entities, grid, self.visibility_report.iter(), turn_count)
+        knowledge.update(entities, grid, self.visibility_report.iter(), turn_count)
     }
 }

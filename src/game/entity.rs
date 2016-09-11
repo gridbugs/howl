@@ -1,7 +1,6 @@
 use game::{
     Speed,
     StatusCounter,
-    LevelId,
 };
 use game::components::{
     DoorState,
@@ -78,7 +77,6 @@ pub enum ComponentType {
     Tile,
     TileDepth,
     PlayerActor,
-    OnLevel,
     Door,
     DoorOpener,
     Opacity,
@@ -105,7 +103,6 @@ pub enum Component {
     Tile(ComplexTile),
     TileDepth(isize),
     PlayerActor,
-    OnLevel(LevelId),
     Door(DoorState),
     DoorOpener,
     Opacity(f64),
@@ -131,7 +128,6 @@ impl ToType<ComponentType> for Component {
             Component::Tile(_) => ComponentType::Tile,
             Component::TileDepth(_) => ComponentType::TileDepth,
             Component::PlayerActor => ComponentType::PlayerActor,
-            Component::OnLevel(_) => ComponentType::OnLevel,
             Component::Door(_) => ComponentType::Door,
             Component::DoorOpener => ComponentType::DoorOpener,
             Component::Opacity(_) => ComponentType::Opacity,

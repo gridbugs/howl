@@ -117,7 +117,8 @@ impl<'a> GameContext<'a> {
     }
 
     pub fn render_pc_knowledge(&mut self) {
-        self.renderer.render(self.entities.level(self.pc_level_id).unwrap(), self.pc.unwrap(), self.turn_count);
+        let level_id = self.pc_level_id();
+        self.renderer.render(self.entities.level(self.pc_level_id).unwrap(), self.pc.unwrap(), level_id, self.turn_count);
     }
 
     pub fn render(&mut self) -> bool {

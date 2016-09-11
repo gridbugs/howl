@@ -70,9 +70,8 @@ pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
-    let level = source.on_level().unwrap();
 
-    let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+    let mut bullet = entities::make_bullet(start_coord.x, start_coord.y);
 
     let speed = Speed::from_cells_per_sec(100.0);
 
@@ -93,9 +92,8 @@ pub fn burst_fire_bullet<'a, E: EntityRef<'a>>(
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
-    let level = source.on_level().unwrap();
 
-    let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+    let mut bullet = entities::make_bullet(start_coord.x, start_coord.y);
     let speed = Speed::from_cells_per_sec(100.0);
     bullet.add(AxisVelocity { direction: direction, speed: speed });
 
@@ -114,13 +112,12 @@ pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
 {
     let mut summary = UpdateSummary::new();
 
-    let level = source.on_level().unwrap();
     let speed = Speed::from_cells_per_sec(100.0);
 
     for dir in direction::iter() {
         let start_coord = source.position().unwrap() + dir.vector();
 
-        let mut bullet = entities::make_bullet(start_coord.x, start_coord.y, level);
+        let mut bullet = entities::make_bullet(start_coord.x, start_coord.y);
         bullet.add(AxisVelocity { direction: dir, speed: speed });
 
         summary.add_entity(entities.reserve_entity_id(), bullet);

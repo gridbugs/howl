@@ -4,11 +4,7 @@ use game::{
     ComponentType,
     Component,
     EntityContext,
-    EntityRef,
-    IterEntityRef,
-    EntityTable,
     LevelId,
-    EntityWrapper,
 };
 use game::update::{
     Metadata,
@@ -19,7 +15,6 @@ use game::update::{
 use table::{
     TableRef,
     TableRefMut,
-    TableTable,
 };
 
 use std::collections::{
@@ -84,8 +79,8 @@ impl UpdateSummary {
             entities.add(id, level_id, entity);
         }
 
-        for entity_id in self.removed_entities.drain() {
-            entities.remove(entity_id, level_id).
+        for entity_id in self.removed_entities.iter() {
+            entities.remove(*entity_id, level_id).
                 expect("Tried to remove non-existent entity.");
         }
 
@@ -96,45 +91,10 @@ impl UpdateSummary {
             }
         }
 
-        for (entity_id, mut component_types) in self.removed_components.drain() {
-            let mut entity = entities.get_mut(entity_id, level_id).unwrap();
-            for component_type in component_types.drain() {
-                entity.remove(component_type);
-            }
-        }
-    }
-
-    fn update_levels<'a, T>(&self, entities: &'a T)
-    where T: EntityTable<'a>,
-          <T as TableTable<'a, ComponentType, Component>>::Ref: EntityRef<'a> + IterEntityRef<'a>,
-    {
-        let mut levels = self.levels.borrow_mut();
-        levels.clear();
-
-        for entity in self.added_entities.values() {
-            if let Some(level) = entity.on_level() {
-                levels.insert(level);
-            }
-        }
-
-        for entity_id in &self.removed_entities {
-            let entity = entities.get(*entity_id).unwrap();
-            if let Some(level) = entity.on_level() {
-                levels.insert(level);
-            }
-        }
-
-        for entity_id in self.added_components.keys() {
-            let entity = entities.get(*entity_id).unwrap();
-            if let Some(level) = entity.on_level() {
-                levels.insert(level);
-            }
-        }
-
-        for entity_id in self.removed_components.keys() {
-            let entity = entities.get(*entity_id).unwrap();
-            if let Some(level) = entity.on_level() {
-                levels.insert(level);
+        for (entity_id, component_types) in self.removed_components.iter() {
+            let mut entity = entities.get_mut(*entity_id, level_id).unwrap();
+            for component_type in component_types.iter() {
+                entity.remove(*component_type);
             }
         }
     }

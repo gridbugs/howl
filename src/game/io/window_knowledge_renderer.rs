@@ -1,5 +1,6 @@
 use game::{
     Level,
+    LevelId,
     EntityId,
     EntityWrapper,
     EntityStore,
@@ -79,10 +80,10 @@ impl<'a> WindowKnowledgeRenderer<'a> {
     pub fn render(&mut self,
                   entities: &Level,
                   entity_id: EntityId,
+                  level_id: LevelId,
                   turn_count: u64)
     {
         let entity = entities.get(entity_id).unwrap();
-        let level_id = entity.on_level().unwrap();
         let knowledge = entity.drawable_knowledge().unwrap();
         let grid = knowledge.grid(level_id).unwrap();
 
