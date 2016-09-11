@@ -103,6 +103,15 @@ pub fn make_pc(x: isize, y: isize) -> Entity {
     ]
 }
 
+pub fn make_dog(x: isize, y: isize) -> Entity {
+    entity![
+        Position(Vector2::new(x, y)),
+        Tile(tile::foreground('d', ansi::YELLOW, style::BOLD)),
+        TileDepth(2),
+        VisionDistance(20),
+    ]
+}
+
 pub fn make_bullet(x: isize, y: isize) -> Entity {
     entity![
         Position(Vector2::new(x, y)),

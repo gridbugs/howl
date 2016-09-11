@@ -54,7 +54,7 @@ fn populate(entities: &mut EntityContext) -> EntityId {
         "&&,#.........#................#,,,,,,&",
         "&,&#.........##########+#######,,,,,,&",
         "&,,#.........#,,,,,,,,,,,,,,,,,,,,,,,&",
-        "&&,#.........#,,,,,,,,,&,,,,,,,&,&,&,&",
+        "&&,#.........#,d,,,,,,,&,,,,,,,&,&,&,&",
         "&,,#.........#,,,,,&,,,,,,,,&,,,,,,,,&",
         "&,,#.........+,,,,,,&,,,,,,,,,,,,,,,,&",
         "&&,#.........#,,,,,&,,,,,,,,,&,,,,,,,&",
@@ -110,6 +110,10 @@ fn populate(entities: &mut EntityContext) -> EntityId {
                     },
                     '@' => {
                         level_entities.push(make_pc(x, y));
+                        level_entities.push(make_floor_outside(x, y, moonlight));
+                    },
+                    'd' => {
+                        level_entities.push(make_dog(x, y));
                         level_entities.push(make_floor_outside(x, y, moonlight));
                     },
                     _ => panic!(),
