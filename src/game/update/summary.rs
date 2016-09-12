@@ -5,6 +5,7 @@ use game::{
     Component,
     EntityContext,
     LevelId,
+    EntityWrapper,
 };
 use game::update::{
     Metadata,
@@ -13,6 +14,7 @@ use game::update::{
 };
 
 use table::{
+    ToType,
     TableRef,
     TableRefMut,
 };
@@ -20,12 +22,53 @@ use table::{
 use std::collections::{
     HashSet,
     HashMap,
+    hash_map,
 };
+
+#[derive(Clone)]
+pub struct AddedComponents(HashMap<ComponentType, Component>);
+
+impl<'a> EntityWrapper<'a> for &'a AddedComponents {
+    fn get_component(self, component_type: ComponentType) -> Option<&'a Component> {
+        self.0.get(&component_type)
+    }
+
+    fn has_component(self, component_type: ComponentType) -> bool {
+        self.0.contains_key(&component_type)
+    }
+}
+
+impl AddedComponents {
+    fn new() -> Self {
+        AddedComponents(HashMap::new())
+    }
+
+    fn add(&mut self, component: Component) {
+        self.0.insert(component.to_type(), component);
+    }
+
+    pub fn iter(&self) -> hash_map::Iter<ComponentType, Component> {
+        self.0.iter()
+    }
+
+    pub fn drain(&mut self) -> hash_map::Drain<ComponentType, Component> {
+        self.0.drain()
+    }
+
+    pub fn get(&self, component_type: ComponentType) -> Option<&Component> {
+        self.get_component(component_type)
+    }
+
+    pub fn has(&self, component_type: ComponentType) -> bool {
+        self.has_component(component_type)
+    }
+}
+
 #[derive(Clone)]
 pub struct UpdateSummary {
     pub added_entities: HashMap<EntityId, Entity>,
     pub removed_entities: HashSet<EntityId>,
-    pub added_components: HashMap<EntityId, Entity>,
+    pub added_components: HashMap<EntityId, AddedComponents>,
     pub removed_components: HashMap<EntityId, HashSet<ComponentType>>,
     pub metadata: Metadata,
 }
@@ -53,8 +96,9 @@ impl UpdateSummary {
                          component: Component)
     {
         if !self.added_components.contains_key(&entity) {
-            self.added_components.insert(entity, Entity::new());
+            self.added_components.insert(entity, AddedComponents::new());
         }
+
         self.added_components.get_mut(&entity).unwrap().add(component);
     }
 
@@ -82,9 +126,9 @@ impl UpdateSummary {
                 expect("Tried to remove non-existent entity.");
         }
 
-        for (entity_id, mut changes) in self.added_components.drain() {
+        for (entity_id, mut components) in self.added_components.drain() {
             let mut entity = level.get_mut(entity_id).unwrap();
-            for (_, component) in changes.slots.drain() {
+            for (_, component) in components.drain() {
                 entity.add(component);
             }
         }

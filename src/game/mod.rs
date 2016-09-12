@@ -39,7 +39,10 @@ mod meta_action;
 pub use self::meta_action::MetaAction;
 
 pub mod update;
-pub use self::update::UpdateSummary;
+pub use self::update::{
+    UpdateSummary,
+    AddedComponents,
+};
 
 mod turn_schedule;
 pub use self::turn_schedule::TurnSchedule;

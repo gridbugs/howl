@@ -1,11 +1,11 @@
 use game::{
     EntityId,
     LevelId,
-    Entity,
     Component,
     ComponentType,
     EntityTable,
     UpdateSummary,
+    AddedComponents,
     EntityWrapper,
     IterEntityRef,
     IdEntityRef,
@@ -14,7 +14,6 @@ use game::{
 use table::{
     ToType,
     TableTable,
-    IterTableRef,
 };
 use vision::Opacity;
 use grid::Grid;
@@ -178,7 +177,7 @@ impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
     pub fn add_components<'a, 'b, E: IdEntityRef<'a>>(
         &mut self,
         entity: E,
-        changes: &Entity,
+        changes: &AddedComponents,
         turn_count: u64)
     {
         let id = entity.id();
@@ -210,7 +209,7 @@ impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
 
         if let Some(position) = position {
             let mut cell = self.get_mut_unsafe(position.to_tuple());
-            for (component_type, new_component) in changes.slots() {
+            for (component_type, new_component) in changes.iter() {
                 if *component_type == ComponentType::Position {
                     // this has already been handled
                     continue;

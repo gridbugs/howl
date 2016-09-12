@@ -1,5 +1,8 @@
 mod summary;
-pub use self::summary::UpdateSummary;
+pub use self::summary::{
+    UpdateSummary,
+    AddedComponents,
+};
 
 mod metadata;
 pub use self::metadata::{

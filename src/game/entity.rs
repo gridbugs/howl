@@ -1,6 +1,7 @@
 use game::{
     Speed,
     StatusCounter,
+    EntityWrapper,
 };
 use game::components::{
     DoorState,
@@ -56,6 +57,19 @@ impl<'a> EntityRef<'a> for InvertedEntityRef<'a> {}
 impl<'a> IterEntityRef<'a> for InvertedEntityRef<'a> {}
 impl<'a> EntityRefMut<'a> for InvertedEntityRefMut<'a> {}
 impl<'a> IdEntityRef<'a> for InvertedEntityRef<'a> {}
+
+impl<'a, E> EntityWrapper<'a> for E
+where E: EntityRef<'a>
+{
+    fn get_component(self, component_type: ComponentType) -> Option<&'a Component> {
+        self.get(component_type)
+    }
+
+
+    fn has_component(self, component_type: ComponentType) -> bool {
+        self.has(component_type)
+    }
+}
 
 macro_rules! entity {
     () => { game::entity::Entity::new() };
