@@ -39,11 +39,21 @@ impl<'a> EntityWrapper<'a> for &'a AddedComponents {
 }
 
 impl AddedComponents {
-    fn new() -> Self {
+    pub fn new() -> Self {
         AddedComponents(HashMap::new())
     }
 
-    fn add(&mut self, component: Component) {
+    pub fn from_entity(mut entity: Entity) -> Self {
+        let mut ret = Self::new();
+
+        for (_, component) in entity.slots.drain() {
+            ret.add(component)
+        }
+
+        ret
+    }
+
+    pub fn add(&mut self, component: Component) {
         self.0.insert(component.to_type(), component);
     }
 

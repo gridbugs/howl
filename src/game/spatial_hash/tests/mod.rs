@@ -12,6 +12,7 @@ use game::{
     IterEntityRef,
     IdEntityRef,
     EntityRefMut,
+    AddedComponents,
 };
 
 use geometry::Vector2;
@@ -216,9 +217,9 @@ fn change_entity() {
 
     s.add_entity(e.id, &e, 0);
 
-    s.add_components(&e, &entity![
+    s.add_components(&e, &AddedComponents::from_entity(entity![
         Collider,
-    ], 0);
+    ]), 0);
 
     s.remove_components(&e, &set_from_vec(vec![CType::Solid]), 0);
 
@@ -234,16 +235,16 @@ fn add_remove_components() {
     let mut s = make_spatial_hash();
     let mut e = make_entity(0, 0, 0);
 
-    s.add_components(&e, &entity![
+    s.add_components(&e, &AddedComponents::from_entity(entity![
         Collider,
-    ], 0);
+    ]), 0);
     e.add(Collider);
     assert!(s.get((0, 0)).unwrap().has(CType::Collider));
 
     // add the same component again
-    s.add_components(&e, &entity![
+    s.add_components(&e, &AddedComponents::from_entity(entity![
         Collider,
-    ], 0);
+    ]), 0);
     e.add(Collider);
     assert!(s.get((0, 0)).unwrap().has(CType::Collider));
 
@@ -260,9 +261,9 @@ fn move_entity() {
 
     s.add_entity(e.id, &e, 0);
 
-    s.add_components(&e, &entity![
+    s.add_components(&e, &AddedComponents::from_entity(entity![
         Position(Vector2::new(1, 1)),
-    ], 0);
+    ]), 0);
 
     // assert that the starting cell is empty
     let cell = s.get((0, 0)).unwrap();
@@ -287,10 +288,10 @@ fn move_entity_adding_component() {
 
     s.add_entity(e.id, &e, 0);
 
-    s.add_components(&e, &entity![
+    s.add_components(&e, &AddedComponents::from_entity(entity![
         Position(Vector2::new(1, 1)),
         Collider,
-    ], 0);
+    ]), 0);
 
     let cell = s.get((0, 0)).unwrap();
     assert_eq!(cell.entities.len(), 0);
@@ -346,9 +347,9 @@ fn opacity() {
 
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.3*10.0);
 
-    s.add_components(&e0, &entity![
+    s.add_components(&e0, &AddedComponents::from_entity(entity![
         Opacity(0.4),
-    ], 0);
+    ]), 0);
     e0.add(Opacity(0.4));
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.6*10.0);
 
@@ -356,9 +357,9 @@ fn opacity() {
     e1.remove(CType::Opacity);
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.4*10.0);
 
-    s.add_components(&e1, &entity![
+    s.add_components(&e1, &AddedComponents::from_entity(entity![
         Opacity(0.5),
-    ], 0);
+    ]), 0);
     e1.add(Opacity(0.5));
     assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.9*10.0);
 
