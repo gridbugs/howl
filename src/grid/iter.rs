@@ -57,7 +57,7 @@ impl Iterator for NeiCoordIter {
     type Item = Coord;
     fn next(&mut self) -> Option<Self::Item> {
         self.dir_iter.next().map(|dir| {
-            self.coord + dir.vector().convert::<isize>()
+            self.coord + dir.vector()
         })
     }
 }

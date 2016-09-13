@@ -45,6 +45,7 @@ pub struct DirectionProfile {
     pub vector: Vector2<isize>,
     pub left90: Direction,
     pub right90: Direction,
+    pub multiplier: f64,
 }
 
 pub mod directions {
@@ -57,6 +58,8 @@ pub mod directions {
     use geometry::direction::OrdinalDirection;
     use geometry::direction::DirectionType;
 
+    use math::consts::SQRT2;
+
     pub static NORTH: DirectionProfile = DirectionProfile {
         direction: Direction::North,
         direction_type: DirectionType::Cardinal(CardinalDirection::North),
@@ -64,6 +67,7 @@ pub mod directions {
         vector: Vector2 { x: 0, y: -1 },
         left90: Direction::West,
         right90: Direction::East,
+        multiplier: 1.0,
     };
 
     pub static EAST: DirectionProfile = DirectionProfile {
@@ -73,6 +77,7 @@ pub mod directions {
         vector: Vector2 { x: 1, y: 0 },
         left90: Direction::North,
         right90: Direction::South,
+        multiplier: 1.0,
     };
 
     pub static SOUTH: DirectionProfile = DirectionProfile {
@@ -82,6 +87,7 @@ pub mod directions {
         vector: Vector2 { x: 0, y: 1 },
         left90: Direction::East,
         right90: Direction::West,
+        multiplier: 1.0,
     };
 
     pub static WEST: DirectionProfile = DirectionProfile {
@@ -91,6 +97,7 @@ pub mod directions {
         vector: Vector2 { x: -1, y: 0 },
         left90: Direction::South,
         right90: Direction::North,
+        multiplier: 1.0,
     };
 
     pub static NORTH_EAST: DirectionProfile = DirectionProfile {
@@ -100,6 +107,7 @@ pub mod directions {
         vector: Vector2 { x: 1, y: -1 },
         left90: Direction::NorthWest,
         right90: Direction::SouthEast,
+        multiplier: SQRT2,
     };
 
     pub static SOUTH_EAST: DirectionProfile = DirectionProfile {
@@ -109,6 +117,7 @@ pub mod directions {
         vector: Vector2 { x: 1, y: 1 },
         left90: Direction::NorthEast,
         right90: Direction::SouthWest,
+        multiplier: SQRT2,
     };
 
     pub static SOUTH_WEST: DirectionProfile = DirectionProfile {
@@ -118,6 +127,7 @@ pub mod directions {
         vector: Vector2 { x: -1, y: 1 },
         left90: Direction::SouthEast,
         right90: Direction::NorthWest,
+        multiplier: SQRT2,
     };
 
     pub static NORTH_WEST: DirectionProfile = DirectionProfile {
@@ -127,6 +137,7 @@ pub mod directions {
         vector: Vector2 { x: -1, y: -1 },
         left90: Direction::SouthWest,
         right90: Direction::NorthEast,
+        multiplier: SQRT2,
     };
 }
 
@@ -253,6 +264,9 @@ impl Direction {
     }
     pub fn right90(self) -> Direction {
         self.profile().right90
+    }
+    pub fn multiplier(self) -> f64 {
+        self.profile().multiplier
     }
 }
 

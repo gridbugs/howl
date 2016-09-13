@@ -32,3 +32,4 @@ impl<T> Length<T::Output> for T where T: Dot<T> + Copy, T::Output: Float {
         self.dot(self)
     }
 }
+

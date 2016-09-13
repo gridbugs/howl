@@ -1,8 +1,10 @@
 use std::marker::Copy;
 use std::convert::From;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
-use geometry::vector::Dot;
-use geometry::vector::LengthSquared;
+use geometry::vector::{
+    Dot,
+    LengthSquared,
+};
 use rand;
 use rand::Rng;
 use std::f64::consts::PI;
