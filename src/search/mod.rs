@@ -22,5 +22,9 @@ pub use self::search_context::{
 };
 pub use self::weighted_grid_search_context::WeightedGridSearchContext;
 
+// Internal modules
+
+mod tracker_grid;
+
 #[cfg(test)]
 mod tests;

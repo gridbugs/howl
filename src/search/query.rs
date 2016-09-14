@@ -1,4 +1,8 @@
 use grid::Coord;
+use geometry::{
+    direction,
+    Direction,
+};
 
 pub struct CellInfo<'a, T: 'a> {
     pub value: &'a T,
@@ -31,6 +35,7 @@ impl<T> Destination<T> {
 pub struct Query<T> {
     pub start: Coord,
     pub end: Destination<T>,
+    pub directions: &'static [Direction],
 }
 
 impl<T> Query<T> {
@@ -38,6 +43,7 @@ impl<T> Query<T> {
         Query {
             start: start,
             end: end,
+            directions: &direction::DIRECTIONS,
         }
     }
 
