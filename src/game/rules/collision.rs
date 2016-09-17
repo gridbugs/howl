@@ -1,5 +1,5 @@
 use game::{
-    rule,
+    Rule,
     actions,
     ComponentType,
     RuleResult,
@@ -12,37 +12,39 @@ use game::update::Metadatum::*;
 
 use table::TableRef;
 
-pub fn detect_collision(ctx: RuleContext)
-    -> RuleResult
-{
-    for (entity_id, changes) in &ctx.update.added_components {
+pub struct DetectCollision;
 
-        if !changes.has(ComponentType::Position) {
-            continue;
-        }
+impl Rule for DetectCollision {
+    fn check(&self, ctx: RuleContext) -> RuleResult {
+        for (entity_id, changes) in &ctx.update.added_components {
 
-        let entity = ctx.level.get(*entity_id).unwrap();
+            if !changes.has(ComponentType::Position) {
+                continue;
+            }
 
-        if !entity.has(ComponentType::Collider) {
-            continue;
-        }
+            let entity = ctx.level.get(*entity_id).unwrap();
 
-        let spatial_hash = ctx.level.spatial_hash();
+            if !entity.has(ComponentType::Collider) {
+                continue;
+            }
 
-        let new_position = changes.position().unwrap();
+            let spatial_hash = ctx.level.spatial_hash();
 
-        if let Some(cell) = spatial_hash.get(new_position.to_tuple()) {
-            if cell.has(ComponentType::Solid) {
-                if entity.is_destroy_on_collision() {
-                    let mut remove = actions::remove_entity(entity);
-                    remove.set_metadata(ActionTime(1));
-                    return rule::instead(remove);
-                } else {
-                    return rule::fail();
+            let new_position = changes.position().unwrap();
+
+            if let Some(cell) = spatial_hash.get(new_position.to_tuple()) {
+                if cell.has(ComponentType::Solid) {
+                    if entity.is_destroy_on_collision() {
+                        let mut remove = actions::remove_entity(entity);
+                        remove.set_metadata(ActionTime(1));
+                        return RuleResult::instead(remove);
+                    } else {
+                        return RuleResult::fail();
+                    }
                 }
             }
         }
-    }
 
-    rule::pass()
+        RuleResult::pass()
+    }
 }

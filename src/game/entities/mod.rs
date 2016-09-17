@@ -3,7 +3,8 @@ use game::{
     Entity,
     StatusCounter,
 };
-use game::entity::Component::*;
+use game::Component::*;
+use game::ActorType::*;
 use game::components::{
     DoorState,
     Form,
@@ -11,8 +12,8 @@ use game::components::{
 use game::knowledge;
 
 use geometry::Vector2;
-use renderer::{
-    tile,
+use tile;
+use tile::{
     ComplexTile,
     SimpleTile,
 };
@@ -93,7 +94,7 @@ pub fn make_pc(x: isize, y: isize) -> Entity {
         Position(Vector2::new(x, y)),
         Tile(tile::foreground('@', ansi::WHITE, style::BOLD)),
         TileDepth(2),
-        PlayerActor,
+        Actor(Player),
         Collider,
         DoorOpener,
         VisionDistance(20),
@@ -109,6 +110,7 @@ pub fn make_dog(x: isize, y: isize) -> Entity {
         Tile(tile::foreground('d', ansi::YELLOW, style::BOLD)),
         TileDepth(2),
         VisionDistance(20),
+        Actor(SimpleNpc),
     ]
 }
 

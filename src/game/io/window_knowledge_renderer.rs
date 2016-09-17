@@ -17,7 +17,7 @@ use terminal::{
     style,
 };
 use colour::ansi;
-use renderer::{
+use tile::{
     ComplexTile,
     SimpleTile,
 };

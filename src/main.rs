@@ -9,7 +9,7 @@ extern crate rustty;
 #[macro_use] mod table;
 #[macro_use] mod game;
 mod perlin;
-mod renderer;
+mod tile;
 mod geometry;
 mod schedule;
 mod grid;
@@ -26,6 +26,7 @@ mod search;
 use game::entities::*;
 use game::{
     EntityContext,
+    ReserveEntityId,
     EntityId,
     GameContext,
     Level,
@@ -89,7 +90,7 @@ fn populate(entities: &mut EntityContext) -> EntityId {
             let mut x = 0;
             for ch in line.chars() {
 
-                let moonlight = level.moonlight(x, y);
+                let moonlight = !level.is_cloud(x, y);
 
                 match ch {
                     '#' => {
@@ -131,16 +132,15 @@ fn populate(entities: &mut EntityContext) -> EntityId {
 
     for entity in level_entities.drain(..) {
         let id = entities.reserve_entity_id();
-        level.add(id, entity);
+        level.add_external(id, entity, 0);
 
         if level.get(id).unwrap().is_pc() {
             assert!(pc == None, "Multiple player characters");
             pc = Some(id);
-            level.schedule.borrow_mut().set_pc(id);
+            level.schedule.set_pc(id);
         }
     }
 
-    level.finalise(0);
     entities.add_level(level);
 
     pc.unwrap()
@@ -171,13 +171,13 @@ fn game<'a>(input_source: InputSource<'a>, game_window: Window<'a>) {
     game_context.pc = Some(populate(&mut game_context.entities));
 
     game_context
-        .rule(rules::door::detect_open)
-        .rule(rules::collision::detect_collision)
-        .rule(rules::axis_velocity::start_velocity_movement)
-        .rule(rules::axis_velocity::maintain_velocity_movement)
-        .rule(rules::burst_fire::burst_fire)
-        .rule(rules::transformation::beast_transformation)
-        .rule(rules::transformation::human_transformation);
+        .rule(rules::door::DetectOpen)
+        .rule(rules::collision::DetectCollision)
+        .rule(rules::axis_velocity::StartVelocityMovement)
+        .rule(rules::axis_velocity::MaintainVelocityMovement)
+        .rule(rules::burst_fire::BurstFireRule)
+        .rule(rules::transformation::BeastTransformation)
+        .rule(rules::transformation::HumanTransformation);
 
     game_context.game_loop();
 }

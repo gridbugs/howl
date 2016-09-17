@@ -8,11 +8,15 @@ pub use self::entity::{
     IdEntityRef,
     Entity,
     EntityTable,
-    Component,
-    ComponentType,
     InvertedEntityTable,
     InvertedEntityRef,
     InvertedEntityRefMut,
+};
+
+mod component;
+pub use self::component::{
+    Component,
+    ComponentType,
 };
 
 pub type LevelEntityTable = InvertedEntityTable;
@@ -22,6 +26,8 @@ pub type LevelEntityRefMut<'a> = InvertedEntityRefMut<'a>;
 mod entity_context;
 pub use self::entity_context::{
     EntityContext,
+    ReserveEntityId,
+    LevelStore,
 };
 
 mod entity_store;
@@ -34,6 +40,7 @@ pub mod rules;
 pub mod actions;
 pub mod entities;
 pub mod components;
+pub mod actors;
 
 mod meta_action;
 pub use self::meta_action::MetaAction;
@@ -42,6 +49,7 @@ pub mod update;
 pub use self::update::{
     UpdateSummary,
     AddedComponents,
+    Metadata,
 };
 
 mod turn_schedule;
@@ -61,6 +69,7 @@ pub use self::rule::{
     Rule,
     RuleResult,
     RuleContext,
+    Reaction,
 };
 
 mod spatial_hash;
@@ -85,3 +94,17 @@ pub use self::level::{
     LevelId,
     LevelSpatialHashMap,
 };
+
+mod actor;
+pub use self::actor::ActorType;
+
+mod clouds;
+
+mod commit_context;
+pub use self::commit_context::CommitContext;
+
+mod renderer;
+pub use self::renderer::Renderer;
+
+mod actor_manager;
+pub use self::actor_manager::ActorManager;

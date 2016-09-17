@@ -4,11 +4,12 @@ use game::{
     ComponentType,
     Component,
     EntityContext,
+    LevelStore,
     LevelId,
     EntityWrapper,
+    Metadata,
 };
 use game::update::{
-    Metadata,
     Metadatum,
     MetadatumType,
 };

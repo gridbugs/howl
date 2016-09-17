@@ -1,12 +1,11 @@
 use game::{
     EntityId,
-    EntityContext,
+    ReserveEntityId,
     MetaAction,
     UpdateSummary,
     EntityWrapper,
     EntityRef,
     EntityStore,
-    LevelId,
     Level,
 };
 use game::ComponentType as CType;
@@ -22,12 +21,11 @@ use geometry::direction::Direction;
 const ETX: char = '\u{3}';
 
 pub fn act<'a>(input_source: &InputSource<'a>,
-                       entity_id: EntityId,
-                       level_id: LevelId,
-                       ctx: &EntityContext)
+               level: &Level,
+               entity_id: EntityId,
+               ids: &ReserveEntityId)
     -> Option<MetaAction>
 {
-    let level = ctx.level(level_id).unwrap();
     let entity = level.get(entity_id).unwrap();
 
 
@@ -35,7 +33,7 @@ pub fn act<'a>(input_source: &InputSource<'a>,
         if let Some(direction) = event_to_direction(event) {
             Some(MetaAction::Update(actions::walk(entity, direction)))
         } else {
-            if let Some(update) = event_to_action(event, entity, ctx, input_source) {
+            if let Some(update) = event_to_action(event, entity, ids, input_source) {
                 Some(MetaAction::Update(update))
             } else {
                 event_to_meta_action(event, entity, level)
@@ -93,13 +91,13 @@ fn get_direction(input_source: &InputSource) -> Option<Direction> {
 
 fn event_to_action<'a, E: EntityRef<'a>>(
     event: Event, entity: E,
-    entities: &EntityContext,
+    ids: &ReserveEntityId,
     input_source: &InputSource) -> Option<UpdateSummary>
 {
     match event {
         Event::Char('f') => {
             get_direction(input_source).map(|d| {
-                actions::fire_single_bullet(entity, d, entities)
+                actions::fire_single_bullet(entity, d, ids)
             })
         },
         Event::Char('g') => {
@@ -107,19 +105,19 @@ fn event_to_action<'a, E: EntityRef<'a>>(
                 actions::burst_fire_bullet(entity, d, 6, 100)
             })
         },
-        Event::Char('F') => Some(actions::fire_bullets_all_axes(entity, entities)),
+        Event::Char('F') => Some(actions::fire_bullets_all_axes(entity, ids)),
         Event::Char('.') => Some(actions::wait()),
         _ => None,
     }
 }
 
 fn event_to_meta_action<'a, E: EntityRef<'a>>(
-    event: Event, entity: E, entities: &Level) -> Option<MetaAction>
+    event: Event, entity: E, level: &Level) -> Option<MetaAction>
 {
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),
         Event::Char('q') => Some(MetaAction::Quit),
-        Event::Char('c') => close_door(entity, entities).map(|u| MetaAction::Update(u)),
+        Event::Char('c') => close_door(entity, level).map(|u| MetaAction::Update(u)),
         _ => None,
     }
 }

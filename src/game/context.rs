@@ -1,11 +1,9 @@
 use game::{
-    TurnSchedule,
     UpdateSummary,
     MetaAction,
     Rule,
-    RuleResult,
-    RuleContext,
     EntityContext,
+    LevelStore,
     EntityId,
     Level,
     LevelId,
@@ -13,28 +11,50 @@ use game::{
     actions,
     EntityWrapper,
     EntityStore,
+    CommitContext,
+    Renderer,
+    ActorManager,
 };
 use game::components::Form;
 
 use game::io::{
-    terminal_player_actor,
     WindowKnowledgeRenderer,
 };
 use game::observer::DrawableObserver;
-
-use schedule::Schedule;
 
 use terminal::{
     Window,
     InputSource
 };
 
-use table::TableRef;
+fn cloud_progress(level: &mut Level) -> UpdateSummary {
+    level.update_clouds_action()
+}
 
-use std::cell;
-use std::collections::VecDeque;
-use std::thread;
-use std::time::Duration;
+fn transformation(id: EntityId, level: &Level) -> Option<UpdateSummary> {
+    let entity = level.get(id).unwrap();
+    if let Some(form) = entity.form() {
+        if let Some(position) = entity.position() {
+            let sh = level.spatial_hash();
+            let sh_cell = sh.get((position.x, position.y)).unwrap();
+            if sh_cell.has(ComponentType::Moon) {
+                if form == Form::Human {
+                    return Some(actions::beast_transform_progress(entity, -1));
+                } else {
+                    return Some(actions::human_transform_progress(entity, 1));
+                }
+            } else {
+                if form == Form::Human {
+                    return Some(actions::beast_transform_progress(entity, 1));
+                } else {
+                    return Some(actions::human_transform_progress(entity, -1));
+                }
+            }
+        }
+    }
+
+    None
+}
 
 pub struct GameContext<'a> {
     pub entities: EntityContext,
@@ -42,93 +62,17 @@ pub struct GameContext<'a> {
     pc_level_id: LevelId,
 
     // io
-    input_source: InputSource<'a>,
-    renderer: WindowKnowledgeRenderer<'a>,
+    renderer: Renderer<'a>,
 
     // rule application
-    update_queue: Schedule<UpdateSummary>,
-    reaction_queue: VecDeque<(u64, UpdateSummary)>,
+    commit_context: CommitContext,
     rules: Vec<Box<Rule>>,
 
-    // observation
-    observer: DrawableObserver,
+    // actors
+    actors: ActorManager<'a>,
 
     // time
-    turn_count: u64,
-}
-
-impl<'a> GameContext<'a> {
-    pub fn new(input_source: InputSource<'a>, game_window: Window<'a>) -> Self {
-        GameContext {
-            entities: EntityContext::new(),
-            pc: None,
-            pc_level_id: 0,
-            input_source: input_source,
-            renderer: WindowKnowledgeRenderer::new(game_window),
-            update_queue: Schedule::new(),
-            reaction_queue: VecDeque::new(),
-            rules: Vec::new(),
-            observer: DrawableObserver::new(),
-            turn_count: 0,
-        }
-    }
-
-    pub fn rule<R: 'static + Rule>(&mut self, r: R) -> &mut Self {
-        self.rules.push(Box::new(r));
-
-        self
-    }
-
-    fn pc_level_id(&self) -> LevelId {
-        self.pc_level_id
-    }
-
-    fn pc_level(&self) -> &Level {
-        self.entities.level(self.pc_level_id()).unwrap()
-    }
-
-    fn pc_level_mut(&mut self) -> &mut Level {
-        let id = self.pc_level_id();
-        self.entities.level_mut(id).unwrap()
-    }
-
-    fn pc_schedule(&self) -> cell::RefMut<TurnSchedule> {
-        self.pc_level().schedule.borrow_mut()
-    }
-
-    pub fn pc_schedule_next(&self) -> EntityId {
-        self.pc_schedule().next().unwrap()
-    }
-
-    pub fn act(&mut self, entity_id: EntityId) -> MetaAction {
-        loop {
-            if let Some(meta_action) = terminal_player_actor::act(&self.input_source, entity_id, self.pc_level_id(), &self.entities) {
-                return meta_action;
-            }
-        }
-    }
-
-    pub fn entity_is_pc(&self, entity: EntityId) -> bool {
-        self.entities.get_from_level(entity, self.pc_level_id()).unwrap().has(ComponentType::PlayerActor)
-    }
-
-    pub fn observe_pc(&mut self) -> bool {
-        self.observer.observe(self.pc.unwrap(), self.entities.level(self.pc_level_id).unwrap(), self.turn_count)
-    }
-
-    pub fn render_pc_knowledge(&mut self) {
-        let level_id = self.pc_level_id();
-        self.renderer.render(self.entities.level(self.pc_level_id).unwrap(), self.pc.unwrap(), level_id, self.turn_count);
-    }
-
-    pub fn render(&mut self) -> bool {
-        if self.observe_pc() {
-            self.render_pc_knowledge();
-            true
-        } else {
-            false
-        }
-    }
+    turn: u64,
 }
 
 #[derive(Debug)]
@@ -142,115 +86,71 @@ enum UpdateError {
 }
 
 impl<'a> GameContext<'a> {
-    fn apply_update(&mut self, update: UpdateSummary, render: bool) -> usize {
-        let mut commit_count = 0;
-
-        self.update_queue.insert(update, 0);
-
-        'outer: while let Some((update, time_delta)) = self.update_queue.next() {
-
-            if render && time_delta != 0 {
-                if self.render() {
-                    thread::sleep(Duration::from_millis(time_delta));
-                }
-            }
-
-            {
-                let rule_context = RuleContext::new(&update, self.entities.level(self.pc_level_id).unwrap(), &self.entities);
-
-                self.reaction_queue.clear();
-                for rule in &self.rules {
-                    let result = rule.check(rule_context);
-
-                    match result {
-                        RuleResult::Instead(mut updates) => {
-                            for (time, update) in updates.drain(..) {
-                                self.update_queue.insert(update, time);
-                            }
-                            continue 'outer;
-                        },
-                        RuleResult::After(mut updates) => {
-                            for (time, update) in updates.drain(..) {
-                                self.reaction_queue.push_back((time, update));
-                            }
-                        },
-                    }
-                }
-            }
-
-            let action_time = update.action_time();
-
-            self.turn_count += 1;
-
-            let level_id = self.pc_level_id();
-            update.commit(&mut self.entities, level_id, self.turn_count);
-            commit_count += 1;
-
-            while let Some((time, update)) = self.reaction_queue.pop_front() {
-                self.update_queue.insert(update, action_time + time);
-            }
+    pub fn new(input_source: InputSource<'a>,
+               game_window: Window<'a>) -> Self {
+        GameContext {
+            entities: EntityContext::new(),
+            pc: None,
+            pc_level_id: 0,
+            actors: ActorManager::new(input_source),
+            renderer: Renderer::new(
+                DrawableObserver::new(),
+                WindowKnowledgeRenderer::new(game_window)
+            ),
+            commit_context: CommitContext::new(),
+            rules: Vec::new(),
+            turn: 0,
         }
-
-        if render {
-            self.render();
-        }
-
-        commit_count
     }
 
-    fn cloud_progress(&mut self) -> UpdateSummary {
-        self.pc_level_mut().apply_perlin_change();
-        self.pc_level().perlin_update()
-    }
+    pub fn rule<R: 'static + Rule>(&mut self, r: R) -> &mut Self {
+        self.rules.push(Box::new(r));
 
-    fn transformation_progress(&mut self, id: EntityId, level_id: LevelId) -> Option<UpdateSummary> {
-        let entity = self.entities.get_from_level(id, level_id).unwrap();
-        if let Some(form) = entity.form() {
-            if let Some(position) = entity.position() {
-                let sh = self.entities.level(level_id).unwrap().spatial_hash();
-                let sh_cell = sh.get((position.x, position.y)).unwrap();
-                if sh_cell.has(ComponentType::Moon) {
-                    if form == Form::Human {
-                        return Some(actions::beast_transform_progress(entity, -1));
-                    } else {
-                        return Some(actions::human_transform_progress(entity, 1));
-                    }
-                } else {
-                    if form == Form::Human {
-                        return Some(actions::beast_transform_progress(entity, 1));
-                    } else {
-                        return Some(actions::human_transform_progress(entity, -1));
-                    }
-                }
-            }
-        }
-
-        None
+        self
     }
 
     fn game_turn(&mut self) -> Result<(), TurnError> {
-        self.turn_count += 1;
-        let entity_id = self.pc_schedule_next();
 
-        let level_id = self.pc_level_id();
-        self.cloud_progress().commit(&mut self.entities, level_id, self.turn_count);
+        self.turn += 1;
 
-        if let Some(update) = self.transformation_progress(entity_id, level_id) {
-            self.apply_update(update, false);
+        let level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
+        let ids = &self.entities.entity_ids;
+
+        let entity_id = level.schedule.next().expect("schedule is empty");
+
+        // update cloud positions, bypassing rules
+        let cloud_update = cloud_progress(level);
+        level.commit_update(cloud_update, self.turn);
+
+        // apply transformation system
+        if let Some(transform_update) = transformation(entity_id, level) {
+            self.turn = self.commit_context.apply_update(
+                level,
+                transform_update,
+                &self.rules,
+                None,
+                ids,
+                self.turn);
         }
 
-        self.render();
-
-        if !self.entity_is_pc(entity_id) {
-            self.observer.observe(entity_id, self.entities.level(self.pc_level_id).unwrap(), self.turn_count);
-        }
+        self.renderer.render(level, self.pc.unwrap(), self.turn);
 
         loop {
-            match self.act(entity_id) {
+            match self.actors.act(level, entity_id, ids) {
                 MetaAction::Quit => return Err(TurnError::Quit),
                 MetaAction::Update(update) => {
-                    let commit_count = self.apply_update(update, true);
-                    if commit_count == 0 && self.entity_is_pc(entity_id) {
+                    let old_turn = self.turn;
+                    self.turn = self.commit_context.apply_update(
+                        level,
+                        update,
+                        &self.rules,
+                        Some((self.pc.unwrap(), &mut self.renderer)),
+                        ids,
+                        self.turn);
+
+                    if self.turn == old_turn &&
+                        level.get(entity_id).unwrap().is_pc()
+                    {
                         continue;
                     } else {
                         break;

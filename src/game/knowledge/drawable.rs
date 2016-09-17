@@ -11,7 +11,7 @@ use game::{
 };
 
 use best::BestMap;
-use renderer::ComplexTile;
+use tile::ComplexTile;
 use object_pool::ObjectPool;
 use grid::StaticGrid;
 use table::TableRefMut;

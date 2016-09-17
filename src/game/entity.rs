@@ -1,18 +1,11 @@
 use game::{
-    Speed,
-    StatusCounter,
     EntityWrapper,
+    Component,
+    ComponentType,
 };
-use game::components::{
-    DoorState,
-    Form,
-};
-use game::knowledge::DrawableKnowledge;
 
 use table::{
     TableId,
-    ToType,
-    ToIndex,
     Table,
     TableTable,
     InvertedTableRef,
@@ -23,14 +16,6 @@ use table::{
     TableRefMut,
     IdTableRef,
 };
-
-use geometry::{
-    Vector2,
-    Direction,
-};
-use renderer::ComplexTile;
-
-use std::cell::RefCell;
 
 pub type InvertedEntityRef<'a> = InvertedTableRef<'a, ComponentType, Component>;
 pub type InvertedEntityRefMut<'a> = InvertedTableRefMut<'a, ComponentType, Component>;
@@ -79,91 +64,4 @@ macro_rules! entity {
         $(entity.add($x);)*
         entity
     }};
-}
-
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
-pub enum ComponentType {
-    NullComponent,
-    Position,
-    Solid,
-    Collider,
-    DestroyOnCollision,
-    Tile,
-    TileDepth,
-    PlayerActor,
-    Door,
-    DoorOpener,
-    Opacity,
-    VisionDistance,
-    DrawableKnowledge,
-    Bullet,
-    AxisVelocity,
-    BeastTransform,
-    HumanTransform,
-    FormSlot,
-    Outside,
-    Moon,
-}
-
-pub const NUM_COMPONENTS: usize = 21;
-
-#[derive(Debug, Clone)]
-pub enum Component {
-    NullComponent,
-    Position(Vector2<isize>),
-    Solid,
-    Collider,
-    DestroyOnCollision,
-    Tile(ComplexTile),
-    TileDepth(isize),
-    PlayerActor,
-    Door(DoorState),
-    DoorOpener,
-    Opacity(f64),
-    VisionDistance(usize),
-    DrawableKnowledge(RefCell<DrawableKnowledge>),
-    Bullet,
-    AxisVelocity { direction: Direction, speed: Speed },
-    BeastTransform(StatusCounter),
-    HumanTransform(StatusCounter),
-    FormSlot(Form),
-    Outside,
-    Moon,
-}
-
-impl ToType<ComponentType> for Component {
-    fn to_type(&self) -> ComponentType {
-        match *self {
-            Component::NullComponent => ComponentType::NullComponent,
-            Component::Position(_) => ComponentType::Position,
-            Component::Solid => ComponentType::Solid,
-            Component::Collider => ComponentType::Collider,
-            Component::DestroyOnCollision => ComponentType::DestroyOnCollision,
-            Component::Tile(_) => ComponentType::Tile,
-            Component::TileDepth(_) => ComponentType::TileDepth,
-            Component::PlayerActor => ComponentType::PlayerActor,
-            Component::Door(_) => ComponentType::Door,
-            Component::DoorOpener => ComponentType::DoorOpener,
-            Component::Opacity(_) => ComponentType::Opacity,
-            Component::VisionDistance(_) => ComponentType::VisionDistance,
-            Component::DrawableKnowledge(_) => ComponentType::DrawableKnowledge,
-            Component::Bullet => ComponentType::Bullet,
-            Component::AxisVelocity { direction: _, speed: _ } => ComponentType::AxisVelocity,
-            Component::BeastTransform(_) => ComponentType::BeastTransform,
-            Component::HumanTransform(_) => ComponentType::HumanTransform,
-            Component::FormSlot(_) => ComponentType::FormSlot,
-            Component::Outside => ComponentType::Outside,
-            Component::Moon => ComponentType::Moon,
-        }
-    }
-}
-
-impl ToIndex for ComponentType {
-    fn num_indices() -> usize {
-        NUM_COMPONENTS
-    }
-
-    fn to_index(&self) -> usize {
-        *self as usize
-    }
 }

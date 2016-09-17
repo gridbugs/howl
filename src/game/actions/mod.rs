@@ -4,7 +4,7 @@ use game::{
     IdEntityRef,
     Entity,
     UpdateSummary,
-    EntityContext,
+    ReserveEntityId,
     Speed,
     StatusCounter,
     entities,
@@ -25,7 +25,7 @@ use geometry::{
     Direction,
     Vector2,
 };
-use renderer::tile;
+use tile;
 use colour::ansi;
 use terminal::style;
 use table::TableRefMut;
@@ -65,7 +65,7 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
 }
 
 pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
-    source: E, direction: Direction, entities: &EntityContext) -> UpdateSummary
+    source: E, direction: Direction, ids: &ReserveEntityId) -> UpdateSummary
 {
     let mut summary = UpdateSummary::new();
 
@@ -77,7 +77,7 @@ pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
 
     bullet.add(AxisVelocity { direction: direction, speed: speed });
 
-    summary.add_entity(entities.reserve_entity_id(), bullet);
+    summary.add_entity(ids.reserve_entity_id(), bullet);
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
 
@@ -108,7 +108,7 @@ pub fn burst_fire_bullet<'a, E: EntityRef<'a>>(
 }
 
 pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
-    source: E, entities: &EntityContext) -> UpdateSummary
+    source: E, ids: &ReserveEntityId) -> UpdateSummary
 {
     let mut summary = UpdateSummary::new();
 
@@ -120,7 +120,7 @@ pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
         let mut bullet = entities::make_bullet(start_coord.x, start_coord.y);
         bullet.add(AxisVelocity { direction: dir, speed: speed });
 
-        summary.add_entity(entities.reserve_entity_id(), bullet);
+        summary.add_entity(ids.reserve_entity_id(), bullet);
     }
 
     summary.set_metadata(ActionTime(speed.ms_per_cell()));
@@ -142,10 +142,10 @@ pub fn axis_velocity_move(entity_id: EntityId, position: Vector2<isize>, directi
     summary
 }
 
-pub fn add_entity(entity: Entity, entities: &EntityContext) -> UpdateSummary {
+pub fn add_entity(entity: Entity, ids: &ReserveEntityId) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
-    summary.add_entity(entities.reserve_entity_id(), entity);
+    summary.add_entity(ids.reserve_entity_id(), entity);
 
     summary.set_metadata(Name("add_entity"));
     summary

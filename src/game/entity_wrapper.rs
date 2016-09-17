@@ -3,6 +3,7 @@ use game::{
     ComponentType,
     Speed,
     StatusCounter,
+    ActorType,
 };
 use game::components::{
     DoorState,
@@ -14,7 +15,7 @@ use geometry::{
     Vector2,
     Direction,
 };
-use renderer::ComplexTile;
+use tile::ComplexTile;
 
 use std::cell::{
     Ref,
@@ -38,8 +39,22 @@ pub trait EntityWrapper<'a> : Sized {
         }
     }
 
+    fn actor_type(self) -> Option<ActorType> {
+         if let Some(&Component::Actor(actor)) =
+            self.get_component(ComponentType::Actor)
+        {
+            Some(actor)
+        } else {
+            None
+        }
+    }
+
     fn is_pc(self) -> bool {
-        self.has_component(ComponentType::PlayerActor)
+        if let Some(ActorType::Player) = self.actor_type() {
+            true
+        } else {
+            false
+        }
     }
 
     fn door_state(self) -> Option<DoorState> {
