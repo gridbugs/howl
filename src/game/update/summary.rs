@@ -3,9 +3,6 @@ use game::{
     Entity,
     ComponentType,
     Component,
-    EntityContext,
-    LevelStore,
-    LevelId,
     EntityWrapper,
     Metadata,
 };
@@ -120,36 +117,6 @@ impl UpdateSummary {
             self.removed_components.insert(entity, HashSet::new());
         }
         self.removed_components.get_mut(&entity).unwrap().insert(component_type);
-    }
-
-    pub fn commit(mut self, entities: &mut EntityContext, level_id: LevelId, turn_count: u64) {
-
-        let mut level = entities.level_mut(level_id).unwrap();
-
-        level.update_spatial_hash(&self, turn_count);
-
-        for (id, entity) in self.added_entities.drain() {
-            level.add(id, entity);
-        }
-
-        for entity_id in self.removed_entities.iter() {
-            level.remove(*entity_id).
-                expect("Tried to remove non-existent entity.");
-        }
-
-        for (entity_id, mut components) in self.added_components.drain() {
-            let mut entity = level.get_mut(entity_id).unwrap();
-            for (_, component) in components.drain() {
-                entity.add(component);
-            }
-        }
-
-        for (entity_id, component_types) in self.removed_components.iter() {
-            let mut entity = level.get_mut(*entity_id).unwrap();
-            for component_type in component_types.iter() {
-                entity.remove(*component_type);
-            }
-        }
     }
 
     pub fn set_metadata(&mut self, metadatum: Metadatum) {

@@ -179,7 +179,7 @@ impl Level {
         RuleResult::after_many(reactions)
     }
 
-    pub fn update_spatial_hash(&mut self, update: &UpdateSummary, turn_count: u64) {
+    fn update_spatial_hash(&mut self, update: &UpdateSummary, turn_count: u64) {
         self.spatial_hash.update(update, &self.entities, turn_count);
     }
 }
