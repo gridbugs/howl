@@ -27,7 +27,10 @@ use std::cell::{
 pub trait EntityWrapper<'a> : Sized {
 
     fn get_component(self, component_type: ComponentType) -> Option<&'a Component>;
-    fn has_component(self, component_Type: ComponentType) -> bool;
+
+    fn has_component(self, component_type: ComponentType) -> bool {
+        self.get_component(component_type).is_some()
+    }
 
     fn position(self) -> Option<Vector2<isize>> {
         if let Some(&Component::Position(ref vec)) =
