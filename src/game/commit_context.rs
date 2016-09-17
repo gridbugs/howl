@@ -5,6 +5,7 @@ use game::{
     EntityId,
     Renderer,
     ReserveEntityId,
+    MetadataWrapper,
 };
 
 use schedule::Schedule;
@@ -55,8 +56,9 @@ impl CommitContext {
             let mut action_time = 0;
 
             if result.is_accept() {
-                action_time = update.action_time();
-                level.commit_update(update, turn);
+                let metadata = level.commit_update(update, turn);
+
+                action_time = metadata.action_time();
 
                 turn += 1;
             }

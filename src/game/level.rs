@@ -14,6 +14,7 @@ use game::{
     ReserveEntityId,
     RuleContext,
     RuleResult,
+    Metadata,
 };
 
 use game::Component::*;
@@ -130,7 +131,10 @@ impl Level {
         update
     }
 
-    pub fn commit_update(&mut self, mut update: UpdateSummary, turn: u64) {
+    pub fn commit_update(&mut self,
+                         mut update: UpdateSummary,
+                         turn: u64) -> Metadata
+    {
         self.spatial_hash.update(&update, &self.entities, turn);
 
         for (id, entity) in update.added_entities.drain() {
@@ -155,6 +159,8 @@ impl Level {
                 entity.remove(*component_type);
             }
         }
+
+        update.metadata
     }
 
     pub fn check_rules<'a, I: IntoIterator<Item=&'a Box<Rule>>>(

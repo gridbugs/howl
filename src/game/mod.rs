@@ -50,6 +50,7 @@ pub use self::update::{
     UpdateSummary,
     AddedComponents,
     Metadata,
+    MetadataWrapper,
 };
 
 mod turn_schedule;

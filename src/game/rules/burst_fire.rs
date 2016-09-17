@@ -5,6 +5,7 @@ use game::{
     Reaction,
     RuleContext,
     EntityWrapper,
+    MetadataWrapper,
 };
 
 use game::update::Metadatum::*;

@@ -1,14 +1,26 @@
 use game::{
     Entity,
     UpdateSummary,
+    MetadataWrapper,
 };
 
 use table::{
     Table,
     ToType,
+    TableRef,
 };
 
 pub type Metadata = Table<MetadatumType, Metadatum>;
+
+impl<'a> MetadataWrapper<'a> for &'a Metadata {
+    fn get_metadata(self, md_type: MetadatumType) -> Option<&'a Metadatum> {
+        self.get(md_type)
+    }
+
+    fn has_metadata(self, md_type: MetadatumType) -> bool {
+        self.has(md_type)
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum MetadatumType {

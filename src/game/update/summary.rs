@@ -5,6 +5,7 @@ use game::{
     Component,
     EntityWrapper,
     Metadata,
+    MetadataWrapper,
 };
 use game::update::{
     Metadatum,
@@ -81,6 +82,16 @@ pub struct UpdateSummary {
     pub metadata: Metadata,
 }
 
+impl<'a> MetadataWrapper<'a> for &'a UpdateSummary {
+    fn get_metadata(self, md_type: MetadatumType) -> Option<&'a Metadatum> {
+        self.metadata.get(md_type)
+    }
+
+    fn has_metadata(self, md_type: MetadatumType) -> bool {
+        self.metadata.has(md_type)
+    }
+}
+
 impl UpdateSummary {
     pub fn new() -> Self {
         UpdateSummary {
@@ -121,13 +132,5 @@ impl UpdateSummary {
 
     pub fn set_metadata(&mut self, metadatum: Metadatum) {
         self.metadata.add(metadatum);
-    }
-
-    pub fn get_metadata(&self, metadatum_type: MetadatumType) -> Option<&Metadatum> {
-        self.metadata.get(metadatum_type)
-    }
-
-    pub fn has_metadata(&self, metadatum_type: MetadatumType) ->  bool {
-        self.metadata.has(metadatum_type)
     }
 }

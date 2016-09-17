@@ -1,6 +1,5 @@
 use game::{
     Entity,
-    UpdateSummary,
 };
 
 use game::update::{
@@ -8,12 +7,17 @@ use game::update::{
     MetadatumType,
 };
 
-use table::TableRef;
+pub trait MetadataWrapper<'a> : Sized {
 
-impl UpdateSummary {
-    pub fn action_time(&self) -> u64 {
+    fn get_metadata(self, md_type: MetadatumType) -> Option<&'a Metadatum>;
+
+    fn has_metadata(self, md_type: MetadatumType) -> bool {
+        self.get_metadata(md_type).is_some()
+    }
+
+    fn action_time(self) -> u64 {
         if let Some(&Metadatum::ActionTime(t)) =
-            self.metadata.get(MetadatumType::ActionTime)
+            self.get_metadata(MetadatumType::ActionTime)
         {
             t
         } else {
@@ -21,9 +25,9 @@ impl UpdateSummary {
         }
     }
 
-    pub fn turn_time(&self) -> u64 {
+    fn turn_time(self) -> u64 {
         if let Some(&Metadatum::TurnTime(t)) =
-            self.metadata.get(MetadatumType::TurnTime)
+            self.get_metadata(MetadatumType::TurnTime)
         {
             t
         } else {
@@ -31,13 +35,13 @@ impl UpdateSummary {
         }
     }
 
-    pub fn is_axis_velocity(&self) -> bool {
-        self.metadata.has(MetadatumType::AxisVelocityMovement)
+    fn is_axis_velocity(self) -> bool {
+        self.has_metadata(MetadatumType::AxisVelocityMovement)
     }
 
-    pub fn burst_fire(&self) -> Option<(&Entity, u64, u64)> {
+    fn burst_fire(self) -> Option<(&'a Entity, u64, u64)> {
         if let Some(&Metadatum::BurstFire { ref prototype, count, period }) =
-            self.metadata.get(MetadatumType::BurstFire)
+            self.get_metadata(MetadatumType::BurstFire)
         {
             Some((prototype, count, period))
         } else {
@@ -45,19 +49,9 @@ impl UpdateSummary {
         }
     }
 
-    pub fn delay(&self) -> Option<&UpdateSummary> {
-        if let Some(&Metadatum::Delay(ref update)) =
-            self.metadata.get(MetadatumType::Delay)
-        {
-            Some(update)
-        } else {
-            None
-        }
-    }
-
-    pub fn name(&self) -> Option<&'static str> {
+    fn name(self) -> Option<&'static str> {
         if let Some(&Metadatum::Name(name)) =
-            self.metadata.get(MetadatumType::Name)
+            self.get_metadata(MetadatumType::Name)
         {
             Some(name)
         } else {

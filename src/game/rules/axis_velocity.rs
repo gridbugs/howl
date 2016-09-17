@@ -5,6 +5,7 @@ use game::{
     RuleContext,
     EntityWrapper,
     EntityStore,
+    MetadataWrapper,
 };
 
 use game::rule::Rule;

@@ -12,3 +12,4 @@ pub use self::metadata::{
 };
 
 mod metadata_wrapper;
+pub use self::metadata_wrapper::MetadataWrapper;
