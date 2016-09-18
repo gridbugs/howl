@@ -52,6 +52,10 @@ pub trait EntityWrapper<'a> : Sized {
         }
     }
 
+    fn is_actor(self) -> bool {
+        self.actor_type().is_some()
+    }
+
     fn is_pc(self) -> bool {
         if let Some(ActorType::Player) = self.actor_type() {
             true

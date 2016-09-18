@@ -111,6 +111,7 @@ pub fn make_dog(x: isize, y: isize) -> Entity {
         TileDepth(2),
         VisionDistance(20),
         Actor(SimpleNpc),
+        Collider,
     ]
 }
 

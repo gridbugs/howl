@@ -1,10 +1,10 @@
 use game::{
     Entity,
     EntityId,
-    TurnSchedule,
     SpatialHashMap,
     SpatialHashCell,
     UpdateSummary,
+    EntityWrapper,
     ComponentWrapper,
     EntityStore,
     LevelEntityTable,
@@ -21,6 +21,8 @@ use game::Component::*;
 use game::ComponentType as CType;
 
 use game::clouds::CloudContext;
+
+use schedule::Schedule;
 
 use grid::{
     StaticGrid,
@@ -40,12 +42,11 @@ pub type LevelSpatialHashMap =
 
 pub type LevelId = usize;
 
-#[derive(Debug, Clone)]
 pub struct Level {
     id: LevelId,
     pub width: usize,
     pub height: usize,
-    pub schedule: TurnSchedule,
+    pub schedule: Schedule<EntityId>,
     pub spatial_hash: LevelSpatialHashMap,
     entities: LevelEntityTable,
     clouds: CloudContext,
@@ -68,7 +69,7 @@ impl Level {
             id: id,
             width: width,
             height: height,
-            schedule: TurnSchedule::new(),
+            schedule: Schedule::new(),
             spatial_hash: SpatialHashMap::new(
                     StaticGrid::new_default(width, height)),
             entities: LevelEntityTable::new(),
@@ -86,6 +87,11 @@ impl Level {
     }
 
     pub fn add(&mut self, id: EntityId, entity: Entity) -> Option<Entity> {
+
+        if entity.is_actor() {
+            self.schedule.insert(id, 0);
+        }
+
         self.entities.add(id, entity)
     }
 

@@ -37,6 +37,7 @@ pub fn walk<'a, E: IdEntityRef<'a>>(entity: E, direction: Direction) -> UpdateSu
     summary.add_component(entity.id(), Position(vec));
 
     summary.set_metadata(Name("walk"));
+    summary.set_metadata(TurnTime(10));
     summary
 }
 

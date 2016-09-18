@@ -31,7 +31,6 @@ use game::{
     GameContext,
     Level,
     EntityWrapper,
-    EntityStore,
 };
 use game::rules;
 use game::components::DoorState;
@@ -132,18 +131,18 @@ fn populate(entities: &mut EntityContext) -> EntityId {
 
     for entity in level_entities.drain(..) {
         let id = entities.reserve_entity_id();
-        level.add_external(id, entity, 0);
 
-        if level.get(id).unwrap().is_pc() {
-            assert!(pc == None, "Multiple player characters");
+        if entity.is_pc() {
+            assert!(pc.is_none(), "Multiple player characters");
             pc = Some(id);
-            level.schedule.set_pc(id);
         }
+
+        level.add_external(id, entity, 0);
     }
 
     entities.add_level(level);
 
-    pc.unwrap()
+    pc.expect("no player character found")
 }
 
 const DEBUG_WINDOW_WIDTH: usize = 80;

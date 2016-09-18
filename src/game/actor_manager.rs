@@ -2,7 +2,10 @@ use game::{
     Level,
     EntityId,
     MetaAction,
+    EntityStore,
+    EntityWrapper,
     ReserveEntityId,
+    ActorType,
 };
 
 use game::actors::{
@@ -25,7 +28,18 @@ impl<'a> ActorManager<'a> {
     pub fn act(&self, level: &Level, id: EntityId,
                ids: &ReserveEntityId) -> MetaAction
     {
-        self.player_actor.act(level, id, ids)
+        if let Some(actor_type) = level.get(id).unwrap().actor_type() {
+            match actor_type {
+                ActorType::Player => {
+                    self.player_actor.act(level, id, ids)
+                },
+                ActorType::SimpleNpc => {
+                    MetaAction::PassTurn
+                }
+            }
+        } else {
+            MetaAction::NotActor
+        }
     }
 }
 

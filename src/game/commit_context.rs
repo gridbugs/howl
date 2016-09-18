@@ -17,6 +17,25 @@ pub struct CommitContext {
     update_queue: Schedule<UpdateSummary>,
 }
 
+pub enum CommitError {
+    NoCommits,
+}
+
+
+pub struct CommitTime {
+    pub turn: u64,
+    pub time: u64,
+}
+
+impl CommitTime {
+    fn new(turn: u64, time: u64) -> Self {
+        CommitTime {
+            turn: turn,
+            time: time,
+        }
+    }
+}
+
 impl CommitContext {
     pub fn new() -> Self {
         CommitContext {
@@ -31,9 +50,12 @@ impl CommitContext {
         rules: &Vec<Box<Rule>>,
         mut renderer: Option<(EntityId, &mut Renderer)>,
         ids: &ReserveEntityId,
-        initial_turn: u64) -> u64
+        initial_turn: u64) -> Result<CommitTime, CommitError>
     {
         let mut turn = initial_turn;
+
+        // record the time of the first successful update
+        let mut first_time = None;
 
         // start with the initial action in the queue
         self.update_queue.insert(initial_update, 0);
@@ -58,6 +80,10 @@ impl CommitContext {
             if result.is_accept() {
                 let metadata = level.commit_update(update, turn);
 
+                if first_time.is_none() {
+                    first_time = Some(metadata.turn_time());
+                }
+
                 action_time = metadata.action_time();
 
                 turn += 1;
@@ -74,8 +100,11 @@ impl CommitContext {
             r.render(level, id, turn);
         }
 
-
-        turn
+        if let Some(time) = first_time {
+            Ok(CommitTime::new(turn, time))
+        } else {
+            Err(CommitError::NoCommits)
+        }
     }
 }
 

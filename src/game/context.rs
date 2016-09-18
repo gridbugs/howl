@@ -12,6 +12,7 @@ use game::{
     EntityWrapper,
     EntityStore,
     CommitContext,
+    CommitError,
     Renderer,
     ActorManager,
 };
@@ -26,6 +27,10 @@ use terminal::{
     Window,
     InputSource
 };
+
+use debug;
+
+const NPC_INVALID_ACTION_DELAY: u64 = 10;
 
 fn cloud_progress(level: &mut Level) -> UpdateSummary {
     level.update_clouds_action()
@@ -78,11 +83,7 @@ pub struct GameContext<'a> {
 #[derive(Debug)]
 enum TurnError {
     Quit,
-}
-
-#[derive(Debug)]
-enum UpdateError {
-    NothingApplied,
+    NotActor,
 }
 
 impl<'a> GameContext<'a> {
@@ -116,21 +117,25 @@ impl<'a> GameContext<'a> {
         let level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
         let ids = &self.entities.entity_ids;
 
-        let entity_id = level.schedule.next().expect("schedule is empty");
+        let (entity_id, _) = level.schedule.next().expect("schedule is empty");
 
         // update cloud positions, bypassing rules
         let cloud_update = cloud_progress(level);
         level.commit_update(cloud_update, self.turn);
+        self.turn += 1;
 
         // apply transformation system
         if let Some(transform_update) = transformation(entity_id, level) {
-            self.turn = self.commit_context.apply_update(
+            if let Ok(commit_time) = self.commit_context.apply_update(
                 level,
                 transform_update,
                 &self.rules,
                 None,
                 ids,
-                self.turn);
+                self.turn)
+            {
+                self.turn = commit_time.turn;
+            }
         }
 
         self.renderer.render(level, self.pc.unwrap(), self.turn);
@@ -138,22 +143,41 @@ impl<'a> GameContext<'a> {
         loop {
             match self.actors.act(level, entity_id, ids) {
                 MetaAction::Quit => return Err(TurnError::Quit),
+                MetaAction::NotActor => return Err(TurnError::NotActor),
+                MetaAction::PassTurn => break,
                 MetaAction::Update(update) => {
-                    let old_turn = self.turn;
-                    self.turn = self.commit_context.apply_update(
+                    match self.commit_context.apply_update(
                         level,
                         update,
                         &self.rules,
                         Some((self.pc.unwrap(), &mut self.renderer)),
                         ids,
-                        self.turn);
-
-                    if self.turn == old_turn &&
-                        level.get(entity_id).unwrap().is_pc()
+                        self.turn)
                     {
-                        continue;
-                    } else {
-                        break;
+                        Ok(commit_time) => {
+
+                            self.turn = commit_time.turn;
+                            level.schedule.insert(entity_id, commit_time.time);
+
+                            break;
+                        },
+                        Err(CommitError::NoCommits) => {
+                            if level.get(entity_id).unwrap().is_pc() {
+                                // the player can retry their turn
+                                continue;
+                            } else {
+                                // An npc has made an illegal action.
+                                // Reschedule their turn in the future
+                                // to prevent them from blocking the
+                                // player from acting indefinitely.
+
+                                level.schedule.insert(
+                                    entity_id,
+                                    NPC_INVALID_ACTION_DELAY);
+
+                                break;
+                            }
+                        }
                     }
                 },
             }
@@ -167,6 +191,9 @@ impl<'a> GameContext<'a> {
             if let Err(err) = self.game_turn() {
                 match err {
                     TurnError::Quit => break,
+                    TurnError::NotActor => {
+                        debug_println!("Turn given tot non-actor!");
+                    }
                 }
             }
         }

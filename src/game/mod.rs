@@ -102,7 +102,11 @@ pub use self::actor::ActorType;
 mod clouds;
 
 mod commit_context;
-pub use self::commit_context::CommitContext;
+pub use self::commit_context::{
+    CommitContext,
+    CommitTime,
+    CommitError,
+};
 
 mod renderer;
 pub use self::renderer::Renderer;
