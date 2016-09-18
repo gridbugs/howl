@@ -4,14 +4,16 @@ use std::cmp::Ordering;
 struct ScheduleEntry<T> {
     value: T,
     abs_time: u64,
+    rel_time: u64,
     seq: u64,
 }
 
 impl<T> ScheduleEntry<T> {
-    fn new(value: T, abs_time: u64, seq: u64) -> Self {
+    fn new(value: T, abs_time: u64, rel_time: u64, seq: u64) -> Self {
         ScheduleEntry {
             value: value,
             abs_time: abs_time,
+            rel_time: rel_time,
             seq: seq,
         }
     }
@@ -48,6 +50,22 @@ pub struct Schedule<T> {
     seq: u64,
 }
 
+pub struct ScheduleEvent<T> {
+    pub event: T,
+    pub time_delta: u64,
+    pub time_queued: u64,
+}
+
+impl<T> ScheduleEvent<T> {
+    fn new(event: T, time_delta: u64, time_queued: u64) -> Self {
+        ScheduleEvent {
+            event: event,
+            time_delta: time_delta,
+            time_queued: time_queued,
+        }
+    }
+}
+
 impl<T> Schedule<T> {
     pub fn new() -> Self {
         Schedule {
@@ -58,18 +76,18 @@ impl<T> Schedule<T> {
     }
 
     pub fn insert(&mut self, value: T, rel_time: u64) {
-        let entry = ScheduleEntry::new(value, self.abs_time + rel_time, self.seq);
+        let entry = ScheduleEntry::new(value, self.abs_time + rel_time, rel_time, self.seq);
         self.heap.push(entry);
         self.seq += 1;
     }
 
-    pub fn next(&mut self) -> Option<(T, u64)> {
+    pub fn next(&mut self) -> Option<ScheduleEvent<T>> {
         self.heap.pop().map(|entry| {
             assert!(entry.abs_time >= self.abs_time, "{} < {}", entry.abs_time, self.abs_time);
             let time_delta = entry.abs_time - self.abs_time;
             self.abs_time = entry.abs_time;
 
-            (entry.value, time_delta)
+            ScheduleEvent::new(entry.value, time_delta, entry.rel_time)
         })
     }
 

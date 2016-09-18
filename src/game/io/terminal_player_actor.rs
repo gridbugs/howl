@@ -7,10 +7,10 @@ use game::{
     EntityRef,
     EntityStore,
     Level,
+    actions,
 };
 use game::ComponentType as CType;
 
-use game::actions;
 use game::components::DoorState;
 
 use grid::Grid;

@@ -10,18 +10,21 @@ use game::{
 
 use game::actors::{
     PlayerActor,
+    SimpleNpcActor,
 };
 
 use terminal::InputSource;
 
 pub struct ActorManager<'a> {
     player_actor: PlayerActor<'a>,
+    simple_npc_actor: SimpleNpcActor,
 }
 
 impl<'a> ActorManager<'a> {
     pub fn new(input_source: InputSource<'a>) -> Self {
         ActorManager {
             player_actor: PlayerActor::new(input_source),
+            simple_npc_actor: SimpleNpcActor::new(),
         }
     }
 
@@ -34,7 +37,7 @@ impl<'a> ActorManager<'a> {
                     self.player_actor.act(level, id, ids)
                 },
                 ActorType::SimpleNpc => {
-                    MetaAction::PassTurn
+                    self.simple_npc_actor.act(level, id, ids)
                 }
             }
         } else {

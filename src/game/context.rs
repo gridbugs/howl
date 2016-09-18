@@ -118,16 +118,16 @@ impl<'a> GameContext<'a> {
         let level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
         let ids = &self.entities.entity_ids;
 
-        let (entity_id, time_delta) = level.schedule.next()
-            .expect("schedule is empty");
+        let turn = level.schedule.next().expect("schedule is empty");
+        let entity_id = turn.event;
 
         // update cloud positions, bypassing rules
-        let cloud_update = cloud_progress(level, time_delta);
+        let cloud_update = cloud_progress(level, turn.time_delta);
         level.commit_update(cloud_update, self.turn);
         self.turn += 1;
 
         // apply transformation system
-        if let Some(transform_update) = transformation(entity_id, level, time_delta) {
+        if let Some(transform_update) = transformation(entity_id, level, turn.time_queued) {
             if let Ok(commit_time) = self.commit_context.apply_update(
                 level,
                 transform_update,

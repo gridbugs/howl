@@ -60,25 +60,25 @@ impl CommitContext {
         // start with the initial action in the queue
         self.update_queue.insert(initial_update, 0);
 
-        while let Some((update, time_delta)) = self.update_queue.next() {
+        while let Some(update) = self.update_queue.next() {
 
             // render the scene if time has passed
-            if time_delta != 0 {
+            if update.time_delta != 0 {
                 if let Some((id, ref mut r)) = renderer {
                     if r.render(level, id, turn) {
                         // only delay if something changed
-                        thread::sleep(Duration::from_millis(time_delta));
+                        thread::sleep(Duration::from_millis(update.time_delta));
                     }
                 }
             }
 
             // check the update against all rules
-            let mut result = level.check_rules(&update, rules, ids);
+            let mut result = level.check_rules(&update.event, rules, ids);
 
             let mut action_time = 0;
 
             if result.is_accept() {
-                let metadata = level.commit_update(update, turn);
+                let metadata = level.commit_update(update.event, turn);
 
                 if first_time.is_none() {
                     first_time = Some(metadata.turn_time());

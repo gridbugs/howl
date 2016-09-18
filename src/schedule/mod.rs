@@ -1,2 +1,5 @@
 mod schedule;
-pub use self::schedule::Schedule;
+pub use self::schedule::{
+    Schedule,
+    ScheduleEvent,
+};
