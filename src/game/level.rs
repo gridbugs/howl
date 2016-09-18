@@ -107,11 +107,15 @@ impl Level {
         self.clouds.is_cloud(x, y)
     }
 
-    pub fn update_clouds_action(&mut self) -> UpdateSummary {
-
-        self.clouds.mutate();
+    pub fn update_clouds_action(&mut self, time: u64) -> UpdateSummary {
 
         let mut update = UpdateSummary::new();
+
+        if time == 0 {
+            return update;
+        }
+
+        self.clouds.mutate(time);
 
         let outside = self.entities.accessor(CType::Outside);
         let position = self.entities.accessor(CType::Position);

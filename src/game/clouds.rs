@@ -21,7 +21,7 @@ impl CloudContext {
             perlin_zoom: 0.05,
             perlin_min: -0.1,
             perlin_max: 0.1,
-            perlin_change: Vector3::new(0.05, 0.02, 0.01),
+            perlin_change: Vector3::new(0.005, 0.002, 0.001),
         }
     }
 
@@ -29,9 +29,12 @@ impl CloudContext {
         self.perlin.noise((x as f64) * self.perlin_zoom, (y as f64) * self.perlin_zoom)
     }
 
-    pub fn mutate(&mut self) {
-        self.perlin.scroll(self.perlin_change.x, self.perlin_change.y);
-        self.perlin.mutate(self.perlin_change.z);
+    pub fn mutate(&mut self, time: u64) {
+
+        let change = self.perlin_change * (time as f64);
+
+        self.perlin.scroll(change.x, change.y);
+        self.perlin.mutate(change.z);
     }
 
     pub fn is_cloud(&self, x: isize, y: isize) -> bool {

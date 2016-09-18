@@ -32,8 +32,8 @@ use debug;
 
 const NPC_INVALID_ACTION_DELAY: u64 = 10;
 
-fn cloud_progress(level: &mut Level) -> UpdateSummary {
-    level.update_clouds_action()
+fn cloud_progress(level: &mut Level, time: u64) -> UpdateSummary {
+    level.update_clouds_action(time)
 }
 
 fn transformation(id: EntityId, level: &Level) -> Option<UpdateSummary> {
@@ -117,10 +117,11 @@ impl<'a> GameContext<'a> {
         let level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
         let ids = &self.entities.entity_ids;
 
-        let (entity_id, _) = level.schedule.next().expect("schedule is empty");
+        let (entity_id, time_delta) = level.schedule.next()
+            .expect("schedule is empty");
 
         // update cloud positions, bypassing rules
-        let cloud_update = cloud_progress(level);
+        let cloud_update = cloud_progress(level, time_delta);
         level.commit_update(cloud_update, self.turn);
         self.turn += 1;
 
