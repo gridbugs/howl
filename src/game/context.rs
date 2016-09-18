@@ -122,9 +122,11 @@ impl<'a> GameContext<'a> {
         let entity_id = turn.event;
 
         // update cloud positions, bypassing rules
-        let cloud_update = cloud_progress(level, turn.time_delta);
-        level.commit_update(cloud_update, self.turn);
-        self.turn += 1;
+        if level.get(entity_id).unwrap().is_pc() {
+            let cloud_update = cloud_progress(level, turn.time_queued);
+            level.commit_update(cloud_update, self.turn);
+            self.turn += 1;
+        }
 
         // apply transformation system
         if let Some(transform_update) = transformation(entity_id, level, turn.time_queued) {
