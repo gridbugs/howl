@@ -175,6 +175,8 @@ impl<'a> GameContext<'a> {
                                     entity_id,
                                     NPC_INVALID_ACTION_DELAY);
 
+                                debug_println!("Illegal action by {}", entity_id);
+
                                 break;
                             }
                         }
