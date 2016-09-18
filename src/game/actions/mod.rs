@@ -201,7 +201,7 @@ pub fn beast_transform(entity_id: EntityId) -> UpdateSummary {
 
     summary.remove_component(entity_id, CType::BeastTransform);
     summary.add_component(entity_id,
-        HumanTransform(StatusCounter::new_max(6)));
+        HumanTransform(StatusCounter::new_max(60)));
     summary.add_component(entity_id, FormSlot(Form::Beast));
 
     summary
@@ -214,7 +214,7 @@ pub fn human_transform(entity_id: EntityId) -> UpdateSummary {
         Tile(tile::foreground('@', ansi::WHITE, style::BOLD)));
     summary.remove_component(entity_id, CType::HumanTransform);
     summary.add_component(entity_id,
-        BeastTransform(StatusCounter::new_max(6)));
+        BeastTransform(StatusCounter::new_max(60)));
     summary.add_component(entity_id, FormSlot(Form::Human));
 
     summary

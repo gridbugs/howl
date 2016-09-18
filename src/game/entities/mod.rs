@@ -100,7 +100,7 @@ pub fn make_pc(x: isize, y: isize) -> Entity {
         VisionDistance(20),
         DrawableKnowledge(RefCell::new(knowledge::DrawableKnowledge::new())),
         FormSlot(Form::Human),
-        BeastTransform(StatusCounter::new_max(6)),
+        BeastTransform(StatusCounter::new_max(60)),
     ]
 }
 

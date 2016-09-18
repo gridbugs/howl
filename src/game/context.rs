@@ -36,7 +36,8 @@ fn cloud_progress(level: &mut Level, time: u64) -> UpdateSummary {
     level.update_clouds_action(time)
 }
 
-fn transformation(id: EntityId, level: &Level) -> Option<UpdateSummary> {
+fn transformation(id: EntityId, level: &Level, time: u64) -> Option<UpdateSummary> {
+    let time = time as isize;
     let entity = level.get(id).unwrap();
     if let Some(form) = entity.form() {
         if let Some(position) = entity.position() {
@@ -44,15 +45,15 @@ fn transformation(id: EntityId, level: &Level) -> Option<UpdateSummary> {
             let sh_cell = sh.get((position.x, position.y)).unwrap();
             if sh_cell.has(ComponentType::Moon) {
                 if form == Form::Human {
-                    return Some(actions::beast_transform_progress(entity, -1));
+                    return Some(actions::beast_transform_progress(entity, -time));
                 } else {
-                    return Some(actions::human_transform_progress(entity, 1));
+                    return Some(actions::human_transform_progress(entity, time));
                 }
             } else {
                 if form == Form::Human {
-                    return Some(actions::beast_transform_progress(entity, 1));
+                    return Some(actions::beast_transform_progress(entity, time));
                 } else {
-                    return Some(actions::human_transform_progress(entity, -1));
+                    return Some(actions::human_transform_progress(entity, -time));
                 }
             }
         }
@@ -126,7 +127,7 @@ impl<'a> GameContext<'a> {
         self.turn += 1;
 
         // apply transformation system
-        if let Some(transform_update) = transformation(entity_id, level) {
+        if let Some(transform_update) = transformation(entity_id, level, time_delta) {
             if let Ok(commit_time) = self.commit_context.apply_update(
                 level,
                 transform_update,
