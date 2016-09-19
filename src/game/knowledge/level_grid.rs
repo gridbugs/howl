@@ -14,18 +14,66 @@ use grid::{
 
 use std::collections::HashMap;
 
-pub trait KnowledgeCell: Default {
+pub trait KnowledgeCell: Default  + KnowledgeCellExtra {
+    fn last_updated_turn(&self) -> u64;
+    fn set_last_updated_turn(&mut self, last_updated: u64);
+}
 
+pub trait KnowledgeCellExtra: Default {
     type MetaData;
 
     fn clear(&mut self);
     fn update<'a, E: IterEntityRef<'a>>(
         &mut self,
         entity: E,
-        turn_count: u64,
         meta: &Self::MetaData);
-    fn last_updated(&self) -> u64;
-    fn set_last_updated(&mut self, last_updated: u64);
+}
+
+#[derive(Debug)]
+pub struct KnowledgeCellCommon<Extra: KnowledgeCellExtra> {
+    extra: Extra,
+    turn_count: u64,
+}
+
+impl<Extra: KnowledgeCellExtra> Default for KnowledgeCellCommon<Extra> {
+    fn default() -> Self {
+        KnowledgeCellCommon {
+            turn_count: 0,
+            extra: Extra::default(),
+        }
+    }
+}
+
+impl<Extra: KnowledgeCellExtra> KnowledgeCellExtra for KnowledgeCellCommon<Extra> {
+    type MetaData = Extra::MetaData;
+
+    fn clear(&mut self) {
+        self.extra.clear();
+    }
+
+    fn update<'a, E: IterEntityRef<'a>>(
+        &mut self,
+        entity: E,
+        meta: &Self::MetaData)
+    {
+        self.extra.update(entity, meta);
+    }
+}
+
+impl<Extra: KnowledgeCellExtra> KnowledgeCell for KnowledgeCellCommon<Extra> {
+    fn last_updated_turn(&self) -> u64 {
+        self.turn_count
+    }
+
+    fn set_last_updated_turn(&mut self, last_updated: u64) {
+        self.turn_count = last_updated;
+    }
+}
+
+impl<Extra: KnowledgeCellExtra> KnowledgeCellCommon<Extra> {
+    pub fn extra(&self) -> &Extra {
+        &self.extra
+    }
 }
 
 #[derive(Debug)]
@@ -51,8 +99,8 @@ impl<G> KnowledgeGrid<G>
         grid: &S,
         report_iter: I,
         turn_count: u64) -> bool
-        where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
-              I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
+        where <<G as Grid>::Item as KnowledgeCellExtra>::MetaData: 'a,
+              I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCellExtra>::MetaData)>,
               S: Grid<Item=SpatialHashCell>,
     {
         let mut changed = false;
@@ -64,13 +112,14 @@ impl<G> KnowledgeGrid<G>
             // time the cell was observed, we can skip updating
             // knowledge for that cell.
 
-            if sh_cell.last_updated < kn_cell.last_updated() {
-                kn_cell.set_last_updated(turn_count);
+            if sh_cell.last_updated < kn_cell.last_updated_turn() {
+                kn_cell.set_last_updated_turn(turn_count);
             } else {
                 changed = true;
                 kn_cell.clear();
                 for (_, entity) in entities.id_set_iter(&sh_cell.entities) {
-                    kn_cell.update(entity.unwrap(), turn_count, meta);
+                    kn_cell.update(entity.unwrap(), meta);
+                    kn_cell.set_last_updated_turn(turn_count);
                 }
             }
         }
@@ -103,8 +152,8 @@ impl<G> LevelGridKnowledge<G>
         grid: &S,
         report_iter: I,
         turn_count: u64) -> bool
-        where <<G as Grid>::Item as KnowledgeCell>::MetaData: 'a,
-              I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCell>::MetaData)>,
+        where <<G as Grid>::Item as KnowledgeCellExtra>::MetaData: 'a,
+              I: Iterator<Item=(&'a Coord, &'a <<G as Grid>::Item as KnowledgeCellExtra>::MetaData)>,
               S: Grid<Item=SpatialHashCell>,
     {
         let level_id = entities.id();

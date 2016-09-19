@@ -1,5 +1,6 @@
 use game::knowledge::{
-    KnowledgeCell,
+    KnowledgeCellExtra,
+    KnowledgeCellCommon,
     LevelGridKnowledge,
 };
 use game::{
@@ -16,39 +17,37 @@ use object_pool::ObjectPool;
 use grid::StaticGrid;
 use table::TableRefMut;
 
-use std::collections::HashSet;
+pub type DrawableCell =
+    KnowledgeCellCommon<DrawableExtra>;
 
-pub type DrawableKnowledge = LevelGridKnowledge<StaticGrid<DrawableCell>>;
+pub type DrawableKnowledge =
+    LevelGridKnowledge<StaticGrid<DrawableCell>>;
 
 #[derive(Debug)]
-pub struct DrawableCell {
-    pub component_types: HashSet<CType>,
+pub struct DrawableExtra {
     pub foreground: BestMap<isize, ComplexTile>,
     pub background: BestMap<isize, ComplexTile>,
     pub moonlight: bool,
-    pub last_turn: u64,
     memory_pool: ObjectPool<Entity>,
 }
 
-impl Default for DrawableCell {
+impl Default for DrawableExtra {
     fn default() -> Self {
-        DrawableCell {
-            component_types: HashSet::new(),
+        DrawableExtra {
             foreground: BestMap::new(),
             background: BestMap::new(),
             moonlight: false,
-            last_turn: 0,
             memory_pool: ObjectPool::new(),
         }
     }
 }
 
-impl KnowledgeCell for DrawableCell {
+impl KnowledgeCellExtra for DrawableExtra {
 
+    // visibility of cell (from 0.0 to 1.0)
     type MetaData = f64;
 
     fn clear(&mut self) {
-        self.component_types.clear();
         self.memory_pool.clear();
         self.foreground.clear();
         self.background.clear();
@@ -58,18 +57,12 @@ impl KnowledgeCell for DrawableCell {
     fn update<'a, E: IterEntityRef<'a>>(
         &mut self,
         entity: E,
-        turn_count: u64,
         _: &Self::MetaData)
     {
-        // update set of component types
-        for component_type in entity.types() {
-            self.component_types.insert(*component_type);
-        }
-
         // add entity memory containing clones of components
         {
             let mut memory = self.memory_pool.alloc();
-            Self::update_memory(memory, entity);
+            update_memory(memory, entity);
         }
 
         // update tiles
@@ -84,18 +77,9 @@ impl KnowledgeCell for DrawableCell {
 
         // update moonlight
         self.moonlight |= entity.has_moon();
-
-        self.last_turn = turn_count;
-    }
-
-    fn last_updated(&self) -> u64 { self.last_turn }
-    fn set_last_updated(&mut self, last_updated: u64) {
-        self.last_turn = last_updated;
     }
 }
 
-impl DrawableCell {
-    fn update_memory<'a, E: EntityRef<'a>>(memory: &mut Entity, entity: E) {
-        entity.get(CType::Solid).map(|c| memory.add(c.clone()));
-    }
+fn update_memory<'a, E: EntityRef<'a>>(memory: &mut Entity, entity: E) {
+    entity.get(CType::Solid).map(|c| memory.add(c.clone()));
 }

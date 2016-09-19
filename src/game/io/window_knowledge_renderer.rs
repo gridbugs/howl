@@ -5,7 +5,11 @@ use game::{
     EntityWrapper,
     EntityStore,
 };
-use game::knowledge::DrawableCell;
+use game::knowledge::{
+    KnowledgeCell,
+    DrawableCell,
+    DrawableExtra,
+};
 
 use grid::{
     Grid,
@@ -41,7 +45,7 @@ pub struct WindowKnowledgeRenderer<'a> {
     window: Window<'a>,
 }
 
-fn cell_has_wall(cell: &DrawableCell) -> bool {
+fn cell_has_wall(cell: &DrawableExtra) -> bool {
     if let Some(ComplexTile::Wall { front: _, back: _ }) = cell.foreground.value() {
         true
     } else if let Some(ComplexTile::Wall { front: _, back: _ }) = cell.background.value() {
@@ -65,7 +69,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
             ComplexTile::Simple(s) => s,
             ComplexTile::Wall { front, back } => {
                 if let Some(cell) = grid.get_nei(coord, Direction::South) {
-                    if cell_has_wall(cell) {
+                    if cell_has_wall(cell.extra()) {
                         back
                     } else {
                         front
@@ -87,10 +91,12 @@ impl<'a> WindowKnowledgeRenderer<'a> {
         let knowledge = entity.drawable_knowledge().unwrap();
         let grid = knowledge.grid(level_id).unwrap();
 
-        for (coord, cell) in izip!(
+        for (coord, cell_common) in izip!(
             grid.coord_iter(),
             grid.iter())
         {
+            let cell = cell_common.extra();
+
             let mut bg = ansi::DARK_GREY;
             let mut fg = ansi::DARK_GREY;
             let mut ch = ' ';
@@ -126,7 +132,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                 bg = MOONLIGHT_COLOUR;
             }
 
-            if cell.last_turn != turn_count {
+            if cell_common.last_updated_turn() != turn_count {
                 fg = ansi::BLACK;
                 bg = ansi::DARK_GREY;
             }
