@@ -12,12 +12,8 @@ pub fn init(w: &mut io::Write) {
 
 pub fn write(buf: &[u8]) -> io::Result<usize> {
     unsafe {
-        TARGET.map_or_else(|| {
-            Err(io::Error::new(io::ErrorKind::NotFound,
-                               "Debug not initialised"))
-        }, |w| {
-            (&mut *w).write(buf)
-        })
+        TARGET.map_or_else(|| Err(io::Error::new(io::ErrorKind::NotFound, "Debug not initialised")),
+                           |w| (&mut *w).write(buf))
     }
 }
 

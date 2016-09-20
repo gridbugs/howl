@@ -1,10 +1,6 @@
-use game::{
-    Component,
-};
+use game::Component;
 
-use geometry::{
-    Vector2,
-};
+use geometry::Vector2;
 
 pub trait ComponentWrapper<'a> {
     fn position(self) -> Option<Vector2<isize>>;

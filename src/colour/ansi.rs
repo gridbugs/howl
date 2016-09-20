@@ -38,13 +38,15 @@ pub const RGB_COLOUR_MAX_FIELD: u8 = 5;
 
 impl RgbColour {
     fn new(red: u8, green: u8, blue: u8) -> Result<RgbColour, AnsiRangeError> {
-        if red > RGB_COLOUR_MAX_FIELD ||
-           green > RGB_COLOUR_MAX_FIELD ||
-           blue > RGB_COLOUR_MAX_FIELD
-        {
+        if red > RGB_COLOUR_MAX_FIELD || green > RGB_COLOUR_MAX_FIELD ||
+           blue > RGB_COLOUR_MAX_FIELD {
             Err(AnsiRangeError)
         } else {
-            Ok(RgbColour { red: red, green: green, blue: blue })
+            Ok(RgbColour {
+                red: red,
+                green: green,
+                blue: blue,
+            })
         }
     }
 }
@@ -93,52 +95,42 @@ pub const BRIGHT_CYAN: AnsiColour = AnsiColour::Bright(BrightColour::Cyan);
 pub const WHITE: AnsiColour = AnsiColour::Bright(BrightColour::White);
 
 impl AnsiColour {
-    pub fn new_rgb(red: u8, green: u8, blue: u8) ->
-        Result<AnsiColour,  AnsiRangeError>
-    {
-        RgbColour::new(red, green, blue).map(|colour| {
-            AnsiColour::Rgb(colour)
-        })
+    pub fn new_rgb(red: u8, green: u8, blue: u8) -> Result<AnsiColour, AnsiRangeError> {
+        RgbColour::new(red, green, blue).map(|colour| AnsiColour::Rgb(colour))
     }
 
     pub fn new_greyscale(value: u8) -> Result<AnsiColour, AnsiRangeError> {
-        GreyscaleColour::new(value).map(|colour| {
-            AnsiColour::Greyscale(colour)
-        })
+        GreyscaleColour::new(value).map(|colour| AnsiColour::Greyscale(colour))
     }
 
     pub fn code(&self) -> u8 {
         match *self {
             AnsiColour::Normal(colour) => {
                 match colour {
-                    NormalColour::Black     => 0x00,
-                    NormalColour::Red       => 0x01,
-                    NormalColour::Green     => 0x02,
-                    NormalColour::Yellow    => 0x03,
-                    NormalColour::Blue      => 0x04,
-                    NormalColour::Magenta   => 0x05,
-                    NormalColour::Cyan      => 0x06,
-                    NormalColour::Grey      => 0x07,
+                    NormalColour::Black => 0x00,
+                    NormalColour::Red => 0x01,
+                    NormalColour::Green => 0x02,
+                    NormalColour::Yellow => 0x03,
+                    NormalColour::Blue => 0x04,
+                    NormalColour::Magenta => 0x05,
+                    NormalColour::Cyan => 0x06,
+                    NormalColour::Grey => 0x07,
                 }
-            },
+            }
             AnsiColour::Bright(colour) => {
                 match colour {
-                    BrightColour::DarkGrey  => 0x08,
-                    BrightColour::Red       => 0x09,
-                    BrightColour::Green     => 0x0a,
-                    BrightColour::Yellow    => 0x0b,
-                    BrightColour::Blue      => 0x0c,
-                    BrightColour::Magenta   => 0x0d,
-                    BrightColour::Cyan      => 0x0e,
-                    BrightColour::White     => 0x0f,
+                    BrightColour::DarkGrey => 0x08,
+                    BrightColour::Red => 0x09,
+                    BrightColour::Green => 0x0a,
+                    BrightColour::Yellow => 0x0b,
+                    BrightColour::Blue => 0x0c,
+                    BrightColour::Magenta => 0x0d,
+                    BrightColour::Cyan => 0x0e,
+                    BrightColour::White => 0x0f,
                 }
-            },
-            AnsiColour::Rgb(RgbColour{red, green, blue}) => {
-                16 + 36 * red + 6 * green + blue
-            },
-            AnsiColour::Greyscale(GreyscaleColour(value)) => {
-                0xe8 + value
-            },
+            }
+            AnsiColour::Rgb(RgbColour { red, green, blue }) => 16 + 36 * red + 6 * green + blue,
+            AnsiColour::Greyscale(GreyscaleColour(value)) => 0xe8 + value,
         }
     }
 }

@@ -1,9 +1,5 @@
 use search::Path;
-use grid::{
-    Coord,
-    StaticGrid,
-    DefaultGrid,
-};
+use grid::{Coord, StaticGrid, DefaultGrid};
 
 const INITIAL_GRID_WIDTH: usize = 100;
 const INITIAL_GRID_HEIGHT: usize = 60;
@@ -124,5 +120,3 @@ impl TrackerGrid {
         }
     }
 }
-
-

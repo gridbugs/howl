@@ -1,12 +1,4 @@
-use game::{
-    EntityId,
-    Level,
-    LevelId,
-    Entity,
-    EntityStore,
-    LevelEntityRef,
-    LevelEntityRefMut,
-};
+use game::{EntityId, Level, LevelId, Entity, EntityStore, LevelEntityRef, LevelEntityRefMut};
 
 use reserver::LeakyReserver;
 

@@ -1,12 +1,4 @@
-use game::{
-    Rule,
-    actions,
-    ComponentType,
-    RuleResult,
-    RuleContext,
-    EntityWrapper,
-    EntityStore,
-};
+use game::{Rule, actions, ComponentType, RuleResult, RuleContext, EntityWrapper, EntityStore};
 
 use game::update::Metadatum::*;
 

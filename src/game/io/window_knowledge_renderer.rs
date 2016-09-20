@@ -1,30 +1,10 @@
-use game::{
-    Level,
-    LevelId,
-    EntityId,
-    EntityWrapper,
-    EntityStore,
-};
-use game::knowledge::{
-    KnowledgeCell,
-    DrawableCell,
-    DrawableExtra,
-};
+use game::{Level, LevelId, EntityId, EntityWrapper, EntityStore};
+use game::knowledge::{KnowledgeCell, DrawableCell, DrawableExtra};
 
-use grid::{
-    Grid,
-    IterGrid,
-    Coord,
-};
-use terminal::{
-    Window,
-    style,
-};
+use grid::{Grid, IterGrid, Coord};
+use terminal::{Window, style};
 use colour::ansi;
-use tile::{
-    ComplexTile,
-    SimpleTile,
-};
+use tile::{ComplexTile, SimpleTile};
 use geometry::Direction;
 
 const MOONLIGHT_COLOUR: ansi::AnsiColour = ansi::MAGENTA;
@@ -35,9 +15,7 @@ struct RendererCell {
 
 impl Default for RendererCell {
     fn default() -> Self {
-        RendererCell {
-            wall: false,
-        }
+        RendererCell { wall: false }
     }
 }
 
@@ -57,13 +35,11 @@ fn cell_has_wall(cell: &DrawableExtra) -> bool {
 
 impl<'a> WindowKnowledgeRenderer<'a> {
     pub fn new(window: Window<'a>) -> Self {
-        WindowKnowledgeRenderer {
-            window: window,
-        }
+        WindowKnowledgeRenderer { window: window }
     }
 
     fn get_simple_tile<G>(&self, tile: ComplexTile, coord: Coord, grid: &G) -> SimpleTile
-        where G: Grid<Item=DrawableCell>
+        where G: Grid<Item = DrawableCell>
     {
         match tile {
             ComplexTile::Simple(s) => s,
@@ -77,7 +53,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                 } else {
                     front
                 }
-            },
+            }
         }
     }
 
@@ -85,16 +61,12 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                   entities: &Level,
                   entity_id: EntityId,
                   level_id: LevelId,
-                  turn_count: u64)
-    {
+                  turn_count: u64) {
         let entity = entities.get(entity_id).unwrap();
         let knowledge = entity.drawable_knowledge().unwrap();
         let grid = knowledge.grid(level_id).unwrap();
 
-        for (coord, cell_common) in izip!(
-            grid.coord_iter(),
-            grid.iter())
-        {
+        for (coord, cell_common) in izip!(grid.coord_iter(), grid.iter()) {
             let cell = cell_common.extra();
 
             let mut bg = ansi::DARK_GREY;

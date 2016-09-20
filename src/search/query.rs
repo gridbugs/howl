@@ -1,8 +1,5 @@
 use grid::Coord;
-use geometry::{
-    direction,
-    Direction,
-};
+use geometry::{direction, Direction};
 
 pub struct CellInfo<'a, T: 'a> {
     pub value: &'a T,
@@ -52,7 +49,7 @@ impl<T> Query<T> {
     }
 
     pub fn new_to_predicate<F>(start: Coord, end: F) -> Self
-    where F: 'static + Fn(CellInfo<T>) -> bool
+        where F: 'static + Fn(CellInfo<T>) -> bool
     {
         Self::new(start, Destination::Predicate(Box::new(end)))
     }

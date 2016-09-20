@@ -1,25 +1,12 @@
-use game::{
-    Speed,
-    StatusCounter,
-    ActorType,
-};
+use game::{Speed, StatusCounter, ActorType};
 
-use game::components::{
-    DoorState,
-    Form,
-};
+use game::components::{DoorState, Form};
 
 use game::knowledge::DrawableKnowledge;
 
-use table::{
-    ToIndex,
-    ToType,
-};
+use table::{ToIndex, ToType};
 
-use geometry::{
-    Vector2,
-    Direction,
-};
+use geometry::{Vector2, Direction};
 
 use tile::ComplexTile;
 
@@ -37,26 +24,26 @@ impl ToIndex for ComponentType {
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum ComponentType {
-    NullComponent,          // 00
-    Position,               // 01
-    Solid,                  // 02
-    Collider,               // 03
-    DestroyOnCollision,     // 04
-    Tile,                   // 05
-    TileDepth,              // 06
-    Actor,                  // 07
-    Door,                   // 08
-    DoorOpener,             // 09
-    Opacity,                // 10
-    VisionDistance,         // 11
-    DrawableKnowledge,      // 12
-    Bullet,                 // 13
-    AxisVelocity,           // 14
-    BeastTransform,         // 15
-    HumanTransform,         // 16
-    FormSlot,               // 17
-    Outside,                // 18
-    Moon,                   // 19
+    NullComponent, // 00
+    Position, // 01
+    Solid, // 02
+    Collider, // 03
+    DestroyOnCollision, // 04
+    Tile, // 05
+    TileDepth, // 06
+    Actor, // 07
+    Door, // 08
+    DoorOpener, // 09
+    Opacity, // 10
+    VisionDistance, // 11
+    DrawableKnowledge, // 12
+    Bullet, // 13
+    AxisVelocity, // 14
+    BeastTransform, // 15
+    HumanTransform, // 16
+    FormSlot, // 17
+    Outside, // 18
+    Moon, // 19
 }
 pub const NUM_COMPONENTS: usize = 20;
 
@@ -110,4 +97,3 @@ impl ToType<ComponentType> for Component {
         }
     }
 }
-

@@ -1,23 +1,9 @@
-use geometry::{
-    Direction,
-    CardinalDirection,
-    OrdinalDirection,
-    SubDirection,
-    Vector2,
-    Vector2Index,
-    LengthSquared,
-};
+use geometry::{Direction, CardinalDirection, OrdinalDirection, SubDirection, Vector2,
+               Vector2Index, LengthSquared};
 
-use vision::{
-    Opacity,
-    VisionSystem,
-    VisibilityReport,
-};
+use vision::{Opacity, VisionSystem, VisibilityReport};
 
-use grid::{
-    Grid,
-    Coord,
-};
+use grid::{Grid, Coord};
 
 use std::cell::RefCell;
 use std::cmp;
@@ -139,11 +125,12 @@ impl Octant {
             lateral_step: lateral_step,
             lateral_step_float: lateral_step as f64,
 
-            opacity_increase_corner: card_depth_dir
-                .combine(card_lateral_dir.opposite()).unwrap(),
+            opacity_increase_corner: card_depth_dir.combine(card_lateral_dir.opposite())
+                .unwrap(),
 
             opacity_decrease_corner: card_depth_dir.opposite()
-                .combine(card_lateral_dir.opposite()).unwrap(),
+                .combine(card_lateral_dir.opposite())
+                .unwrap(),
 
             facing_side: card_facing_side.direction(),
             across_side: card_across_side.direction(),
@@ -158,7 +145,8 @@ impl Octant {
 
     fn compute_slope(&self, from: Vector2<f64>, to: Vector2<f64>) -> f64 {
         ((to.get(self.lateral_idx) - from.get(self.lateral_idx)) /
-            (to.get(self.depth_idx) - from.get(self.depth_idx))).abs()
+         (to.get(self.depth_idx) - from.get(self.depth_idx)))
+            .abs()
     }
 }
 
@@ -199,7 +187,7 @@ struct Limits {
 impl Limits {
     fn new<G>(eye: Coord, grid: &G, octant: &Octant) -> Self
         where G: Grid,
-              G::Item: Opacity,
+              G::Item: Opacity
     {
         let eye_centre = eye.cell_centre();
         Limits {
@@ -223,7 +211,11 @@ struct Scan<'a> {
 }
 
 impl<'a> Scan<'a> {
-    fn new(limits: &'a Limits, frame: &'a Frame, octant: &'a Octant, distance: usize) -> Option<Self> {
+    fn new(limits: &'a Limits,
+           frame: &'a Frame,
+           octant: &'a Octant,
+           distance: usize)
+           -> Option<Self> {
         assert!(frame.min_slope >= 0.0);
         assert!(frame.min_slope <= 1.0);
         assert!(frame.max_slope >= 0.0);
@@ -253,9 +245,8 @@ impl<'a> Scan<'a> {
         // Lateral index to start scanning from.
         // We always scan from from cardinal axis to ordinal axis.
         let rel_scan_start_idx = frame.min_slope * inner_depth_offset;
-        let abs_scan_start_idx =
-            octant.round_start.round(limits.eye_lateral_pos +
-                                     rel_scan_start_idx * octant.lateral_step_float);
+        let abs_scan_start_idx = octant.round_start
+            .round(limits.eye_lateral_pos + rel_scan_start_idx * octant.lateral_step_float);
 
         // Make sure the scan starts inside the grid.
         // We always scan away from the eye in the lateral direction, so if the scan
@@ -266,13 +257,12 @@ impl<'a> Scan<'a> {
 
         // Lateral index at which to stop scanning.
         let rel_scan_end_idx = frame.max_slope * outer_depth_offset;
-        let abs_scan_end_idx =
-            octant.round_end.round(limits.eye_lateral_pos +
-                                   rel_scan_end_idx * octant.lateral_step_float);
+        let abs_scan_end_idx = octant.round_end
+            .round(limits.eye_lateral_pos + rel_scan_end_idx * octant.lateral_step_float);
 
         // Constrain the end of the scan within the limits of the grid
-        let abs_scan_end_idx =
-            cmp::min(cmp::max(abs_scan_end_idx, limits.lateral_min), limits.lateral_max);
+        let abs_scan_end_idx = cmp::min(cmp::max(abs_scan_end_idx, limits.lateral_min),
+                                        limits.lateral_max);
 
         Some(Scan {
             depth_idx: depth_abs_idx,
@@ -286,7 +276,7 @@ impl<'a> Scan<'a> {
 
 struct OctantArgs<'a, G>
     where G: Grid + 'a,
-          G::Item: Opacity,
+          G::Item: Opacity
 {
     octant: &'a Octant,
     grid: &'a G,
@@ -299,15 +289,15 @@ struct OctantArgs<'a, G>
 
 impl<'a, G> OctantArgs<'a, G>
     where G: Grid + 'a,
-          G::Item: Opacity,
+          G::Item: Opacity
 {
     fn new(octant: &'a Octant,
            grid: &'a G,
            eye: Coord,
            distance: usize,
            initial_min_slope: f64,
-           initial_max_slope: f64) -> Self
-    {
+           initial_max_slope: f64)
+           -> Self {
         OctantArgs {
             octant: octant,
             grid: grid,
@@ -318,7 +308,6 @@ impl<'a, G> OctantArgs<'a, G>
             initial_max_slope: initial_max_slope,
         }
     }
-
 }
 
 pub struct Shadowcast {
@@ -332,28 +321,22 @@ impl Shadowcast {
             // The order octants appear is the order one would visit
             // each octant if they started at -PI radians and moved
             // in the positive (anticlockwise) direction.
-            octants: [
-                Octant::new(CardinalDirection::West, CardinalDirection::South),
-                Octant::new(CardinalDirection::South, CardinalDirection::West),
-                Octant::new(CardinalDirection::South, CardinalDirection::East),
-                Octant::new(CardinalDirection::East, CardinalDirection::South),
-                Octant::new(CardinalDirection::East, CardinalDirection::North),
-                Octant::new(CardinalDirection::North, CardinalDirection::East),
-                Octant::new(CardinalDirection::North, CardinalDirection::West),
-                Octant::new(CardinalDirection::West, CardinalDirection::North),
-            ],
+            octants: [Octant::new(CardinalDirection::West, CardinalDirection::South),
+                      Octant::new(CardinalDirection::South, CardinalDirection::West),
+                      Octant::new(CardinalDirection::South, CardinalDirection::East),
+                      Octant::new(CardinalDirection::East, CardinalDirection::South),
+                      Octant::new(CardinalDirection::East, CardinalDirection::North),
+                      Octant::new(CardinalDirection::North, CardinalDirection::East),
+                      Octant::new(CardinalDirection::North, CardinalDirection::West),
+                      Octant::new(CardinalDirection::West, CardinalDirection::North)],
             stack: RefCell::new(Vec::new()),
         }
     }
 
-    fn scan<G, R>(
-        &self,
-        args: &OctantArgs<G>,
-        scan: &Scan,
-        report: &mut R)
+    fn scan<G, R>(&self, args: &OctantArgs<G>, scan: &Scan, report: &mut R)
         where G: Grid,
               G::Item: Opacity,
-              R: VisibilityReport<MetaData=f64>,
+              R: VisibilityReport<MetaData = f64>
     {
         let mut coord = Coord::new(0, 0);
         coord.set(args.octant.depth_idx, scan.depth_idx);
@@ -408,9 +391,9 @@ impl Shadowcast {
                         // the just-completed region onto the stack so it can
                         // be expanded in a future scan
                         self.push(Frame::new(scan.frame.depth + 1,
-                                  min_slope,
-                                  slope,
-                                  previous_visibility));
+                                             min_slope,
+                                             slope,
+                                             previous_visibility));
                     }
 
                     min_slope = slope;
@@ -445,7 +428,7 @@ impl Shadowcast {
     fn detect_visible_area_octant<G, R>(&self, args: &OctantArgs<G>, report: &mut R)
         where G: Grid,
               G::Item: Opacity,
-              R: VisibilityReport<MetaData=f64>,
+              R: VisibilityReport<MetaData = f64>
     {
         let limits = Limits::new(args.eye, args.grid, args.octant);
 
@@ -458,33 +441,24 @@ impl Shadowcast {
                 // outside the view distance.
                 self.scan(args, &scan, report);
             }
-       }
+        }
     }
 }
 
 impl<G, R> VisionSystem<G, R, usize> for Shadowcast
     where G: Grid,
           G::Item: Opacity,
-          R: VisibilityReport<MetaData=f64>,
+          R: VisibilityReport<MetaData = f64>
 {
-    fn detect_visible_area(
-        &mut self,
-        eye: Vector2<isize>,
-        grid: &G,
-        distance: usize,
-        report: &mut R)
-    {
+    fn detect_visible_area(&mut self,
+                           eye: Vector2<isize>,
+                           grid: &G,
+                           distance: usize,
+                           report: &mut R) {
         report.see(eye, 1.0);
 
         for octant in &self.octants {
-            let args = OctantArgs::new(
-                octant,
-                grid,
-                eye,
-                distance,
-                0.0,
-                1.0
-            );
+            let args = OctantArgs::new(octant, grid, eye, distance, 0.0, 1.0);
             self.detect_visible_area_octant(&args, report);
         }
     }

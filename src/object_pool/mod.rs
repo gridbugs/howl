@@ -33,5 +33,3 @@ impl<T: Default + Clear> ObjectPool<T> {
         ret
     }
 }
-
-

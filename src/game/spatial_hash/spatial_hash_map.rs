@@ -1,20 +1,7 @@
-use game::{
-    EntityId,
-    LevelId,
-    Component,
-    ComponentType,
-    EntityTable,
-    UpdateSummary,
-    AddedComponents,
-    EntityWrapper,
-    IterEntityRef,
-    IdEntityRef,
-};
+use game::{EntityId, LevelId, Component, ComponentType, EntityTable, UpdateSummary,
+           AddedComponents, EntityWrapper, IterEntityRef, IdEntityRef};
 
-use table::{
-    ToType,
-    TableTable,
-};
+use table::{ToType, TableTable};
 use vision::Opacity;
 use grid::Grid;
 use geometry::Vector2;
@@ -31,7 +18,9 @@ pub struct SpatialHashCell {
 }
 
 impl Opacity for SpatialHashCell {
-    fn opacity(&self) -> f64 { self.opacity }
+    fn opacity(&self) -> f64 {
+        self.opacity
+    }
 }
 
 impl Default for SpatialHashCell {
@@ -112,7 +101,7 @@ impl SpatialHashCell {
         }
     }
 
-    fn remove_component(&mut self , component: &Component) {
+    fn remove_component(&mut self, component: &Component) {
         self.decrement_count(component.to_type());
 
         if let &Component::Opacity(opacity) = component {
@@ -123,12 +112,12 @@ impl SpatialHashCell {
 
 
 #[derive(Debug, Clone)]
-pub struct SpatialHashMap<G: Grid<Item=SpatialHashCell>> {
+pub struct SpatialHashMap<G: Grid<Item = SpatialHashCell>> {
     pub id: Option<LevelId>,
     pub grid: G,
 }
 
-impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
+impl<G: Grid<Item = SpatialHashCell>> SpatialHashMap<G> {
     pub fn new(grid: G) -> Self {
         SpatialHashMap {
             id: None,
@@ -156,9 +145,10 @@ impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
         self.grid.get_mut_unsafe(Vector2::from_tuple(coord))
     }
 
-    pub fn add_entity<'a, E: IterEntityRef<'a>>(
-        &mut self, id: EntityId, entity: E, turn_count: u64)
-    {
+    pub fn add_entity<'a, E: IterEntityRef<'a>>(&mut self,
+                                                id: EntityId,
+                                                entity: E,
+                                                turn_count: u64) {
         if let Some(vec) = entity.position() {
             let cell = self.get_mut_unsafe(vec.to_tuple());
             cell.add_entity(id, entity);
@@ -174,12 +164,10 @@ impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
         }
     }
 
-    pub fn add_components<'a, 'b, E: IdEntityRef<'a>>(
-        &mut self,
-        entity: E,
-        changes: &AddedComponents,
-        turn_count: u64)
-    {
+    pub fn add_components<'a, 'b, E: IdEntityRef<'a>>(&mut self,
+                                                      entity: E,
+                                                      changes: &AddedComponents,
+                                                      turn_count: u64) {
         let id = entity.id();
 
         // position will be set to the position of entity after the change
@@ -227,12 +215,10 @@ impl<G: Grid<Item=SpatialHashCell>> SpatialHashMap<G> {
         }
     }
 
-    pub fn remove_components<'a, E: IdEntityRef<'a>>(
-        &mut self,
-        entity: E,
-        component_types: &HashSet<ComponentType>,
-        turn_count: u64)
-    {
+    pub fn remove_components<'a, E: IdEntityRef<'a>>(&mut self,
+                                                     entity: E,
+                                                     component_types: &HashSet<ComponentType>,
+                                                     turn_count: u64) {
         if let Some(position) = entity.position() {
             if component_types.contains(&ComponentType::Position) {
                 // removing position - remove the entity

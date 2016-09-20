@@ -1,12 +1,6 @@
-use table::{
-    TableId,
-};
+use table::TableId;
 
-use std::collections::{
-    HashMap,
-    HashSet,
-    hash_set,
-};
+use std::collections::{HashMap, HashSet, hash_set};
 
 use std::hash::Hash;
 
@@ -25,10 +19,10 @@ impl<'a> Iterator for TableIdIter<'a> {
 
 #[derive(Clone, Debug)]
 pub struct TypeIdMap<EntryType>(HashMap<EntryType, HashSet<TableId>>)
-where EntryType: Eq + Hash + Copy;
+    where EntryType: Eq + Hash + Copy;
 
 impl<EntryType> TypeIdMap<EntryType>
-where EntryType: Eq + Hash + Copy,
+    where EntryType: Eq + Hash + Copy
 {
     pub fn new() -> Self {
         TypeIdMap(HashMap::new())

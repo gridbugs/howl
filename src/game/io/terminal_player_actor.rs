@@ -1,14 +1,5 @@
-use game::{
-    EntityId,
-    ReserveEntityId,
-    MetaAction,
-    UpdateSummary,
-    EntityWrapper,
-    EntityRef,
-    EntityStore,
-    Level,
-    actions,
-};
+use game::{EntityId, ReserveEntityId, MetaAction, UpdateSummary, EntityWrapper, EntityRef,
+           EntityStore, Level, actions};
 use game::ComponentType as CType;
 
 use game::components::DoorState;
@@ -24,8 +15,7 @@ pub fn act<'a>(input_source: &InputSource<'a>,
                level: &Level,
                entity_id: EntityId,
                ids: &ReserveEntityId)
-    -> Option<MetaAction>
-{
+               -> Option<MetaAction> {
     let entity = level.get(entity_id).unwrap();
 
 
@@ -89,31 +79,28 @@ fn get_direction(input_source: &InputSource) -> Option<Direction> {
     }
 }
 
-fn event_to_action<'a, E: EntityRef<'a>>(
-    event: Event, entity: E,
-    ids: &ReserveEntityId,
-    input_source: &InputSource) -> Option<UpdateSummary>
-{
+fn event_to_action<'a, E: EntityRef<'a>>(event: Event,
+                                         entity: E,
+                                         ids: &ReserveEntityId,
+                                         input_source: &InputSource)
+                                         -> Option<UpdateSummary> {
     match event {
         Event::Char('f') => {
-            get_direction(input_source).map(|d| {
-                actions::fire_single_bullet(entity, d, ids)
-            })
-        },
+            get_direction(input_source).map(|d| actions::fire_single_bullet(entity, d, ids))
+        }
         Event::Char('g') => {
-            get_direction(input_source).map(|d| {
-                actions::burst_fire_bullet(entity, d, 6, 100)
-            })
-        },
+            get_direction(input_source).map(|d| actions::burst_fire_bullet(entity, d, 6, 100))
+        }
         Event::Char('F') => Some(actions::fire_bullets_all_axes(entity, ids)),
         Event::Char('.') => Some(actions::wait()),
         _ => None,
     }
 }
 
-fn event_to_meta_action<'a, E: EntityRef<'a>>(
-    event: Event, entity: E, level: &Level) -> Option<MetaAction>
-{
+fn event_to_meta_action<'a, E: EntityRef<'a>>(event: Event,
+                                              entity: E,
+                                              level: &Level)
+                                              -> Option<MetaAction> {
     match event {
         Event::Char(ETX) => Some(MetaAction::Quit),
         Event::Char('q') => Some(MetaAction::Quit),

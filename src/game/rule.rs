@@ -1,13 +1,6 @@
-use game::{
-    ReserveEntityId,
-    UpdateSummary,
-    Level,
-};
+use game::{ReserveEntityId, UpdateSummary, Level};
 
-use std::collections::{
-    VecDeque,
-    vec_deque,
-};
+use std::collections::{VecDeque, vec_deque};
 
 pub type Drain<'a> = vec_deque::Drain<'a, Reaction>;
 

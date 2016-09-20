@@ -1,15 +1,8 @@
-use game::{
-    actions,
-    Rule,
-    RuleResult,
-    RuleContext,
-    EntityWrapper,
-};
+use game::{actions, Rule, RuleResult, RuleContext, EntityWrapper};
 
 pub struct BeastTransformation;
 
 impl Rule for BeastTransformation {
-
     fn check(&self, ctx: RuleContext) -> RuleResult {
         for (entity_id, changes) in &ctx.update.added_components {
             if let Some(counter) = changes.beast_transform() {

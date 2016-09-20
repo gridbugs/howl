@@ -1,13 +1,6 @@
-use game::{
-    Entity,
-    MetadataWrapper,
-};
+use game::{Entity, MetadataWrapper};
 
-use table::{
-    Table,
-    ToType,
-    TableRef,
-};
+use table::{Table, ToType, TableRef};
 
 pub type Metadata = Table<MetadatumType, Metadatum>;
 
@@ -36,7 +29,11 @@ pub enum Metadatum {
     TurnTime(u64),
     ActionTime(u64),
     AxisVelocityMovement,
-    BurstFire { prototype: Entity, count: u64, period: u64 },
+    BurstFire {
+        prototype: Entity,
+        count: u64,
+        period: u64,
+    },
 }
 
 impl ToType<MetadatumType> for Metadatum {

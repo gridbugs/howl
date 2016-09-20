@@ -1,18 +1,10 @@
-use grid::{
-    Coord,
-    CoordIter,
-    NeiCoordIter,
-    NeiIter,
-    SomeNeiIter,
-    SomeNeiCoordIter,
-};
+use grid::{Coord, CoordIter, NeiCoordIter, NeiIter, SomeNeiIter, SomeNeiCoordIter};
 
 use geometry::Direction;
 
 use std::marker::Sized;
 
 pub trait Grid {
-
     type Item;
 
     fn swap(&mut self, other: &mut Self);
@@ -30,10 +22,18 @@ pub trait Grid {
     fn limits_min(&self) -> Coord;
     fn limits_max(&self) -> Coord;
 
-    fn x_min(&self) -> isize { self.limits_min().x }
-    fn y_min(&self) -> isize { self.limits_min().y }
-    fn x_max(&self) -> isize { self.limits_max().x }
-    fn y_max(&self) -> isize { self.limits_max().y }
+    fn x_min(&self) -> isize {
+        self.limits_min().x
+    }
+    fn y_min(&self) -> isize {
+        self.limits_min().y
+    }
+    fn x_max(&self) -> isize {
+        self.limits_max().x
+    }
+    fn y_max(&self) -> isize {
+        self.limits_max().y
+    }
 
     fn width(&self) -> usize {
         (self.x_max() - self.x_min() + 1) as usize
@@ -44,13 +44,11 @@ pub trait Grid {
     }
 
     fn is_valid_coord(&self, c: Coord) -> bool {
-        c.x >= self.x_min() && c.y >= self.y_min() &&
-            c.x <= self.x_max() && c.y <= self.y_max()
+        c.x >= self.x_min() && c.y >= self.y_min() && c.x <= self.x_max() && c.y <= self.y_max()
     }
 
     fn is_border_coord(&self, c: Coord) -> bool {
-        c.x == self.x_min() || c.y == self.y_min() ||
-            c.x == self.x_max() || c.y == self.y_max()
+        c.x == self.x_min() || c.y == self.y_min() || c.x == self.x_max() || c.y == self.y_max()
     }
 
     fn coord_iter(&self) -> CoordIter {
@@ -80,39 +78,39 @@ pub trait Grid {
     }
 }
 
-pub trait DefaultGrid : Grid
-    where <Self as Grid>::Item: Default,
+pub trait DefaultGrid: Grid
+    where <Self as Grid>::Item: Default
 {
     fn new_default(width: usize, height: usize) -> Self;
     fn reset_all(&mut self);
 }
 
-pub trait CopyGrid : Grid
-    where <Self as Grid>::Item: Copy,
+pub trait CopyGrid: Grid
+    where <Self as Grid>::Item: Copy
 {
     fn new_copy(width: usize, height: usize, example: Self::Item) -> Self;
     fn set_all(&mut self, example: Self::Item);
     fn copy_from(&mut self, other: &Self);
 }
 
-pub trait IterGrid<'a> : Grid
-    where <Self as Grid>::Item: 'a,
+pub trait IterGrid<'a>: Grid
+    where <Self as Grid>::Item: 'a
 {
-    type Iter: Iterator<Item=&'a Self::Item>;
-    type IterMut: Iterator<Item=&'a mut Self::Item>;
+    type Iter: Iterator<Item = &'a Self::Item>;
+    type IterMut: Iterator<Item = &'a mut Self::Item>;
 
     fn iter(&'a self) -> Self::Iter;
     fn iter_mut(&'a mut self) -> Self::IterMut;
 }
 
-pub trait RowGrid<'a> : Grid
-    where <Self as Grid>::Item: 'a,
+pub trait RowGrid<'a>: Grid
+    where <Self as Grid>::Item: 'a
 {
-    type RowIntoIter: IntoIterator<Item=&'a Self::Item> + 'a;
-    type RowIter: Iterator<Item=Self::RowIntoIter>;
+    type RowIntoIter: IntoIterator<Item = &'a Self::Item> + 'a;
+    type RowIter: Iterator<Item = Self::RowIntoIter>;
 
-    type RowIntoIterMut: IntoIterator<Item=&'a mut Self::Item> + 'a;
-    type RowIterMut: Iterator<Item=Self::RowIntoIterMut>;
+    type RowIntoIterMut: IntoIterator<Item = &'a mut Self::Item> + 'a;
+    type RowIterMut: Iterator<Item = Self::RowIntoIterMut>;
 
     fn rows(&'a self) -> Self::RowIter;
     fn rows_mut(&'a mut self) -> Self::RowIterMut;

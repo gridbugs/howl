@@ -1,22 +1,13 @@
 use game;
-use game::{
-    Entity,
-    StatusCounter,
-};
+use game::{Entity, StatusCounter};
 use game::Component::*;
 use game::ActorType::*;
-use game::components::{
-    DoorState,
-    Form,
-};
+use game::components::{DoorState, Form};
 use game::knowledge;
 
 use geometry::Vector2;
 use tile;
-use tile::{
-    ComplexTile,
-    SimpleTile,
-};
+use tile::{ComplexTile, SimpleTile};
 use colour::ansi;
 use terminal::style;
 use table::TableRefMut;

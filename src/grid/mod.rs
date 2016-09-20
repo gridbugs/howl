@@ -9,19 +9,7 @@ mod coord;
 pub use self::coord::Coord;
 
 mod grid;
-pub use self::grid::{
-    Grid,
-    DefaultGrid,
-    CopyGrid,
-    IterGrid,
-    RowGrid,
-};
+pub use self::grid::{Grid, DefaultGrid, CopyGrid, IterGrid, RowGrid};
 
 mod iter;
-pub use self::iter::{
-    CoordIter,
-    NeiCoordIter,
-    NeiIter,
-    SomeNeiIter,
-    SomeNeiCoordIter,
-};
+pub use self::iter::{CoordIter, NeiCoordIter, NeiIter, SomeNeiIter, SomeNeiCoordIter};

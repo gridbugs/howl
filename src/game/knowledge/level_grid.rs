@@ -1,20 +1,10 @@
-use game::{
-    IterEntityRef,
-    SpatialHashCell,
-    LevelId,
-    EntityStore,
-    Level,
-};
+use game::{IterEntityRef, SpatialHashCell, LevelId, EntityStore, Level};
 
-use grid::{
-    Grid,
-    DefaultGrid,
-    Coord,
-};
+use grid::{Grid, DefaultGrid, Coord};
 
 use std::collections::HashMap;
 
-pub trait KnowledgeCell: Default  + KnowledgeCellExtra {
+pub trait KnowledgeCell: Default + KnowledgeCellExtra {
     fn last_updated_turn(&self) -> u64;
     fn set_last_updated_turn(&mut self, last_updated: u64);
 }
@@ -23,10 +13,7 @@ pub trait KnowledgeCellExtra: Default {
     type MetaData;
 
     fn clear(&mut self);
-    fn update<'a, E: IterEntityRef<'a>>(
-        &mut self,
-        entity: E,
-        meta: &Self::MetaData);
+    fn update<'a, E: IterEntityRef<'a>>(&mut self, entity: E, meta: &Self::MetaData);
 }
 
 #[derive(Debug)]
@@ -51,11 +38,7 @@ impl<Extra: KnowledgeCellExtra> KnowledgeCellExtra for KnowledgeCellCommon<Extra
         self.extra.clear();
     }
 
-    fn update<'a, E: IterEntityRef<'a>>(
-        &mut self,
-        entity: E,
-        meta: &Self::MetaData)
-    {
+    fn update<'a, E: IterEntityRef<'a>>(&mut self, entity: E, meta: &Self::MetaData) {
         self.extra.update(entity, meta);
     }
 }
@@ -86,12 +69,10 @@ struct KnowledgeGrid<G>
 
 impl<G> KnowledgeGrid<G>
     where G: DefaultGrid,
-          G::Item: KnowledgeCell,
+          G::Item: KnowledgeCell
 {
     fn new(width: usize, height: usize) -> Self {
-        KnowledgeGrid {
-            grid: G::new_default(width, height),
-        }
+        KnowledgeGrid { grid: G::new_default(width, height) }
     }
 
     fn update<'a, I, S>(
@@ -141,9 +122,7 @@ impl<G> LevelGridKnowledge<G>
           G::Item: KnowledgeCell
 {
     pub fn new() -> Self {
-        LevelGridKnowledge {
-            levels: HashMap::new(),
-        }
+        LevelGridKnowledge { levels: HashMap::new() }
     }
 
     pub fn update<'a, I, S>(

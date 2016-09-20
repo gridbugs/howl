@@ -1,12 +1,4 @@
-use game::{
-    UpdateSummary,
-    Level,
-    Rule,
-    EntityId,
-    Renderer,
-    ReserveEntityId,
-    MetadataWrapper,
-};
+use game::{UpdateSummary, Level, Rule, EntityId, Renderer, ReserveEntityId, MetadataWrapper};
 
 use schedule::Schedule;
 
@@ -38,20 +30,17 @@ impl CommitTime {
 
 impl CommitContext {
     pub fn new() -> Self {
-        CommitContext {
-            update_queue: Schedule::new(),
-        }
+        CommitContext { update_queue: Schedule::new() }
     }
 
-    pub fn apply_update(
-        &mut self,
-        level: &mut Level,
-        initial_update: UpdateSummary,
-        rules: &Vec<Box<Rule>>,
-        mut renderer: Option<(EntityId, &mut Renderer)>,
-        ids: &ReserveEntityId,
-        initial_turn: u64) -> Result<CommitTime, CommitError>
-    {
+    pub fn apply_update(&mut self,
+                        level: &mut Level,
+                        initial_update: UpdateSummary,
+                        rules: &Vec<Box<Rule>>,
+                        mut renderer: Option<(EntityId, &mut Renderer)>,
+                        ids: &ReserveEntityId,
+                        initial_turn: u64)
+                        -> Result<CommitTime, CommitError> {
         let mut turn = initial_turn;
 
         // record the time of the first successful update
@@ -90,9 +79,7 @@ impl CommitContext {
             }
 
             for reaction in result.drain_reactions() {
-                self.update_queue.insert(
-                    reaction.action,
-                    action_time + reaction.delay);
+                self.update_queue.insert(reaction.action, action_time + reaction.delay);
             }
         }
 
@@ -107,4 +94,3 @@ impl CommitContext {
         }
     }
 }
-

@@ -1,1 +1,2 @@
-#[macro_use] pub mod debug;
+#[macro_use]
+pub mod debug;

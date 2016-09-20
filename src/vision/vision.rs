@@ -8,7 +8,6 @@ pub trait Opacity {
 
 /// Trait used by vision systems to communicate which cells are visible
 pub trait VisibilityReport {
-
     /// Aditional information about the visibility of a cell
     type MetaData;
 
@@ -20,12 +19,7 @@ pub trait VisibilityReport {
 pub trait VisionSystem<G, R, I>
     where G: Grid,
           G::Item: Opacity,
-          R: VisibilityReport,
+          R: VisibilityReport
 {
-    fn detect_visible_area(
-        &mut self,
-        eye: Vector2<isize>,
-        grid: &G,
-        info: I,
-        report: &mut R);
+    fn detect_visible_area(&mut self, eye: Vector2<isize>, grid: &G, info: I, report: &mut R);
 }

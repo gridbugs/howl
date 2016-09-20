@@ -7,15 +7,11 @@ pub struct Speed {
 
 impl Speed {
     pub fn from_cells_per_sec(cells_per_sec: f64) -> Self {
-        Speed {
-            cells_per_ms: cells_per_sec / MS_PER_S,
-        }
+        Speed { cells_per_ms: cells_per_sec / MS_PER_S }
     }
 
     pub fn from_cells_per_ms(cells_per_ms: f64) -> Self {
-        Speed {
-            cells_per_ms: cells_per_ms,
-        }
+        Speed { cells_per_ms: cells_per_ms }
     }
 
     pub fn ms_per_cell(self) -> u64 {

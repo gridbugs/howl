@@ -1,9 +1,6 @@
 use geometry::Vector3;
 
-use perlin::{
-    Perlin3Grid,
-    PerlinWrapType,
-};
+use perlin::{Perlin3Grid, PerlinWrapType};
 
 #[derive(Debug, Clone)]
 pub struct CloudContext {

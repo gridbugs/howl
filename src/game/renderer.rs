@@ -1,7 +1,4 @@
-use game::{
-    Level,
-    EntityId,
-};
+use game::{Level, EntityId};
 use game::io::WindowKnowledgeRenderer;
 use game::observer::DrawableObserver;
 
@@ -11,9 +8,7 @@ pub struct Renderer<'a> {
 }
 
 impl<'a> Renderer<'a> {
-    pub fn new(observer: DrawableObserver,
-           renderer: WindowKnowledgeRenderer<'a>) -> Self
-    {
+    pub fn new(observer: DrawableObserver, renderer: WindowKnowledgeRenderer<'a>) -> Self {
         Renderer {
             observer: observer,
             renderer: renderer,
@@ -30,5 +25,3 @@ impl<'a> Renderer<'a> {
         change
     }
 }
-
-

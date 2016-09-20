@@ -1,15 +1,5 @@
-use game::knowledge::{
-    KnowledgeCellExtra,
-    KnowledgeCellCommon,
-    LevelGridKnowledge,
-};
-use game::{
-    Entity,
-    ComponentType as CType,
-    EntityWrapper,
-    EntityRef,
-    IterEntityRef,
-};
+use game::knowledge::{KnowledgeCellExtra, KnowledgeCellCommon, LevelGridKnowledge};
+use game::{Entity, ComponentType as CType, EntityWrapper, EntityRef, IterEntityRef};
 
 use best::BestMap;
 use tile::ComplexTile;
@@ -17,11 +7,9 @@ use object_pool::ObjectPool;
 use grid::StaticGrid;
 use table::TableRefMut;
 
-pub type DrawableCell =
-    KnowledgeCellCommon<DrawableExtra>;
+pub type DrawableCell = KnowledgeCellCommon<DrawableExtra>;
 
-pub type DrawableKnowledge =
-    LevelGridKnowledge<StaticGrid<DrawableCell>>;
+pub type DrawableKnowledge = LevelGridKnowledge<StaticGrid<DrawableCell>>;
 
 #[derive(Debug)]
 pub struct DrawableExtra {
@@ -43,7 +31,6 @@ impl Default for DrawableExtra {
 }
 
 impl KnowledgeCellExtra for DrawableExtra {
-
     // visibility of cell (from 0.0 to 1.0)
     type MetaData = f64;
 
@@ -54,11 +41,7 @@ impl KnowledgeCellExtra for DrawableExtra {
         self.moonlight = false;
     }
 
-    fn update<'a, E: IterEntityRef<'a>>(
-        &mut self,
-        entity: E,
-        _: &Self::MetaData)
-    {
+    fn update<'a, E: IterEntityRef<'a>>(&mut self, entity: E, _: &Self::MetaData) {
         // add entity memory containing clones of components
         {
             let mut memory = self.memory_pool.alloc();

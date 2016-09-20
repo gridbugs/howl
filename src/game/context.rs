@@ -1,32 +1,12 @@
-use game::{
-    UpdateSummary,
-    MetaAction,
-    Rule,
-    EntityContext,
-    LevelStore,
-    EntityId,
-    Level,
-    LevelId,
-    ComponentType,
-    actions,
-    EntityWrapper,
-    EntityStore,
-    CommitContext,
-    CommitError,
-    Renderer,
-    ActorManager,
-};
+use game::{UpdateSummary, MetaAction, Rule, EntityContext, LevelStore, EntityId, Level, LevelId,
+           ComponentType, actions, EntityWrapper, EntityStore, CommitContext, CommitError,
+           Renderer, ActorManager};
 use game::components::Form;
 
-use game::io::{
-    WindowKnowledgeRenderer,
-};
+use game::io::WindowKnowledgeRenderer;
 use game::observer::DrawableObserver;
 
-use terminal::{
-    Window,
-    InputSource
-};
+use terminal::{Window, InputSource};
 
 use debug;
 
@@ -88,17 +68,14 @@ enum TurnError {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn new(input_source: InputSource<'a>,
-               game_window: Window<'a>) -> Self {
+    pub fn new(input_source: InputSource<'a>, game_window: Window<'a>) -> Self {
         GameContext {
             entities: EntityContext::new(),
             pc: None,
             pc_level_id: 0,
             actors: ActorManager::new(input_source),
-            renderer: Renderer::new(
-                DrawableObserver::new(),
-                WindowKnowledgeRenderer::new(game_window)
-            ),
+            renderer: Renderer::new(DrawableObserver::new(),
+                                    WindowKnowledgeRenderer::new(game_window)),
             commit_context: CommitContext::new(),
             rules: Vec::new(),
             turn: 0,
@@ -130,14 +107,8 @@ impl<'a> GameContext<'a> {
 
         // apply transformation system
         if let Some(transform_update) = transformation(entity_id, level, turn.time_queued) {
-            if let Ok(commit_time) = self.commit_context.apply_update(
-                level,
-                transform_update,
-                &self.rules,
-                None,
-                ids,
-                self.turn)
-            {
+            if let Ok(commit_time) = self.commit_context
+                .apply_update(level, transform_update, &self.rules, None, ids, self.turn) {
                 self.turn = commit_time.turn;
             }
         }
@@ -150,21 +121,20 @@ impl<'a> GameContext<'a> {
                 MetaAction::NotActor => return Err(TurnError::NotActor),
                 MetaAction::PassTurn => break,
                 MetaAction::Update(update) => {
-                    match self.commit_context.apply_update(
-                        level,
-                        update,
-                        &self.rules,
-                        Some((self.pc.unwrap(), &mut self.renderer)),
-                        ids,
-                        self.turn)
-                    {
+                    match self.commit_context.apply_update(level,
+                                                           update,
+                                                           &self.rules,
+                                                           Some((self.pc.unwrap(),
+                                                                 &mut self.renderer)),
+                                                           ids,
+                                                           self.turn) {
                         Ok(commit_time) => {
 
                             self.turn = commit_time.turn;
                             level.schedule.insert(entity_id, commit_time.time);
 
                             break;
-                        },
+                        }
                         Err(CommitError::NoCommits) => {
                             if level.get(entity_id).unwrap().is_pc() {
                                 // the player can retry their turn
@@ -175,9 +145,7 @@ impl<'a> GameContext<'a> {
                                 // to prevent them from blocking the
                                 // player from acting indefinitely.
 
-                                level.schedule.insert(
-                                    entity_id,
-                                    NPC_INVALID_ACTION_DELAY);
+                                level.schedule.insert(entity_id, NPC_INVALID_ACTION_DELAY);
 
                                 debug_println!("Illegal action by {}", entity_id);
 
@@ -185,7 +153,7 @@ impl<'a> GameContext<'a> {
                             }
                         }
                     }
-                },
+                }
             }
         }
 

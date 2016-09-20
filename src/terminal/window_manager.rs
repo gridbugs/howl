@@ -15,12 +15,7 @@ use std::collections::HashMap;
 
 pub type Event = rustty::Event;
 
-use grid::{
-    StaticGrid,
-    Grid,
-    CopyGrid,
-    IterGrid,
-};
+use grid::{StaticGrid, Grid, CopyGrid, IterGrid};
 
 #[derive(PartialEq, Eq)]
 pub enum BufferType {
@@ -99,10 +94,13 @@ pub struct Window<'a> {
 }
 
 impl<'a> Window<'a> {
-
-    fn new(manager: &'a RefCell<WindowManager>, x: isize, y: isize,
-           width: usize, height: usize, buffer_type: BufferType) -> Self
-    {
+    fn new(manager: &'a RefCell<WindowManager>,
+           x: isize,
+           y: isize,
+           width: usize,
+           height: usize,
+           buffer_type: BufferType)
+           -> Self {
         Window {
             id: manager.borrow_mut().allocate_window(x, y, width, height),
             manager: manager,
@@ -179,31 +177,34 @@ pub struct WindowAllocator {
 
 impl WindowAllocator {
     pub fn new() -> Result<Self, Error> {
-        WindowManager::new().map(|manager| {
-            WindowAllocator {
-                manager: RefCell::new(manager),
-            }
-        })
+        WindowManager::new().map(|manager| WindowAllocator { manager: RefCell::new(manager) })
     }
 
-    pub fn make_window(&self, x: isize, y: isize,
-                       width: usize, height: usize,
-                       buffer_type: BufferType) -> Window
-    {
+    pub fn make_window(&self,
+                       x: isize,
+                       y: isize,
+                       width: usize,
+                       height: usize,
+                       buffer_type: BufferType)
+                       -> Window {
         Window::new(&self.manager, x, y, width, height, buffer_type)
     }
 
-    pub fn make_window_buffer(&self, x: isize, y: isize,
-                              width: usize, height: usize,
-                              border_x: usize, border_y: usize) -> WindowBuffer
-    {
-        WindowBuffer::new(self.make_window(x, y, width, height, BufferType::Single), border_x, border_y)
+    pub fn make_window_buffer(&self,
+                              x: isize,
+                              y: isize,
+                              width: usize,
+                              height: usize,
+                              border_x: usize,
+                              border_y: usize)
+                              -> WindowBuffer {
+        WindowBuffer::new(self.make_window(x, y, width, height, BufferType::Single),
+                          border_x,
+                          border_y)
     }
 
     pub fn make_input_source(&self) -> InputSource {
-        InputSource {
-            manager: &self.manager,
-        }
+        InputSource { manager: &self.manager }
     }
 
     pub fn width(&self) -> usize {
@@ -244,9 +245,7 @@ impl WindowManager {
         })
     }
 
-    fn allocate_window(&mut self, x: isize, y: isize,
-                       width: usize, height: usize) -> u64
-    {
+    fn allocate_window(&mut self, x: isize, y: isize, width: usize, height: usize) -> u64 {
         let id = self.id_reserver.reserve();
 
         // make back buffer for window
@@ -279,9 +278,7 @@ impl WindowManager {
 
     fn flush_top_window(&mut self, id: u64) {
         let window = self.windows.get(&id).unwrap();
-        for (coord, cell) in izip![
-            window.grid.coord_iter(), window.grid.iter()]
-        {
+        for (coord, cell) in izip![window.grid.coord_iter(), window.grid.iter()] {
             let x = coord.x + window.coord.0;
             let y = coord.y + window.coord.1;
             let termcell = &mut self.terminal[(x as usize, y as usize)];
@@ -294,9 +291,7 @@ impl WindowManager {
 
     fn flush_non_top_window(&mut self, id: u64) {
         let window = self.windows.get(&id).unwrap();
-        for (coord, cell) in izip![
-            window.grid.coord_iter(), window.grid.iter()]
-        {
+        for (coord, cell) in izip![window.grid.coord_iter(), window.grid.iter()] {
             let x = coord.x + window.coord.0;
             let y = coord.y + window.coord.1;
             if self.top_window_map[(x, y)] == Some(id) {

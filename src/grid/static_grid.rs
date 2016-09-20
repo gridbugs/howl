@@ -4,15 +4,7 @@ use std::ops::{Index, IndexMut};
 
 use geometry::Vector2;
 
-use grid::{
-    Grid,
-    DefaultGrid,
-    CopyGrid,
-    IterGrid,
-    RowGrid,
-    Coord,
-    CoordCell,
-};
+use grid::{Grid, DefaultGrid, CopyGrid, IterGrid, RowGrid, Coord, CoordCell};
 
 #[derive(Debug, Clone)]
 pub struct StaticGrid<T> {
@@ -94,7 +86,8 @@ impl<T> StaticGrid<T> {
 impl<T> StaticGrid<T> {
     fn new_uninitialised(width: usize, height: usize) -> Self {
 
-        let size = (width as usize).checked_mul(height as usize)
+        let size = (width as usize)
+            .checked_mul(height as usize)
             .expect("product of width and height overflows");
 
         StaticGrid {
@@ -112,7 +105,6 @@ impl<T> StaticGrid<T> {
 }
 
 impl<T> Grid for StaticGrid<T> {
-
     type Item = T;
 
     fn swap(&mut self, other: &mut Self) {
@@ -156,8 +148,12 @@ impl<T> Grid for StaticGrid<T> {
         self.limits
     }
 
-    fn width(&self) -> usize { self.width }
-    fn height(&self) -> usize { self.height }
+    fn width(&self) -> usize {
+        self.width
+    }
+    fn height(&self) -> usize {
+        self.height
+    }
 }
 
 impl<'a, T: 'a> IterGrid<'a> for StaticGrid<T> {
@@ -174,7 +170,6 @@ impl<'a, T: 'a> IterGrid<'a> for StaticGrid<T> {
 }
 
 impl<'a, T: 'a> RowGrid<'a> for StaticGrid<T> {
-
     type RowIntoIter = &'a [T];
     type RowIter = slice::Chunks<'a, T>;
 

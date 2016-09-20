@@ -1,36 +1,21 @@
-use table::{
-    TableId,
-    ToType,
-    ToIndex,
-    IdTypeMap,
-    TableRef,
-    TableRefMut,
-    IterTableRef,
-    EntryTypeIter,
-    IdTableRef,
-    EntryAccessor,
-    TableTable,
-    Table,
-};
+use table::{TableId, ToType, ToIndex, IdTypeMap, TableRef, TableRefMut, IterTableRef,
+            EntryTypeIter, IdTableRef, EntryAccessor, TableTable, Table};
 
-use std::collections::{
-    HashMap,
-    hash_map,
-};
+use std::collections::{HashMap, hash_map};
 use std::hash::Hash;
 
 #[derive(Debug, Clone)]
 pub struct InvertedTableTable<EntryType, Entry>
-where EntryType: Eq + Hash + Copy + ToIndex,
-      Entry: ToType<EntryType>,
+    where EntryType: Eq + Hash + Copy + ToIndex,
+          Entry: ToType<EntryType>
 {
     tables: Vec<HashMap<TableId, Entry>>,
     id_types: IdTypeMap<EntryType>,
 }
 
 impl<EntryType, Entry> InvertedTableTable<EntryType, Entry>
-where EntryType: Eq + Hash + Copy + ToIndex,
-      Entry: ToType<EntryType>,
+    where EntryType: Eq + Hash + Copy + ToIndex,
+          Entry: ToType<EntryType>
 {
     pub fn new() -> Self {
         let num_indices = EntryType::num_indices();
@@ -55,16 +40,16 @@ where EntryType: Eq + Hash + Copy + ToIndex,
 }
 
 pub struct InvertedTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     id: TableId,
     table_table: &'a InvertedTableTable<EntryType, Entry>,
 }
 
 impl<'a, EntryType, Entry> InvertedTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     fn new(id: TableId, table_table: &'a InvertedTableTable<EntryType, Entry>) -> Self {
         InvertedTableRef {
@@ -75,8 +60,8 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 impl<'a, EntryType, Entry> Clone for InvertedTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     fn clone(&self) -> Self {
         InvertedTableRef::new(self.id, self.table_table)
@@ -84,22 +69,23 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 impl<'a, EntryType, Entry> Copy for InvertedTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>
-{}
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
+{
+}
 
 
 pub struct InvertedTableRefMut<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     id: TableId,
     table_table: &'a mut InvertedTableTable<EntryType, Entry>,
 }
 
 impl<'a, EntryType, Entry> InvertedTableRefMut<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     fn new(id: TableId, table_table: &'a mut InvertedTableTable<EntryType, Entry>) -> Self {
         InvertedTableRefMut {
@@ -110,20 +96,18 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 pub struct InvertedEntryAccessor<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     entry_type: EntryType,
     hash_map: &'a HashMap<TableId, Entry>,
 }
 
 impl<'a, EntryType, Entry> InvertedEntryAccessor<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
-    fn new(entry_type: EntryType,
-           hash_map: &'a HashMap<TableId, Entry>) -> Self
-    {
+    fn new(entry_type: EntryType, hash_map: &'a HashMap<TableId, Entry>) -> Self {
         InvertedEntryAccessor {
             entry_type: entry_type,
             hash_map: hash_map,
@@ -132,8 +116,8 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry> for InvertedTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     fn get(self, entry_type: EntryType) -> Option<&'a Entry> {
         self.table_table.get_table(entry_type).get(&self.id)
@@ -144,9 +128,10 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
     }
 }
 
-impl<'a, EntryType, Entry> TableRefMut<'a, EntryType, Entry> for InvertedTableRefMut<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+impl<'a, EntryType, Entry> TableRefMut<'a, EntryType, Entry>
+    for InvertedTableRefMut<'a, EntryType, Entry>
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     fn add(&mut self, entry: Entry) -> Option<Entry> {
         let entry_type = entry.to_type();
@@ -164,9 +149,10 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
     }
 }
 
-impl<'a, EntryType, Entry> IterTableRef<'a, EntryType, Entry> for InvertedTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+impl<'a, EntryType, Entry> IterTableRef<'a, EntryType, Entry>
+    for InvertedTableRef<'a, EntryType, Entry>
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     type Iter = InvertedTableIter<'a, EntryType, Entry>;
     type TypeIter = EntryTypeIter<'a, EntryType>;
@@ -190,8 +176,8 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 pub struct InvertedTableIter<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     id: TableId,
     iter: EntryTypeIter<'a, EntryType>,
@@ -199,8 +185,8 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 impl<'a, EntryType, Entry> Iterator for InvertedTableIter<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     type Item = (&'a EntryType, &'a Entry);
     fn next(&mut self) -> Option<Self::Item> {
@@ -213,12 +199,12 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 pub struct InvertedTableEntryIter<'a, EntryType, Entry>(InvertedTableIter<'a, EntryType, Entry>)
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>;
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>;
 
 impl<'a, EntryType, Entry> Iterator for InvertedTableEntryIter<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     type Item = &'a Entry;
     fn next(&mut self) -> Option<Self::Item> {
@@ -230,9 +216,10 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
     }
 }
 
-impl<'a, EntryType, Entry> IdTableRef<'a, EntryType, Entry> for InvertedTableRef<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+impl<'a, EntryType, Entry> IdTableRef<'a, EntryType, Entry>
+    for InvertedTableRef<'a, EntryType, Entry>
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     fn id(self) -> TableId {
         self.id
@@ -240,8 +227,8 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 impl<'a, EntryType, Entry> Clone for InvertedEntryAccessor<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     fn clone(&self) -> Self {
         InvertedEntryAccessor::new(self.entry_type, self.hash_map)
@@ -249,16 +236,16 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
 }
 
 impl<'a, EntryType, Entry> Copy for InvertedEntryAccessor<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>
-{}
-
-impl<'a, EntryType, Entry> EntryAccessor <'a, EntryType, Entry>
-for InvertedEntryAccessor<'a, EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
+}
 
+impl<'a, EntryType, Entry> EntryAccessor<'a, EntryType, Entry>
+    for InvertedEntryAccessor<'a, EntryType, Entry>
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
+{
     type IdIter = hash_map::Keys<'a, TableId, Entry>;
     type EntryIter = hash_map::Values<'a, TableId, Entry>;
     type Iter = hash_map::Iter<'a, TableId, Entry>;
@@ -288,18 +275,18 @@ where EntryType: 'a + Eq + Hash + Copy + ToIndex,
     }
 }
 
-impl<'a, EntryType, Entry> TableTable<'a, EntryType, Entry>
-for InvertedTableTable<EntryType, Entry>
-where EntryType: 'a + Eq + Hash + Copy + ToIndex,
-      Entry: 'a + ToType<EntryType>,
+impl<'a, EntryType, Entry> TableTable<'a, EntryType, Entry> for InvertedTableTable<EntryType, Entry>
+    where EntryType: 'a + Eq + Hash + Copy + ToIndex,
+          Entry: 'a + ToType<EntryType>
 {
     type Ref = InvertedTableRef<'a, EntryType, Entry>;
     type RefMut = InvertedTableRefMut<'a, EntryType, Entry>;
     type Accessor = InvertedEntryAccessor<'a, EntryType, Entry>;
 
-    fn add(&mut self, id: TableId, mut table: Table<EntryType, Entry>)
-        -> Option<Table<EntryType, Entry>>
-    {
+    fn add(&mut self,
+           id: TableId,
+           mut table: Table<EntryType, Entry>)
+           -> Option<Table<EntryType, Entry>> {
         let ret = self.remove(id);
 
         for (entry_type, entry) in table.slots.drain() {

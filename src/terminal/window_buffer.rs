@@ -102,8 +102,9 @@ impl<'a> io::Write for WindowBuffer<'a> {
             if *ch as char == '\n' {
                 self.newline();
             } else {
-                self.window.get_cell(self.cursor_pos.0 + self.border_x as isize,
-                                     self.cursor_pos.1 + self.border_y as isize)
+                self.window
+                    .get_cell(self.cursor_pos.0 + self.border_x as isize,
+                              self.cursor_pos.1 + self.border_y as isize)
                     .set_ch(*ch as char);
                 self.get_current_string().push(*ch as char);
 

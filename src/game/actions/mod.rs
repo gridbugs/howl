@@ -1,30 +1,13 @@
-use game::{
-    EntityId,
-    EntityRef,
-    IdEntityRef,
-    Entity,
-    UpdateSummary,
-    ReserveEntityId,
-    Speed,
-    StatusCounter,
-    entities,
-    EntityWrapper,
-};
+use game::{EntityId, EntityRef, IdEntityRef, Entity, UpdateSummary, ReserveEntityId, Speed,
+           StatusCounter, entities, EntityWrapper};
 use game::Component::*;
 use game::ComponentType as CType;
 
 use game::update::Metadatum::*;
 
-use game::components::{
-    DoorState,
-    Form,
-};
+use game::components::{DoorState, Form};
 
-use geometry::{
-    direction,
-    Direction,
-    Vector2,
-};
+use geometry::{direction, Direction, Vector2};
 use tile;
 use colour::ansi;
 use terminal::style;
@@ -45,7 +28,8 @@ pub fn open_door(door_id: EntityId) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.remove_component(door_id, CType::Solid);
-    summary.add_component(door_id, Tile(tile::foreground('-', ansi::WHITE, style::NONE)));
+    summary.add_component(door_id,
+                          Tile(tile::foreground('-', ansi::WHITE, style::NONE)));
     summary.add_component(door_id, Door(DoorState::Open));
     summary.add_component(door_id, Opacity(0.0));
 
@@ -57,7 +41,8 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.add_component(door_id, Solid);
-    summary.add_component(door_id, Tile(tile::full('+', ansi::WHITE, ansi::DARK_GREY, style::NONE)));
+    summary.add_component(door_id,
+                          Tile(tile::full('+', ansi::WHITE, ansi::DARK_GREY, style::NONE)));
     summary.add_component(door_id, Door(DoorState::Closed));
     summary.add_component(door_id, Opacity(1.0));
 
@@ -65,9 +50,10 @@ pub fn close_door(door_id: EntityId) -> UpdateSummary {
     summary
 }
 
-pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
-    source: E, direction: Direction, ids: &ReserveEntityId) -> UpdateSummary
-{
+pub fn fire_single_bullet<'a, E: EntityRef<'a>>(source: E,
+                                                direction: Direction,
+                                                ids: &ReserveEntityId)
+                                                -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
@@ -76,7 +62,10 @@ pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
 
     let speed = Speed::from_cells_per_sec(100.0);
 
-    bullet.add(AxisVelocity { direction: direction, speed: speed });
+    bullet.add(AxisVelocity {
+        direction: direction,
+        speed: speed,
+    });
 
     summary.add_entity(ids.reserve_entity_id(), bullet);
 
@@ -86,17 +75,21 @@ pub fn fire_single_bullet<'a, E: EntityRef<'a>>(
     summary
 }
 
-pub fn burst_fire_bullet<'a, E: EntityRef<'a>>(
-    source: E, direction: Direction,
-    num_bullets: u64, period: u64) -> UpdateSummary
-{
+pub fn burst_fire_bullet<'a, E: EntityRef<'a>>(source: E,
+                                               direction: Direction,
+                                               num_bullets: u64,
+                                               period: u64)
+                                               -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let start_coord = source.position().unwrap() + direction.vector();
 
     let mut bullet = entities::make_bullet(start_coord.x, start_coord.y);
     let speed = Speed::from_cells_per_sec(100.0);
-    bullet.add(AxisVelocity { direction: direction, speed: speed });
+    bullet.add(AxisVelocity {
+        direction: direction,
+        speed: speed,
+    });
 
     summary.set_metadata(BurstFire {
         prototype: bullet,
@@ -108,9 +101,9 @@ pub fn burst_fire_bullet<'a, E: EntityRef<'a>>(
     summary
 }
 
-pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
-    source: E, ids: &ReserveEntityId) -> UpdateSummary
-{
+pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(source: E,
+                                                   ids: &ReserveEntityId)
+                                                   -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let speed = Speed::from_cells_per_sec(100.0);
@@ -119,7 +112,10 @@ pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
         let start_coord = source.position().unwrap() + dir.vector();
 
         let mut bullet = entities::make_bullet(start_coord.x, start_coord.y);
-        bullet.add(AxisVelocity { direction: dir, speed: speed });
+        bullet.add(AxisVelocity {
+            direction: dir,
+            speed: speed,
+        });
 
         summary.add_entity(ids.reserve_entity_id(), bullet);
     }
@@ -130,7 +126,11 @@ pub fn fire_bullets_all_axes<'a, E: EntityRef<'a>>(
     summary
 }
 
-pub fn axis_velocity_move(entity_id: EntityId, position: Vector2<isize>, direction: Direction, speed: Speed) -> UpdateSummary {
+pub fn axis_velocity_move(entity_id: EntityId,
+                          position: Vector2<isize>,
+                          direction: Direction,
+                          speed: Speed)
+                          -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let vec = position + direction.vector();
@@ -167,9 +167,9 @@ pub fn wait() -> UpdateSummary {
     summary
 }
 
-pub fn beast_transform_progress<'a, E: IdEntityRef<'a>>(
-    entity: E, progress: isize) -> UpdateSummary
-{
+pub fn beast_transform_progress<'a, E: IdEntityRef<'a>>(entity: E,
+                                                        progress: isize)
+                                                        -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let mut counter = entity.beast_transform().unwrap();
@@ -181,7 +181,9 @@ pub fn beast_transform_progress<'a, E: IdEntityRef<'a>>(
     summary
 }
 
-pub fn human_transform_progress<'a, E: IdEntityRef<'a>>(entity: E, progress: isize) -> UpdateSummary {
+pub fn human_transform_progress<'a, E: IdEntityRef<'a>>(entity: E,
+                                                        progress: isize)
+                                                        -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     let mut counter = entity.human_transform().unwrap();
@@ -197,11 +199,10 @@ pub fn beast_transform(entity_id: EntityId) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.add_component(entity_id,
-        Tile(tile::foreground('@', ansi::RED, style::BOLD)));
+                          Tile(tile::foreground('@', ansi::RED, style::BOLD)));
 
     summary.remove_component(entity_id, CType::BeastTransform);
-    summary.add_component(entity_id,
-        HumanTransform(StatusCounter::new_max(60)));
+    summary.add_component(entity_id, HumanTransform(StatusCounter::new_max(60)));
     summary.add_component(entity_id, FormSlot(Form::Beast));
 
     summary
@@ -211,10 +212,9 @@ pub fn human_transform(entity_id: EntityId) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
     summary.add_component(entity_id,
-        Tile(tile::foreground('@', ansi::WHITE, style::BOLD)));
+                          Tile(tile::foreground('@', ansi::WHITE, style::BOLD)));
     summary.remove_component(entity_id, CType::HumanTransform);
-    summary.add_component(entity_id,
-        BeastTransform(StatusCounter::new_max(60)));
+    summary.add_component(entity_id, BeastTransform(StatusCounter::new_max(60)));
     summary.add_component(entity_id, FormSlot(Form::Human));
 
     summary

@@ -83,7 +83,10 @@ impl<T> Schedule<T> {
 
     pub fn next(&mut self) -> Option<ScheduleEvent<T>> {
         self.heap.pop().map(|entry| {
-            assert!(entry.abs_time >= self.abs_time, "{} < {}", entry.abs_time, self.abs_time);
+            assert!(entry.abs_time >= self.abs_time,
+                    "{} < {}",
+                    entry.abs_time,
+                    self.abs_time);
             let time_delta = entry.abs_time - self.abs_time;
             self.abs_time = entry.abs_time;
 

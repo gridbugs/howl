@@ -1,16 +1,6 @@
-use search::{
-    Query,
-    Traverse,
-    TraverseType,
-    WeightedGridSearchContext,
-    SearchContext,
-};
+use search::{Query, Traverse, TraverseType, WeightedGridSearchContext, SearchContext};
 use search::TraverseType::*;
-use grid::{
-    Coord,
-    StaticGrid,
-    CopyGrid,
-};
+use grid::{Coord, StaticGrid, CopyGrid};
 
 #[derive(Clone, Copy, Debug)]
 struct Cell {
@@ -30,22 +20,20 @@ impl Traverse for Cell {
             '7' => Traversable(7.0),
             '8' => Traversable(8.0),
             '9' => Traversable(9.0),
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
     }
 }
 
 fn grid_a() -> StaticGrid<Cell> {
-    let strings = [
-        "#########",
-        "#1299811#",
-        "#1223811#",
-        "#1223811#",
-        "#1111811#",
-        "#1111811#",
-        "#1111811#",
-        "#########",
-    ];
+    let strings = ["#########",
+                   "#1299811#",
+                   "#1223811#",
+                   "#1223811#",
+                   "#1111811#",
+                   "#1111811#",
+                   "#1111811#",
+                   "#########"];
 
     let width = strings[0].len();
     let height = strings.len();
@@ -62,14 +50,10 @@ fn grid_a() -> StaticGrid<Cell> {
 
 #[test]
 fn optimal_search() {
-    let query_a: Query<Cell> = Query::new_to_coord(
-                                Coord::new(1, 1),
-                                Coord::new(7, 1));
+    let query_a: Query<Cell> = Query::new_to_coord(Coord::new(1, 1), Coord::new(7, 1));
 
-    let query_b: Query<Cell> =
-        Query::new_to_predicate(Coord::new(1, 1), |info| {
-        info.coord == Coord::new(7, 1)
-    });
+    let query_b: Query<Cell> = Query::new_to_predicate(Coord::new(1, 1),
+                                                       |info| info.coord == Coord::new(7, 1));
 
     let ctx = WeightedGridSearchContext::new();
 
@@ -78,5 +62,6 @@ fn optimal_search() {
     let result_a = ctx.search(&grid, &query_a).unwrap();
     let result_b = ctx.search(&grid, &query_b).unwrap();
 
-    assert_eq!((result_a.cost * 100.0).floor(), (result_b.cost * 100.0).floor());
+    assert_eq!((result_a.cost * 100.0).floor(),
+               (result_b.cost * 100.0).floor());
 }

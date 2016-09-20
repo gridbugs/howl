@@ -1,15 +1,6 @@
-use game::{
-    EntityId,
-    EntityWrapper,
-    EntityStore,
-    Level,
-};
+use game::{EntityId, EntityWrapper, EntityStore, Level};
 
-use vision::{
-    VisionSystem,
-    DefaultVisibilityReport,
-    Shadowcast,
-};
+use vision::{VisionSystem, DefaultVisibilityReport, Shadowcast};
 
 pub struct DrawableObserver {
     visibility_report: DefaultVisibilityReport,
@@ -24,7 +15,7 @@ impl DrawableObserver {
         }
     }
 
-    pub fn observe(&mut self, entity_id: EntityId, entities: &Level, turn_count: u64) -> bool{
+    pub fn observe(&mut self, entity_id: EntityId, entities: &Level, turn_count: u64) -> bool {
         let entity = entities.get(entity_id).unwrap();
 
         let eye = entity.position().unwrap();

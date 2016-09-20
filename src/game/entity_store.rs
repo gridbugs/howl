@@ -1,13 +1,6 @@
-use game::{
-    IdEntityRef,
-    EntityId,
-    LevelSpatialHashMap,
-};
+use game::{IdEntityRef, EntityId, LevelSpatialHashMap};
 
-use std::collections::{
-    hash_set,
-    HashSet,
-};
+use std::collections::{hash_set, HashSet};
 
 pub struct EntityIter<'a, Store: 'a + EntityStore<'a>> {
     hash_set_iter: hash_set::Iter<'a, EntityId>,
@@ -32,9 +25,8 @@ pub trait EntityStore<'a> {
     fn get(&'a self, id: EntityId) -> Option<Self::Ref>;
     fn spatial_hash(&self) -> &LevelSpatialHashMap;
 
-    fn id_set_iter(&'a self, set: &'a HashSet<EntityId>)
-        -> EntityIter<'a, Self>
-    where Self: Sized
+    fn id_set_iter(&'a self, set: &'a HashSet<EntityId>) -> EntityIter<'a, Self>
+        where Self: Sized
     {
         EntityIter {
             hash_set_iter: set.iter(),

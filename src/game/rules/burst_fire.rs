@@ -1,12 +1,4 @@
-use game::{
-    Rule,
-    actions,
-    RuleResult,
-    Reaction,
-    RuleContext,
-    EntityWrapper,
-    MetadataWrapper,
-};
+use game::{Rule, actions, RuleResult, Reaction, RuleContext, EntityWrapper, MetadataWrapper};
 
 use game::update::Metadatum::*;
 
@@ -14,11 +6,8 @@ pub struct BurstFireRule;
 
 impl Rule for BurstFireRule {
     fn check(&self, ctx: RuleContext) -> RuleResult {
-        if let Some((prototype, count, period)) =
-            ctx.update.burst_fire()
-        {
-            let mut spawn_bullet =
-                actions::add_entity(prototype.clone(), ctx.ids);
+        if let Some((prototype, count, period)) = ctx.update.burst_fire() {
+            let mut spawn_bullet = actions::add_entity(prototype.clone(), ctx.ids);
             let (_, speed) = prototype.axis_velocity().unwrap();
 
             spawn_bullet.set_metadata(ActionTime(speed.ms_per_cell()));

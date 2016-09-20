@@ -1,24 +1,10 @@
-use search::{
-    Traverse,
-    SearchContext,
-    Query,
-    Path,
-    SearchError,
-    CellInfo,
-    Destination,
-};
+use search::{Traverse, SearchContext, Query, Path, SearchError, CellInfo, Destination};
 
 use search::tracker_grid::TrackerGrid;
 
-use grid::{
-    Grid,
-    Coord,
-};
+use grid::{Grid, Coord};
 
-use geometry::{
-    Direction,
-    LengthSquared,
-};
+use geometry::{Direction, LengthSquared};
 
 use std::collections::BinaryHeap;
 use std::cell::RefCell;
@@ -99,17 +85,16 @@ pub struct WeightedGridSearchContext {
 
 impl WeightedGridSearchContext {
     pub fn new() -> Self {
-        WeightedGridSearchContext {
-            state: RefCell::new(State::new()),
-        }
+        WeightedGridSearchContext { state: RefCell::new(State::new()) }
     }
 
-    fn dijkstra_predicate_search<T: Traverse, G: Grid<Item=T>>(
-        &self, grid: &G,
-        start: Coord,
-        predicate: &Box<Fn(CellInfo<T>) -> bool>,
-        dirs: &[Direction]) -> Option<Path>
-    {
+    fn dijkstra_predicate_search<T: Traverse, G: Grid<Item = T>>(&self,
+                                                                 grid: &G,
+                                                                 start: Coord,
+                                                                 predicate: &Box<Fn(CellInfo<T>)
+                                                                                    -> bool>,
+                                                                 dirs: &[Direction])
+                                                                 -> Option<Path> {
         let mut state = self.state.borrow_mut();
         state.clear();
 
@@ -144,9 +129,12 @@ impl WeightedGridSearchContext {
         None
     }
 
-    fn astar_coord_search<T: Traverse, G: Grid<Item=T>>(
-        &self, grid: &G, start: Coord, dest: Coord, dirs: &[Direction]) -> Option<Path>
-    {
+    fn astar_coord_search<T: Traverse, G: Grid<Item = T>>(&self,
+                                                          grid: &G,
+                                                          start: Coord,
+                                                          dest: Coord,
+                                                          dirs: &[Direction])
+                                                          -> Option<Path> {
         let mut state = self.state.borrow_mut();
         state.clear();
 
@@ -184,7 +172,10 @@ impl WeightedGridSearchContext {
 
 
 impl SearchContext for WeightedGridSearchContext {
-    fn search<T: Traverse, G: Grid<Item=T>>(&self, grid: &G, query: &Query<T>) -> Result<Path, SearchError> {
+    fn search<T: Traverse, G: Grid<Item = T>>(&self,
+                                              grid: &G,
+                                              query: &Query<T>)
+                                              -> Result<Path, SearchError> {
 
         if let Some(initial_cell) = grid.get(query.start) {
             if !initial_cell.is_traversable() {
@@ -197,10 +188,10 @@ impl SearchContext for WeightedGridSearchContext {
         let result = match &query.end {
             &Destination::Predicate(ref predicate) => {
                 self.dijkstra_predicate_search(grid, query.start, predicate, query.directions)
-            },
+            }
             &Destination::Coord(coord) => {
                 self.astar_coord_search(grid, query.start, coord, query.directions)
-            },
+            }
         };
 
         if let Some(path) = result {

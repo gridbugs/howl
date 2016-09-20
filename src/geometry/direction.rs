@@ -1,7 +1,4 @@
-use geometry::{
-    Vector2,
-    Vector2Index,
-};
+use geometry::{Vector2, Vector2Index};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Direction {
@@ -202,43 +199,32 @@ pub mod ordinal_directions {
 }
 
 pub const NUM_DIRECTIONS: usize = 8;
-pub static DIRECTIONS: [Direction; NUM_DIRECTIONS] = [
-    Direction::North,
-    Direction::NorthEast,
-    Direction::East,
-    Direction::SouthEast,
-    Direction::South,
-    Direction::SouthWest,
-    Direction::West,
-    Direction::NorthWest,
-];
+pub static DIRECTIONS: [Direction; NUM_DIRECTIONS] = [Direction::North,
+                                                      Direction::NorthEast,
+                                                      Direction::East,
+                                                      Direction::SouthEast,
+                                                      Direction::South,
+                                                      Direction::SouthWest,
+                                                      Direction::West,
+                                                      Direction::NorthWest];
 
 pub const NUM_CARDINAL_DIRECTIONS: usize = 4;
-pub static CARDINAL_DIRECTIONS: [Direction; NUM_CARDINAL_DIRECTIONS] = [
-    Direction::North,
-    Direction::East,
-    Direction::South,
-    Direction::West,
-];
+pub static CARDINAL_DIRECTIONS: [Direction; NUM_CARDINAL_DIRECTIONS] =
+    [Direction::North, Direction::East, Direction::South, Direction::West];
 
 pub const NUM_ORDINAL_DIRECTIONS: usize = 4;
-pub static ORDINAL_DIRECTIONS: [Direction; NUM_ORDINAL_DIRECTIONS] = [
-    Direction::NorthEast,
-    Direction::SouthEast,
-    Direction::SouthWest,
-    Direction::NorthWest,
-];
+pub static ORDINAL_DIRECTIONS: [Direction; NUM_ORDINAL_DIRECTIONS] =
+    [Direction::NorthEast, Direction::SouthEast, Direction::SouthWest, Direction::NorthWest];
 
-pub static DIRECTION_PROFILES: [&'static DirectionProfile; NUM_DIRECTIONS] = [
-    &directions::NORTH,
-    &directions::NORTH_EAST,
-    &directions::EAST,
-    &directions::SOUTH_EAST,
-    &directions::SOUTH,
-    &directions::SOUTH_WEST,
-    &directions::WEST,
-    &directions::NORTH_WEST,
-];
+pub static DIRECTION_PROFILES: [&'static DirectionProfile; NUM_DIRECTIONS] =
+    [&directions::NORTH,
+     &directions::NORTH_EAST,
+     &directions::EAST,
+     &directions::SOUTH_EAST,
+     &directions::SOUTH,
+     &directions::SOUTH_WEST,
+     &directions::WEST,
+     &directions::NORTH_WEST];
 
 impl Direction {
     pub fn index(self) -> usize {
@@ -369,7 +355,7 @@ impl SubDirection for OrdinalDirection {
 }
 
 fn iter_helper<Item: Copy>(index: &mut usize, size: usize, array: &[Item]) -> Option<Item> {
-     if *index < size {
+    if *index < size {
         let result = array[*index];
         *index += 1;
         Some(result)
@@ -402,6 +388,12 @@ impl Iterator for OrdinalIter {
     }
 }
 
-pub fn iter() -> Iter { Iter(0) }
-pub fn cardinal_iter() -> CardinalIter { CardinalIter(0) }
-pub fn ordinal_iter() -> OrdinalIter { OrdinalIter(0) }
+pub fn iter() -> Iter {
+    Iter(0)
+}
+pub fn cardinal_iter() -> CardinalIter {
+    CardinalIter(0)
+}
+pub fn ordinal_iter() -> OrdinalIter {
+    OrdinalIter(0)
+}

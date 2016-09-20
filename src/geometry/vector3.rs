@@ -12,11 +12,17 @@ pub struct Vector3<T> {
 
 impl<T> Vector3<T> {
     pub fn new(x: T, y: T, z: T) -> Vector3<T> {
-        Vector3 {x: x, y: y, z: z}
+        Vector3 { x: x, y: y, z: z }
     }
 
-    pub fn convert<S>(self) -> Vector3<S> where S: From<T> {
-        Vector3 { x: S::from(self.x), y: S::from(self.y), z: S::from(self.z) }
+    pub fn convert<S>(self) -> Vector3<S>
+        where S: From<T>
+    {
+        Vector3 {
+            x: S::from(self.x),
+            y: S::from(self.y),
+            z: S::from(self.z),
+        }
     }
 }
 
@@ -28,15 +34,23 @@ impl Vector3<f64> {
 }
 
 // Vector Addition
-impl<T, S> Add<Vector3<S>> for Vector3<T> where T: Add<S> {
+impl<T, S> Add<Vector3<S>> for Vector3<T>
+    where T: Add<S>
+{
     type Output = Vector3<T::Output>;
 
     fn add(self, other: Vector3<S>) -> Vector3<T::Output> {
-        Vector3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
+        Vector3 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
     }
 }
 
-impl<T, S> AddAssign<Vector3<S>> for Vector3<T> where T: AddAssign<S> {
+impl<T, S> AddAssign<Vector3<S>> for Vector3<T>
+    where T: AddAssign<S>
+{
     fn add_assign(&mut self, other: Vector3<S>) {
         self.x += other.x;
         self.y += other.y;
@@ -45,15 +59,23 @@ impl<T, S> AddAssign<Vector3<S>> for Vector3<T> where T: AddAssign<S> {
 }
 
 // Vector Subtraction
-impl<T, S> Sub<Vector3<S>> for Vector3<T> where T: Sub<S> {
+impl<T, S> Sub<Vector3<S>> for Vector3<T>
+    where T: Sub<S>
+{
     type Output = Vector3<T::Output>;
 
     fn sub(self, other: Vector3<S>) -> Vector3<T::Output> {
-        Vector3 { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z }
+        Vector3 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
     }
 }
 
-impl<T, S> SubAssign<Vector3<S>> for Vector3<T> where T: SubAssign<S> {
+impl<T, S> SubAssign<Vector3<S>> for Vector3<T>
+    where T: SubAssign<S>
+{
     fn sub_assign(&mut self, other: Vector3<S>) {
         self.x -= other.x;
         self.y -= other.y;
@@ -62,15 +84,25 @@ impl<T, S> SubAssign<Vector3<S>> for Vector3<T> where T: SubAssign<S> {
 }
 
 // Scalar Multiplication
-impl<T, S> Mul<S> for Vector3<T> where T: Mul<S>, S: Copy {
+impl<T, S> Mul<S> for Vector3<T>
+    where T: Mul<S>,
+          S: Copy
+{
     type Output = Vector3<T::Output>;
 
     fn mul(self, other: S) -> Vector3<T::Output> {
-        Vector3 { x: self.x * other, y: self.y * other, z: self.z * other }
+        Vector3 {
+            x: self.x * other,
+            y: self.y * other,
+            z: self.z * other,
+        }
     }
 }
 
-impl<T, S> MulAssign<S> for Vector3<T> where T: MulAssign<S>, S: Copy {
+impl<T, S> MulAssign<S> for Vector3<T>
+    where T: MulAssign<S>,
+          S: Copy
+{
     fn mul_assign(&mut self, other: S) {
         self.x *= other;
         self.y *= other;
@@ -79,15 +111,25 @@ impl<T, S> MulAssign<S> for Vector3<T> where T: MulAssign<S>, S: Copy {
 }
 
 // Scalar Division
-impl<T, S> Div<S> for Vector3<T> where T: Div<S>, S: Copy {
+impl<T, S> Div<S> for Vector3<T>
+    where T: Div<S>,
+          S: Copy
+{
     type Output = Vector3<T::Output>;
 
     fn div(self, other: S) -> Vector3<T::Output> {
-        Vector3 { x: self.x / other, y: self.y / other, z: self.z / other }
+        Vector3 {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
+        }
     }
 }
 
-impl<T, S> DivAssign<S> for Vector3<T> where T: DivAssign<S>, S: Copy {
+impl<T, S> DivAssign<S> for Vector3<T>
+    where T: DivAssign<S>,
+          S: Copy
+{
     fn div_assign(&mut self, other: S) {
         self.x /= other;
         self.y /= other;

@@ -5,9 +5,7 @@ pub struct BestSet<T: Ord + Copy> {
 
 impl<T: Ord + Copy> BestSet<T> {
     pub fn new() -> Self {
-        BestSet {
-            value: None,
-        }
+        BestSet { value: None }
     }
 
     pub fn clear(&mut self) {

@@ -1,21 +1,14 @@
-use table::{
-    TableId,
-};
+use table::TableId;
 
-use std::collections::{
-    HashMap,
-    HashSet,
-    hash_set,
-};
+use std::collections::{HashMap, HashSet, hash_set};
 
 use std::hash::Hash;
 
-pub struct EntryTypeIter<'a, EntryType>(
-    Option<hash_set::Iter<'a, EntryType>>)
-where EntryType: 'a + Eq + Hash + Copy;
+pub struct EntryTypeIter<'a, EntryType>(Option<hash_set::Iter<'a, EntryType>>)
+    where EntryType: 'a + Eq + Hash + Copy;
 
 impl<'a, EntryType> Iterator for EntryTypeIter<'a, EntryType>
-where EntryType: 'a + Eq + Hash + Copy,
+    where EntryType: 'a + Eq + Hash + Copy
 {
     type Item = &'a EntryType;
     fn next(&mut self) -> Option<Self::Item> {
@@ -29,10 +22,10 @@ where EntryType: 'a + Eq + Hash + Copy,
 
 #[derive(Clone, Debug)]
 pub struct IdTypeMap<EntryType>(HashMap<TableId, HashSet<EntryType>>)
-where EntryType: Eq + Hash + Copy;
+    where EntryType: Eq + Hash + Copy;
 
 impl<EntryType> IdTypeMap<EntryType>
-where EntryType: Eq + Hash + Copy,
+    where EntryType: Eq + Hash + Copy
 {
     pub fn new() -> Self {
         IdTypeMap(HashMap::new())

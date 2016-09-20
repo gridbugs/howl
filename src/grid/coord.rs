@@ -1,7 +1,4 @@
-use geometry::{
-    Vector2,
-    OrdinalDirection,
-};
+use geometry::{Vector2, OrdinalDirection};
 
 pub type Coord = Vector2<isize>;
 

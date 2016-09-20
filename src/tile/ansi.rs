@@ -5,7 +5,12 @@ use terminal::Style;
 pub enum SimpleTile {
     SolidColour(AnsiColour),
     Foreground(char, AnsiColour, Style),
-    Full { ch: char, fg: AnsiColour, bg: AnsiColour, style: Style },
+    Full {
+        ch: char,
+        fg: AnsiColour,
+        bg: AnsiColour,
+        style: Style,
+    },
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -77,9 +82,7 @@ impl ComplexTile {
     pub fn opaque_bg(self) -> bool {
         match self {
             ComplexTile::Simple(s) => s.opaque_bg(),
-            ComplexTile::Wall { front, back } => {
-                front.opaque_bg() || back.opaque_bg()
-            }
+            ComplexTile::Wall { front, back } => front.opaque_bg() || back.opaque_bg(),
         }
     }
 }

@@ -56,9 +56,7 @@ impl NeiCoordIter {
 impl Iterator for NeiCoordIter {
     type Item = Coord;
     fn next(&mut self) -> Option<Self::Item> {
-        self.dir_iter.next().map(|dir| {
-            self.coord + dir.vector()
-        })
+        self.dir_iter.next().map(|dir| self.coord + dir.vector())
     }
 }
 
@@ -80,9 +78,7 @@ impl<'a, G: Grid> Iterator for NeiIter<'a, G> {
     type Item = Option<&'a G::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.nei_coord_iter.next().map(|coord| {
-            self.grid.get(coord)
-        })
+        self.nei_coord_iter.next().map(|coord| self.grid.get(coord))
     }
 }
 

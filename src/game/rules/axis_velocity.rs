@@ -1,12 +1,4 @@
-use game::{
-    actions,
-    RuleResult,
-    Reaction,
-    RuleContext,
-    EntityWrapper,
-    EntityStore,
-    MetadataWrapper,
-};
+use game::{actions, RuleResult, Reaction, RuleContext, EntityWrapper, EntityStore, MetadataWrapper};
 
 use game::rule::Rule;
 
@@ -21,13 +13,10 @@ impl Rule for MaintainVelocityMovement {
                 let entity = ctx.level.get(*entity_id).unwrap();
                 if let Some((direction, speed)) = entity.axis_velocity() {
                     let position = entity.position().unwrap();
-                    reactions.push(
-                        Reaction::new(
-                            actions::axis_velocity_move(
-                                *entity_id,
-                                position,
-                                direction,
-                                speed)));
+                    reactions.push(Reaction::new(actions::axis_velocity_move(*entity_id,
+                                                                             position,
+                                                                             direction,
+                                                                             speed)));
                 }
             }
         }
@@ -46,13 +35,10 @@ impl Rule for StartVelocityMovement {
         for (id, entity) in &ctx.update.added_entities {
             if let Some((direction, speed)) = entity.axis_velocity() {
                 let position = entity.position().unwrap();
-                reactions.push(
-                    Reaction::new(
-                        actions::axis_velocity_move(
-                            *id,
-                            position,
-                            direction,
-                            speed)));
+                reactions.push(Reaction::new(actions::axis_velocity_move(*id,
+                                                                         position,
+                                                                         direction,
+                                                                         speed)));
             }
         }
 

@@ -1,8 +1,4 @@
-use vision::{
-    Opacity,
-    VisibilityReport,
-    VisionSystem,
-};
+use vision::{Opacity, VisibilityReport, VisionSystem};
 
 use geometry::Vector2;
 
@@ -12,15 +8,13 @@ pub struct Square;
 impl<G, R> VisionSystem<G, R, usize> for Square
     where G: Grid,
           G::Item: Opacity,
-          R: VisibilityReport<MetaData=f64>
+          R: VisibilityReport<MetaData = f64>
 {
-    fn detect_visible_area(
-        &mut self,
-        eye: Vector2<isize>,
-        grid: &G,
-        distance: usize,
-        report: &mut R)
-    {
+    fn detect_visible_area(&mut self,
+                           eye: Vector2<isize>,
+                           grid: &G,
+                           distance: usize,
+                           report: &mut R) {
         let distance = distance as isize;
         for i in -distance..distance + 1 {
             for j in -distance..distance + 1 {

@@ -1,21 +1,6 @@
-use game::{
-    Entity,
-    EntityId,
-    SpatialHashMap,
-    SpatialHashCell,
-    UpdateSummary,
-    EntityWrapper,
-    ComponentWrapper,
-    EntityStore,
-    LevelEntityTable,
-    LevelEntityRef,
-    LevelEntityRefMut,
-    Rule,
-    ReserveEntityId,
-    RuleContext,
-    RuleResult,
-    Metadata,
-};
+use game::{Entity, EntityId, SpatialHashMap, SpatialHashCell, UpdateSummary, EntityWrapper,
+           ComponentWrapper, EntityStore, LevelEntityTable, LevelEntityRef, LevelEntityRefMut,
+           Rule, ReserveEntityId, RuleContext, RuleResult, Metadata};
 
 use game::Component::*;
 use game::ComponentType as CType;
@@ -24,21 +9,13 @@ use game::clouds::CloudContext;
 
 use schedule::Schedule;
 
-use grid::{
-    StaticGrid,
-    DefaultGrid,
-};
+use grid::{StaticGrid, DefaultGrid};
 
 use geometry::Vector2;
 
-use table::{
-    TableTable,
-    EntryAccessor,
-    TableRefMut,
-};
+use table::{TableTable, EntryAccessor, TableRefMut};
 
-pub type LevelSpatialHashMap =
-    SpatialHashMap<StaticGrid<SpatialHashCell>>;
+pub type LevelSpatialHashMap = SpatialHashMap<StaticGrid<SpatialHashCell>>;
 
 pub type LevelId = usize;
 
@@ -70,8 +47,7 @@ impl Level {
             width: width,
             height: height,
             schedule: Schedule::new(),
-            spatial_hash: SpatialHashMap::new(
-                    StaticGrid::new_default(width, height)),
+            spatial_hash: SpatialHashMap::new(StaticGrid::new_default(width, height)),
             entities: LevelEntityTable::new(),
             clouds: CloudContext::new(width, height),
         }
@@ -122,7 +98,7 @@ impl Level {
         let moonlight = self.entities.accessor(CType::Moon);
 
         for id in outside.ids() {
-            if let Some(Vector2 {x, y}) = position.access(*id).position() {
+            if let Some(Vector2 { x, y }) = position.access(*id).position() {
                 let new = !self.is_cloud(x, y);
                 let current = moonlight.has(*id);
 
@@ -141,10 +117,7 @@ impl Level {
         update
     }
 
-    pub fn commit_update(&mut self,
-                         mut update: UpdateSummary,
-                         turn: u64) -> Metadata
-    {
+    pub fn commit_update(&mut self, mut update: UpdateSummary, turn: u64) -> Metadata {
         self.spatial_hash.update(&update, &self.entities, turn);
 
         for (id, entity) in update.added_entities.drain() {
@@ -152,8 +125,7 @@ impl Level {
         }
 
         for entity_id in update.removed_entities.iter() {
-            self.remove(*entity_id).
-                expect("Tried to remove non-existent entity.");
+            self.remove(*entity_id).expect("Tried to remove non-existent entity.");
         }
 
         for (entity_id, mut components) in update.added_components.drain() {
@@ -173,12 +145,11 @@ impl Level {
         update.metadata
     }
 
-    pub fn check_rules<'a, I: IntoIterator<Item=&'a Box<Rule>>>(
-        &self,
-        update: &UpdateSummary,
-        rules: I,
-        ids: &ReserveEntityId) -> RuleResult
-    {
+    pub fn check_rules<'a, I: IntoIterator<Item = &'a Box<Rule>>>(&self,
+                                                                  update: &UpdateSummary,
+                                                                  rules: I,
+                                                                  ids: &ReserveEntityId)
+                                                                  -> RuleResult {
         let mut reactions = Vec::new();
         let rule_context = RuleContext::new(&update, &self, ids);
         for rule in rules {

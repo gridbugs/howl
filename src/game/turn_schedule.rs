@@ -1,7 +1,7 @@
 use game::EntityId;
 
 // TODO
-// Currently this just repeatedly schedules the player character 
+// Currently this just repeatedly schedules the player character
 
 #[derive(Debug, Clone)]
 pub struct TurnSchedule {

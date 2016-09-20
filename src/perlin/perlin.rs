@@ -1,19 +1,7 @@
-use grid::{
-    StaticGrid,
-    IterGrid,
-};
-use geometry::{
-    Dot,
-    Length,
-    Vector2,
-    Vector3,
-};
+use grid::{StaticGrid, IterGrid};
+use geometry::{Dot, Length, Vector2, Vector3};
 
-use rand::{
-    Rng,
-    StdRng,
-    SeedableRng,
-};
+use rand::{Rng, StdRng, SeedableRng};
 
 use std::fmt;
 use std::io;
@@ -73,25 +61,25 @@ pub fn ease_curve(x: f64) -> f64 {
 }
 
 impl Perlin3Grid {
-
-    pub fn new(width: usize, height: usize, wrap_type: PerlinWrapType)
-        -> io::Result<Self>
-    {
+    pub fn new(width: usize, height: usize, wrap_type: PerlinWrapType) -> io::Result<Self> {
         let rng = try!(StdRng::new());
         Ok(Perlin3Grid::new_with_rng(width, height, wrap_type, rng))
     }
 
-    pub fn new_from_seed(width: usize, height: usize,
-                         wrap_type: PerlinWrapType, seed: usize) -> Self {
+    pub fn new_from_seed(width: usize,
+                         height: usize,
+                         wrap_type: PerlinWrapType,
+                         seed: usize)
+                         -> Self {
         let rng = StdRng::from_seed(&[seed]);
         Perlin3Grid::new_with_rng(width, height, wrap_type, rng)
     }
 
-    fn new_with_rng(width: usize, height: usize,
-                        wrap_type: PerlinWrapType,
-                        mut rng: StdRng)
-        -> Perlin3Grid
-    {
+    fn new_with_rng(width: usize,
+                    height: usize,
+                    wrap_type: PerlinWrapType,
+                    mut rng: StdRng)
+                    -> Perlin3Grid {
         let grid_width = width + 2;
         let grid_height = height + 2;
         Perlin3Grid {
@@ -99,9 +87,9 @@ impl Perlin3Grid {
                 let mut v = Vec::with_capacity(NUM_SLICES);
                 for i in 0..2 as isize {
                     v.push(Perlin3Slice {
-                        grid: StaticGrid::new_call(grid_width, grid_height, |_, _| {
-                            Perlin3Vector::new(&mut rng)
-                        }),
+                        grid: StaticGrid::new_call(grid_width,
+                                                   grid_height,
+                                                   |_, _| Perlin3Vector::new(&mut rng)),
                         z: i as f64,
                     });
                 }
@@ -153,26 +141,28 @@ impl Perlin3Grid {
         self.minor_offset.x += x;
         self.minor_offset.y += y;
 
-        let floor_f = Vector2::new(self.minor_offset.x.floor(),
-                                   self.minor_offset.y.floor());
+        let floor_f = Vector2::new(self.minor_offset.x.floor(), self.minor_offset.y.floor());
 
-        let floor_i = Vector2::new(floor_f.x as usize,
-                                   floor_f.y as usize);
+        let floor_i = Vector2::new(floor_f.x as usize, floor_f.y as usize);
 
         if floor_i.x != 0 {
             if self.wrap_type == PerlinWrapType::Regenerate {
                 if floor_i.x > 0 {
                     for i in (self.major_offset.x)..(self.major_offset.x + floor_i.x) {
                         for j in 0..self.grid_height {
-                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
-                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
+                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] =
+                                self.make_vector();
+                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] =
+                                self.make_vector();
                         }
                     }
                 } else {
                     for i in (self.major_offset.x + floor_i.x)..(self.major_offset.x) {
                         for j in 0..self.grid_height {
-                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
-                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] = self.make_vector();
+                            self.slices[0].grid[((i + self.grid_width) % self.grid_width, j)] =
+                                self.make_vector();
+                            self.slices[1].grid[((i + self.grid_width) % self.grid_width, j)] =
+                                self.make_vector();
                         }
                     }
                 }
@@ -186,15 +176,19 @@ impl Perlin3Grid {
                 if floor_i.y > 0 {
                     for i in (self.major_offset.y)..(self.major_offset.y + floor_i.y) {
                         for j in 0..self.grid_width {
-                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
-                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
+                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] =
+                                self.make_vector();
+                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] =
+                                self.make_vector();
                         }
                     }
                 } else {
                     for i in (self.major_offset.y + floor_i.y)..(self.major_offset.y) {
                         for j in 0..self.grid_width {
-                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
-                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] = self.make_vector();
+                            self.slices[0].grid[(j, (i + self.grid_height) % self.grid_height)] =
+                                self.make_vector();
+                            self.slices[1].grid[(j, (i + self.grid_height) % self.grid_height)] =
+                                self.make_vector();
                         }
                     }
                 }
@@ -221,27 +215,22 @@ impl Perlin3Grid {
 
         let top_left_f = Vector2::new(x.floor(), y.floor());
         let top_left_i = self.major_offset +
-                         Vector2::new(top_left_f.x as usize,
-                                      top_left_f.y as usize);
+                         Vector2::new(top_left_f.x as usize, top_left_f.y as usize);
 
-        let mut corner_coords_i = [
-            top_left_i,
-            top_left_i + Vector2::new(1, 0),
-            top_left_i + Vector2::new(0, 1),
-            top_left_i + Vector2::new(1, 1),
-        ];
+        let mut corner_coords_i = [top_left_i,
+                                   top_left_i + Vector2::new(1, 0),
+                                   top_left_i + Vector2::new(0, 1),
+                                   top_left_i + Vector2::new(1, 1)];
 
         for corner_coord_i in &mut corner_coords_i {
             corner_coord_i.x %= self.grid_width;
             corner_coord_i.y %= self.grid_height;
         }
 
-        let corner_coords_f = [
-            top_left_f,
-            top_left_f + Vector2::new(1.0, 0.0),
-            top_left_f + Vector2::new(0.0, 1.0),
-            top_left_f + Vector2::new(1.0, 1.0),
-        ];
+        let corner_coords_f = [top_left_f,
+                               top_left_f + Vector2::new(1.0, 0.0),
+                               top_left_f + Vector2::new(0.0, 1.0),
+                               top_left_f + Vector2::new(1.0, 1.0)];
 
         let mut dots: [f64; NUM_CORNERS] = [0.0; NUM_CORNERS];
 
@@ -252,11 +241,7 @@ impl Perlin3Grid {
             let corner_coord_f = corner_coords_f[i % NUM_SLICE_CORNERS];
 
             let gradient = slice.grid[corner_coord_i].0;
-            let corner_coord_f3 = Vector3::new(
-                corner_coord_f.x,
-                corner_coord_f.y,
-                slice.z
-            );
+            let corner_coord_f3 = Vector3::new(corner_coord_f.x, corner_coord_f.y, slice.z);
             let relative = global_coord - corner_coord_f3;
             dots[i] = gradient.dot(relative);
 
@@ -267,17 +252,13 @@ impl Perlin3Grid {
         let weight_y = ease_curve(y - top_left_f.y);
         let weight_z = ease_curve(self.z.fract());
 
-        let square_avgs = [
-            dots[0] + weight_z * (dots[4] - dots[0]),
-            dots[1] + weight_z * (dots[5] - dots[1]),
-            dots[2] + weight_z * (dots[6] - dots[2]),
-            dots[3] + weight_z * (dots[7] - dots[3]),
-        ];
+        let square_avgs = [dots[0] + weight_z * (dots[4] - dots[0]),
+                           dots[1] + weight_z * (dots[5] - dots[1]),
+                           dots[2] + weight_z * (dots[6] - dots[2]),
+                           dots[3] + weight_z * (dots[7] - dots[3])];
 
-        let line_avgs = [
-            square_avgs[0] + weight_x * (square_avgs[1] - square_avgs[0]),
-            square_avgs[2] + weight_x * (square_avgs[3] - square_avgs[2]),
-        ];
+        let line_avgs = [square_avgs[0] + weight_x * (square_avgs[1] - square_avgs[0]),
+                         square_avgs[2] + weight_x * (square_avgs[3] - square_avgs[2])];
 
         let avg = line_avgs[0] + weight_y * (line_avgs[1] - line_avgs[0]);
 
@@ -293,23 +274,85 @@ impl fmt::Debug for Perlin3Grid {
 
 const NUM_GRADIENTS: usize = 16;
 const GRADIENT_MASK: usize = 0xf;
-static GRADIENTS: [Vector3<f64>; NUM_GRADIENTS] = [
-    Vector3 { x: 1.0, y: 1.0, z: 0.0 },
-    Vector3 { x: -1.0, y: 1.0, z: 0.0 },
-    Vector3 { x: 1.0, y: -1.0, z: 0.0 },
-    Vector3 { x: -1.0, y: -1.0, z: 0.0 },
-    Vector3 { x: 1.0, y: 0.0, z: 1.0 },
-    Vector3 { x: -1.0, y: 0.0, z: 1.0 },
-    Vector3 { x: 1.0, y: 0.0, z: -1.0 },
-    Vector3 { x: -1.0, y: 0.0, z: -1.0 },
-    Vector3 { x: 0.0, y: 1.0, z: 1.0 },
-    Vector3 { x: 0.0, y: -1.0, z: 1.0 },
-    Vector3 { x: 0.0, y: 1.0, z: -1.0 },
-    Vector3 { x: 0.0, y: -1.0, z: -1.0 },
+static GRADIENTS: [Vector3<f64>; NUM_GRADIENTS] = [Vector3 {
+                                                       x: 1.0,
+                                                       y: 1.0,
+                                                       z: 0.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: -1.0,
+                                                       y: 1.0,
+                                                       z: 0.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 1.0,
+                                                       y: -1.0,
+                                                       z: 0.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: -1.0,
+                                                       y: -1.0,
+                                                       z: 0.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 1.0,
+                                                       y: 0.0,
+                                                       z: 1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: -1.0,
+                                                       y: 0.0,
+                                                       z: 1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 1.0,
+                                                       y: 0.0,
+                                                       z: -1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: -1.0,
+                                                       y: 0.0,
+                                                       z: -1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 0.0,
+                                                       y: 1.0,
+                                                       z: 1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 0.0,
+                                                       y: -1.0,
+                                                       z: 1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 0.0,
+                                                       y: 1.0,
+                                                       z: -1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 0.0,
+                                                       y: -1.0,
+                                                       z: -1.0,
+                                                   },
 
-    // repetition
-    Vector3 { x: 1.0, y: 1.0, z: 0.0 },
-    Vector3 { x: -1.0, y: 1.0, z: 0.0 },
-    Vector3 { x: 0.0, y: -1.0, z: 1.0 },
-    Vector3 { x: 0.0, y: -1.0, z: -1.0 },
-];
+                                                   // repetition
+                                                   Vector3 {
+                                                       x: 1.0,
+                                                       y: 1.0,
+                                                       z: 0.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: -1.0,
+                                                       y: 1.0,
+                                                       z: 0.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 0.0,
+                                                       y: -1.0,
+                                                       z: 1.0,
+                                                   },
+                                                   Vector3 {
+                                                       x: 0.0,
+                                                       y: -1.0,
+                                                       z: -1.0,
+                                                   }];

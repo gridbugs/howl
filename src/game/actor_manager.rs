@@ -1,17 +1,6 @@
-use game::{
-    Level,
-    EntityId,
-    MetaAction,
-    EntityStore,
-    EntityWrapper,
-    ReserveEntityId,
-    ActorType,
-};
+use game::{Level, EntityId, MetaAction, EntityStore, EntityWrapper, ReserveEntityId, ActorType};
 
-use game::actors::{
-    PlayerActor,
-    SimpleNpcActor,
-};
+use game::actors::{PlayerActor, SimpleNpcActor};
 
 use terminal::InputSource;
 
@@ -28,22 +17,14 @@ impl<'a> ActorManager<'a> {
         }
     }
 
-    pub fn act(&self, level: &Level, id: EntityId,
-               ids: &ReserveEntityId) -> MetaAction
-    {
+    pub fn act(&self, level: &Level, id: EntityId, ids: &ReserveEntityId) -> MetaAction {
         if let Some(actor_type) = level.get(id).unwrap().actor_type() {
             match actor_type {
-                ActorType::Player => {
-                    self.player_actor.act(level, id, ids)
-                },
-                ActorType::SimpleNpc => {
-                    self.simple_npc_actor.act(level, id, ids)
-                }
+                ActorType::Player => self.player_actor.act(level, id, ids),
+                ActorType::SimpleNpc => self.simple_npc_actor.act(level, id, ids),
             }
         } else {
             MetaAction::NotActor
         }
     }
 }
-
-

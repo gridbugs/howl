@@ -1,10 +1,5 @@
 use clear::Clear;
-use table::{
-    ToType,
-    TableRef,
-    IterTableRef,
-    TableRefMut,
-};
+use table::{ToType, TableRef, IterTableRef, TableRefMut};
 
 use std::collections::HashMap;
 use std::collections::hash_map;
@@ -15,25 +10,23 @@ pub type TableId = u64;
 #[derive(Debug, Clone)]
 pub struct Table<EntryType, Entry>
     where EntryType: Eq + Hash,
-          Entry: ToType<EntryType>,
+          Entry: ToType<EntryType>
 {
     pub slots: HashMap<EntryType, Entry>,
 }
 
 impl<EntryType, Entry> Table<EntryType, Entry>
     where EntryType: Eq + Hash,
-          Entry: ToType<EntryType>,
+          Entry: ToType<EntryType>
 {
     pub fn new() -> Self {
-        Table {
-            slots: HashMap::new(),
-        }
+        Table { slots: HashMap::new() }
     }
 }
 
 impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry> for &'a Table<EntryType, Entry>
-where EntryType: 'a + Eq + Hash,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash,
+          Entry: 'a + ToType<EntryType>
 {
     fn get(self, t: EntryType) -> Option<&'a Entry> {
         self.slots.get(&t)
@@ -45,8 +38,8 @@ where EntryType: 'a + Eq + Hash,
 }
 
 impl<'a, EntryType, Entry> IterTableRef<'a, EntryType, Entry> for &'a Table<EntryType, Entry>
-where EntryType: 'a + Eq + Hash,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash,
+          Entry: 'a + ToType<EntryType>
 {
     type Iter = hash_map::Iter<'a, EntryType, Entry>;
     type TypeIter = hash_map::Keys<'a, EntryType, Entry>;
@@ -66,8 +59,8 @@ where EntryType: 'a + Eq + Hash,
 }
 
 impl<'a, EntryType, Entry> TableRefMut<'a, EntryType, Entry> for Table<EntryType, Entry>
-where EntryType: 'a + Eq + Hash,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash,
+          Entry: 'a + ToType<EntryType>
 {
     fn add(&mut self, entry: Entry) -> Option<Entry> {
         self.slots.insert(entry.to_type(), entry)
@@ -83,8 +76,8 @@ where EntryType: 'a + Eq + Hash,
 }
 
 impl<'a, EntryType, Entry> TableRefMut<'a, EntryType, Entry> for &'a mut Table<EntryType, Entry>
-where EntryType: 'a + Eq + Hash,
-      Entry: 'a + ToType<EntryType>,
+    where EntryType: 'a + Eq + Hash,
+          Entry: 'a + ToType<EntryType>
 {
     fn add(&mut self, entry: Entry) -> Option<Entry> {
         self.slots.insert(entry.to_type(), entry)
@@ -103,7 +96,7 @@ where EntryType: 'a + Eq + Hash,
 
 impl<EntryType, Entry> Clear for Table<EntryType, Entry>
     where EntryType: Eq + Hash,
-          Entry: ToType<EntryType>,
+          Entry: ToType<EntryType>
 {
     fn clear(&mut self) {
         self.slots.clear();
@@ -112,7 +105,7 @@ impl<EntryType, Entry> Clear for Table<EntryType, Entry>
 
 impl<EntryType, Entry> Default for Table<EntryType, Entry>
     where EntryType: Eq + Hash,
-          Entry: ToType<EntryType>,
+          Entry: ToType<EntryType>
 {
     fn default() -> Self {
         Table::new()

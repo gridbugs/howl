@@ -1,28 +1,9 @@
-use game::{
-    EntityId,
-    Entity,
-    ComponentType,
-    Component,
-    EntityWrapper,
-    Metadata,
-    MetadataWrapper,
-};
-use game::update::{
-    Metadatum,
-    MetadatumType,
-};
+use game::{EntityId, Entity, ComponentType, Component, EntityWrapper, Metadata, MetadataWrapper};
+use game::update::{Metadatum, MetadatumType};
 
-use table::{
-    ToType,
-    TableRef,
-    TableRefMut,
-};
+use table::{ToType, TableRef, TableRefMut};
 
-use std::collections::{
-    HashSet,
-    HashMap,
-    hash_map,
-};
+use std::collections::{HashSet, HashMap, hash_map};
 
 #[derive(Clone)]
 pub struct AddedComponents(HashMap<ComponentType, Component>);
@@ -111,9 +92,7 @@ impl UpdateSummary {
         self.removed_entities.insert(entity);
     }
 
-    pub fn add_component(&mut self, entity: EntityId,
-                         component: Component)
-    {
+    pub fn add_component(&mut self, entity: EntityId, component: Component) {
         if !self.added_components.contains_key(&entity) {
             self.added_components.insert(entity, AddedComponents::new());
         }
@@ -121,9 +100,7 @@ impl UpdateSummary {
         self.added_components.get_mut(&entity).unwrap().add(component);
     }
 
-    pub fn remove_component(&mut self, entity: EntityId,
-                            component_type: ComponentType)
-    {
+    pub fn remove_component(&mut self, entity: EntityId, component_type: ComponentType) {
         if !self.removed_components.contains_key(&entity) {
             self.removed_components.insert(entity, HashSet::new());
         }

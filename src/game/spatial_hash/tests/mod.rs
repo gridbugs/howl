@@ -1,38 +1,15 @@
 use game;
 use game::Component::*;
 use game::ComponentType as CType;
-use game::{
-    Component,
-    ComponentType,
-    SpatialHashMap,
-    SpatialHashCell,
-    Entity,
-    EntityId,
-    EntityRef,
-    IterEntityRef,
-    IdEntityRef,
-    EntityRefMut,
-    AddedComponents,
-};
+use game::{Component, ComponentType, SpatialHashMap, SpatialHashCell, Entity, EntityId, EntityRef,
+           IterEntityRef, IdEntityRef, EntityRefMut, AddedComponents};
 
 use geometry::Vector2;
-use grid::{
-    StaticGrid,
-    DefaultGrid,
-};
+use grid::{StaticGrid, DefaultGrid};
 
-use table::{
-    TableId,
-    TableRefMut,
-    TableRef,
-    IdTableRef,
-    IterTableRef,
-};
+use table::{TableId, TableRefMut, TableRef, IdTableRef, IterTableRef};
 
-use std::collections::{
-    HashSet,
-    hash_map,
-};
+use std::collections::{HashSet, hash_map};
 
 const WIDTH: usize = 10;
 const HEIGHT: usize = 10;
@@ -98,9 +75,7 @@ impl<'a> EntityRefMut<'a> for TestRef {}
 
 // helper fns
 
-fn make_spatial_hash() 
-    -> SpatialHashMap<StaticGrid<SpatialHashCell>>
-{
+fn make_spatial_hash() -> SpatialHashMap<StaticGrid<SpatialHashCell>> {
     SpatialHashMap::new(StaticGrid::new_default(WIDTH, HEIGHT))
 }
 
@@ -217,9 +192,11 @@ fn change_entity() {
 
     s.add_entity(e.id, &e, 0);
 
-    s.add_components(&e, &AddedComponents::from_entity(entity![
+    s.add_components(&e,
+                     &AddedComponents::from_entity(entity![
         Collider,
-    ]), 0);
+    ]),
+                     0);
 
     s.remove_components(&e, &set_from_vec(vec![CType::Solid]), 0);
 
@@ -235,16 +212,20 @@ fn add_remove_components() {
     let mut s = make_spatial_hash();
     let mut e = make_entity(0, 0, 0);
 
-    s.add_components(&e, &AddedComponents::from_entity(entity![
+    s.add_components(&e,
+                     &AddedComponents::from_entity(entity![
         Collider,
-    ]), 0);
+    ]),
+                     0);
     e.add(Collider);
     assert!(s.get((0, 0)).unwrap().has(CType::Collider));
 
     // add the same component again
-    s.add_components(&e, &AddedComponents::from_entity(entity![
+    s.add_components(&e,
+                     &AddedComponents::from_entity(entity![
         Collider,
-    ]), 0);
+    ]),
+                     0);
     e.add(Collider);
     assert!(s.get((0, 0)).unwrap().has(CType::Collider));
 
@@ -261,9 +242,11 @@ fn move_entity() {
 
     s.add_entity(e.id, &e, 0);
 
-    s.add_components(&e, &AddedComponents::from_entity(entity![
+    s.add_components(&e,
+                     &AddedComponents::from_entity(entity![
         Position(Vector2::new(1, 1)),
-    ]), 0);
+    ]),
+                     0);
 
     // assert that the starting cell is empty
     let cell = s.get((0, 0)).unwrap();
@@ -288,10 +271,12 @@ fn move_entity_adding_component() {
 
     s.add_entity(e.id, &e, 0);
 
-    s.add_components(&e, &AddedComponents::from_entity(entity![
+    s.add_components(&e,
+                     &AddedComponents::from_entity(entity![
         Position(Vector2::new(1, 1)),
         Collider,
-    ]), 0);
+    ]),
+                     0);
 
     let cell = s.get((0, 0)).unwrap();
     assert_eq!(cell.entities.len(), 0);
@@ -345,24 +330,28 @@ fn opacity() {
     s.add_entity(e0.id, &e0, 0);
     s.add_entity(e1.id, &e1, 0);
 
-    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.3*10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.3 * 10.0);
 
-    s.add_components(&e0, &AddedComponents::from_entity(entity![
+    s.add_components(&e0,
+                     &AddedComponents::from_entity(entity![
         Opacity(0.4),
-    ]), 0);
+    ]),
+                     0);
     e0.add(Opacity(0.4));
-    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.6*10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.6 * 10.0);
 
     s.remove_components(&e1, &set_from_vec(vec![CType::Opacity]), 0);
     e1.remove(CType::Opacity);
-    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.4*10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.4 * 10.0);
 
-    s.add_components(&e1, &AddedComponents::from_entity(entity![
+    s.add_components(&e1,
+                     &AddedComponents::from_entity(entity![
         Opacity(0.5),
-    ]), 0);
+    ]),
+                     0);
     e1.add(Opacity(0.5));
-    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.9*10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.9 * 10.0);
 
     s.remove_entity(&e1, 0);
-    assert_eq!((s.get((0, 0)).unwrap().opacity*10.0).round(), 0.4*10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.4 * 10.0);
 }

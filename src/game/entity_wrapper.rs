@@ -1,31 +1,15 @@
-use game::{
-    Component,
-    ComponentType,
-    Speed,
-    StatusCounter,
-    ActorType,
-};
-use game::components::{
-    DoorState,
-    Form,
-};
+use game::{Component, ComponentType, Speed, StatusCounter, ActorType};
+use game::components::{DoorState, Form};
 use game::knowledge::DrawableKnowledge;
 
-use geometry::{
-    Vector2,
-    Direction,
-};
+use geometry::{Vector2, Direction};
 use tile::ComplexTile;
 
-use std::cell::{
-    Ref,
-    RefMut,
-};
+use std::cell::{Ref, RefMut};
 
 // Convenience wrappers around entities
 
-pub trait EntityWrapper<'a> : Sized {
-
+pub trait EntityWrapper<'a>: Sized {
     fn get_component(self, component_type: ComponentType) -> Option<&'a Component>;
 
     fn has_component(self, component_type: ComponentType) -> bool {
@@ -33,9 +17,7 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn position(self) -> Option<Vector2<isize>> {
-        if let Some(&Component::Position(ref vec)) =
-            self.get_component(ComponentType::Position)
-        {
+        if let Some(&Component::Position(ref vec)) = self.get_component(ComponentType::Position) {
             Some(*vec)
         } else {
             None
@@ -43,9 +25,7 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn actor_type(self) -> Option<ActorType> {
-         if let Some(&Component::Actor(actor)) =
-            self.get_component(ComponentType::Actor)
-        {
+        if let Some(&Component::Actor(actor)) = self.get_component(ComponentType::Actor) {
             Some(actor)
         } else {
             None
@@ -65,9 +45,7 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn door_state(self) -> Option<DoorState> {
-        if let Some(&Component::Door(state)) =
-            self.get_component(ComponentType::Door)
-        {
+        if let Some(&Component::Door(state)) = self.get_component(ComponentType::Door) {
             Some(state)
         } else {
             None
@@ -75,9 +53,7 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn opacity(self) -> f64 {
-        if let Some(&Component::Opacity(o)) =
-            self.get_component(ComponentType::Opacity)
-        {
+        if let Some(&Component::Opacity(o)) = self.get_component(ComponentType::Opacity) {
             o
         } else {
             0.0
@@ -86,8 +62,7 @@ pub trait EntityWrapper<'a> : Sized {
 
     fn vision_distance(self) -> Option<usize> {
         if let Some(&Component::VisionDistance(distance)) =
-            self.get_component(ComponentType::VisionDistance)
-        {
+               self.get_component(ComponentType::VisionDistance) {
             Some(distance)
         } else {
             None
@@ -96,8 +71,7 @@ pub trait EntityWrapper<'a> : Sized {
 
     fn drawable_knowledge(self) -> Option<Ref<'a, DrawableKnowledge>> {
         if let Some(&Component::DrawableKnowledge(ref knowledge)) =
-            self.get_component(ComponentType::DrawableKnowledge)
-        {
+               self.get_component(ComponentType::DrawableKnowledge) {
             Some(knowledge.borrow())
         } else {
             None
@@ -106,8 +80,7 @@ pub trait EntityWrapper<'a> : Sized {
 
     fn drawable_knowledge_mut(self) -> Option<RefMut<'a, DrawableKnowledge>> {
         if let Some(&Component::DrawableKnowledge(ref knowledge)) =
-            self.get_component(ComponentType::DrawableKnowledge)
-        {
+               self.get_component(ComponentType::DrawableKnowledge) {
             Some(knowledge.borrow_mut())
         } else {
             None
@@ -115,9 +88,7 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn tile_depth(self) -> Option<isize> {
-         if let Some(&Component::TileDepth(depth)) =
-            self.get_component(ComponentType::TileDepth)
-        {
+        if let Some(&Component::TileDepth(depth)) = self.get_component(ComponentType::TileDepth) {
             Some(depth)
         } else {
             None
@@ -125,9 +96,7 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn tile(self) -> Option<ComplexTile> {
-         if let Some(&Component::Tile(tile)) =
-            self.get_component(ComponentType::Tile)
-        {
+        if let Some(&Component::Tile(tile)) = self.get_component(ComponentType::Tile) {
             Some(tile)
         } else {
             None
@@ -135,9 +104,8 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn axis_velocity(self) -> Option<(Direction, Speed)> {
-        if let Some(&Component::AxisVelocity {direction, speed}) =
-            self.get_component(ComponentType::AxisVelocity)
-        {
+        if let Some(&Component::AxisVelocity { direction, speed }) =
+               self.get_component(ComponentType::AxisVelocity) {
             Some((direction, speed))
         } else {
             None
@@ -165,9 +133,7 @@ pub trait EntityWrapper<'a> : Sized {
     }
 
     fn form(self) -> Option<Form> {
-        if let Some(&Component::FormSlot(form)) =
-            self.get_component(ComponentType::FormSlot)
-        {
+        if let Some(&Component::FormSlot(form)) = self.get_component(ComponentType::FormSlot) {
             Some(form)
         } else {
             None
@@ -176,8 +142,7 @@ pub trait EntityWrapper<'a> : Sized {
 
     fn beast_transform(self) -> Option<StatusCounter> {
         if let Some(&Component::BeastTransform(counter)) =
-            self.get_component(ComponentType::BeastTransform)
-        {
+               self.get_component(ComponentType::BeastTransform) {
             Some(counter)
         } else {
             None
@@ -186,8 +151,7 @@ pub trait EntityWrapper<'a> : Sized {
 
     fn human_transform(self) -> Option<StatusCounter> {
         if let Some(&Component::HumanTransform(counter)) =
-            self.get_component(ComponentType::HumanTransform)
-        {
+               self.get_component(ComponentType::HumanTransform) {
             Some(counter)
         } else {
             None

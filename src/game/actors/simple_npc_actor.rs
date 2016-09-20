@@ -1,10 +1,4 @@
-use game::{
-    Level,
-    EntityId,
-    ReserveEntityId,
-    MetaAction,
-    actions,
-};
+use game::{Level, EntityId, ReserveEntityId, MetaAction, actions};
 
 pub struct SimpleNpcActor {}
 
@@ -13,9 +7,7 @@ impl SimpleNpcActor {
         SimpleNpcActor {}
     }
 
-    pub fn act(&self, _: &Level, _: EntityId,
-               _: &ReserveEntityId) -> MetaAction
-    {
+    pub fn act(&self, _: &Level, _: EntityId, _: &ReserveEntityId) -> MetaAction {
         MetaAction::Update(actions::wait())
     }
 }

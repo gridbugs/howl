@@ -29,8 +29,12 @@ impl<K: Ord + Copy, V: Copy> BestMap<K, V> {
         }
     }
 
-    pub fn key(&self) -> Option<K> { self.key }
-    pub fn value(&self) -> Option<V> { self.value }
+    pub fn key(&self) -> Option<K> {
+        self.key
+    }
+    pub fn value(&self) -> Option<V> {
+        self.value
+    }
     pub fn items(&self) -> Option<(K, V)> {
         if let Some(k) = self.key {
             if let Some(v) = self.value {
