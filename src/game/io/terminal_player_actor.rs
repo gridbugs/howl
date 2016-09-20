@@ -58,7 +58,7 @@ fn event_to_direction(event: Event) -> Option<Direction> {
 fn close_door<'a, E: EntityRef<'a>>(entity: E, entities: &Level) -> Option<UpdateSummary> {
     let sh = entities.spatial_hash();
 
-    for cell in sh.grid.some_nei_iter(entity.position().unwrap()) {
+    for cell in sh.grid().some_nei_iter(entity.position().unwrap()) {
         if cell.has(CType::Door) {
             for (id, e) in entities.id_set_iter(&cell.entities) {
                 if let Some(DoorState::Open) = e.unwrap().door_state() {

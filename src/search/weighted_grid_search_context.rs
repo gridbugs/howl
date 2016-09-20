@@ -10,6 +10,7 @@ use std::collections::BinaryHeap;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 
+#[derive(Debug)]
 struct Node {
     coord: Coord,
     cost: f64,
@@ -116,11 +117,12 @@ impl WeightedGridSearchContext {
 
             for dir in dirs {
                 let nei_coord = node.coord + dir.vector();
-                let cell = grid.get_unsafe(nei_coord);
-                if let Some(cost) = cell.cost() {
-                    let total_cost = node.cost + cost * dir.multiplier();
-                    if state.tracker.see_with_parent(nei_coord, total_cost, node.coord) {
-                        state.queue.push(Node::new_dijkstra(nei_coord, total_cost));
+                if let Some(cell) = grid.get(nei_coord) {
+                    if let Some(cost) = cell.cost() {
+                        let total_cost = node.cost + cost * dir.multiplier();
+                        if state.tracker.see_with_parent(nei_coord, total_cost, node.coord, *dir) {
+                            state.queue.push(Node::new_dijkstra(nei_coord, total_cost));
+                        }
                     }
                 }
             }
@@ -143,6 +145,7 @@ impl WeightedGridSearchContext {
 
         while let Some(node) = state.queue.pop() {
 
+
             if state.tracker.is_visited(node.coord) {
                 continue;
             }
@@ -153,14 +156,17 @@ impl WeightedGridSearchContext {
                 return Some(state.tracker.make_path(node.coord).unwrap());
             }
 
+
             for dir in dirs {
                 let nei_coord = node.coord + dir.vector();
-                let cell = grid.get_unsafe(nei_coord);
-                if let Some(cost) = cell.cost() {
-                    let total_cost = node.cost + cost * dir.multiplier();
-                    if state.tracker.see_with_parent(nei_coord, total_cost, node.coord) {
-                        let heuristic = ((nei_coord - dest).len_sq() as f64).sqrt();
-                        state.queue.push(Node::new_astar(nei_coord, total_cost, heuristic));
+                if let Some(cell) = grid.get(nei_coord) {
+
+                    if let Some(cost) = cell.cost() {
+                        let total_cost = node.cost + cost * dir.multiplier();
+                        if state.tracker.see_with_parent(nei_coord, total_cost, node.coord, *dir) {
+                            let heuristic = ((nei_coord - dest).len_sq() as f64).sqrt();
+                            state.queue.push(Node::new_astar(nei_coord, total_cost, heuristic));
+                        }
                     }
                 }
             }
@@ -180,6 +186,9 @@ impl SearchContext for WeightedGridSearchContext {
         if let Some(initial_cell) = grid.get(query.start) {
             if !initial_cell.is_traversable() {
                 return Err(SearchError::NonTraversableStart);
+            }
+            if query.matches(CellInfo::new(&initial_cell, query.start)) {
+                return Err(SearchError::AtDestination);
             }
         } else {
             return Err(SearchError::StartOutOfGrid);

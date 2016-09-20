@@ -2,7 +2,7 @@ use game::{Speed, StatusCounter, ActorType};
 
 use game::components::{DoorState, Form};
 
-use game::knowledge::DrawableKnowledge;
+use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
 
 use table::{ToIndex, ToType};
 
@@ -44,8 +44,11 @@ pub enum ComponentType {
     FormSlot, // 17
     Outside, // 18
     Moon, // 19
+    SimpleNpcKnowledge, // 20
+    PlayerCharacter, // 21
+    WalkSpeed, // 22
 }
-pub const NUM_COMPONENTS: usize = 20;
+pub const NUM_COMPONENTS: usize = 23;
 
 #[derive(Debug, Clone)]
 pub enum Component {
@@ -69,6 +72,9 @@ pub enum Component {
     FormSlot(Form),
     Outside,
     Moon,
+    SimpleNpcKnowledge(RefCell<SimpleNpcKnowledge>),
+    PlayerCharacter,
+    WalkSpeed(u64),
 }
 
 impl ToType<ComponentType> for Component {
@@ -94,6 +100,9 @@ impl ToType<ComponentType> for Component {
             Component::FormSlot(_) => ComponentType::FormSlot,
             Component::Outside => ComponentType::Outside,
             Component::Moon => ComponentType::Moon,
+            Component::SimpleNpcKnowledge(_) => ComponentType::SimpleNpcKnowledge,
+            Component::PlayerCharacter => ComponentType::PlayerCharacter,
+            Component::WalkSpeed(_) => ComponentType::WalkSpeed,
         }
     }
 }

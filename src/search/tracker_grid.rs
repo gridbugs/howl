@@ -1,5 +1,6 @@
-use search::Path;
+use search::{Path, PathNode};
 use grid::{Coord, StaticGrid, DefaultGrid};
+use geometry::Direction;
 
 const INITIAL_GRID_WIDTH: usize = 100;
 const INITIAL_GRID_HEIGHT: usize = 60;
@@ -10,6 +11,7 @@ struct SeenCell {
     visited_seq: u64,
     cost: f64,
     parent: Option<Coord>,
+    direction: Option<Direction>,
 }
 
 impl Default for SeenCell {
@@ -19,6 +21,7 @@ impl Default for SeenCell {
             visited_seq: 0,
             cost: 0.0,
             parent: None,
+            direction: None,
         }
     }
 }
@@ -68,9 +71,15 @@ impl TrackerGrid {
         }
     }
 
-    pub fn see_with_parent(&mut self, coord: Coord, cost: f64, parent_coord: Coord) -> bool {
+    pub fn see_with_parent(&mut self,
+                           coord: Coord,
+                           cost: f64,
+                           parent_coord: Coord,
+                           direction: Direction)
+                           -> bool {
         if self.see_with_cost(coord, cost) {
             self.grid[coord].parent = Some(parent_coord);
+            self.grid[coord].direction = Some(direction);
             true
         } else {
             false
@@ -106,12 +115,12 @@ impl TrackerGrid {
 
         loop {
             if !self.is_visited(coord) {
-                return None;
+                panic!("cell not visited");
             }
 
-            path.push(coord);
-
             if let Some(parent) = self.grid[coord].parent {
+                let direction = self.grid[coord].direction.unwrap();
+                path.push(PathNode::new(coord, direction));
                 coord = parent;
             } else {
                 path.reverse();

@@ -1,5 +1,5 @@
-use game::{EntityId, LevelId, Component, ComponentType, EntityTable, UpdateSummary,
-           AddedComponents, EntityWrapper, IterEntityRef, IdEntityRef};
+use game::{EntityId, Component, ComponentType, EntityTable, UpdateSummary, AddedComponents,
+           EntityWrapper, IterEntityRef, IdEntityRef};
 
 use table::{ToType, TableTable};
 use vision::Opacity;
@@ -113,20 +113,16 @@ impl SpatialHashCell {
 
 #[derive(Debug, Clone)]
 pub struct SpatialHashMap<G: Grid<Item = SpatialHashCell>> {
-    pub id: Option<LevelId>,
-    pub grid: G,
+    grid: G,
 }
 
 impl<G: Grid<Item = SpatialHashCell>> SpatialHashMap<G> {
     pub fn new(grid: G) -> Self {
-        SpatialHashMap {
-            id: None,
-            grid: grid,
-        }
+        SpatialHashMap { grid: grid }
     }
 
-    pub fn set_id(&mut self, id: LevelId) {
-        self.id = Some(id);
+    pub fn grid(&self) -> &G {
+        &self.grid
     }
 
     pub fn get_unsafe(&self, coord: (isize, isize)) -> &SpatialHashCell {
@@ -237,9 +233,9 @@ impl<G: Grid<Item = SpatialHashCell>> SpatialHashMap<G> {
 
     /// Update the spatial hash's metadata. This should be called before the update is applied.
     pub fn update<'a, T>(&mut self, update: &UpdateSummary, entities: &'a T, turn_count: u64)
-    where T: EntityTable<'a>,
-          <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,
-    {
+        where T: EntityTable<'a>,
+              <T as TableTable<'a, ComponentType, Component>>::Ref: IdEntityRef<'a>,
+              {
         for (id, entity) in update.added_entities.iter() {
             self.add_entity(*id, entity, turn_count);
         }

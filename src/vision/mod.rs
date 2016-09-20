@@ -7,6 +7,9 @@ pub use self::default::DefaultVisibilityReport;
 mod square;
 pub use self::square::Square;
 
+mod omniscient;
+pub use self::omniscient::Omniscient;
+
 mod shadowcast;
 pub use self::shadowcast::Shadowcast;
 

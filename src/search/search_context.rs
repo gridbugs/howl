@@ -6,6 +6,7 @@ pub enum SearchError {
     StartOutOfGrid,
     NonTraversableStart,
     Exhausted,
+    AtDestination,
 }
 
 pub trait SearchContext {

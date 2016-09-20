@@ -17,11 +17,17 @@ impl<'a> ActorManager<'a> {
         }
     }
 
-    pub fn act(&self, level: &Level, id: EntityId, ids: &ReserveEntityId) -> MetaAction {
+    pub fn act(&mut self,
+               level: &Level,
+               id: EntityId,
+               ids: &ReserveEntityId,
+               turn: u64)
+               -> MetaAction {
+
         if let Some(actor_type) = level.get(id).unwrap().actor_type() {
             match actor_type {
                 ActorType::Player => self.player_actor.act(level, id, ids),
-                ActorType::SimpleNpc => self.simple_npc_actor.act(level, id, ids),
+                ActorType::SimpleNpc => self.simple_npc_actor.act(level, id, ids, turn),
             }
         } else {
             MetaAction::NotActor

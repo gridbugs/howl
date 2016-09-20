@@ -135,7 +135,7 @@ fn populate(entities: &mut EntityContext) -> EntityId {
 }
 
 const DEBUG_WINDOW_WIDTH: usize = 80;
-const DEBUG_WINDOW_HEIGHT: usize = 10;
+const DEBUG_WINDOW_HEIGHT: usize = 40;
 
 fn main() {
     window_session();

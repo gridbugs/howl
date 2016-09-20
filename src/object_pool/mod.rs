@@ -32,4 +32,8 @@ impl<T: Default + Clear> ObjectPool<T> {
         ret.clear();
         ret
     }
+
+    pub fn free_last(&mut self) {
+        self.length -= 1;
+    }
 }

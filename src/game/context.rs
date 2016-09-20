@@ -116,7 +116,7 @@ impl<'a> GameContext<'a> {
         self.renderer.render(level, self.pc.unwrap(), self.turn);
 
         loop {
-            match self.actors.act(level, entity_id, ids) {
+            match self.actors.act(level, entity_id, ids, self.turn) {
                 MetaAction::Quit => return Err(TurnError::Quit),
                 MetaAction::NotActor => return Err(TurnError::NotActor),
                 MetaAction::PassTurn => break,

@@ -1,6 +1,6 @@
 use game::{Component, ComponentType, Speed, StatusCounter, ActorType};
 use game::components::{DoorState, Form};
-use game::knowledge::DrawableKnowledge;
+use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
 
 use geometry::{Vector2, Direction};
 use tile::ComplexTile;
@@ -87,6 +87,24 @@ pub trait EntityWrapper<'a>: Sized {
         }
     }
 
+    fn simple_npc_knowledge(self) -> Option<Ref<'a, SimpleNpcKnowledge>> {
+        if let Some(&Component::SimpleNpcKnowledge(ref knowledge)) =
+               self.get_component(ComponentType::SimpleNpcKnowledge) {
+            Some(knowledge.borrow())
+        } else {
+            None
+        }
+    }
+
+    fn simple_npc_knowledge_mut(self) -> Option<RefMut<'a, SimpleNpcKnowledge>> {
+        if let Some(&Component::SimpleNpcKnowledge(ref knowledge)) =
+               self.get_component(ComponentType::SimpleNpcKnowledge) {
+            Some(knowledge.borrow_mut())
+        } else {
+            None
+        }
+    }
+
     fn tile_depth(self) -> Option<isize> {
         if let Some(&Component::TileDepth(depth)) = self.get_component(ComponentType::TileDepth) {
             Some(depth)
@@ -155,6 +173,14 @@ pub trait EntityWrapper<'a>: Sized {
             Some(counter)
         } else {
             None
+        }
+    }
+
+    fn walk_speed(self) -> u64 {
+        if let Some(&Component::WalkSpeed(speed)) = self.get_component(ComponentType::WalkSpeed) {
+            speed
+        } else {
+            0
         }
     }
 }

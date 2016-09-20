@@ -82,6 +82,7 @@ pub fn make_floor_outside(x: isize, y: isize, moonlight: bool) -> Entity {
 
 pub fn make_pc(x: isize, y: isize) -> Entity {
     entity![
+        PlayerCharacter,
         Position(Vector2::new(x, y)),
         Tile(tile::foreground('@', ansi::WHITE, style::BOLD)),
         TileDepth(2),
@@ -92,6 +93,7 @@ pub fn make_pc(x: isize, y: isize) -> Entity {
         DrawableKnowledge(RefCell::new(knowledge::DrawableKnowledge::new())),
         FormSlot(Form::Human),
         BeastTransform(StatusCounter::new_max(60)),
+        WalkSpeed(6),
     ]
 }
 
@@ -103,6 +105,8 @@ pub fn make_dog(x: isize, y: isize) -> Entity {
         VisionDistance(20),
         Actor(SimpleNpc),
         Collider,
+        SimpleNpcKnowledge(RefCell::new(knowledge::SimpleNpcKnowledge::new())),
+        WalkSpeed(1),
     ]
 }
 
