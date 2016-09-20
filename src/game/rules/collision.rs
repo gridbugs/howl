@@ -16,7 +16,8 @@ impl Rule for DetectCollision {
 
             let entity = ctx.level.get(*entity_id).unwrap();
 
-            if !entity.has(ComponentType::Collider) {
+            if !entity.has(ComponentType::Collider) &&
+               !entity.has(ComponentType::DestroyOnCollision) {
                 continue;
             }
 
