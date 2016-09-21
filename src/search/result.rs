@@ -1,7 +1,7 @@
 use grid::Coord;
 use geometry::Direction;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PathNode {
     pub coord: Coord,
     pub direction: Direction,
@@ -16,11 +16,12 @@ impl PathNode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Path {
     pub coords: Vec<PathNode>,
     pub cost: f64,
     pub explored: u64,
+    pub index: usize,
 }
 
 impl Path {
@@ -29,6 +30,17 @@ impl Path {
             coords: coords,
             cost: cost,
             explored: explored,
+            index: 0,
+        }
+    }
+
+    pub fn next(&mut self) -> Option<&PathNode> {
+        if self.index < self.coords.len() {
+            let ret = &self.coords[self.index];
+            self.index += 1;
+            Some(ret)
+        } else {
+            None
         }
     }
 }

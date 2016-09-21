@@ -1,13 +1,10 @@
 use game::{Speed, StatusCounter, ActorType};
-
 use game::components::{DoorState, Form};
-
 use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
+use game::actors::SimpleNpcAiState;
 
 use table::{ToIndex, ToType};
-
 use geometry::{Vector2, Direction};
-
 use tile::ComplexTile;
 
 use std::cell::RefCell;
@@ -47,8 +44,9 @@ pub enum ComponentType {
     SimpleNpcKnowledge, // 20
     PlayerCharacter, // 21
     WalkSpeed, // 22
+    SimpleNpcAi, // 23
 }
-pub const NUM_COMPONENTS: usize = 23;
+pub const NUM_COMPONENTS: usize = 24;
 
 #[derive(Debug, Clone)]
 pub enum Component {
@@ -66,7 +64,10 @@ pub enum Component {
     VisionDistance(usize),
     DrawableKnowledge(RefCell<DrawableKnowledge>),
     Bullet,
-    AxisVelocity { direction: Direction, speed: Speed },
+    AxisVelocity {
+        direction: Direction,
+        speed: Speed,
+    },
     BeastTransform(StatusCounter),
     HumanTransform(StatusCounter),
     FormSlot(Form),
@@ -75,6 +76,7 @@ pub enum Component {
     SimpleNpcKnowledge(RefCell<SimpleNpcKnowledge>),
     PlayerCharacter,
     WalkSpeed(u64),
+    SimpleNpcAi(RefCell<SimpleNpcAiState>),
 }
 
 impl ToType<ComponentType> for Component {
@@ -103,6 +105,7 @@ impl ToType<ComponentType> for Component {
             Component::SimpleNpcKnowledge(_) => ComponentType::SimpleNpcKnowledge,
             Component::PlayerCharacter => ComponentType::PlayerCharacter,
             Component::WalkSpeed(_) => ComponentType::WalkSpeed,
+            Component::SimpleNpcAi(_) => ComponentType::SimpleNpcAi,
         }
     }
 }

@@ -1,6 +1,7 @@
 use game::{Component, ComponentType, Speed, StatusCounter, ActorType};
 use game::components::{DoorState, Form};
 use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
+use game::actors::SimpleNpcAiState;
 
 use geometry::{Vector2, Direction};
 use tile::ComplexTile;
@@ -100,6 +101,15 @@ pub trait EntityWrapper<'a>: Sized {
         if let Some(&Component::SimpleNpcKnowledge(ref knowledge)) =
                self.get_component(ComponentType::SimpleNpcKnowledge) {
             Some(knowledge.borrow_mut())
+        } else {
+            None
+        }
+    }
+
+    fn simple_npc_ai_mut(self) -> Option<RefMut<'a, SimpleNpcAiState>> {
+        if let Some(&Component::SimpleNpcAi(ref ai)) =
+               self.get_component(ComponentType::SimpleNpcAi) {
+            Some(ai.borrow_mut())
         } else {
             None
         }

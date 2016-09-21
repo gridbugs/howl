@@ -16,7 +16,10 @@ pub enum SimpleTile {
 #[derive(Clone, Copy, Debug)]
 pub enum ComplexTile {
     Simple(SimpleTile),
-    Wall { front: SimpleTile, back: SimpleTile },
+    Wall {
+        front: SimpleTile,
+        back: SimpleTile,
+    },
 }
 
 pub fn solid_colour(colour: AnsiColour) -> ComplexTile {

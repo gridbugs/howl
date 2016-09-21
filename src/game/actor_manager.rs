@@ -18,7 +18,7 @@ impl<'a> ActorManager<'a> {
     }
 
     pub fn act(&mut self,
-               level: &Level,
+               level: &mut Level,
                id: EntityId,
                ids: &ReserveEntityId,
                turn: u64)

@@ -4,6 +4,7 @@ use game::Component::*;
 use game::ActorType::*;
 use game::components::{DoorState, Form};
 use game::knowledge;
+use game::actors::SimpleNpcAiState;
 
 use geometry::Vector2;
 use tile;
@@ -107,6 +108,7 @@ pub fn make_dog(x: isize, y: isize) -> Entity {
         Collider,
         SimpleNpcKnowledge(RefCell::new(knowledge::SimpleNpcKnowledge::new())),
         WalkSpeed(1),
+        SimpleNpcAi(RefCell::new(SimpleNpcAiState::new())),
     ]
 }
 

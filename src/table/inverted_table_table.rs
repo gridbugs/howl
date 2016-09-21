@@ -128,8 +128,9 @@ impl<'a, EntryType, Entry> TableRef<'a, EntryType, Entry> for InvertedTableRef<'
     }
 }
 
-impl<'a, EntryType, Entry> TableRefMut<'a, EntryType, Entry>
-    for InvertedTableRefMut<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> TableRefMut<'a, EntryType, Entry> for InvertedTableRefMut<'a,
+                                                                                     EntryType,
+                                                                                     Entry>
     where EntryType: 'a + Eq + Hash + Copy + ToIndex,
           Entry: 'a + ToType<EntryType>
 {
@@ -149,8 +150,9 @@ impl<'a, EntryType, Entry> TableRefMut<'a, EntryType, Entry>
     }
 }
 
-impl<'a, EntryType, Entry> IterTableRef<'a, EntryType, Entry>
-    for InvertedTableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> IterTableRef<'a, EntryType, Entry> for InvertedTableRef<'a,
+                                                                                   EntryType,
+                                                                                   Entry>
     where EntryType: 'a + Eq + Hash + Copy + ToIndex,
           Entry: 'a + ToType<EntryType>
 {
@@ -216,8 +218,9 @@ impl<'a, EntryType, Entry> Iterator for InvertedTableEntryIter<'a, EntryType, En
     }
 }
 
-impl<'a, EntryType, Entry> IdTableRef<'a, EntryType, Entry>
-    for InvertedTableRef<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> IdTableRef<'a, EntryType, Entry> for InvertedTableRef<'a,
+                                                                                 EntryType,
+                                                                                 Entry>
     where EntryType: 'a + Eq + Hash + Copy + ToIndex,
           Entry: 'a + ToType<EntryType>
 {
@@ -241,8 +244,9 @@ impl<'a, EntryType, Entry> Copy for InvertedEntryAccessor<'a, EntryType, Entry>
 {
 }
 
-impl<'a, EntryType, Entry> EntryAccessor<'a, EntryType, Entry>
-    for InvertedEntryAccessor<'a, EntryType, Entry>
+impl<'a, EntryType, Entry> EntryAccessor<'a, EntryType, Entry> for InvertedEntryAccessor<'a,
+                                                                                         EntryType,
+                                                                                         Entry>
     where EntryType: 'a + Eq + Hash + Copy + ToIndex,
           Entry: 'a + ToType<EntryType>
 {
