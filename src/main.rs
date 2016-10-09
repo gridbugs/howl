@@ -26,6 +26,7 @@ mod vision;
 mod reserver;
 mod math;
 mod search;
+mod behaviour;
 
 use game::entities::*;
 use game::{EntityContext, ReserveEntityId, EntityId, GameContext, Level, EntityWrapper};
