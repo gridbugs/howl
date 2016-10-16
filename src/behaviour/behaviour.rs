@@ -21,6 +21,7 @@ pub type NodeIndex = usize;
 pub enum LeafResolution<A> {
     Return(bool),
     Yield(A),
+    ReturnFromInterrupt,
 }
 
 pub enum CheckResolution {
@@ -33,6 +34,7 @@ enum Resolution<A> {
     Return(bool),
     Call(NodeIndex),
     Yield(A),
+    PopStack,
 }
 
 enum CheckResolutionInternal {
@@ -97,6 +99,7 @@ impl<A> LeafResolution<A> {
         match self {
             LeafResolution::Return(value) => Resolution::Return(value),
             LeafResolution::Yield(action) => Resolution::Yield(action),
+            LeafResolution::ReturnFromInterrupt => Resolution::PopStack,
         }
     }
 }
@@ -231,7 +234,7 @@ impl<K, A> Graph<K, A> {
         self.add_node(Node::Leaf(leaf))
     }
 
-    pub fn add_check(&mut self, condition: CheckFn<K>, child: NodeIndex) -> NodeIndex {
+    pub fn add_check(&mut self, child: NodeIndex, condition: CheckFn<K>) -> NodeIndex {
         self.add_node(Node::Check {
             condition: condition,
             child: child,
@@ -385,6 +388,9 @@ impl State {
             }
             Resolution::Yield(action) => {
                 return Ok(Some(action));
+            }
+            Resolution::PopStack => {
+                try!(self.pop_stack());
             }
        }
 
