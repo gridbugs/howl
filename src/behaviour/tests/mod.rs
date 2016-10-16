@@ -1,38 +1,37 @@
 use behaviour::*;
-use behaviour::BehaviourNodeLeaf::*;
-use behaviour::BehaviourNodeInternal::*;
 
-type TestBehaviourGraph = BehaviourGraph<&'static str, &'static str>;
-type TestBehaviourNodeLeaf = BehaviourNodeLeaf<&'static str, &'static str>;
+type TestGraph = Graph<isize, &'static str>;
+type TestLeafFn = LeafFn<isize, &'static str>;
+type TestCheckFn = CheckFn<isize>;
 
-fn action(s: &'static str) -> TestBehaviourNodeLeaf {
-    Action(Box::new(move |_| s))
+fn action(s: &'static str) -> TestLeafFn {
+    Box::new(move |_| LeafResolution::Yield(s))
 }
 
-fn create_a() -> (TestBehaviourGraph, BehaviourNodeIndex) {
-    let mut bg: TestBehaviourGraph = BehaviourGraph::new();
+fn create_a() -> (TestGraph, NodeIndex) {
+    let mut graph = Graph::new();
 
-    let hello = bg.add_leaf(action("hello"));
-    let world = bg.add_leaf(action("world"));
+    let hello = graph.add_leaf(action("hello"));
+    let world = graph.add_leaf(action("world"));
 
-    let all = bg.add_internal(All(vec![hello, world]));
-    let root = bg.add_internal(Forever(all));
+    let all = graph.add_collection(CollectionNode::All(vec![hello, world]));
 
-    (bg, root)
+    let forever = graph.add_collection(CollectionNode::Forever(all));
+
+    (graph, forever)
 }
 
 #[test]
 fn forever() {
-    let (bg, root) = create_a();
+    let (graph, root) = create_a();
 
-    let mut state = BehaviourState::new();
+    let mut state = State::new();
+    state.initialise(&graph, root).unwrap();
 
-    state.start(&bg, root).unwrap();
-
-    assert_eq!(state.run(&bg, &"").unwrap(), "hello");
-    state.give_outcome(BehaviourOutcome::Succeed).unwrap();
-    assert_eq!(state.run(&bg, &"").unwrap(), "world");
-    state.give_outcome(BehaviourOutcome::Succeed).unwrap();
-    assert_eq!(state.run(&bg, &"").unwrap(), "hello");
-    state.give_outcome(BehaviourOutcome::Succeed).unwrap();
+    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "hello");
+    state.report_action_result(true).unwrap();
+    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "world");
+    state.report_action_result(true).unwrap();
+    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "hello");
+    state.report_action_result(true).unwrap();
 }
