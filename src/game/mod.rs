@@ -74,3 +74,6 @@ pub use self::renderer::Renderer;
 
 mod actor_manager;
 pub use self::actor_manager::ActorManager;
+
+mod behaviour;
+pub use self::behaviour::BehaviourContext;
