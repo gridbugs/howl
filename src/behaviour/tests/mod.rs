@@ -41,7 +41,7 @@ fn create_c() -> (TestGraph, NodeIndex) {
     let handler = graph.add_collection(CollectionNode::All(vec![b_root, rti]));
 
     let root = graph.add_check(a_root, Box::new(move |k| {
-        if *k == 0 {
+        if k == 0 {
             None
         } else {
             Some(CheckResolution::Interrupt(handler))
@@ -55,7 +55,7 @@ fn create_d() -> (TestGraph, NodeIndex) {
     let (mut graph, _, b_root) = create_b();
 
     let root = graph.add_check(b_root, Box::new(move |k| {
-        if *k == 0 {
+        if k == 0 {
             None
         } else {
             Some(CheckResolution::Restart)
@@ -72,11 +72,11 @@ fn forever() {
     let mut state = State::new();
     state.initialise(&graph, root).unwrap();
 
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "world");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "world");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
     state.report_action_result(true).unwrap();
 }
 
@@ -88,23 +88,23 @@ fn interrupt() {
     state.initialise(&graph, root).unwrap();
 
     // test normal operation
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "world");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "world");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
     state.report_action_result(true).unwrap();
 
     // trigger interrupt
-    assert_eq!(state.run_to_action(&graph, &1).unwrap(), "one");
+    assert_eq!(state.run_to_action(&graph, 1).unwrap(), "one");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "two");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "two");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "three");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "three");
     state.report_action_result(true).unwrap();
 
     // should return from interrupt here
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "world");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "world");
     state.report_action_result(true).unwrap();
 }
 
@@ -116,16 +116,16 @@ fn restart() {
     state.initialise(&graph, root).unwrap();
 
     // normal operation
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "one");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "one");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "two");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "two");
     state.report_action_result(true).unwrap();
 
     // trigger restart
-    assert_eq!(state.run_to_action(&graph, &1).unwrap(), "one");
+    assert_eq!(state.run_to_action(&graph, 1).unwrap(), "one");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "two");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "two");
     state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, &0).unwrap(), "three");
+    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "three");
     state.report_action_result(true).unwrap();
 }

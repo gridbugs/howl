@@ -43,11 +43,11 @@ enum CheckResolutionInternal {
     PopStack,
 }
 
-pub type LeafFn<K, A> = Box<Fn(&K) -> LeafResolution<A>>;
-pub type CheckFn<K> = Box<Fn(&K) -> Option<CheckResolution>>;
+pub type LeafFn<K, A> = Box<Fn(K) -> LeafResolution<A>>;
+pub type CheckFn<K> = Box<Fn(K) -> Option<CheckResolution>>;
 
 enum Node<K, A> {
-    Leaf(Box<Fn(&K) -> LeafResolution<A>>),
+    Leaf(Box<Fn(K) -> LeafResolution<A>>),
     Check {
         condition: CheckFn<K>,
         child: NodeIndex,
@@ -271,7 +271,7 @@ impl<K, A> Graph<K, A> {
         }
     }
 
-    fn resolve_frame(&self, frame: &mut StackFrame, knowledge: &K) -> Result<Resolution<A>> {
+    fn resolve_frame(&self, frame: &mut StackFrame, knowledge: K) -> Result<Resolution<A>> {
         match frame {
             &mut StackFrame::Leaf(index) => {
                 let node = try!(self.node(index));
@@ -418,7 +418,7 @@ impl State {
         Ok(())
     }
 
-    pub fn run_to_action<K, A>(&mut self, graph: &Graph<K, A>, knowledge: &K) -> Result<A> {
+    pub fn run_to_action<K: Copy, A>(&mut self, graph: &Graph<K, A>, knowledge: K) -> Result<A> {
 
         if self.is_yielding() {
             return Err(Error::Yielding);
@@ -451,7 +451,7 @@ impl State {
         self.apply_return(value)
     }
 
-    fn check<K, A>(&mut self, graph: &Graph<K, A>, knowledge: &K) -> Result<Option<CheckResolutionInternal>> {
+    fn check<K: Copy, A>(&mut self, graph: &Graph<K, A>, knowledge: K) -> Result<Option<CheckResolutionInternal>> {
 
         let mut i = 0; // track current stack index
 
