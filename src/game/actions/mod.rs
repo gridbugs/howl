@@ -12,6 +12,7 @@ use tile;
 use colour::ansi;
 use terminal::style;
 use table::TableRefMut;
+use behaviour;
 
 pub fn walk<'a, E: IdEntityRef<'a>>(entity: E, direction: Direction) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
@@ -216,6 +217,14 @@ pub fn human_transform(entity_id: EntityId) -> UpdateSummary {
     summary.remove_component(entity_id, CType::HumanTransform);
     summary.add_component(entity_id, BeastTransform(StatusCounter::new_max(60)));
     summary.add_component(entity_id, FormSlot(Form::Human));
+
+    summary
+}
+
+pub fn add_behaviour_state(entity_id: EntityId, state: behaviour::State) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.add_component(entity_id, BehaviourState(state));
 
     summary
 }

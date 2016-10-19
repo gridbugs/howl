@@ -40,7 +40,7 @@ impl<'a, E: 'a + IdEntityRef<'a>> BehaviourContext<E> {
         }
     }
 
-    pub fn get(&self, behaviour: Behaviour) -> behaviour::NodeIndex {
+    pub fn get_node_index(&self, behaviour: Behaviour) -> behaviour::NodeIndex {
         *self.behaviours.get(&behaviour).expect("missing behaviour")
     }
 }

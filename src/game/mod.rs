@@ -2,8 +2,7 @@
 mod entity;
 
 pub use self::entity::{EntityId, EntityRef, IterEntityRef, EntityRefMut, IdEntityRef, Entity,
-                       EntityTable, InvertedEntityTable, InvertedEntityRef, InvertedEntityRefMut,
-                       EntityRefAccessMut};
+                       EntityTable, InvertedEntityTable, InvertedEntityRef, InvertedEntityRefMut};
 
 mod component;
 pub use self::component::{Component, ComponentType};

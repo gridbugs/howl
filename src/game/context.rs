@@ -1,6 +1,6 @@
 use game::{UpdateSummary, MetaAction, Rule, EntityContext, LevelStore, EntityId, Level, LevelId,
-           ComponentType, Component, actions, EntityWrapper, EntityStore, CommitContext, CommitError,
-           Renderer, ActorManager, LevelEntityRef, EntityRef, EntityRefAccessMut};
+           ComponentType, Component, actions, EntityWrapper, EntityStore, CommitContext,
+           CommitError, Renderer, ActorManager, LevelEntityRef, IdEntityRef};
 use game::components::Form;
 use game::behaviour as game_behaviour;
 
@@ -100,13 +100,17 @@ impl<'a> GameContext<'a> {
 
         self.turn += 1;
 
-        let mut level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
+        let level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
         let ids = &self.entities.entity_ids;
 
         let turn = level.schedule.next().expect("schedule is empty");
         let entity_id = turn.event;
 
-        Self::lazy_init_behaviour(level.get_mut(entity_id).unwrap(), &self.behaviour_context);
+        if let Some(update) = Self::lazy_init_behaviour(level.get(entity_id).unwrap(),
+                                                        &self.behaviour_context) {
+            level.commit_update(update, self.turn);
+            self.turn += 1;
+        }
 
         // update cloud positions, bypassing rules
         if level.get(entity_id).unwrap().is_pc() {
@@ -183,10 +187,21 @@ impl<'a> GameContext<'a> {
         }
     }
 
-    fn lazy_init_behaviour<'b, E: EntityRefAccessMut<'b>>(entity: E, ctx: &BehaviourContext) {
+
+    fn lazy_init_behaviour<'b, E: IdEntityRef<'b>>(entity: E,
+                                                   ctx: &BehaviourContext)
+                                                   -> Option<UpdateSummary> {
         if !entity.has(ComponentType::BehaviourState) {
             if let Some(&Component::Behaviour(b)) = entity.get(ComponentType::Behaviour) {
+                let mut state = behaviour::State::new();
+                let behaviour_node = ctx.get_node_index(b);
+                state.initialise(&ctx.graph, behaviour_node).unwrap();
+                let update = actions::add_behaviour_state(entity.id(), state);
+
+                return Some(update);
             }
         }
+
+        None
     }
 }
