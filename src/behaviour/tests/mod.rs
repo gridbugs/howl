@@ -40,7 +40,8 @@ fn create_c() -> (TestGraph, NodeIndex) {
 
     let handler = graph.add_collection(CollectionNode::All(vec![b_root, rti]));
 
-    let root = graph.add_check(a_root, Box::new(move |k| {
+    let root = graph.add_check(a_root,
+                               Box::new(move |k| {
         if k == 0 {
             None
         } else {
@@ -54,7 +55,8 @@ fn create_c() -> (TestGraph, NodeIndex) {
 fn create_d() -> (TestGraph, NodeIndex) {
     let (mut graph, _, b_root) = create_b();
 
-    let root = graph.add_check(b_root, Box::new(move |k| {
+    let root = graph.add_check(b_root,
+                               Box::new(move |k| {
         if k == 0 {
             None
         } else {

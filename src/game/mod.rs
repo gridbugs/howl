@@ -2,7 +2,8 @@
 mod entity;
 
 pub use self::entity::{EntityId, EntityRef, IterEntityRef, EntityRefMut, IdEntityRef, Entity,
-                       EntityTable, InvertedEntityTable, InvertedEntityRef, InvertedEntityRefMut};
+                       EntityTable, InvertedEntityTable, InvertedEntityRef, InvertedEntityRefMut,
+                       EntityRefAccessMut};
 
 mod component;
 pub use self::component::{Component, ComponentType};
@@ -76,4 +77,4 @@ mod actor_manager;
 pub use self::actor_manager::ActorManager;
 
 mod behaviour;
-pub use self::behaviour::BehaviourContext;
+pub use self::behaviour::{Behaviour, BehaviourContext};

@@ -60,12 +60,14 @@ pub enum CollectionNode {
     All(Vec<NodeIndex>),
 }
 
+#[derive(Clone)]
 struct ArrayTraverse {
     index: usize,
     length: usize,
     value: bool,
 }
 
+#[derive(Clone)]
 enum CollectionState {
     Forever,
     All(ArrayTraverse),
@@ -75,6 +77,7 @@ pub struct Graph<K, A> {
     nodes: Vec<Node<K, A>>,
 }
 
+#[derive(Clone)]
 enum StackFrame {
     Leaf(NodeIndex),
     Check {
@@ -89,6 +92,7 @@ enum StackFrame {
 
 type Stack = Vec<StackFrame>;
 
+#[derive(Clone)]
 pub struct State {
     stacks: Vec<Stack>,
     yielding: bool,
@@ -392,7 +396,7 @@ impl State {
             Resolution::PopStack => {
                 try!(self.pop_stack());
             }
-       }
+        }
 
         Ok(None)
     }
@@ -451,7 +455,10 @@ impl State {
         self.apply_return(value)
     }
 
-    fn check<K: Copy, A>(&mut self, graph: &Graph<K, A>, knowledge: K) -> Result<Option<CheckResolutionInternal>> {
+    fn check<K: Copy, A>(&mut self,
+                         graph: &Graph<K, A>,
+                         knowledge: K)
+                         -> Result<Option<CheckResolutionInternal>> {
 
         let mut i = 0; // track current stack index
 

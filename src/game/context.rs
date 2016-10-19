@@ -1,12 +1,14 @@
 use game::{UpdateSummary, MetaAction, Rule, EntityContext, LevelStore, EntityId, Level, LevelId,
-           ComponentType, actions, EntityWrapper, EntityStore, CommitContext, CommitError,
-           Renderer, ActorManager};
+           ComponentType, Component, actions, EntityWrapper, EntityStore, CommitContext, CommitError,
+           Renderer, ActorManager, LevelEntityRef, EntityRef, EntityRefAccessMut};
 use game::components::Form;
+use game::behaviour as game_behaviour;
 
 use game::io::WindowKnowledgeRenderer;
 use game::observer::DrawableObserver;
 
 use terminal::{Window, InputSource};
+use behaviour;
 
 use debug;
 
@@ -42,6 +44,8 @@ fn transformation(id: EntityId, level: &Level, time: u64) -> Option<UpdateSummar
     None
 }
 
+type BehaviourContext<'a> = game_behaviour::BehaviourContext<LevelEntityRef<'a>>;
+
 pub struct GameContext<'a> {
     pub entities: EntityContext,
     pub pc: Option<EntityId>,
@@ -59,6 +63,9 @@ pub struct GameContext<'a> {
 
     // time
     turn: u64,
+
+    // behaviour
+    behaviour_context: BehaviourContext<'a>,
 }
 
 #[derive(Debug)]
@@ -79,6 +86,7 @@ impl<'a> GameContext<'a> {
             commit_context: CommitContext::new(),
             rules: Vec::new(),
             turn: 0,
+            behaviour_context: BehaviourContext::new(),
         }
     }
 
@@ -92,11 +100,13 @@ impl<'a> GameContext<'a> {
 
         self.turn += 1;
 
-        let level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
+        let mut level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
         let ids = &self.entities.entity_ids;
 
         let turn = level.schedule.next().expect("schedule is empty");
         let entity_id = turn.event;
+
+        Self::lazy_init_behaviour(level.get_mut(entity_id).unwrap(), &self.behaviour_context);
 
         // update cloud positions, bypassing rules
         if level.get(entity_id).unwrap().is_pc() {
@@ -169,6 +179,13 @@ impl<'a> GameContext<'a> {
                         debug_println!("Turn given tot non-actor!");
                     }
                 }
+            }
+        }
+    }
+
+    fn lazy_init_behaviour<'b, E: EntityRefAccessMut<'b>>(entity: E, ctx: &BehaviourContext) {
+        if !entity.has(ComponentType::BehaviourState) {
+            if let Some(&Component::Behaviour(b)) = entity.get(ComponentType::Behaviour) {
             }
         }
     }
