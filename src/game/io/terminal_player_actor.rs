@@ -11,7 +11,20 @@ use geometry::direction::Direction;
 
 const ETX: char = '\u{3}';
 
-pub fn act<'a>(input_source: &InputSource<'a>,
+pub fn act_retrying<'a>(input_source: &InputSource,
+                        level: &Level,
+                        entity_id: EntityId,
+                        ids: &ReserveEntityId)
+                        -> MetaAction {
+
+    loop {
+        if let Some(meta_action) = act(input_source, level, entity_id, ids) {
+            return meta_action;
+        }
+    }
+}
+
+pub fn act<'a>(input_source: &InputSource,
                level: &Level,
                entity_id: EntityId,
                ids: &ReserveEntityId)

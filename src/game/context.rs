@@ -2,7 +2,7 @@ use game::{UpdateSummary, MetaAction, Rule, EntityContext, LevelStore, EntityId,
            ComponentType, Component, actions, EntityWrapper, EntityStore, CommitContext,
            CommitError, Renderer, ActorManager, LevelEntityRef, IdEntityRef};
 use game::components::Form;
-use game::behaviour as game_behaviour;
+use game::behaviour::{BehaviourContext, BehaviourInput};
 
 use game::io::WindowKnowledgeRenderer;
 use game::observer::DrawableObserver;
@@ -44,8 +44,6 @@ fn transformation(id: EntityId, level: &Level, time: u64) -> Option<UpdateSummar
     None
 }
 
-type BehaviourContext<'a> = game_behaviour::BehaviourContext<LevelEntityRef<'a>>;
-
 pub struct GameContext<'a> {
     pub entities: EntityContext,
     pub pc: Option<EntityId>,
@@ -59,13 +57,14 @@ pub struct GameContext<'a> {
     rules: Vec<Box<Rule>>,
 
     // actors
-    actors: ActorManager<'a>,
+    actors: ActorManager,
 
     // time
     turn: u64,
 
     // behaviour
     behaviour_context: BehaviourContext<'a>,
+    input_source: InputSource,
 }
 
 #[derive(Debug)]
@@ -75,7 +74,7 @@ enum TurnError {
 }
 
 impl<'a> GameContext<'a> {
-    pub fn new(input_source: InputSource<'a>, game_window: Window<'a>) -> Self {
+    pub fn new(input_source: InputSource, game_window: Window<'a>) -> Self {
         GameContext {
             entities: EntityContext::new(),
             pc: None,
@@ -87,6 +86,7 @@ impl<'a> GameContext<'a> {
             rules: Vec::new(),
             turn: 0,
             behaviour_context: BehaviourContext::new(),
+            input_source: input_source,
         }
     }
 
@@ -108,6 +108,12 @@ impl<'a> GameContext<'a> {
 
         if let Some(update) = Self::lazy_init_behaviour(level.get(entity_id).unwrap(),
                                                         &self.behaviour_context) {
+            level.commit_update(update, self.turn);
+            self.turn += 1;
+        }
+
+        if let Some(update) = Self::lazy_init_player_character(level.get(entity_id).unwrap(),
+                                                               self.input_source) {
             level.commit_update(update, self.turn);
             self.turn += 1;
         }
@@ -200,6 +206,15 @@ impl<'a> GameContext<'a> {
 
                 return Some(update);
             }
+        }
+
+        None
+    }
+
+    fn lazy_init_player_character<'b, E: IdEntityRef<'b>>(entity: E, input_source: InputSource) -> Option<UpdateSummary> {
+
+        if entity.is_pc() && entity.input_source().is_none() {
+            return Some(actions::add_input_source(entity.id(), input_source));
         }
 
         None

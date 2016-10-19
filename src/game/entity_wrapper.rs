@@ -5,6 +5,7 @@ use game::actors::SimpleNpcAiState;
 
 use geometry::{Vector2, Direction};
 use tile::ComplexTile;
+use terminal;
 
 use std::cell::{Ref, RefMut};
 
@@ -191,6 +192,14 @@ pub trait EntityWrapper<'a>: Sized {
             speed
         } else {
             0
+        }
+    }
+
+    fn input_source(self) -> Option<terminal::InputSource> {
+        if let Some(&Component::InputSource(is)) = self.get_component(ComponentType::InputSource) {
+            Some(is)
+        } else {
+            None
         }
     }
 }

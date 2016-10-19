@@ -8,6 +8,7 @@ use table::{ToIndex, ToType};
 use geometry::{Vector2, Direction};
 use tile::ComplexTile;
 use behaviour;
+use terminal;
 
 use std::cell::RefCell;
 
@@ -49,8 +50,9 @@ pub enum ComponentType {
     SimpleNpcAi, // 23
     Behaviour, // 24
     BehaviourState, // 25
+    InputSource, // 26
 }
-pub const NUM_COMPONENTS: usize = 26;
+pub const NUM_COMPONENTS: usize = 27;
 
 #[derive(Clone)]
 pub enum Component {
@@ -80,6 +82,7 @@ pub enum Component {
     SimpleNpcAi(RefCell<SimpleNpcAiState>),
     Behaviour(Behaviour),
     BehaviourState(behaviour::State),
+    InputSource(terminal::InputSource),
 }
 
 impl ToType<ComponentType> for Component {
@@ -111,6 +114,7 @@ impl ToType<ComponentType> for Component {
             Component::SimpleNpcAi(_) => ComponentType::SimpleNpcAi,
             Component::Behaviour(_) => ComponentType::Behaviour,
             Component::BehaviourState(_) => ComponentType::BehaviourState,
+            Component::InputSource(_) => ComponentType::InputSource,
         }
     }
 }

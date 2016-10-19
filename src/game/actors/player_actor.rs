@@ -4,12 +4,12 @@ use game::io::terminal_player_actor;
 
 use terminal::InputSource;
 
-pub struct PlayerActor<'a> {
-    input_source: InputSource<'a>,
+pub struct PlayerActor {
+    input_source: InputSource,
 }
 
-impl<'a> PlayerActor<'a> {
-    pub fn new(input_source: InputSource<'a>) -> Self {
+impl<'a> PlayerActor {
+    pub fn new(input_source: InputSource) -> Self {
         PlayerActor { input_source: input_source }
     }
 

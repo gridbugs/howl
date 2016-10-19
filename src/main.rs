@@ -143,18 +143,19 @@ fn main() {
 }
 
 fn window_session() {
-    let wa = WindowAllocator::new().unwrap();
+    let mut wa = WindowAllocator::new().unwrap();
+
+    let input = wa.make_input_source();
+    let window = wa.make_window(0, 0, 80, 30, BufferType::Double);
 
     // Initialise debug window
     let mut debug_buffer = make_debug_window(&wa, DEBUG_WINDOW_WIDTH, DEBUG_WINDOW_HEIGHT);
-
     debug::debug::init(&mut debug_buffer as &mut io::Write);
 
-    game(wa.make_input_source(),
-         wa.make_window(0, 0, 80, 30, BufferType::Double));
+    game(input, window);
 }
 
-fn game<'a>(input_source: InputSource<'a>, game_window: Window<'a>) {
+fn game<'a>(input_source: InputSource, game_window: Window<'a>) {
     let mut game_context = GameContext::new(input_source, game_window);
 
     game_context.pc = Some(populate(&mut game_context.entities));

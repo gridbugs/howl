@@ -4,13 +4,13 @@ use game::actors::{PlayerActor, SimpleNpcActor};
 
 use terminal::InputSource;
 
-pub struct ActorManager<'a> {
-    player_actor: PlayerActor<'a>,
+pub struct ActorManager {
+    player_actor: PlayerActor,
     simple_npc_actor: SimpleNpcActor,
 }
 
-impl<'a> ActorManager<'a> {
-    pub fn new(input_source: InputSource<'a>) -> Self {
+impl ActorManager {
+    pub fn new(input_source: InputSource) -> Self {
         ActorManager {
             player_actor: PlayerActor::new(input_source),
             simple_npc_actor: SimpleNpcActor::new(),

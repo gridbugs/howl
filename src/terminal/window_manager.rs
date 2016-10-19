@@ -161,13 +161,15 @@ impl WindowCell {
 }
 
 #[derive(Clone, Copy)]
-pub struct InputSource<'a> {
-    manager: &'a RefCell<WindowManager>,
+pub struct InputSource {
+    terminal: *mut rustty::Terminal,
 }
 
-impl<'a> InputSource<'a> {
-    pub fn get_event(&'a self) -> Option<Event> {
-        self.manager.borrow_mut().get_event()
+impl InputSource {
+    pub fn get_event(&self) -> Option<Event> {
+        unsafe {
+            (*self.terminal).get_event(None).unwrap()
+        }
     }
 }
 
@@ -203,8 +205,10 @@ impl WindowAllocator {
                           border_y)
     }
 
-    pub fn make_input_source(&self) -> InputSource {
-        InputSource { manager: &self.manager }
+    pub fn make_input_source(&mut self) -> InputSource {
+        InputSource {
+            terminal: &mut self.manager.get_mut().terminal,
+        }
     }
 
     pub fn width(&self) -> usize {
@@ -315,9 +319,5 @@ impl WindowManager {
 
     fn flush(&mut self) {
         self.terminal.swap_buffers().unwrap();
-    }
-
-    fn get_event(&mut self) -> Option<Event> {
-        self.terminal.get_event(None).unwrap()
     }
 }

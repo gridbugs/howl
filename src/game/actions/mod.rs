@@ -13,6 +13,7 @@ use colour::ansi;
 use terminal::style;
 use table::TableRefMut;
 use behaviour;
+use terminal;
 
 pub fn walk<'a, E: IdEntityRef<'a>>(entity: E, direction: Direction) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
@@ -225,6 +226,14 @@ pub fn add_behaviour_state(entity_id: EntityId, state: behaviour::State) -> Upda
     let mut summary = UpdateSummary::new();
 
     summary.add_component(entity_id, BehaviourState(state));
+
+    summary
+}
+
+pub fn add_input_source(entity_id: EntityId, input_source: terminal::InputSource) -> UpdateSummary {
+    let mut summary = UpdateSummary::new();
+
+    summary.add_component(entity_id, InputSource(input_source));
 
     summary
 }
