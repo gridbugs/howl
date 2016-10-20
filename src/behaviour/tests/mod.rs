@@ -1,11 +1,25 @@
 use behaviour::*;
 
-type TestGraph = Graph<isize, &'static str>;
-type TestLeafFn = LeafFn<isize, &'static str>;
-type TestCheckFn = CheckFn<isize>;
 
-fn action(s: &'static str) -> TestLeafFn {
-    Box::new(move |_| LeafResolution::Yield(s))
+struct Leaf(Box<Fn(isize) -> LeafResolution<&'static str>>);
+struct Check(Box<Fn(isize) -> Option<CheckResolution>>);
+
+impl<'a> LeafFnBox<isize, &'static str> for Leaf {
+    fn call(&self, knowledge: isize) -> LeafResolution<&'static str> {
+        (self.0)(knowledge)
+    }
+}
+
+impl<'a> CheckFnBox<isize> for Check {
+    fn call(&self, knowledge: isize) -> Option<CheckResolution> {
+        (self.0)(knowledge)
+    }
+}
+
+type TestGraph = Graph<Leaf, Check>;
+
+fn action(s: &'static str) -> Leaf {
+    Leaf(Box::new(move |_| LeafResolution::Yield(s)))
 }
 
 fn create_a() -> (TestGraph, NodeIndex) {
@@ -36,18 +50,18 @@ fn create_b() -> (TestGraph, NodeIndex, NodeIndex) {
 fn create_c() -> (TestGraph, NodeIndex) {
     let (mut graph, a_root, b_root) = create_b();
 
-    let rti = graph.add_leaf(Box::new(|_| LeafResolution::ReturnFromInterrupt));
+    let rti = graph.add_leaf(Leaf(Box::new(|_| LeafResolution::ReturnFromInterrupt)));
 
     let handler = graph.add_collection(CollectionNode::All(vec![b_root, rti]));
 
     let root = graph.add_check(a_root,
-                               Box::new(move |k| {
+                               Check(Box::new(move |k| {
         if k == 0 {
             None
         } else {
             Some(CheckResolution::Interrupt(handler))
         }
-    }));
+    })));
 
     (graph, root)
 }
@@ -56,13 +70,13 @@ fn create_d() -> (TestGraph, NodeIndex) {
     let (mut graph, _, b_root) = create_b();
 
     let root = graph.add_check(b_root,
-                               Box::new(move |k| {
+                               Check(Box::new(move |k| {
         if k == 0 {
             None
         } else {
             Some(CheckResolution::Restart)
         }
-    }));
+    })));
 
     (graph, root)
 }

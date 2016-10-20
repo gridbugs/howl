@@ -6,6 +6,7 @@ use game::actors::SimpleNpcAiState;
 use geometry::{Vector2, Direction};
 use tile::ComplexTile;
 use terminal;
+use behaviour;
 
 use std::cell::{Ref, RefMut};
 
@@ -198,6 +199,15 @@ pub trait EntityWrapper<'a>: Sized {
     fn input_source(self) -> Option<terminal::InputSource> {
         if let Some(&Component::InputSource(is)) = self.get_component(ComponentType::InputSource) {
             Some(is)
+        } else {
+            None
+        }
+    }
+
+    fn behaviour_state(self) -> Option<RefMut<'a, behaviour::State>> {
+        if let Some(&Component::BehaviourState(ref state)) =
+               self.get_component(ComponentType::BehaviourState) {
+            Some(state.borrow_mut())
         } else {
             None
         }

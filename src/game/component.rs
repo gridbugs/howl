@@ -70,7 +70,10 @@ pub enum Component {
     VisionDistance(usize),
     DrawableKnowledge(RefCell<DrawableKnowledge>),
     Bullet,
-    AxisVelocity { direction: Direction, speed: Speed },
+    AxisVelocity {
+        direction: Direction,
+        speed: Speed,
+    },
     BeastTransform(StatusCounter),
     HumanTransform(StatusCounter),
     FormSlot(Form),
@@ -81,7 +84,7 @@ pub enum Component {
     WalkSpeed(u64),
     SimpleNpcAi(RefCell<SimpleNpcAiState>),
     Behaviour(Behaviour),
-    BehaviourState(behaviour::State),
+    BehaviourState(RefCell<behaviour::State>),
     InputSource(terminal::InputSource),
 }
 

@@ -15,6 +15,8 @@ use table::TableRefMut;
 use behaviour;
 use terminal;
 
+use std::cell::RefCell;
+
 pub fn walk<'a, E: IdEntityRef<'a>>(entity: E, direction: Direction) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
@@ -225,7 +227,7 @@ pub fn human_transform(entity_id: EntityId) -> UpdateSummary {
 pub fn add_behaviour_state(entity_id: EntityId, state: behaviour::State) -> UpdateSummary {
     let mut summary = UpdateSummary::new();
 
-    summary.add_component(entity_id, BehaviourState(state));
+    summary.add_component(entity_id, BehaviourState(RefCell::new(state)));
 
     summary
 }

@@ -167,9 +167,7 @@ pub struct InputSource {
 
 impl InputSource {
     pub fn get_event(&self) -> Option<Event> {
-        unsafe {
-            (*self.terminal).get_event(None).unwrap()
-        }
+        unsafe { (*self.terminal).get_event(None).unwrap() }
     }
 }
 
@@ -206,9 +204,7 @@ impl WindowAllocator {
     }
 
     pub fn make_input_source(&mut self) -> InputSource {
-        InputSource {
-            terminal: &mut self.manager.get_mut().terminal,
-        }
+        InputSource { terminal: &mut self.manager.get_mut().terminal }
     }
 
     pub fn width(&self) -> usize {

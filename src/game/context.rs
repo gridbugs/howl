@@ -1,6 +1,6 @@
 use game::{UpdateSummary, MetaAction, Rule, EntityContext, LevelStore, EntityId, Level, LevelId,
            ComponentType, Component, actions, EntityWrapper, EntityStore, CommitContext,
-           CommitError, Renderer, ActorManager, LevelEntityRef, IdEntityRef};
+           CommitError, Renderer, ActorManager, IdEntityRef, ReserveEntityId};
 use game::components::Form;
 use game::behaviour::{BehaviourContext, BehaviourInput};
 
@@ -11,6 +11,8 @@ use terminal::{Window, InputSource};
 use behaviour;
 
 use debug;
+
+use std::result;
 
 const NPC_INVALID_ACTION_DELAY: u64 = 10;
 
@@ -63,15 +65,16 @@ pub struct GameContext<'a> {
     turn: u64,
 
     // behaviour
-    behaviour_context: BehaviourContext<'a>,
+    behaviour_context: BehaviourContext,
     input_source: InputSource,
 }
 
 #[derive(Debug)]
-enum TurnError {
+enum Error {
     Quit,
-    NotActor,
 }
+
+type Result<T> = result::Result<T, Error>;
 
 impl<'a> GameContext<'a> {
     pub fn new(input_source: InputSource, game_window: Window<'a>) -> Self {
@@ -96,12 +99,14 @@ impl<'a> GameContext<'a> {
         self
     }
 
-    fn game_turn(&mut self) -> Result<(), TurnError> {
+    fn game_turn<'b>(&'b mut self) -> Result<()>
+        where 'a: 'b
+    {
 
         self.turn += 1;
 
-        let level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
-        let ids = &self.entities.entity_ids;
+        let level: &'b mut Level = self.entities.levels.level_mut(self.pc_level_id).unwrap();
+        let ids: &'b ReserveEntityId = &self.entities.entity_ids;
 
         let turn = level.schedule.next().expect("schedule is empty");
         let entity_id = turn.event;
@@ -135,11 +140,18 @@ impl<'a> GameContext<'a> {
 
         self.renderer.render(level, self.pc.unwrap(), self.turn);
 
+
         loop {
-            match self.actors.act(level, entity_id, ids, self.turn) {
-                MetaAction::Quit => return Err(TurnError::Quit),
-                MetaAction::NotActor => return Err(TurnError::NotActor),
-                MetaAction::PassTurn => break,
+            let meta_action = {
+                let behaviour_input = BehaviourInput::new(entity_id, ids, level);
+                let mut state = level.get(entity_id).unwrap().behaviour_state().unwrap();
+                let maybe_action =
+                    state.run_to_action(&self.behaviour_context.graph, behaviour_input);
+                maybe_action.expect("behaviour graph error")
+            };
+
+            match meta_action {
+                MetaAction::Quit => return Err(Error::Quit),
                 MetaAction::Update(update) => {
                     match self.commit_context.apply_update(level,
                                                            update,
@@ -149,6 +161,12 @@ impl<'a> GameContext<'a> {
                                                            ids,
                                                            self.turn) {
                         Ok(commit_time) => {
+                            level.get(entity_id)
+                                .unwrap()
+                                .behaviour_state()
+                                .unwrap()
+                                .report_action_result(true)
+                                .expect("behaviour graph error");
 
                             self.turn = commit_time.turn;
                             level.schedule.insert(entity_id, commit_time.time);
@@ -156,6 +174,13 @@ impl<'a> GameContext<'a> {
                             break;
                         }
                         Err(CommitError::NoCommits) => {
+                            level.get(entity_id)
+                                .unwrap()
+                                .behaviour_state()
+                                .unwrap()
+                                .report_action_result(false)
+                                .expect("behaviour graph error");
+
                             if level.get(entity_id).unwrap().is_pc() {
                                 // the player can retry their turn
                                 continue;
@@ -180,19 +205,17 @@ impl<'a> GameContext<'a> {
         Ok(())
     }
 
-    pub fn game_loop(&mut self) {
+    pub fn game_loop<'b>(&'b mut self)
+        where 'a: 'b
+    {
         loop {
             if let Err(err) = self.game_turn() {
                 match err {
-                    TurnError::Quit => break,
-                    TurnError::NotActor => {
-                        debug_println!("Turn given tot non-actor!");
-                    }
+                    Error::Quit => break,
                 }
             }
         }
     }
-
 
     fn lazy_init_behaviour<'b, E: IdEntityRef<'b>>(entity: E,
                                                    ctx: &BehaviourContext)
@@ -211,7 +234,9 @@ impl<'a> GameContext<'a> {
         None
     }
 
-    fn lazy_init_player_character<'b, E: IdEntityRef<'b>>(entity: E, input_source: InputSource) -> Option<UpdateSummary> {
+    fn lazy_init_player_character<'b, E: IdEntityRef<'b>>(entity: E,
+                                                          input_source: InputSource)
+                                                          -> Option<UpdateSummary> {
 
         if entity.is_pc() && entity.input_source().is_none() {
             return Some(actions::add_input_source(entity.id(), input_source));

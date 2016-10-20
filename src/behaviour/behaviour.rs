@@ -43,13 +43,18 @@ enum CheckResolutionInternal {
     PopStack,
 }
 
-pub type LeafFn<K, A> = Box<Fn(K) -> LeafResolution<A>>;
-pub type CheckFn<K> = Box<Fn(K) -> Option<CheckResolution>>;
+pub trait LeafFnBox<K, A> {
+    fn call(&self, knowledge: K) -> LeafResolution<A>;
+}
 
-enum Node<K, A> {
-    Leaf(Box<Fn(K) -> LeafResolution<A>>),
+pub trait CheckFnBox<K> {
+    fn call(&self, knowledge: K) -> Option<CheckResolution>;
+}
+
+enum Node<Leaf, Check> {
+    Leaf(Leaf),
     Check {
-        condition: CheckFn<K>,
+        condition: Check,
         child: NodeIndex,
     },
     Collection(CollectionNode),
@@ -73,8 +78,8 @@ enum CollectionState {
     All(ArrayTraverse),
 }
 
-pub struct Graph<K, A> {
-    nodes: Vec<Node<K, A>>,
+pub struct Graph<Leaf, Check> {
+    nodes: Vec<Node<Leaf, Check>>,
 }
 
 #[derive(Clone)]
@@ -189,8 +194,8 @@ impl StackFrame {
     }
 }
 
-impl<K, A> Node<K, A> {
-    fn leaf_fn(&self) -> Result<&LeafFn<K, A>> {
+impl<Leaf, Check> Node<Leaf, Check> {
+    fn leaf_fn(&self) -> Result<&Leaf> {
         if let &Node::Leaf(ref f) = self {
             Ok(f)
         } else {
@@ -198,7 +203,7 @@ impl<K, A> Node<K, A> {
         }
     }
 
-    fn check_condition(&self) -> Result<&CheckFn<K>> {
+    fn check_condition(&self) -> Result<&Check> {
         if let &Node::Check { ref condition, .. } = self {
             Ok(condition)
         } else {
@@ -223,22 +228,22 @@ impl<K, A> Node<K, A> {
     }
 }
 
-impl<K, A> Graph<K, A> {
+impl<Leaf, Check> Graph<Leaf, Check> {
     pub fn new() -> Self {
         Graph { nodes: Vec::new() }
     }
 
-    fn add_node(&mut self, node: Node<K, A>) -> NodeIndex {
+    fn add_node(&mut self, node: Node<Leaf, Check>) -> NodeIndex {
         let index = self.nodes.len();
         self.nodes.push(node);
         return index;
     }
 
-    pub fn add_leaf(&mut self, leaf: LeafFn<K, A>) -> NodeIndex {
+    pub fn add_leaf(&mut self, leaf: Leaf) -> NodeIndex {
         self.add_node(Node::Leaf(leaf))
     }
 
-    pub fn add_check(&mut self, child: NodeIndex, condition: CheckFn<K>) -> NodeIndex {
+    pub fn add_check(&mut self, child: NodeIndex, condition: Check) -> NodeIndex {
         self.add_node(Node::Check {
             condition: condition,
             child: child,
@@ -249,7 +254,7 @@ impl<K, A> Graph<K, A> {
         self.add_node(Node::Collection(collection))
     }
 
-    fn node(&self, index: NodeIndex) -> Result<&Node<K, A>> {
+    fn node(&self, index: NodeIndex) -> Result<&Node<Leaf, Check>> {
         if index < self.nodes.len() {
             Ok(&self.nodes[index])
         } else {
@@ -275,12 +280,14 @@ impl<K, A> Graph<K, A> {
         }
     }
 
-    fn resolve_frame(&self, frame: &mut StackFrame, knowledge: K) -> Result<Resolution<A>> {
+    fn resolve_frame<K, A>(&self, frame: &mut StackFrame, knowledge: K) -> Result<Resolution<A>>
+        where Leaf: LeafFnBox<K, A>
+    {
         match frame {
             &mut StackFrame::Leaf(index) => {
                 let node = try!(self.node(index));
                 let f = try!(node.leaf_fn());
-                Ok(f(knowledge).to_resolution())
+                Ok(f.call(knowledge).to_resolution())
             }
             &mut StackFrame::Check { index, value } => {
                 let node = try!(self.node(index));
@@ -325,7 +332,10 @@ impl State {
         self.yielding
     }
 
-    pub fn initialise<K, A>(&mut self, graph: &Graph<K, A>, index: NodeIndex) -> Result<()> {
+    pub fn initialise<Leaf, Check>(&mut self,
+                                   graph: &Graph<Leaf, Check>,
+                                   index: NodeIndex)
+                                   -> Result<()> {
         if !self.is_clear() {
             return Err(Error::StateAlreadyInitialised);
         }
@@ -333,7 +343,10 @@ impl State {
         self.push_stack(graph, index)
     }
 
-    fn push_stack<K, A>(&mut self, graph: &Graph<K, A>, index: NodeIndex) -> Result<()> {
+    fn push_stack<Leaf, Check>(&mut self,
+                               graph: &Graph<Leaf, Check>,
+                               index: NodeIndex)
+                               -> Result<()> {
         self.stacks.push(vec![try!(graph.create_stack_frame(index))]);
 
         Ok(())
@@ -376,10 +389,12 @@ impl State {
         self.pop_stack()
     }
 
-    fn apply_resolution<K, A>(&mut self,
-                              graph: &Graph<K, A>,
-                              resolution: Resolution<A>)
-                              -> Result<Option<A>> {
+    fn apply_resolution<K, A, Leaf, Check>(&mut self,
+                                           graph: &Graph<Leaf, Check>,
+                                           resolution: Resolution<A>)
+                                           -> Result<Option<A>>
+        where Leaf: LeafFnBox<K, A>
+    {
 
         match resolution {
             Resolution::Return(value) => {
@@ -401,10 +416,10 @@ impl State {
         Ok(None)
     }
 
-    fn apply_check_resolution<K, A>(&mut self,
-                                    graph: &Graph<K, A>,
-                                    resolution: CheckResolutionInternal)
-                                    -> Result<()> {
+    fn apply_check_resolution<Leaf, Check>(&mut self,
+                                           graph: &Graph<Leaf, Check>,
+                                           resolution: CheckResolutionInternal)
+                                           -> Result<()> {
 
         match resolution {
             CheckResolutionInternal::SeverStack(frame_index) => {
@@ -422,7 +437,14 @@ impl State {
         Ok(())
     }
 
-    pub fn run_to_action<K: Copy, A>(&mut self, graph: &Graph<K, A>, knowledge: K) -> Result<A> {
+    pub fn run_to_action<K, A, Leaf, Check>(&mut self,
+                                            graph: &Graph<Leaf, Check>,
+                                            knowledge: K)
+                                            -> Result<A>
+        where K: Copy,
+              Leaf: LeafFnBox<K, A>,
+              Check: CheckFnBox<K>
+    {
 
         if self.is_yielding() {
             return Err(Error::Yielding);
@@ -455,10 +477,13 @@ impl State {
         self.apply_return(value)
     }
 
-    fn check<K: Copy, A>(&mut self,
-                         graph: &Graph<K, A>,
-                         knowledge: K)
-                         -> Result<Option<CheckResolutionInternal>> {
+    fn check<K, Leaf, Check>(&mut self,
+                             graph: &Graph<Leaf, Check>,
+                             knowledge: K)
+                             -> Result<Option<CheckResolutionInternal>>
+        where K: Copy,
+              Check: CheckFnBox<K>
+    {
 
         let mut i = 0; // track current stack index
 
@@ -466,7 +491,7 @@ impl State {
             if let &StackFrame::Check { index, .. } = frame {
                 let node = try!(graph.node(index));
                 let condition = try!(node.check_condition());
-                if let Some(resolution) = condition(knowledge) {
+                if let Some(resolution) = condition.call(knowledge) {
                     return Ok(Some(resolution.to_internal(i)));
                 }
             }

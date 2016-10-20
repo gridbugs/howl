@@ -96,6 +96,7 @@ pub fn make_pc(x: isize, y: isize) -> Entity {
         FormSlot(Form::Human),
         BeastTransform(StatusCounter::new_max(60)),
         WalkSpeed(6),
+        Behaviour(behaviour::Behaviour::PlayerInput),
     ]
 }
 

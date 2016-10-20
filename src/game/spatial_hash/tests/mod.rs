@@ -14,7 +14,7 @@ use std::collections::{HashSet, hash_map};
 const WIDTH: usize = 10;
 const HEIGHT: usize = 10;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct TestRef {
     entity: Entity,
     id: EntityId,

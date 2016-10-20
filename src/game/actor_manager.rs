@@ -30,7 +30,7 @@ impl ActorManager {
                 ActorType::SimpleNpc => self.simple_npc_actor.act(level, id, ids, turn),
             }
         } else {
-            MetaAction::NotActor
+            panic!("not actor")
         }
     }
 }

@@ -76,4 +76,4 @@ mod actor_manager;
 pub use self::actor_manager::ActorManager;
 
 mod behaviour;
-pub use self::behaviour::{Behaviour, BehaviourContext, BehaviourInput};
+pub use self::behaviour::{Behaviour, BehaviourContext, BehaviourInput, BehaviourGraph};
