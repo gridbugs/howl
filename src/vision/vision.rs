@@ -21,5 +21,5 @@ pub trait VisionSystem<G, R, I>
           G::Item: Opacity,
           R: VisibilityReport
 {
-    fn detect_visible_area(&mut self, eye: Vector2<isize>, grid: &G, info: I, report: &mut R);
+    fn detect_visible_area(&self, eye: Vector2<isize>, grid: &G, info: I, report: R);
 }

@@ -1,13 +1,13 @@
-use game::knowledge::{KnowledgeCellExtra, KnowledgeCellCommon, LevelGridKnowledge};
+use game::knowledge::{KnowledgeCellData, LevelGridKnowledge, KnowledgeCell};
 use game::{EntityWrapper, EntityRef};
 
 use best::BestMap;
 use tile::ComplexTile;
 use grid::StaticGrid;
+use clear::Clear;
 
-pub type DrawableCell = KnowledgeCellCommon<DrawableExtra>;
-
-pub type DrawableKnowledge = LevelGridKnowledge<StaticGrid<DrawableCell>>;
+pub type DrawableCell = KnowledgeCell<DrawableExtra>;
+pub type DrawableKnowledge = LevelGridKnowledge<DrawableExtra>;
 
 #[derive(Debug)]
 pub struct DrawableExtra {
@@ -26,17 +26,18 @@ impl Default for DrawableExtra {
     }
 }
 
-impl KnowledgeCellExtra for DrawableExtra {
-    // visibility of cell (from 0.0 to 1.0)
-    type MetaData = f64;
-
+impl Clear for DrawableExtra {
     fn clear(&mut self) {
         self.foreground.clear();
         self.background.clear();
         self.moonlight = false;
     }
+}
 
-    fn update<'a, E: EntityRef<'a>>(&mut self, entity: E, _: &Self::MetaData) {
+impl KnowledgeCellData for DrawableExtra {
+    // visibility of cell (from 0.0 to 1.0)
+    type VisionMetadata = f64;
+    fn update<'a, E: EntityRef<'a>>(&mut self, entity: E, _: &Self::VisionMetadata) {
         // update tiles
         entity.tile_depth().map(|depth| {
             entity.tile().map(|tile| {

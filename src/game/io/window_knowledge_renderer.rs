@@ -45,7 +45,7 @@ impl<'a> WindowKnowledgeRenderer<'a> {
             ComplexTile::Simple(s) => s,
             ComplexTile::Wall { front, back } => {
                 if let Some(cell) = grid.get_nei(coord, Direction::South) {
-                    if cell_has_wall(cell.extra()) {
+                    if cell_has_wall(cell.data()) {
                         back
                     } else {
                         front
@@ -64,10 +64,10 @@ impl<'a> WindowKnowledgeRenderer<'a> {
                   turn_count: u64) {
         let entity = entities.get(entity_id).unwrap();
         let knowledge = entity.drawable_knowledge().unwrap();
-        let grid = knowledge.grid(level_id).unwrap();
+        let grid = knowledge.grid(level_id).unwrap().inner();
 
         for (coord, cell_common) in izip!(grid.coord_iter(), grid.iter()) {
-            let cell = cell_common.extra();
+            let cell = cell_common.data();
 
             let mut bg = ansi::DARK_GREY;
             let mut fg = ansi::DARK_GREY;

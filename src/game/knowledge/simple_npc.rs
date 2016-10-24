@@ -1,12 +1,11 @@
-use game::knowledge::{KnowledgeCellCommon, LevelGridKnowledge, KnowledgeCellExtra};
-
+use game::knowledge::{KnowledgeCell, LevelGridKnowledge, KnowledgeCellData};
 use game::{ComponentType, IterEntityRef};
 
 use grid::StaticGrid;
+use clear::Clear;
 
-pub type SimpleNpcCell = KnowledgeCellCommon<SimpleNpcExtra>;
-
-pub type SimpleNpcKnowledge = LevelGridKnowledge<StaticGrid<SimpleNpcCell>>;
+pub type SimpleNpcCell = KnowledgeCell<SimpleNpcExtra>;
+pub type SimpleNpcKnowledge = LevelGridKnowledge<SimpleNpcExtra>;
 
 #[derive(Debug)]
 pub struct SimpleNpcExtra {
@@ -23,15 +22,17 @@ impl Default for SimpleNpcExtra {
     }
 }
 
-impl KnowledgeCellExtra for SimpleNpcExtra {
-    type MetaData = f64;
-
+impl Clear for SimpleNpcExtra {
     fn clear(&mut self) {
         self.solid = false;
         self.player = false;
     }
+}
 
-    fn update<'a, E: IterEntityRef<'a>>(&mut self, entity: E, _: &Self::MetaData) {
+impl KnowledgeCellData for SimpleNpcExtra {
+    type VisionMetadata = f64;
+
+    fn update<'a, E: IterEntityRef<'a>>(&mut self, entity: E, _: &Self::VisionMetadata) {
         if entity.has(ComponentType::Solid) {
             self.solid = true;
         }

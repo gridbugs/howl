@@ -10,11 +10,11 @@ impl<G, R> VisionSystem<G, R, usize> for Square
           G::Item: Opacity,
           R: VisibilityReport<MetaData = f64>
 {
-    fn detect_visible_area(&mut self,
+    fn detect_visible_area(&self,
                            eye: Vector2<isize>,
                            grid: &G,
                            distance: usize,
-                           report: &mut R) {
+                           mut report: R) {
         let distance = distance as isize;
         for i in -distance..distance + 1 {
             for j in -distance..distance + 1 {

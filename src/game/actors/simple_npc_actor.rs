@@ -8,7 +8,7 @@ use grid::{Grid, Coord};
 
 impl Traverse for SimpleNpcCell {
     fn get_type(&self) -> TraverseType {
-        if self.extra().solid {
+        if self.data().solid {
             TraverseType::NonTraversable
         } else {
             TraverseType::Traversable(1.0)
@@ -61,10 +61,10 @@ impl SimpleNpcActor {
     fn player_coord<'a, E: EntityRef<'a>>(&mut self, level: &Level, entity: E) -> Option<Coord> {
 
         let knowledge = entity.simple_npc_knowledge().unwrap();
-        let grid = knowledge.grid(level.id()).unwrap();
+        let grid = knowledge.grid(level.id()).unwrap().inner();
 
         for coord in self.visibility_report.keys() {
-            if grid.get_unsafe(*coord).extra().player {
+            if grid.get_unsafe(*coord).data().player {
                 return Some(*coord);
             }
         }
@@ -88,7 +88,7 @@ impl SimpleNpcActor {
 
             let position = entity.position().unwrap();
             let knowledge = entity.simple_npc_knowledge().unwrap();
-            let grid = knowledge.grid(level.id()).unwrap();
+            let grid = knowledge.grid(level.id()).unwrap().inner();
             let query = Query::new_to_coord(position, target);
             let result = self.search_context.search(grid, &query);
 
