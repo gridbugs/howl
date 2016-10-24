@@ -1,33 +1,43 @@
 use game::{MetaAction, actions, Level, EntityId, ReserveEntityId, EntityStore, LevelEntityRef,
            EntityWrapper};
 use game::io::terminal_player_actor;
+use game::knowledge::SimpleNpcCell;
 
+use vision::{VisionSystem, DefaultVisibilityReport, Shadowcast, VisibilityReport};
 use behaviour;
-use geometry::Direction;
+use geometry::{Direction, Vector2};
+use grid::{Coord, StaticGrid, IterGrid};
+
+use debug;
 
 use std::collections::HashMap;
+use std::cell::{RefCell, RefMut};
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum Behaviour {
     BackAndForthForever,
     PlayerInput,
+    FollowPlayer,
+    Observer,
 }
 
 #[derive(Clone, Copy)]
 pub struct BehaviourInput<'a> {
-    pub id: EntityId,
+    entity_id: EntityId,
     ids: &'a ReserveEntityId,
     level: &'a Level,
+    turn: u64,
     entity: LevelEntityRef<'a>,
 }
 
 impl<'a> BehaviourInput<'a> {
-    pub fn new(id: EntityId, ids: &'a ReserveEntityId, level: &'a Level) -> Self {
+    pub fn new(entity_id: EntityId, ids: &'a ReserveEntityId, level: &'a Level, turn: u64) -> Self {
         BehaviourInput {
-            id: id,
+            entity_id: entity_id,
             ids: ids,
             level: level,
-            entity: level.get(id).unwrap(),
+            turn: turn,
+            entity: level.get(entity_id).unwrap(),
         }
     }
 }
@@ -54,6 +64,62 @@ pub struct BehaviourContext {
     behaviours: HashMap<Behaviour, behaviour::NodeIndex>,
 }
 
+fn follow_player_node_choose_target(grid: &StaticGrid<SimpleNpcCell>, targets: RefMut<Vec<Coord>>) {
+    debug_println!("choose target");
+}
+
+fn see_player_interrupt(handler: behaviour::NodeIndex) -> Check {
+    Check(Box::new(move |input: BehaviourInput| {
+        let knowledge = input.entity.simple_npc_knowledge().unwrap();
+        let knowledge_grid = knowledge.grid(input.level.id()).unwrap().inner();
+        for cell in knowledge_grid.iter() {
+            // if the player character is visible
+            if cell.data().player && cell.last_updated_turn() == input.turn {
+                debug_println!("can see player");
+                return Some(behaviour::CheckResolution::Interrupt(handler))
+            }
+        }
+
+        None
+    }))
+}
+
+fn follow_player_node(child: behaviour::NodeIndex) -> Check {
+    let targets: RefCell<Vec<Coord>> = RefCell::new(Vec::new());
+    Check(Box::new(move |input: BehaviourInput| {
+        let mut targets = targets.borrow_mut();
+        targets.clear();
+
+        let knowledge = input.entity.simple_npc_knowledge().unwrap();
+        let knowledge_grid = knowledge.grid(input.level.id()).unwrap().inner();
+
+        follow_player_node_choose_target(knowledge_grid, targets);
+
+        None
+    }))
+}
+
+fn observe_node() -> Check {
+    let _visibility_report = RefCell::new(DefaultVisibilityReport::new());
+    let vision_system = Shadowcast::new();
+    Check(Box::new(move |input: BehaviourInput| {
+
+        let grid = input.level.spatial_hash().grid();
+        let eye = input.entity.position().unwrap();
+        let info = input.entity.vision_distance().unwrap();
+
+        let mut visibility_report = _visibility_report.borrow_mut();
+        visibility_report.clear();
+        vision_system.detect_visible_area(eye, grid, info, visibility_report);
+
+        let visibility_report = _visibility_report.borrow();
+        let mut knowledge = input.entity.simple_npc_knowledge_mut().unwrap();
+        knowledge.update(input.level, grid, visibility_report.iter(), input.turn);
+
+        None
+    }))
+}
+
 impl BehaviourContext {
     pub fn new() -> Self {
         let mut graph = behaviour::Graph::new();
@@ -75,7 +141,7 @@ impl BehaviourContext {
             let input_source = input.entity.input_source().expect("no input source");
             let meta_action = terminal_player_actor::act_retrying(&input_source,
                                                                   input.level,
-                                                                  input.id,
+                                                                  input.entity_id,
                                                                   input.ids);
             behaviour::LeafResolution::Yield(meta_action)
         })));

@@ -143,7 +143,7 @@ impl<'a> GameContext<'a> {
 
         loop {
             let meta_action = {
-                let behaviour_input = BehaviourInput::new(entity_id, ids, level);
+                let behaviour_input = BehaviourInput::new(entity_id, ids, level, self.turn);
                 let mut state = level.get(entity_id).unwrap().behaviour_state().unwrap();
                 let maybe_action =
                     state.run_to_action(&self.behaviour_context.graph, behaviour_input);
