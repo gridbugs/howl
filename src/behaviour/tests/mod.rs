@@ -1,22 +1,28 @@
-use behaviour::*;
-
+use behaviour::behaviour::*;
 
 struct Leaf(Box<Fn(isize) -> LeafResolution<&'static str>>);
-struct Check(Box<Fn(isize) -> Option<CheckResolution>>);
+struct Switch {
+    call: Box<Fn(isize) -> SwitchResolution>,
+    return_to: Box<Fn(bool) -> Option<bool>>,
+}
 
-impl<'a> LeafFnBox<isize, &'static str> for Leaf {
+impl<'a> LeafFn<isize, &'static str> for Leaf {
     fn call(&self, knowledge: isize) -> LeafResolution<&'static str> {
         (self.0)(knowledge)
     }
 }
 
-impl<'a> CheckFnBox<isize> for Check {
-    fn call(&self, knowledge: isize) -> Option<CheckResolution> {
-        (self.0)(knowledge)
+impl<'a> SwitchFn<isize> for Switch {
+    fn call(&self, knowledge: isize) -> SwitchResolution {
+        (self.call)(knowledge)
+    }
+
+    fn return_to(&self, value: bool) -> Option<bool> {
+        (self.return_to)(value)
     }
 }
 
-type TestGraph = Graph<Leaf, Check>;
+type TestGraph = Graph<Leaf, Switch>;
 
 fn action(s: &'static str) -> Leaf {
     Leaf(Box::new(move |_| LeafResolution::Yield(s)))
@@ -35,113 +41,16 @@ fn create_a() -> (TestGraph, NodeIndex) {
     (graph, forever)
 }
 
-fn create_b() -> (TestGraph, NodeIndex, NodeIndex) {
-    let (mut graph, a_root) = create_a();
-
-    let one = graph.add_leaf(action("one"));
-    let two = graph.add_leaf(action("two"));
-    let three = graph.add_leaf(action("three"));
-
-    let root = graph.add_collection(CollectionNode::All(vec![one, two, three]));
-
-    (graph, a_root, root)
-}
-
-fn create_c() -> (TestGraph, NodeIndex) {
-    let (mut graph, a_root, b_root) = create_b();
-
-    let rti = graph.add_leaf(Leaf(Box::new(|_| LeafResolution::ReturnFromInterrupt)));
-
-    let handler = graph.add_collection(CollectionNode::All(vec![b_root, rti]));
-
-    let root = graph.add_check(a_root,
-                               Check(Box::new(move |k| {
-        if k == 0 {
-            None
-        } else {
-            Some(CheckResolution::Interrupt(handler))
-        }
-    })));
-
-    (graph, root)
-}
-
-fn create_d() -> (TestGraph, NodeIndex) {
-    let (mut graph, _, b_root) = create_b();
-
-    let root = graph.add_check(b_root,
-                               Check(Box::new(move |k| {
-        if k == 0 {
-            None
-        } else {
-            Some(CheckResolution::Restart)
-        }
-    })));
-
-    (graph, root)
-}
-
 #[test]
 fn forever() {
     let (graph, root) = create_a();
-
     let mut state = State::new();
     state.initialise(&graph, root).unwrap();
 
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "world");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
-    state.report_action_result(true).unwrap();
-}
-
-#[test]
-fn interrupt() {
-    let (graph, root) = create_c();
-
-    let mut state = State::new();
-    state.initialise(&graph, root).unwrap();
-
-    // test normal operation
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "world");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "hello");
-    state.report_action_result(true).unwrap();
-
-    // trigger interrupt
-    assert_eq!(state.run_to_action(&graph, 1).unwrap(), "one");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "two");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "three");
-    state.report_action_result(true).unwrap();
-
-    // should return from interrupt here
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "world");
-    state.report_action_result(true).unwrap();
-}
-
-#[test]
-fn restart() {
-    let (graph, root) = create_d();
-
-    let mut state = State::new();
-    state.initialise(&graph, root).unwrap();
-
-    // normal operation
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "one");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "two");
-    state.report_action_result(true).unwrap();
-
-    // trigger restart
-    assert_eq!(state.run_to_action(&graph, 1).unwrap(), "one");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "two");
-    state.report_action_result(true).unwrap();
-    assert_eq!(state.run_to_action(&graph, 0).unwrap(), "three");
-    state.report_action_result(true).unwrap();
+    assert_eq!(state.run(&graph, 0).unwrap(), "hello");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 0).unwrap(), "world");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 0).unwrap(), "hello");
+    state.declare_return(true).unwrap();
 }

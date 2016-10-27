@@ -1,17 +1,18 @@
 use std::result;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum Error {
     UnknownNodeIndex,
-    StateAlreadyInitialised,
-    NoStack,
-    EmptyStack,
-    ReturnToLeaf,
-    InvalidStack,
+    NodeStateMismatch,
+    UnexpectedNodeType,
+    StackEmpty,
+    StackNotEmpty,
+    StackInitialised,
+    RootStackReturned,
+    UnexpectedResolutionType,
     Yielding,
     NotYielding,
-    UnexpectedNodeType,
-    NodeStateMismatch,
 }
 
 pub type Result<T> = result::Result<T, Error>;
@@ -21,43 +22,57 @@ pub type NodeIndex = usize;
 pub enum LeafResolution<A> {
     Return(bool),
     Yield(A),
-    ReturnFromInterrupt,
 }
 
-pub enum CheckResolution {
-    Restart,
-    Interrupt(NodeIndex),
-    ReturnFromInterrupt,
+pub enum SwitchResolution {
+    Select(NodeIndex),
+    Reset(NodeIndex),
 }
 
-enum Resolution<A> {
+enum StepResolution<A> {
+    Yield {
+        action: A,
+        state: YieldState,
+    },
+    Call(NodeIndex),
+    Return(bool),
+}
+
+enum RunResolution<A> {
+    Yield {
+        action: A,
+        state: YieldState,
+    },
+    Return(bool),
+}
+
+enum Resolution<'a, A> {
     Return(bool),
     Call(NodeIndex),
     Yield(A),
-    PopStack,
+    StackSwitch(&'a mut Stack),
 }
 
-enum CheckResolutionInternal {
-    SeverStack(usize),
-    PushStack(NodeIndex),
-    PopStack,
+// Pointer to stack frame currently yielding.
+// Using a pointer prevents having to traverse the state when
+// handling returns from yielded actions.
+struct YieldState {
+    frame: *mut StackFrame,
 }
 
-pub trait LeafFnBox<K, A> {
+pub trait LeafFn<K, A> {
     fn call(&self, knowledge: K) -> LeafResolution<A>;
 }
 
-pub trait CheckFnBox<K> {
-    fn call(&self, knowledge: K) -> Option<CheckResolution>;
+pub trait SwitchFn<K> {
+    fn call(&self, knowledge: K) -> SwitchResolution;
+    fn return_to(&self, value: bool) -> Option<bool>;
 }
 
-enum Node<Leaf, Check> {
+enum Node<Leaf, Switch> {
     Leaf(Leaf),
-    Check {
-        condition: Check,
-        child: NodeIndex,
-    },
     Collection(CollectionNode),
+    Switch(Switch),
 }
 
 pub enum CollectionNode {
@@ -65,27 +80,23 @@ pub enum CollectionNode {
     All(Vec<NodeIndex>),
 }
 
-#[derive(Clone)]
 struct ArrayTraverse {
     index: usize,
     length: usize,
     value: bool,
 }
 
-#[derive(Clone)]
 enum CollectionState {
     Forever,
     All(ArrayTraverse),
 }
 
-pub struct Graph<Leaf, Check> {
-    nodes: Vec<Node<Leaf, Check>>,
+struct SwitchState {
+    stacks: HashMap<NodeIndex, Stack>,
 }
 
-#[derive(Clone)]
 enum StackFrame {
-    Leaf(NodeIndex),
-    Check {
+    Leaf {
         index: NodeIndex,
         value: Option<bool>,
     },
@@ -93,33 +104,83 @@ enum StackFrame {
         index: NodeIndex,
         state: CollectionState,
     },
+    Switch {
+        index: NodeIndex,
+        state: SwitchState,
+        value: Option<bool>,
+    },
 }
 
-type Stack = Vec<StackFrame>;
+struct Stack {
+    frames: Vec<StackFrame>,
+    initialised: bool,
+}
 
-#[derive(Clone)]
+pub struct Graph<Leaf, Switch> {
+    nodes: Vec<Node<Leaf, Switch>>,
+}
+
 pub struct State {
-    stacks: Vec<Stack>,
-    yielding: bool,
+    root_stack: Stack,
+    yield_state: Option<YieldState>,
 }
 
-impl<A> LeafResolution<A> {
-    fn to_resolution(self) -> Resolution<A> {
+impl YieldState {
+    fn new(frame: &mut StackFrame) -> Self {
+        YieldState { frame: frame }
+    }
+}
+
+impl<A> RunResolution<A> {
+    fn to_step_resolution(self) -> StepResolution<A> {
         match self {
-            LeafResolution::Return(value) => Resolution::Return(value),
-            LeafResolution::Yield(action) => Resolution::Yield(action),
-            LeafResolution::ReturnFromInterrupt => Resolution::PopStack,
+            RunResolution::Return(value) => StepResolution::Return(value),
+            RunResolution::Yield { action, state } => {
+                StepResolution::Yield {
+                    action: action,
+                    state: state,
+                }
+            }
         }
     }
 }
 
-impl CheckResolution {
-    fn to_internal(self, frame_index: usize) -> CheckResolutionInternal {
-        match self {
-            CheckResolution::Restart => CheckResolutionInternal::SeverStack(frame_index),
-            CheckResolution::Interrupt(index) => CheckResolutionInternal::PushStack(index),
-            CheckResolution::ReturnFromInterrupt => CheckResolutionInternal::PopStack,
+impl Stack {
+    fn new() -> Self {
+        Stack {
+            frames: Vec::new(),
+            initialised: false,
         }
+    }
+
+    fn push(&mut self, frame: StackFrame) {
+        self.frames.push(frame);
+    }
+
+    fn pop(&mut self) -> Option<StackFrame> {
+        self.frames.pop()
+    }
+
+    fn last_mut(&mut self) -> Option<&mut StackFrame> {
+        self.frames.last_mut()
+    }
+
+    fn initialise(&mut self, frame: StackFrame) {
+        self.push(frame);
+        self.initialised = true;
+    }
+
+    fn is_initialised(&self) -> bool {
+        self.initialised
+    }
+
+    fn reset(&mut self) {
+        self.frames.clear();
+        self.initialised = false;
+    }
+
+    fn is_empty(&self) -> bool {
+        self.frames.is_empty()
     }
 }
 
@@ -162,6 +223,12 @@ impl CollectionNode {
     }
 }
 
+impl SwitchState {
+    fn new() -> Self {
+        SwitchState { stacks: HashMap::new() }
+    }
+}
+
 impl CollectionState {
     fn handle_return(&mut self, value: bool) {
         match self {
@@ -178,15 +245,26 @@ impl CollectionState {
     }
 }
 
+impl<A> LeafResolution<A> {
+    fn to_resolution<'a>(self) -> Resolution<'a, A> {
+        match self {
+            LeafResolution::Return(value) => Resolution::Return(value),
+            LeafResolution::Yield(action) => Resolution::Yield(action),
+        }
+    }
+}
+
 impl StackFrame {
     fn handle_return(&mut self, return_value: bool) -> Result<()> {
         match self {
-            &mut StackFrame::Leaf(_) => return Err(Error::ReturnToLeaf),
-            &mut StackFrame::Check { ref mut value, .. } => {
+            &mut StackFrame::Leaf { ref mut value, .. } => {
                 *value = Some(return_value);
             }
             &mut StackFrame::Collection { ref mut state, .. } => {
                 state.handle_return(return_value);
+            }
+            &mut StackFrame::Switch { ref mut value, .. } => {
+                *value = Some(return_value);
             }
         }
 
@@ -194,26 +272,10 @@ impl StackFrame {
     }
 }
 
-impl<Leaf, Check> Node<Leaf, Check> {
+impl<Leaf, Switch> Node<Leaf, Switch> {
     fn leaf_fn(&self) -> Result<&Leaf> {
         if let &Node::Leaf(ref f) = self {
             Ok(f)
-        } else {
-            Err(Error::UnexpectedNodeType)
-        }
-    }
-
-    fn check_condition(&self) -> Result<&Check> {
-        if let &Node::Check { ref condition, .. } = self {
-            Ok(condition)
-        } else {
-            Err(Error::UnexpectedNodeType)
-        }
-    }
-
-    fn check_child(&self) -> Result<NodeIndex> {
-        if let &Node::Check { child, .. } = self {
-            Ok(child)
         } else {
             Err(Error::UnexpectedNodeType)
         }
@@ -226,14 +288,24 @@ impl<Leaf, Check> Node<Leaf, Check> {
             Err(Error::UnexpectedNodeType)
         }
     }
+
+    fn switch_fn(&self) -> Result<&Switch> {
+        if let &Node::Switch(ref f) = self {
+            Ok(f)
+        } else {
+            Err(Error::UnexpectedNodeType)
+        }
+    }
 }
 
-impl<Leaf, Check> Graph<Leaf, Check> {
+
+
+impl<Leaf, Switch> Graph<Leaf, Switch> {
     pub fn new() -> Self {
         Graph { nodes: Vec::new() }
     }
 
-    fn add_node(&mut self, node: Node<Leaf, Check>) -> NodeIndex {
+    fn add_node(&mut self, node: Node<Leaf, Switch>) -> NodeIndex {
         let index = self.nodes.len();
         self.nodes.push(node);
         return index;
@@ -243,18 +315,15 @@ impl<Leaf, Check> Graph<Leaf, Check> {
         self.add_node(Node::Leaf(leaf))
     }
 
-    pub fn add_check(&mut self, child: NodeIndex, condition: Check) -> NodeIndex {
-        self.add_node(Node::Check {
-            condition: condition,
-            child: child,
-        })
-    }
-
     pub fn add_collection(&mut self, collection: CollectionNode) -> NodeIndex {
         self.add_node(Node::Collection(collection))
     }
 
-    fn node(&self, index: NodeIndex) -> Result<&Node<Leaf, Check>> {
+    pub fn add_switch(&mut self, switch: Switch) -> NodeIndex {
+        self.add_node(Node::Switch(switch))
+    }
+
+    fn node(&self, index: NodeIndex) -> Result<&Node<Leaf, Switch>> {
         if index < self.nodes.len() {
             Ok(&self.nodes[index])
         } else {
@@ -264,9 +333,8 @@ impl<Leaf, Check> Graph<Leaf, Check> {
 
     fn create_stack_frame(&self, index: NodeIndex) -> Result<StackFrame> {
         match try!(self.node(index)) {
-            &Node::Leaf(_) => Ok(StackFrame::Leaf(index)),
-            &Node::Check { .. } => {
-                Ok(StackFrame::Check {
+            &Node::Leaf(_) => {
+                Ok(StackFrame::Leaf {
                     index: index,
                     value: None,
                 })
@@ -277,25 +345,69 @@ impl<Leaf, Check> Graph<Leaf, Check> {
                     state: c.create_state(),
                 })
             }
+            &Node::Switch(_) => {
+                Ok(StackFrame::Switch {
+                    index: index,
+                    state: SwitchState::new(),
+                    value: None,
+                })
+            }
         }
     }
 
-    fn resolve_frame<K, A>(&self, frame: &mut StackFrame, knowledge: K) -> Result<Resolution<A>>
-        where Leaf: LeafFnBox<K, A>
+    fn resolve_switch<'a>(&self,
+                          state: &'a mut SwitchState,
+                          resolution: SwitchResolution)
+                          -> Result<&'a mut Stack> {
+        match resolution {
+            SwitchResolution::Select(index) => {
+                let mut stack = state.stacks.entry(index).or_insert_with(Stack::new);
+
+                if !stack.is_initialised() {
+                    stack.initialise(try!(self.create_stack_frame(index)));
+                }
+
+                Ok(stack)
+            }
+            SwitchResolution::Reset(index) => {
+                let mut stack = state.stacks.entry(index).or_insert_with(Stack::new);
+
+                stack.reset();
+                stack.initialise(try!(self.create_stack_frame(index)));
+
+                Ok(stack)
+            }
+        }
+    }
+
+    fn apply_switch<'a, K>(&self,
+                           index: NodeIndex,
+                           state: &'a mut SwitchState,
+                           knowledge: K)
+                           -> Result<&'a mut Stack>
+        where Switch: SwitchFn<K>
+    {
+        let node = try!(self.node(index));
+        let f = try!(node.switch_fn());
+        let switch_resolution = f.call(knowledge);
+        self.resolve_switch(state, switch_resolution)
+    }
+
+    fn resolve_frame<'a, K, A>(&self,
+                               frame: &'a mut StackFrame,
+                               knowledge: K)
+                               -> Result<Resolution<'a, A>>
+        where Leaf: LeafFn<K, A>,
+              Switch: SwitchFn<K>
     {
         match frame {
-            &mut StackFrame::Leaf(index) => {
-                let node = try!(self.node(index));
-                let f = try!(node.leaf_fn());
-                Ok(f.call(knowledge).to_resolution())
-            }
-            &mut StackFrame::Check { index, value } => {
-                let node = try!(self.node(index));
-                let child = try!(node.check_child());
-                if let Some(return_value) = value {
-                    Ok(Resolution::Return(return_value))
+            &mut StackFrame::Leaf { index, value } => {
+                if let Some(value) = value {
+                    Ok(Resolution::Return(value))
                 } else {
-                    Ok(Resolution::Call(child))
+                    let node = try!(self.node(index));
+                    let f = try!(node.leaf_fn());
+                    Ok(f.call(knowledge).to_resolution())
                 }
             }
             &mut StackFrame::Collection { index, ref mut state } => {
@@ -307,6 +419,14 @@ impl<Leaf, Check> Graph<Leaf, Check> {
                     Ok(Resolution::Return(state.return_value()))
                 }
             }
+            &mut StackFrame::Switch { index, ref mut state, value } => {
+                if let Some(value) = value {
+                    Ok(Resolution::Return(value))
+                } else {
+                    let stack = try!(self.apply_switch(index, state, knowledge));
+                    Ok(Resolution::StackSwitch(stack))
+                }
+            }
         }
     }
 }
@@ -314,191 +434,140 @@ impl<Leaf, Check> Graph<Leaf, Check> {
 impl State {
     pub fn new() -> Self {
         State {
-            stacks: Vec::new(),
-            yielding: false,
+            root_stack: Stack::new(),
+            yield_state: None,
         }
     }
 
-    pub fn is_clear(&self) -> bool {
-        self.stacks.is_empty()
+    fn is_yielding(&self) -> bool {
+        self.yield_state.is_some()
     }
 
-    pub fn clear(&mut self) {
-        self.stacks.clear();
-        self.yielding = false;
-    }
+    pub fn initialise<Leaf, Switch>(&mut self,
+                                    graph: &Graph<Leaf, Switch>,
+                                    index: NodeIndex)
+                                    -> Result<()> {
 
-    pub fn is_yielding(&self) -> bool {
-        self.yielding
-    }
-
-    pub fn initialise<Leaf, Check>(&mut self,
-                                   graph: &Graph<Leaf, Check>,
-                                   index: NodeIndex)
-                                   -> Result<()> {
-        if !self.is_clear() {
-            return Err(Error::StateAlreadyInitialised);
+        if !self.root_stack.is_empty() {
+            return Err(Error::StackNotEmpty);
         }
 
-        self.push_stack(graph, index)
-    }
+        if self.root_stack.is_initialised() {
+            return Err(Error::StackInitialised);
+        }
 
-    fn push_stack<Leaf, Check>(&mut self,
-                               graph: &Graph<Leaf, Check>,
-                               index: NodeIndex)
-                               -> Result<()> {
-        self.stacks.push(vec![try!(graph.create_stack_frame(index))]);
+        let frame = try!(graph.create_stack_frame(index));
+        self.root_stack.push(frame);
 
         Ok(())
     }
 
-    fn pop_stack(&mut self) -> Result<()> {
-        try!(self.stacks.pop().ok_or(Error::InvalidStack));
-        Ok(())
-    }
-
-    fn current_stack_mut(&mut self) -> Result<&mut Stack> {
-        self.stacks.last_mut().ok_or(Error::NoStack)
-    }
-
-    fn current_stack(&self) -> Result<&Stack> {
-        self.stacks.last().ok_or(Error::NoStack)
-    }
-
-    fn current_frame_mut(&mut self) -> Result<&mut StackFrame> {
-        let mut stack = try!(self.current_stack_mut());
-        stack.last_mut().ok_or(Error::EmptyStack)
-    }
-
-    fn apply_return(&mut self, value: bool) -> Result<()> {
-        {
-            let mut stack = try!(self.current_stack_mut());
-
-            if stack.pop().is_none() {
-                return Err(Error::EmptyStack);
-            }
-
-            if let Some(frame) = stack.last_mut() {
-                return frame.handle_return(value);
-            }
-        }
-
-        // if we're here, it means the top-most frame of the
-        // current stack just returned
-
-        self.pop_stack()
-    }
-
-    fn apply_resolution<K, A, Leaf, Check>(&mut self,
-                                           graph: &Graph<Leaf, Check>,
-                                           resolution: Resolution<A>)
-                                           -> Result<Option<A>>
-        where Leaf: LeafFnBox<K, A>
-    {
-
-        match resolution {
-            Resolution::Return(value) => {
-                try!(self.apply_return(value));
-            }
-            Resolution::Call(index) => {
-                let frame = try!(graph.create_stack_frame(index));
-                let mut stack = try!(self.current_stack_mut());
-                stack.push(frame);
-            }
-            Resolution::Yield(action) => {
-                return Ok(Some(action));
-            }
-            Resolution::PopStack => {
-                try!(self.pop_stack());
-            }
-        }
-
-        Ok(None)
-    }
-
-    fn apply_check_resolution<Leaf, Check>(&mut self,
-                                           graph: &Graph<Leaf, Check>,
-                                           resolution: CheckResolutionInternal)
-                                           -> Result<()> {
-
-        match resolution {
-            CheckResolutionInternal::SeverStack(frame_index) => {
-                let mut stack = try!(self.current_stack_mut());
-                stack.truncate(frame_index + 1);
-            }
-            CheckResolutionInternal::PushStack(index) => {
-                try!(self.push_stack(graph, index));
-            }
-            CheckResolutionInternal::PopStack => {
-                try!(self.pop_stack());
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn run_to_action<K, A, Leaf, Check>(&mut self,
-                                            graph: &Graph<Leaf, Check>,
-                                            knowledge: K)
-                                            -> Result<A>
+    pub fn run<K, A, Leaf, Switch>(&mut self,
+                                   graph: &Graph<Leaf, Switch>,
+                                   knowledge: K)
+                                   -> Result<A>
         where K: Copy,
-              Leaf: LeafFnBox<K, A>,
-              Check: CheckFnBox<K>
+              Leaf: LeafFn<K, A>,
+              Switch: SwitchFn<K>
     {
 
         if self.is_yielding() {
             return Err(Error::Yielding);
         }
 
-        if let Some(resolution) = try!(self.check(graph, knowledge)) {
-            try!(self.apply_check_resolution(graph, resolution));
-        }
-
-        loop {
-            let resolution = {
-                let mut frame = try!(self.current_frame_mut());
-                try!(graph.resolve_frame(frame, knowledge))
-            };
-
-            if let Some(action) = try!(self.apply_resolution(graph, resolution)) {
-                self.yielding = true;
-                return Ok(action);
-            }
+        let resolution = try!(Self::run_on_stack(&mut self.root_stack, graph, knowledge));
+        if let RunResolution::Yield { action, state } = resolution {
+            self.yield_state = Some(state);
+            Ok(action)
+        } else {
+            Err(Error::RootStackReturned)
         }
     }
 
-    pub fn report_action_result(&mut self, value: bool) -> Result<()> {
-        if !self.is_yielding() {
+    pub fn declare_return(&mut self, value: bool) -> Result<()> {
+        if let Some(ref mut yield_state) = self.yield_state {
+
+            unsafe {
+                try!((*yield_state.frame).handle_return(value));
+            }
+
+        } else {
             return Err(Error::NotYielding);
         }
 
-        self.yielding = false;
-
-        self.apply_return(value)
+        self.yield_state = None;
+        Ok(())
     }
 
-    fn check<K, Leaf, Check>(&mut self,
-                             graph: &Graph<Leaf, Check>,
-                             knowledge: K)
-                             -> Result<Option<CheckResolutionInternal>>
+    fn run_on_stack<K, A, Leaf, Switch>(stack: &mut Stack,
+                                        graph: &Graph<Leaf, Switch>,
+                                        knowledge: K)
+                                        -> Result<RunResolution<A>>
         where K: Copy,
-              Check: CheckFnBox<K>
+              Leaf: LeafFn<K, A>,
+              Switch: SwitchFn<K>
     {
+        loop {
+            match try!(Self::step_on_stack(stack, graph, knowledge)) {
+                StepResolution::Yield { action, state } => {
+                    return Ok(RunResolution::Yield {
+                        action: action,
+                        state: state,
+                    });
+                }
+                StepResolution::Call(index) => {
+                    let frame = try!(graph.create_stack_frame(index));
+                    stack.push(frame);
+                }
+                StepResolution::Return(value) => {
+                    if stack.pop().is_none() {
+                        return Err(Error::StackEmpty);
+                    }
 
-        let mut i = 0; // track current stack index
+                    if let Some(frame) = stack.last_mut() {
+                        try!(frame.handle_return(value));
+                        continue;
+                    }
 
-        for frame in try!(self.current_stack()) {
-            if let &StackFrame::Check { index, .. } = frame {
-                let node = try!(graph.node(index));
-                let condition = try!(node.check_condition());
-                if let Some(resolution) = condition.call(knowledge) {
-                    return Ok(Some(resolution.to_internal(i)));
+                    // stack is empty
+                    // reset stack so it can be re-initialised by parent
+                    stack.reset();
+
+                    // return control to parent
+                    return Ok(RunResolution::Return(value));
                 }
             }
-
-            i += 1;
         }
+    }
 
-        Ok(None)
+    fn step_on_stack<K, A, Leaf, Switch>(stack: &mut Stack,
+                                         graph: &Graph<Leaf, Switch>,
+                                         knowledge: K)
+                                         -> Result<StepResolution<A>>
+        where K: Copy,
+              Leaf: LeafFn<K, A>,
+              Switch: SwitchFn<K>
+    {
+        if let Some(frame) = stack.last_mut() {
+
+            let yield_state = YieldState::new(frame);
+
+            match try!(graph.resolve_frame(frame, knowledge)) {
+                Resolution::StackSwitch(child_stack) => {
+                    let resolution = try!(Self::run_on_stack(child_stack, graph, knowledge));
+                    Ok(resolution.to_step_resolution())
+                }
+                Resolution::Yield(action) => {
+                    Ok(StepResolution::Yield {
+                        action: action,
+                        state: yield_state,
+                    })
+                }
+                Resolution::Call(index) => Ok(StepResolution::Call(index)),
+                Resolution::Return(value) => Ok(StepResolution::Return(value)),
+            }
+        } else {
+            Err(Error::StackEmpty)
+        }
     }
 }
