@@ -3,7 +3,7 @@ use behaviour::behaviour::*;
 struct Leaf(Box<Fn(isize) -> LeafResolution<&'static str>>);
 struct Switch {
     call: Box<Fn(isize) -> SwitchResolution>,
-    return_to: Box<Fn(bool) -> Option<bool>>,
+    return_to: Box<Fn(bool) -> SwitchReturn>,
 }
 
 impl<'a> LeafFn<isize, &'static str> for Leaf {
@@ -17,7 +17,7 @@ impl<'a> SwitchFn<isize> for Switch {
         (self.call)(knowledge)
     }
 
-    fn return_to(&self, value: bool) -> Option<bool> {
+    fn return_to(&self, value: bool) -> SwitchReturn {
         (self.return_to)(value)
     }
 }
@@ -28,22 +28,29 @@ fn action(s: &'static str) -> Leaf {
     Leaf(Box::new(move |_| LeafResolution::Yield(s)))
 }
 
-fn create_a() -> (TestGraph, NodeIndex) {
-    let mut graph = Graph::new();
-
+fn hello_world(graph: &mut TestGraph) -> NodeIndex {
     let hello = graph.add_leaf(action("hello"));
     let world = graph.add_leaf(action("world"));
 
     let all = graph.add_collection(CollectionNode::All(vec![hello, world]));
 
-    let forever = graph.add_collection(CollectionNode::Forever(all));
+    graph.add_collection(CollectionNode::Forever(all))
+}
 
-    (graph, forever)
+fn one_two_three(graph: &mut TestGraph) -> NodeIndex {
+    let one = graph.add_leaf(action("one"));
+    let two = graph.add_leaf(action("two"));
+    let three = graph.add_leaf(action("three"));
+
+    let all = graph.add_collection(CollectionNode::All(vec![one, two, three]));
+
+    graph.add_collection(CollectionNode::Forever(all))
 }
 
 #[test]
 fn forever() {
-    let (graph, root) = create_a();
+    let mut graph = Graph::new();
+    let root = hello_world(&mut graph);
     let mut state = State::new();
     state.initialise(&graph, root).unwrap();
 
@@ -52,5 +59,42 @@ fn forever() {
     assert_eq!(state.run(&graph, 0).unwrap(), "world");
     state.declare_return(true).unwrap();
     assert_eq!(state.run(&graph, 0).unwrap(), "hello");
+    state.declare_return(true).unwrap();
+}
+
+#[test]
+fn switch_select() {
+    let mut graph = Graph::new();
+    let hello_world = hello_world(&mut graph);
+    let one_two_three = one_two_three(&mut graph);
+
+    let switch = Switch {
+        call: Box::new(move |k| {
+            if k % 2 == 0 {
+                SwitchResolution::Select(hello_world)
+            } else {
+                SwitchResolution::Select(one_two_three)
+            }
+        }),
+        return_to: Box::new(|x| SwitchReturn::Return(x)),
+    };
+    let switch = graph.add_switch(switch);
+
+    let mut state = State::new();
+    state.initialise(&graph, switch).unwrap();
+
+    assert_eq!(state.run(&graph, 0).unwrap(), "hello");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 0).unwrap(), "world");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 1).unwrap(), "one");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 1).unwrap(), "two");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 0).unwrap(), "hello");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 0).unwrap(), "world");
+    state.declare_return(true).unwrap();
+    assert_eq!(state.run(&graph, 1).unwrap(), "one");
     state.declare_return(true).unwrap();
 }
