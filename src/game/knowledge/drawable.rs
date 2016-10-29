@@ -3,7 +3,6 @@ use game::{EntityWrapper, EntityRef};
 
 use best::BestMap;
 use tile::ComplexTile;
-use grid::StaticGrid;
 use clear::Clear;
 
 pub type DrawableCell = KnowledgeCell<DrawableExtra>;

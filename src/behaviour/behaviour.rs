@@ -67,17 +67,20 @@ pub enum CollectionNode {
     All(Vec<NodeIndex>),
 }
 
+#[derive(Clone)]
 struct ArrayTraverse {
     index: usize,
     length: usize,
     value: bool,
 }
 
+#[derive(Clone)]
 enum CollectionState {
     Forever,
     All(ArrayTraverse),
 }
 
+#[derive(Clone)]
 enum StackFrame {
     Leaf {
         index: NodeIndex,
@@ -103,6 +106,7 @@ pub struct Graph<Leaf, Switch> {
     nodes: Vec<Node<Leaf, Switch>>,
 }
 
+#[derive(Clone)]
 pub struct State {
     stack: Vec<StackFrame>,
     yielding: bool,
@@ -300,10 +304,7 @@ impl<Leaf, Switch> Graph<Leaf, Switch> {
         }
     }
 
-    fn resolve_frame<K, A>(&self,
-                               frame: &mut StackFrame,
-                               knowledge: K)
-                               -> Result<Resolution<A>>
+    fn resolve_frame<K, A>(&self, frame: &mut StackFrame, knowledge: K) -> Result<Resolution<A>>
         where Leaf: LeafFn<K, A>,
               Switch: SwitchFn<K>
     {
@@ -374,9 +375,9 @@ impl State {
     }
 
     fn apply_resolution<K, A, Leaf, Switch>(stack: &mut Vec<StackFrame>,
-                                   graph: &Graph<Leaf, Switch>,
-                                   resolution: Resolution<A>)
-                                   -> Result<Option<A>>
+                                            graph: &Graph<Leaf, Switch>,
+                                            resolution: Resolution<A>)
+                                            -> Result<Option<A>>
         where Leaf: LeafFn<K, A>
     {
         match resolution {
@@ -399,9 +400,9 @@ impl State {
     }
 
     fn resolve_switches<K, Leaf, Switch>(stack: &mut Vec<StackFrame>,
-                                   graph: &Graph<Leaf, Switch>,
-                                   knowledge: K)
-                                   -> Result<Option<StackTruncate>>
+                                         graph: &Graph<Leaf, Switch>,
+                                         knowledge: K)
+                                         -> Result<Option<StackTruncate>>
         where K: Copy,
               Switch: SwitchFn<K>
     {

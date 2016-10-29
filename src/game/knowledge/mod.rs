@@ -1,5 +1,6 @@
 mod static_level_grid;
-pub use self::static_level_grid::{KnowledgeCell, KnowledgeGrid, LevelGridKnowledge, KnowledgeCellData, KnowledgeGridIter};
+pub use self::static_level_grid::{KnowledgeCell, KnowledgeGrid, LevelGridKnowledge,
+                                  KnowledgeCellData, KnowledgeGridIter};
 
 mod drawable;
 pub use self::drawable::{DrawableKnowledge, DrawableCell, DrawableExtra};

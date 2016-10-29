@@ -1,5 +1,5 @@
 use game::{Level, LevelId, EntityId, EntityWrapper, EntityStore};
-use game::knowledge::{KnowledgeCell, DrawableCell, DrawableExtra};
+use game::knowledge::{DrawableCell, DrawableExtra};
 
 use grid::{Grid, IterGrid, Coord};
 use terminal::{Window, style};

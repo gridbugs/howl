@@ -450,11 +450,7 @@ impl<G, R> VisionSystem<G, R, usize> for Shadowcast
           G::Item: Opacity,
           R: VisibilityReport<MetaData = f64>
 {
-    fn detect_visible_area(&self,
-                           eye: Vector2<isize>,
-                           grid: &G,
-                           distance: usize,
-                           mut report: R) {
+    fn detect_visible_area(&self, eye: Vector2<isize>, grid: &G, distance: usize, mut report: R) {
         report.see(eye, 1.0);
 
         for octant in &self.octants {

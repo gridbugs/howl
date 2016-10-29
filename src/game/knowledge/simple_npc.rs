@@ -1,7 +1,6 @@
 use game::knowledge::{KnowledgeCell, LevelGridKnowledge, KnowledgeCellData};
 use game::{ComponentType, IterEntityRef};
 
-use grid::StaticGrid;
 use clear::Clear;
 
 pub type SimpleNpcCell = KnowledgeCell<SimpleNpcExtra>;

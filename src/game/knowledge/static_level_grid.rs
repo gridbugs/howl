@@ -31,8 +31,12 @@ impl<'a, Data> Iterator for KnowledgeGridIter<'a, Data> {
 }
 
 impl<Data> KnowledgeCell<Data> {
-    pub fn data(&self) -> &Data { &self.data }
-    pub fn last_updated_turn(&self) -> u64 { self.last_updated_turn }
+    pub fn data(&self) -> &Data {
+        &self.data
+    }
+    pub fn last_updated_turn(&self) -> u64 {
+        self.last_updated_turn
+    }
 }
 
 impl<Data: Default> Default for KnowledgeCell<Data> {
@@ -118,5 +122,7 @@ impl<Data: KnowledgeCellData + Clear + Default> LevelGridKnowledge<Data> {
 }
 
 impl<Data> Clone for LevelGridKnowledge<Data> {
-    fn clone(&self) -> Self { panic!() }
+    fn clone(&self) -> Self {
+        panic!()
+    }
 }

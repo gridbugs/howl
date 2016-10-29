@@ -145,8 +145,7 @@ impl<'a> GameContext<'a> {
             let meta_action = {
                 let behaviour_input = BehaviourInput::new(entity_id, ids, level, self.turn);
                 let mut state = level.get(entity_id).unwrap().behaviour_state().unwrap();
-                let maybe_action =
-                    state.run_to_action(&self.behaviour_context.graph, behaviour_input);
+                let maybe_action = state.run(&self.behaviour_context.graph, behaviour_input);
                 maybe_action.expect("behaviour graph error")
             };
 
@@ -165,7 +164,7 @@ impl<'a> GameContext<'a> {
                                 .unwrap()
                                 .behaviour_state()
                                 .unwrap()
-                                .report_action_result(true)
+                                .declare_return(true)
                                 .expect("behaviour graph error");
 
                             self.turn = commit_time.turn;
@@ -178,7 +177,7 @@ impl<'a> GameContext<'a> {
                                 .unwrap()
                                 .behaviour_state()
                                 .unwrap()
-                                .report_action_result(false)
+                                .declare_return(false)
                                 .expect("behaviour graph error");
 
                             if level.get(entity_id).unwrap().is_pc() {

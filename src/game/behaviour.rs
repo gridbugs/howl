@@ -1,17 +1,13 @@
 use game::{MetaAction, actions, Level, EntityId, ReserveEntityId, EntityStore, LevelEntityRef,
            EntityWrapper};
 use game::io::terminal_player_actor;
-use game::knowledge::SimpleNpcCell;
 
-use vision::{VisionSystem, DefaultVisibilityReport, Shadowcast, VisibilityReport};
-use behaviour;
-use geometry::{Direction, Vector2};
-use grid::{Coord, StaticGrid, IterGrid};
-
-use debug;
+use vision::{VisionSystem, DefaultVisibilityReport, Shadowcast};
+use behaviour::*;
+use geometry::Direction;
 
 use std::collections::HashMap;
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum Behaviour {
@@ -42,67 +38,54 @@ impl<'a> BehaviourInput<'a> {
     }
 }
 
-pub struct Leaf(Box<for<'a> Fn(BehaviourInput<'a>) -> behaviour::LeafResolution<MetaAction>>);
-pub struct Check(Box<for<'a> Fn(BehaviourInput<'a>) -> Option<behaviour::CheckResolution>>);
+pub struct Leaf(Box<Fn(BehaviourInput) -> LeafResolution<MetaAction>>);
+pub struct Switch {
+    call: Box<Fn(BehaviourInput) -> SwitchResolution>,
+    return_to: Box<Fn(bool) -> SwitchReturn>,
+}
 
-impl<'a> behaviour::LeafFnBox<BehaviourInput<'a>, MetaAction> for Leaf {
-    fn call(&self, knowledge: BehaviourInput<'a>) -> behaviour::LeafResolution<MetaAction> {
+impl Leaf {
+    fn new<F: 'static + Fn(BehaviourInput) -> LeafResolution<MetaAction>>(f: F) -> Self {
+        Leaf(Box::new(f))
+    }
+}
+
+impl Switch {
+    fn new_return<F: 'static + Fn(BehaviourInput) -> SwitchResolution>(f: F) -> Self {
+        Switch {
+            call: Box::new(f),
+            return_to: Box::new(|value| SwitchReturn::Return(value)),
+        }
+    }
+}
+
+impl<'a> LeafFn<BehaviourInput<'a>, MetaAction> for Leaf {
+    fn call(&self, knowledge: BehaviourInput<'a>) -> LeafResolution<MetaAction> {
         (self.0)(knowledge)
     }
 }
 
-impl<'a> behaviour::CheckFnBox<BehaviourInput<'a>> for Check {
-    fn call(&self, knowledge: BehaviourInput<'a>) -> Option<behaviour::CheckResolution> {
-        (self.0)(knowledge)
+impl<'a> SwitchFn<BehaviourInput<'a>> for Switch {
+    fn call(&self, knowledge: BehaviourInput<'a>) -> SwitchResolution {
+        (self.call)(knowledge)
+    }
+
+    fn return_to(&self, value: bool) -> SwitchReturn {
+        (self.return_to)(value)
     }
 }
 
-pub type BehaviourGraph = behaviour::Graph<Leaf, Check>;
+pub type BehaviourGraph = Graph<Leaf, Switch>;
 
 pub struct BehaviourContext {
     pub graph: BehaviourGraph,
-    behaviours: HashMap<Behaviour, behaviour::NodeIndex>,
+    behaviours: HashMap<Behaviour, NodeIndex>,
 }
 
-fn follow_player_node_choose_target(grid: &StaticGrid<SimpleNpcCell>, targets: RefMut<Vec<Coord>>) {
-    debug_println!("choose target");
-}
-
-fn see_player_interrupt(handler: behaviour::NodeIndex) -> Check {
-    Check(Box::new(move |input: BehaviourInput| {
-        let knowledge = input.entity.simple_npc_knowledge().unwrap();
-        let knowledge_grid = knowledge.grid(input.level.id()).unwrap().inner();
-        for cell in knowledge_grid.iter() {
-            // if the player character is visible
-            if cell.data().player && cell.last_updated_turn() == input.turn {
-                debug_println!("can see player");
-                return Some(behaviour::CheckResolution::Interrupt(handler))
-            }
-        }
-
-        None
-    }))
-}
-
-fn follow_player_node(child: behaviour::NodeIndex) -> Check {
-    let targets: RefCell<Vec<Coord>> = RefCell::new(Vec::new());
-    Check(Box::new(move |input: BehaviourInput| {
-        let mut targets = targets.borrow_mut();
-        targets.clear();
-
-        let knowledge = input.entity.simple_npc_knowledge().unwrap();
-        let knowledge_grid = knowledge.grid(input.level.id()).unwrap().inner();
-
-        follow_player_node_choose_target(knowledge_grid, targets);
-
-        None
-    }))
-}
-
-fn observe_node() -> Check {
+fn observe_node(child: NodeIndex) -> Switch {
     let _visibility_report = RefCell::new(DefaultVisibilityReport::new());
     let vision_system = Shadowcast::new();
-    Check(Box::new(move |input: BehaviourInput| {
+    Switch::new_return(move |input: BehaviourInput| {
 
         let grid = input.level.spatial_hash().grid();
         let eye = input.entity.position().unwrap();
@@ -116,38 +99,38 @@ fn observe_node() -> Check {
         let mut knowledge = input.entity.simple_npc_knowledge_mut().unwrap();
         knowledge.update(input.level, grid, visibility_report.iter(), input.turn);
 
-        None
-    }))
+        SwitchResolution::Select(child)
+    })
 }
 
 impl BehaviourContext {
     pub fn new() -> Self {
-        let mut graph = behaviour::Graph::new();
+        let mut graph = Graph::new();
         let mut behaviours = HashMap::new();
 
-        let east = graph.add_leaf(Leaf(Box::new(|input: BehaviourInput| {
+        let east = graph.add_leaf(Leaf::new(|input: BehaviourInput| {
             let walk = MetaAction::Update(actions::walk(input.entity, Direction::East));
-            behaviour::LeafResolution::Yield(walk)
-        })));
-        let west = graph.add_leaf(Leaf(Box::new(|input: BehaviourInput| {
+            LeafResolution::Yield(walk)
+        }));
+        let west = graph.add_leaf(Leaf::new(|input: BehaviourInput| {
             let walk = MetaAction::Update(actions::walk(input.entity, Direction::West));
-            behaviour::LeafResolution::Yield(walk)
-        })));
-        let back_and_forth = graph.add_collection(behaviour::CollectionNode::All(vec![east, west]));
-        let back_and_forth_forever =
-            graph.add_collection(behaviour::CollectionNode::Forever(back_and_forth));
+            LeafResolution::Yield(walk)
+        }));
+        let back_and_forth = graph.add_collection(CollectionNode::All(vec![east, west]));
+        let back_and_forth_forever = graph.add_collection(CollectionNode::Forever(back_and_forth));
 
-        let player_input_once = graph.add_leaf(Leaf(Box::new(|input: BehaviourInput| {
+        let back_and_forth_forever = graph.add_switch(observe_node(back_and_forth_forever));
+
+        let player_input_once = graph.add_leaf(Leaf::new(|input: BehaviourInput| {
             let input_source = input.entity.input_source().expect("no input source");
             let meta_action = terminal_player_actor::act_retrying(&input_source,
                                                                   input.level,
                                                                   input.entity_id,
                                                                   input.ids);
-            behaviour::LeafResolution::Yield(meta_action)
-        })));
+            LeafResolution::Yield(meta_action)
+        }));
 
-        let player_input =
-            graph.add_collection(behaviour::CollectionNode::Forever(player_input_once));
+        let player_input = graph.add_collection(CollectionNode::Forever(player_input_once));
 
         behaviours.insert(Behaviour::BackAndForthForever, back_and_forth_forever);
         behaviours.insert(Behaviour::PlayerInput, player_input);
@@ -158,7 +141,7 @@ impl BehaviourContext {
         }
     }
 
-    pub fn get_node_index(&self, behaviour: Behaviour) -> behaviour::NodeIndex {
+    pub fn get_node_index(&self, behaviour: Behaviour) -> NodeIndex {
         *self.behaviours.get(&behaviour).expect("missing behaviour")
     }
 }
