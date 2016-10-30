@@ -1,12 +1,13 @@
 use grid::Coord;
 use geometry::Direction;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PathNode {
     pub coord: Coord,
     pub in_direction: Direction,
 }
 
+#[derive(Clone)]
 pub struct Path {
     pub start: Coord,
     pub nodes: Vec<PathNode>,
@@ -19,6 +20,10 @@ impl PathNode {
             coord: coord,
             in_direction: in_direction,
         }
+    }
+
+    pub fn source(&self) -> Coord {
+        self.coord - self.in_direction.vector()
     }
 }
 

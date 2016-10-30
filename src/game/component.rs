@@ -1,5 +1,5 @@
 use game::{Speed, StatusCounter};
-use game::components::{DoorState, Form};
+use game::components::{DoorState, Form, PathTraverse};
 use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
 use game::behaviour::Behaviour;
 
@@ -50,8 +50,9 @@ pub enum ComponentType {
     BehaviourState, // 23
     InputSource, // 24
     TargetSet, // 25
+    PathTraverse, // 26
 }
-pub const NUM_COMPONENTS: usize = 26;
+pub const NUM_COMPONENTS: usize = 27;
 
 #[derive(Clone)]
 pub enum Component {
@@ -84,6 +85,7 @@ pub enum Component {
     BehaviourState(RefCell<behaviour::State>),
     InputSource(terminal::InputSource),
     TargetSet(RefCell<HashSet<Vector2<isize>>>),
+    PathTraverse(RefCell<PathTraverse>),
 }
 
 impl ToType<ComponentType> for Component {
@@ -115,6 +117,7 @@ impl ToType<ComponentType> for Component {
             Component::BehaviourState(_) => ComponentType::BehaviourState,
             Component::InputSource(_) => ComponentType::InputSource,
             Component::TargetSet(_) => ComponentType::TargetSet,
+            Component::PathTraverse(_) => ComponentType::PathTraverse,
         }
     }
 }

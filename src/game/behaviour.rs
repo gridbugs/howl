@@ -6,7 +6,7 @@ use vision::{VisionSystem, DefaultVisibilityReport, Shadowcast};
 use behaviour::*;
 use geometry::Direction;
 use grid::{Grid, IterGrid};
-use search::{Path, WeightedGridSearchContext, Config};
+use search::{WeightedGridSearchContext, Config};
 
 use std::collections::{HashMap, HashSet};
 use std::cell::RefCell;
@@ -131,7 +131,7 @@ fn choose_target_node(child: NodeIndex) -> Switch {
             }
         }
 
-        let mut target_set = input.entity.target_set().unwrap();
+        let mut target_set = input.entity.target_set_mut().unwrap();
         if *target_set != *targets {
             mem::swap(target_set.deref_mut(), targets.deref_mut());
             SwitchResolution::Reset(child)
@@ -154,23 +154,32 @@ fn update_path_node() -> Leaf {
 
         let config = Config::new_all_directions();
 
-        // TODO get path from entity
-        let mut path = Path::new();
+        let mut path_traverse = input.entity.path_traverse_mut().unwrap();
 
         // TODO optimized search function for sets
         let err = search_context.search_predicate(knowledge_grid,
                                                   position,
                                                   |info| target_set.contains(&info.coord),
                                                   &config,
-                                                  &mut path);
+                                                  path_traverse.path_mut());
 
         if err.is_err() {
             return LeafResolution::Return(false);
         }
 
-        // TODO add path to entity
+        path_traverse.reset();
 
         LeafResolution::Return(true)
+    })
+}
+
+fn follow_path_step_node() -> Leaf {
+    Leaf::new(|input: BehaviourInput| {
+
+        let mut path_traverse = input.entity.path_traverse_mut().unwrap();
+        let direction = path_traverse.next_direction().unwrap();
+        let action = MetaAction::Update(actions::walk(input.entity, direction));
+        LeafResolution::Yield(action)
     })
 }
 
@@ -188,12 +197,15 @@ impl BehaviourContext {
             LeafResolution::Yield(walk)
         }));
 
+        let follow_path_step = graph.add_leaf(follow_path_step_node());
+        let follow_path = graph.add_collection(CollectionNode::Forever(follow_path_step));
+
         let back_and_forth = graph.add_collection(CollectionNode::All(vec![east, west]));
         let back_and_forth_forever = graph.add_collection(CollectionNode::Forever(back_and_forth));
         let update_path = graph.add_leaf(update_path_node());
 
         let back_and_forth_forever =
-            graph.add_collection(CollectionNode::All(vec![update_path, back_and_forth_forever]));
+            graph.add_collection(CollectionNode::All(vec![update_path, follow_path, back_and_forth_forever]));
 
         let back_and_forth_forever = graph.add_switch(choose_target_node(back_and_forth_forever));
         let back_and_forth_forever = graph.add_switch(observe_node(back_and_forth_forever));

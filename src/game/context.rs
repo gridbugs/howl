@@ -140,7 +140,7 @@ impl<'a> GameContext<'a> {
         loop {
             let meta_action = {
                 let behaviour_input = BehaviourInput::new(entity_id, ids, level, self.turn);
-                let mut state = level.get(entity_id).unwrap().behaviour_state().unwrap();
+                let mut state = level.get(entity_id).unwrap().behaviour_state_mut().unwrap();
                 let maybe_action = state.run(&self.behaviour_context.graph, behaviour_input);
                 maybe_action.expect("behaviour graph error")
             };
@@ -158,7 +158,7 @@ impl<'a> GameContext<'a> {
                         Ok(commit_time) => {
                             level.get(entity_id)
                                 .unwrap()
-                                .behaviour_state()
+                                .behaviour_state_mut()
                                 .unwrap()
                                 .declare_return(true)
                                 .expect("behaviour graph error");
@@ -171,7 +171,7 @@ impl<'a> GameContext<'a> {
                         Err(CommitError::NoCommits) => {
                             level.get(entity_id)
                                 .unwrap()
-                                .behaviour_state()
+                                .behaviour_state_mut()
                                 .unwrap()
                                 .declare_return(false)
                                 .expect("behaviour graph error");

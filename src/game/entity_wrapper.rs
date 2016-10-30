@@ -1,5 +1,5 @@
 use game::{Component, ComponentType, Speed, StatusCounter};
-use game::components::{DoorState, Form};
+use game::components::{DoorState, Form, PathTraverse};
 use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
 
 use geometry::{Vector2, Direction};
@@ -184,7 +184,7 @@ pub trait EntityWrapper<'a>: Sized {
         }
     }
 
-    fn behaviour_state(self) -> Option<RefMut<'a, behaviour::State>> {
+    fn behaviour_state_mut(self) -> Option<RefMut<'a, behaviour::State>> {
         if let Some(&Component::BehaviourState(ref state)) =
                self.get_component(ComponentType::BehaviourState) {
             Some(state.borrow_mut())
@@ -197,9 +197,33 @@ pub trait EntityWrapper<'a>: Sized {
         self.has_component(ComponentType::Behaviour)
     }
 
-    fn target_set(self) -> Option<RefMut<'a, HashSet<Vector2<isize>>>> {
+    fn target_set(self) -> Option<Ref<'a, HashSet<Vector2<isize>>>> {
+        if let Some(&Component::TargetSet(ref set)) = self.get_component(ComponentType::TargetSet) {
+            Some(set.borrow())
+        } else {
+            None
+        }
+    }
+
+    fn target_set_mut(self) -> Option<RefMut<'a, HashSet<Vector2<isize>>>> {
         if let Some(&Component::TargetSet(ref set)) = self.get_component(ComponentType::TargetSet) {
             Some(set.borrow_mut())
+        } else {
+            None
+        }
+    }
+
+    fn path_traverse(self) -> Option<Ref<'a, PathTraverse>> {
+        if let Some(&Component::PathTraverse(ref traverse)) = self.get_component(ComponentType::PathTraverse) {
+            Some(traverse.borrow())
+        } else {
+            None
+        }
+    }
+
+    fn path_traverse_mut(self) -> Option<RefMut<'a, PathTraverse>> {
+        if let Some(&Component::PathTraverse(ref traverse)) = self.get_component(ComponentType::PathTraverse) {
+            Some(traverse.borrow_mut())
         } else {
             None
         }

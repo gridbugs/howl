@@ -1,7 +1,7 @@
 use game;
 use game::{Entity, StatusCounter};
 use game::Component::*;
-use game::components::{DoorState, Form};
+use game::components::{self, DoorState, Form};
 use game::knowledge;
 use game::behaviour;
 
@@ -108,6 +108,7 @@ pub fn make_dog(x: isize, y: isize) -> Entity {
         SimpleNpcKnowledge(RefCell::new(knowledge::SimpleNpcKnowledge::new())),
         WalkSpeed(1),
         Behaviour(behaviour::Behaviour::BackAndForthForever),
+        PathTraverse(RefCell::new(components::PathTraverse::new())),
         TargetSet(RefCell::new(HashSet::new())),
     ]
 }
