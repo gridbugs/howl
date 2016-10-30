@@ -22,7 +22,6 @@ pub mod rules;
 pub mod actions;
 pub mod entities;
 pub mod components;
-pub mod actors;
 
 mod meta_action;
 pub use self::meta_action::MetaAction;
@@ -61,9 +60,6 @@ pub use self::status::StatusCounter;
 mod level;
 pub use self::level::{Level, LevelId, LevelSpatialHashMap};
 
-mod actor;
-pub use self::actor::ActorType;
-
 mod clouds;
 
 mod commit_context;
@@ -71,9 +67,6 @@ pub use self::commit_context::{CommitContext, CommitTime, CommitError};
 
 mod renderer;
 pub use self::renderer::Renderer;
-
-mod actor_manager;
-pub use self::actor_manager::ActorManager;
 
 mod behaviour;
 pub use self::behaviour::{Behaviour, BehaviourContext, BehaviourInput, BehaviourGraph};

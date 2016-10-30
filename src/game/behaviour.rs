@@ -5,9 +5,13 @@ use game::io::terminal_player_actor;
 use vision::{VisionSystem, DefaultVisibilityReport, Shadowcast};
 use behaviour::*;
 use geometry::Direction;
+use grid::{Grid, IterGrid};
+use search::{Path, WeightedGridSearchContext, Config};
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::cell::RefCell;
+use std::mem;
+use std::ops::DerefMut;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum Behaviour {
@@ -51,7 +55,7 @@ impl Leaf {
 }
 
 impl Switch {
-    fn new_return<F: 'static + Fn(BehaviourInput) -> SwitchResolution>(f: F) -> Self {
+    fn new_returning<F: 'static + Fn(BehaviourInput) -> SwitchResolution>(f: F) -> Self {
         Switch {
             call: Box::new(f),
             return_to: Box::new(|value| SwitchReturn::Return(value)),
@@ -85,7 +89,7 @@ pub struct BehaviourContext {
 fn observe_node(child: NodeIndex) -> Switch {
     let _visibility_report = RefCell::new(DefaultVisibilityReport::new());
     let vision_system = Shadowcast::new();
-    Switch::new_return(move |input: BehaviourInput| {
+    Switch::new_returning(move |input: BehaviourInput| {
 
         let grid = input.level.spatial_hash().grid();
         let eye = input.entity.position().unwrap();
@@ -103,6 +107,73 @@ fn observe_node(child: NodeIndex) -> Switch {
     })
 }
 
+fn choose_target_node(child: NodeIndex) -> Switch {
+    let targets = RefCell::new(HashSet::new());
+    Switch::new_returning(move |input: BehaviourInput| {
+        let mut targets = targets.borrow_mut();
+        targets.clear();
+
+        let mut turn = 0;
+
+        let knowledge = input.entity.simple_npc_knowledge().unwrap();
+        let knowledge_grid = knowledge.grid(input.level.id()).unwrap().inner();
+
+        for (coord, cell) in izip!(knowledge_grid.coord_iter(), knowledge_grid.iter()) {
+            if cell.data().player {
+                let last_updated_turn = cell.last_updated_turn();
+                if turn == last_updated_turn {
+                    targets.insert(coord);
+                } else if turn < last_updated_turn {
+                    turn = last_updated_turn;
+                    targets.clear();
+                    targets.insert(coord);
+                }
+            }
+        }
+
+        let mut target_set = input.entity.target_set().unwrap();
+        if *target_set != *targets {
+            mem::swap(target_set.deref_mut(), targets.deref_mut());
+            SwitchResolution::Reset(child)
+        } else {
+            SwitchResolution::Select(child)
+        }
+    })
+}
+
+fn update_path_node() -> Leaf {
+    let _search_context = RefCell::new(WeightedGridSearchContext::new());
+    Leaf::new(move |input: BehaviourInput| {
+        let mut search_context = _search_context.borrow_mut();
+        let target_set = input.entity.target_set().unwrap();
+
+        let position = input.entity.position().unwrap();
+
+        let knowledge = input.entity.simple_npc_knowledge().unwrap();
+        let knowledge_grid = knowledge.grid(input.level.id()).unwrap().inner();
+
+        let config = Config::new_all_directions();
+
+        // TODO get path from entity
+        let mut path = Path::new();
+
+        // TODO optimized search function for sets
+        let err = search_context.search_predicate(knowledge_grid,
+                                                  position,
+                                                  |info| target_set.contains(&info.coord),
+                                                  &config,
+                                                  &mut path);
+
+        if err.is_err() {
+            return LeafResolution::Return(false);
+        }
+
+        // TODO add path to entity
+
+        LeafResolution::Return(true)
+    })
+}
+
 impl BehaviourContext {
     pub fn new() -> Self {
         let mut graph = Graph::new();
@@ -116,9 +187,15 @@ impl BehaviourContext {
             let walk = MetaAction::Update(actions::walk(input.entity, Direction::West));
             LeafResolution::Yield(walk)
         }));
+
         let back_and_forth = graph.add_collection(CollectionNode::All(vec![east, west]));
         let back_and_forth_forever = graph.add_collection(CollectionNode::Forever(back_and_forth));
+        let update_path = graph.add_leaf(update_path_node());
 
+        let back_and_forth_forever =
+            graph.add_collection(CollectionNode::All(vec![update_path, back_and_forth_forever]));
+
+        let back_and_forth_forever = graph.add_switch(choose_target_node(back_and_forth_forever));
         let back_and_forth_forever = graph.add_switch(observe_node(back_and_forth_forever));
 
         let player_input_once = graph.add_leaf(Leaf::new(|input: BehaviourInput| {

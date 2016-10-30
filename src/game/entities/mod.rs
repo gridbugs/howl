@@ -1,10 +1,8 @@
 use game;
 use game::{Entity, StatusCounter};
 use game::Component::*;
-use game::ActorType::*;
 use game::components::{DoorState, Form};
 use game::knowledge;
-use game::actors::SimpleNpcAiState;
 use game::behaviour;
 
 use geometry::Vector2;
@@ -15,6 +13,7 @@ use terminal::style;
 use table::TableRefMut;
 
 use std::cell::RefCell;
+use std::collections::HashSet;
 
 pub fn make_wall(x: isize, y: isize) -> Entity {
     entity![
@@ -88,7 +87,6 @@ pub fn make_pc(x: isize, y: isize) -> Entity {
         Position(Vector2::new(x, y)),
         Tile(tile::foreground('@', ansi::WHITE, style::BOLD)),
         TileDepth(2),
-        Actor(Player),
         Collider,
         DoorOpener,
         VisionDistance(20),
@@ -106,12 +104,11 @@ pub fn make_dog(x: isize, y: isize) -> Entity {
         Tile(tile::foreground('d', ansi::YELLOW, style::BOLD)),
         TileDepth(2),
         VisionDistance(20),
-        Actor(SimpleNpc),
         Collider,
         SimpleNpcKnowledge(RefCell::new(knowledge::SimpleNpcKnowledge::new())),
         WalkSpeed(1),
-        SimpleNpcAi(RefCell::new(SimpleNpcAiState::new())),
         Behaviour(behaviour::Behaviour::BackAndForthForever),
+        TargetSet(RefCell::new(HashSet::new())),
     ]
 }
 

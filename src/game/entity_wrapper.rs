@@ -1,7 +1,6 @@
-use game::{Component, ComponentType, Speed, StatusCounter, ActorType};
+use game::{Component, ComponentType, Speed, StatusCounter};
 use game::components::{DoorState, Form};
 use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
-use game::actors::SimpleNpcAiState;
 
 use geometry::{Vector2, Direction};
 use tile::ComplexTile;
@@ -9,6 +8,7 @@ use terminal;
 use behaviour;
 
 use std::cell::{Ref, RefMut};
+use std::collections::HashSet;
 
 // Convenience wrappers around entities
 
@@ -27,20 +27,9 @@ pub trait EntityWrapper<'a>: Sized {
         }
     }
 
-    fn actor_type(self) -> Option<ActorType> {
-        if let Some(&Component::Actor(actor)) = self.get_component(ComponentType::Actor) {
-            Some(actor)
-        } else {
-            None
-        }
-    }
-
-    fn is_actor(self) -> bool {
-        self.actor_type().is_some()
-    }
-
     fn is_pc(self) -> bool {
-        if let Some(ActorType::Player) = self.actor_type() {
+        if let Some(&Component::PlayerCharacter) =
+               self.get_component(ComponentType::PlayerCharacter) {
             true
         } else {
             false
@@ -103,15 +92,6 @@ pub trait EntityWrapper<'a>: Sized {
         if let Some(&Component::SimpleNpcKnowledge(ref knowledge)) =
                self.get_component(ComponentType::SimpleNpcKnowledge) {
             Some(knowledge.borrow_mut())
-        } else {
-            None
-        }
-    }
-
-    fn simple_npc_ai_mut(self) -> Option<RefMut<'a, SimpleNpcAiState>> {
-        if let Some(&Component::SimpleNpcAi(ref ai)) =
-               self.get_component(ComponentType::SimpleNpcAi) {
-            Some(ai.borrow_mut())
         } else {
             None
         }
@@ -208,6 +188,18 @@ pub trait EntityWrapper<'a>: Sized {
         if let Some(&Component::BehaviourState(ref state)) =
                self.get_component(ComponentType::BehaviourState) {
             Some(state.borrow_mut())
+        } else {
+            None
+        }
+    }
+
+    fn has_behaviour(self) -> bool {
+        self.has_component(ComponentType::Behaviour)
+    }
+
+    fn target_set(self) -> Option<RefMut<'a, HashSet<Vector2<isize>>>> {
+        if let Some(&Component::TargetSet(ref set)) = self.get_component(ComponentType::TargetSet) {
+            Some(set.borrow_mut())
         } else {
             None
         }

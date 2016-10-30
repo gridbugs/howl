@@ -1,6 +1,6 @@
 use game::{UpdateSummary, MetaAction, Rule, EntityContext, LevelStore, EntityId, Level, LevelId,
            ComponentType, Component, actions, EntityWrapper, EntityStore, CommitContext,
-           CommitError, Renderer, ActorManager, IdEntityRef, ReserveEntityId};
+           CommitError, Renderer, IdEntityRef, ReserveEntityId};
 use game::components::Form;
 use game::behaviour::{BehaviourContext, BehaviourInput};
 
@@ -58,9 +58,6 @@ pub struct GameContext<'a> {
     commit_context: CommitContext,
     rules: Vec<Box<Rule>>,
 
-    // actors
-    actors: ActorManager,
-
     // time
     turn: u64,
 
@@ -82,7 +79,6 @@ impl<'a> GameContext<'a> {
             entities: EntityContext::new(),
             pc: None,
             pc_level_id: 0,
-            actors: ActorManager::new(input_source),
             renderer: Renderer::new(DrawableObserver::new(),
                                     WindowKnowledgeRenderer::new(game_window)),
             commit_context: CommitContext::new(),

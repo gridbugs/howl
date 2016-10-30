@@ -64,7 +64,7 @@ impl Level {
 
     pub fn add(&mut self, id: EntityId, entity: Entity) -> Option<Entity> {
 
-        if entity.is_actor() {
+        if entity.has_behaviour() {
             self.schedule.insert(id, 0);
         }
 

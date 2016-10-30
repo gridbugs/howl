@@ -107,11 +107,12 @@ impl TrackerGrid {
         self.grid[coord].visited_seq == self.seq
     }
 
-    pub fn make_path(&self, start: Coord) -> Option<Path> {
-        let mut path = Vec::new();
-        let mut coord = start;
+    pub fn populate_path(&self, start: Coord, path: &mut Path) {
+        path.nodes.clear();
+        path.start = start;
+        path.cost = self.grid[start].cost;
 
-        let cost = self.grid[coord].cost;
+        let mut coord = start;
 
         loop {
             if !self.is_visited(coord) {
@@ -120,11 +121,11 @@ impl TrackerGrid {
 
             if let Some(parent) = self.grid[coord].parent {
                 let direction = self.grid[coord].direction.unwrap();
-                path.push(PathNode::new(coord, direction));
+                path.nodes.push(PathNode::new(coord, direction));
                 coord = parent;
             } else {
-                path.reverse();
-                return Some(Path::new(path, cost, self.explored));
+                path.nodes.reverse();
+                break;
             }
         }
     }

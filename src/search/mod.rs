@@ -1,14 +1,8 @@
-mod result;
-mod traverse;
-mod query;
-mod search_context;
-mod weighted_grid_search_context;
+mod weighted_grid;
+mod path;
 
-pub use self::query::{Query, CellInfo, Destination};
-pub use self::result::{Path, PathNode};
-pub use self::traverse::{TraverseType, Traverse};
-pub use self::search_context::{SearchContext, SearchError};
-pub use self::weighted_grid_search_context::WeightedGridSearchContext;
+pub use self::path::{Path, PathNode};
+pub use self::weighted_grid::{WeightedGridSearchContext, Config, TraverseCost, CellInfo};
 
 // Internal modules
 

@@ -1,7 +1,6 @@
-use game::{Speed, StatusCounter, ActorType};
+use game::{Speed, StatusCounter};
 use game::components::{DoorState, Form};
 use game::knowledge::{DrawableKnowledge, SimpleNpcKnowledge};
-use game::actors::SimpleNpcAiState;
 use game::behaviour::Behaviour;
 
 use table::{ToIndex, ToType};
@@ -11,6 +10,7 @@ use behaviour;
 use terminal;
 
 use std::cell::RefCell;
+use std::collections::HashSet;
 
 impl ToIndex for ComponentType {
     fn num_indices() -> usize {
@@ -31,28 +31,27 @@ pub enum ComponentType {
     DestroyOnCollision, // 04
     Tile, // 05
     TileDepth, // 06
-    Actor, // 07
-    Door, // 08
-    DoorOpener, // 09
-    Opacity, // 10
-    VisionDistance, // 11
-    DrawableKnowledge, // 12
-    Bullet, // 13
-    AxisVelocity, // 14
-    BeastTransform, // 15
-    HumanTransform, // 16
-    FormSlot, // 17
-    Outside, // 18
-    Moon, // 19
-    SimpleNpcKnowledge, // 20
-    PlayerCharacter, // 21
-    WalkSpeed, // 22
-    SimpleNpcAi, // 23
-    Behaviour, // 24
-    BehaviourState, // 25
-    InputSource, // 26
+    Door, // 07
+    DoorOpener, // 08
+    Opacity, // 09
+    VisionDistance, // 10
+    DrawableKnowledge, // 11
+    Bullet, // 12
+    AxisVelocity, // 13
+    BeastTransform, // 14
+    HumanTransform, // 15
+    FormSlot, // 16
+    Outside, // 17
+    Moon, // 18
+    SimpleNpcKnowledge, // 19
+    PlayerCharacter, // 20
+    WalkSpeed, // 21
+    Behaviour, // 22
+    BehaviourState, // 23
+    InputSource, // 24
+    TargetSet, // 25
 }
-pub const NUM_COMPONENTS: usize = 27;
+pub const NUM_COMPONENTS: usize = 26;
 
 #[derive(Clone)]
 pub enum Component {
@@ -63,7 +62,6 @@ pub enum Component {
     DestroyOnCollision,
     Tile(ComplexTile),
     TileDepth(isize),
-    Actor(ActorType),
     Door(DoorState),
     DoorOpener,
     Opacity(f64),
@@ -82,10 +80,10 @@ pub enum Component {
     SimpleNpcKnowledge(RefCell<SimpleNpcKnowledge>),
     PlayerCharacter,
     WalkSpeed(u64),
-    SimpleNpcAi(RefCell<SimpleNpcAiState>),
     Behaviour(Behaviour),
     BehaviourState(RefCell<behaviour::State>),
     InputSource(terminal::InputSource),
+    TargetSet(RefCell<HashSet<Vector2<isize>>>),
 }
 
 impl ToType<ComponentType> for Component {
@@ -98,7 +96,6 @@ impl ToType<ComponentType> for Component {
             Component::DestroyOnCollision => ComponentType::DestroyOnCollision,
             Component::Tile(_) => ComponentType::Tile,
             Component::TileDepth(_) => ComponentType::TileDepth,
-            Component::Actor(_) => ComponentType::Actor,
             Component::Door(_) => ComponentType::Door,
             Component::DoorOpener => ComponentType::DoorOpener,
             Component::Opacity(_) => ComponentType::Opacity,
@@ -114,10 +111,10 @@ impl ToType<ComponentType> for Component {
             Component::SimpleNpcKnowledge(_) => ComponentType::SimpleNpcKnowledge,
             Component::PlayerCharacter => ComponentType::PlayerCharacter,
             Component::WalkSpeed(_) => ComponentType::WalkSpeed,
-            Component::SimpleNpcAi(_) => ComponentType::SimpleNpcAi,
             Component::Behaviour(_) => ComponentType::Behaviour,
             Component::BehaviourState(_) => ComponentType::BehaviourState,
             Component::InputSource(_) => ComponentType::InputSource,
+            Component::TargetSet(_) => ComponentType::TargetSet,
         }
     }
 }
