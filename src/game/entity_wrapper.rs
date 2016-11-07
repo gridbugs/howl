@@ -214,7 +214,8 @@ pub trait EntityWrapper<'a>: Sized {
     }
 
     fn path_traverse(self) -> Option<Ref<'a, PathTraverse>> {
-        if let Some(&Component::PathTraverse(ref traverse)) = self.get_component(ComponentType::PathTraverse) {
+        if let Some(&Component::PathTraverse(ref traverse)) =
+               self.get_component(ComponentType::PathTraverse) {
             Some(traverse.borrow())
         } else {
             None
@@ -222,7 +223,8 @@ pub trait EntityWrapper<'a>: Sized {
     }
 
     fn path_traverse_mut(self) -> Option<RefMut<'a, PathTraverse>> {
-        if let Some(&Component::PathTraverse(ref traverse)) = self.get_component(ComponentType::PathTraverse) {
+        if let Some(&Component::PathTraverse(ref traverse)) =
+               self.get_component(ComponentType::PathTraverse) {
             Some(traverse.borrow_mut())
         } else {
             None

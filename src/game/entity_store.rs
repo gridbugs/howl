@@ -18,7 +18,6 @@ impl<'a, Store: 'a + EntityStore<'a>> Iterator for EntityIter<'a, Store> {
     }
 }
 
-
 pub trait EntityStore<'a> {
     type Ref: IdEntityRef<'a>;
 

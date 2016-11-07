@@ -1,5 +1,5 @@
 use game::knowledge::{KnowledgeCell, LevelGridKnowledge, KnowledgeCellData};
-use game::{ComponentType, IterEntityRef};
+use game::{ComponentType, EntityRef};
 
 use search::TraverseCost;
 use clear::Clear;
@@ -42,7 +42,7 @@ impl Clear for SimpleNpcExtra {
 impl KnowledgeCellData for SimpleNpcExtra {
     type VisionMetadata = f64;
 
-    fn update<'a, E: IterEntityRef<'a>>(&mut self, entity: E, _: &Self::VisionMetadata) {
+    fn update<'a, E: EntityRef<'a>>(&mut self, entity: E, _: &Self::VisionMetadata) {
         if entity.has(ComponentType::Solid) {
             self.solid = true;
         }

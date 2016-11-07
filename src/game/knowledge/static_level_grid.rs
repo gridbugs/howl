@@ -1,4 +1,4 @@
-use game::{LevelId, Level, SpatialHashCell, IterEntityRef, EntityStore};
+use game::{LevelId, Level, SpatialHashCell, IterEntityRef};
 use grid::{Grid, Coord, StaticGrid, DefaultGrid, IterGrid};
 use clear::Clear;
 use std::collections::HashMap;
@@ -80,10 +80,11 @@ impl<Data: KnowledgeCellData + Clear + Default> KnowledgeGrid<Data> {
             // time the cell was observed, we can skip updating
             // knowledge for that cell.
 
-            if sh_cell.last_updated >= kn_cell.last_updated_turn {
+            if sh_cell.last_updated() >= kn_cell.last_updated_turn {
                 changed = true;
                 kn_cell.data.clear();
-                for (_, maybe_entity) in level.id_set_iter(&sh_cell.entities) {
+                for (_, maybe_entity) in sh_cell.entity_iter(level) {
+                    // level.id_set_iter(&sh_cell.entities) {
                     let entity = maybe_entity.expect("invalid entity id");
                     kn_cell.data.update(entity, meta);
                 }

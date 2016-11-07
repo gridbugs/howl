@@ -204,8 +204,9 @@ impl BehaviourContext {
         let back_and_forth_forever = graph.add_collection(CollectionNode::Forever(back_and_forth));
         let update_path = graph.add_leaf(update_path_node());
 
-        let back_and_forth_forever =
-            graph.add_collection(CollectionNode::All(vec![update_path, follow_path, back_and_forth_forever]));
+        let back_and_forth_forever = graph.add_collection(CollectionNode::All(vec![update_path,
+                                                     follow_path,
+                                                     back_and_forth_forever]));
 
         let back_and_forth_forever = graph.add_switch(choose_target_node(back_and_forth_forever));
         let back_and_forth_forever = graph.add_switch(observe_node(back_and_forth_forever));

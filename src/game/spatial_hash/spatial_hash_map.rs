@@ -1,5 +1,5 @@
 use game::{EntityId, Component, ComponentType, EntityTable, UpdateSummary, AddedComponents,
-           EntityWrapper, IterEntityRef, IdEntityRef};
+           EntityWrapper, IterEntityRef, IdEntityRef, EntityStore, EntityIter};
 
 use table::{ToType, TableTable};
 use vision::Opacity;
@@ -11,10 +11,10 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
 pub struct SpatialHashCell {
-    pub entities: HashSet<EntityId>,
-    pub components: HashMap<ComponentType, usize>,
-    pub opacity: f64,
-    pub last_updated: u64,
+    entities: HashSet<EntityId>,
+    components: HashMap<ComponentType, usize>,
+    opacity: f64,
+    last_updated: u64,
 }
 
 impl Opacity for SpatialHashCell {
@@ -41,6 +41,16 @@ impl SpatialHashCell {
         } else {
             false
         }
+    }
+
+    pub fn last_updated(&self) -> u64 {
+        self.last_updated
+    }
+
+    pub fn entity_iter<'a, Store: 'a + EntityStore<'a>>(&'a self,
+                                                        store: &'a Store)
+                                                        -> EntityIter<'a, Store> {
+        store.id_set_iter(&self.entities)
     }
 
     fn get_count(&self, component_type: ComponentType) -> usize {

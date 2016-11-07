@@ -15,7 +15,7 @@ mod entity_context;
 pub use self::entity_context::{EntityContext, ReserveEntityId, LevelStore};
 
 mod entity_store;
-pub use self::entity_store::EntityStore;
+pub use self::entity_store::{EntityStore, EntityIter};
 
 pub mod io;
 pub mod rules;

@@ -1,8 +1,5 @@
 use game::{ComponentType, RuleResult, RuleContext, actions, Rule, EntityWrapper, EntityStore};
-use game::Component::*;
 use game::components::DoorState;
-
-use table::TableRef;
 
 pub struct DetectOpen;
 
@@ -26,12 +23,9 @@ impl Rule for DetectOpen {
 
             if let Some(cell) = spatial_hash.get(new_position.to_tuple()) {
                 if cell.has(ComponentType::Door) && cell.has(ComponentType::Solid) {
-                    for entity_id in &cell.entities {
-                        if let Some(&Door(DoorState::Closed)) = ctx.level
-                            .get(*entity_id)
-                            .unwrap()
-                            .get(ComponentType::Door) {
-                            return RuleResult::instead(actions::open_door(*entity_id));
+                    for (entity_id, maybe_entity) in cell.entity_iter(ctx.level) {
+                        if let Some(DoorState::Closed) = maybe_entity.unwrap().door_state() {
+                            return RuleResult::instead(actions::open_door(entity_id));
                         }
                     }
                 }
