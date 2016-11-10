@@ -27,6 +27,7 @@ mod reserver;
 mod math;
 mod search;
 mod behaviour;
+mod ecs;
 
 use game::entities::*;
 use game::{EntityContext, ReserveEntityId, EntityId, GameContext, Level, EntityWrapper};

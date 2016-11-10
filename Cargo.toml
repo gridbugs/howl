@@ -2,9 +2,13 @@
 name = "howl"
 version = "0.1.0"
 authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+build = "build.rs"
 
 [dependencies]
 itertools = "0.4.16"
 rand = "0.3.14"
 num = "0.1.32"
 rustty = { git = "https://github.com/stevebob/rustty.git" }
+
+[build-dependencies]
+genecs = { git = "https://github.com/stevebob/genecs.git" }

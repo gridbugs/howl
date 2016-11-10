@@ -2,3 +2,6 @@
 Cargo.lock
 target
 *.bk
+
+# Generated ecs source file
+ecs.rs

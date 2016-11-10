@@ -1,0 +1,22 @@
+imports = [
+    "game::components::DoorState",
+    "geometry::Vector2"
+]
+
+[components.position]
+    name = "Position"
+    type = "Vector2<isize>"
+
+[components.solid]
+    name = "Solid"
+
+[components.collider]
+    name = "Collider"
+
+[components.opacity]
+    name = "Opacity"
+    type = "f64"
+
+[components.door]
+    name = "Door"
+    type = "DoorState"
