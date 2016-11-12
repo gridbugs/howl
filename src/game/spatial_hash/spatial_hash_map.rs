@@ -11,7 +11,7 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
 pub struct SpatialHashCell {
-    entities: HashSet<EntityId>,
+    pub entities: HashSet<EntityId>,
     components: HashMap<ComponentType, usize>,
     opacity: f64,
     last_updated: u64,

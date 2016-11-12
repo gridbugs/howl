@@ -6,6 +6,7 @@ use game::{Component, ComponentType, SpatialHashMap, SpatialHashCell, Entity, En
 
 use geometry::Vector2;
 use grid::{StaticGrid, DefaultGrid};
+use vision::Opacity as OpacityTrait;
 
 use table::{TableId, TableRefMut, TableRef, IdTableRef, IterTableRef};
 
@@ -330,7 +331,7 @@ fn opacity() {
     s.add_entity(e0.id, &e0, 0);
     s.add_entity(e1.id, &e1, 0);
 
-    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.3 * 10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity() * 10.0).round(), 0.3 * 10.0);
 
     s.add_components(&e0,
                      &AddedComponents::from_entity(entity![
@@ -338,11 +339,11 @@ fn opacity() {
     ]),
                      0);
     e0.add(Opacity(0.4));
-    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.6 * 10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity() * 10.0).round(), 0.6 * 10.0);
 
     s.remove_components(&e1, &set_from_vec(vec![CType::Opacity]), 0);
     e1.remove(CType::Opacity);
-    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.4 * 10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity() * 10.0).round(), 0.4 * 10.0);
 
     s.add_components(&e1,
                      &AddedComponents::from_entity(entity![
@@ -350,8 +351,8 @@ fn opacity() {
     ]),
                      0);
     e1.add(Opacity(0.5));
-    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.9 * 10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity() * 10.0).round(), 0.9 * 10.0);
 
     s.remove_entity(&e1, 0);
-    assert_eq!((s.get((0, 0)).unwrap().opacity * 10.0).round(), 0.4 * 10.0);
+    assert_eq!((s.get((0, 0)).unwrap().opacity() * 10.0).round(), 0.4 * 10.0);
 }
