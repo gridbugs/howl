@@ -1,22 +1,25 @@
 imports = [
     "game::components::DoorState",
-    "geometry::Vector2"
+    "game::components::AxisVelocity",
+    "geometry::Vector2",
 ]
 
-[components.position]
-    name = "Position"
+[component.position]
     type = "Vector2<isize>"
 
-[components.solid]
-    name = "Solid"
+[component.axis_velocity]
+    type = "AxisVelocity"
 
-[components.collider]
-    name = "Collider"
+[component.solid]
 
-[components.opacity]
-    name = "Opacity"
+[component.collider]
+
+[component.opacity]
     type = "f64"
 
-[components.door]
-    name = "Door"
+[component.door]
     type = "DoorState"
+
+[query.movement]
+    prefix = "Movement"
+    components = ["position", "solid", "axis_velocity"]

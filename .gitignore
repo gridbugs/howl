@@ -4,4 +4,4 @@ target
 *.bk
 
 # Generated ecs source file
-src/ecs/ecs.rs
+src/ecs/generated.rs

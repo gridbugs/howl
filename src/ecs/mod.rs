@@ -1,6 +1,6 @@
-mod ecs;
-pub use self::ecs::{EcsTable, EcsCtx, EcsMap, EcsSet, EntityId, ComponentType, component_type, ComponentTypeSet,
-                    EntityRef, EntityRefMut};
+mod generated;
+pub use self::generated::{EcsTable, EcsCtx, EntityMap, EntitySet, EntityId, ComponentType, component_type, ComponentTypeSet,
+                          EntityRef, EntityRefMut};
 
 #[cfg(test)]
 mod tests;
