@@ -23,3 +23,14 @@ imports = [
 [query.movement]
     prefix = "Movement"
     components = ["position", "solid", "axis_velocity"]
+
+[action_property.name]
+    type = "&'static str"
+
+[action_property.turn_time]
+    type = "u64"
+
+[action_property.action_time]
+    type = "u64"
+
+[action_property.axis_velocity_movement]
