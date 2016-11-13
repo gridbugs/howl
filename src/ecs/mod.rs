@@ -1,6 +1,9 @@
 mod generated;
-pub use self::generated::{EcsTable, EcsCtx, EntityMap, EntitySet, EntityId, ComponentType, component_type, ComponentTypeSet,
-                          EntityRef, EntityRefMut};
+
+// general ecs types/modules
+pub use self::generated::{EcsTable, EcsCtx, EcsAction, EcsActionProperties, ComponentTypeSet,
+                          ComponentTypeSetIter, ActionPropertyType, ActionPropertyTypeSetIter,
+                          EntityRef, EntityRefMut, component_type, action_property_type};
 
 #[cfg(test)]
 mod tests;
