@@ -1,5 +1,4 @@
 imports = [
-    "std::cell::RefCell",
     "game::components::DoorState",
     "game::components::AxisVelocity",
     "game::components::Form",
@@ -16,7 +15,6 @@ imports = [
     "terminal::InputSource",
 ]
 
-
 [component.solid]
 [component.collider]
 [component.destroy_on_collision]
@@ -28,24 +26,29 @@ imports = [
 
 [component.position]
     type = "Vector2<isize>"
+    copy = true
 
 [component.tile]
     type = "ComplexTile"
 
 [component.tile_depth]
     type = "isize"
+    copy = true
 
 [component.axis_velocity]
     type = "AxisVelocity"
 
 [component.door]
     type = "DoorState"
+    copy = true
 
 [component.opacity]
     type = "f64"
+    copy = true
 
 [component.vision_distance]
     type = "usize"
+    copy = true
 
 [component.beast_transform]
     type = "StatusCounter"
@@ -55,30 +58,38 @@ imports = [
 
 [component.form]
     type = "Form"
+    copy = true
 
 [component.walk_speed]
     type = "f64"
+    copy = true
 
 [component.behaviour]
     type = "Behaviour"
+    copy = true
 
 [component.input_source]
     type = "InputSource"
 
 [component.behaviour_state]
-    type = "RefCell<BehaviourState>"
+    type = "BehaviourState"
+    refcell = true
 
 [component.simple_npc_knowledge]
-    type = "RefCell<SimpleNpcKnowledge>"
+    type = "SimpleNpcKnowledge"
+    refcell = true
 
 [component.drawable_knowledge]
-    type = "RefCell<DrawableKnowledge>"
+    type = "DrawableKnowledge"
+    refcell = true
 
 [component.target_set]
-    type = "RefCell<TargetSet>"
+    type = "TargetSet"
+    refcell = true
 
 [component.path_traverse]
-    type = "RefCell<PathTraverse>"
+    type = "PathTraverse"
+    refcell = true
 
 [query.clouds_query]
     prefix = "Clouds"
@@ -86,12 +97,15 @@ imports = [
 
 [action_property.name]
     type = "&'static str"
+    copy = true
 
 [action_property.turn_time]
     type = "u64"
+    copy = true
 
 [action_property.action_time]
     type = "u64"
+    copy = true
 
 [action_property.axis_velocity_movement]
 
