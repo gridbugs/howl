@@ -69,4 +69,4 @@ mod renderer;
 pub use self::renderer::Renderer;
 
 mod behaviour;
-pub use self::behaviour::{Behaviour, BehaviourContext, BehaviourInput, BehaviourGraph};
+pub use self::behaviour::{Behaviour, BehaviourState, BehaviourContext, BehaviourInput, BehaviourGraph};

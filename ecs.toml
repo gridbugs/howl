@@ -1,28 +1,88 @@
 imports = [
+    "std::cell::RefCell",
     "game::components::DoorState",
     "game::components::AxisVelocity",
+    "game::components::Form",
+    "game::components::TargetSet",
+    "game::components::PathTraverse",
+    "game::components::BurstFire",
+    "game::StatusCounter",
+    "game::knowledge::DrawableKnowledge",
+    "game::knowledge::SimpleNpcKnowledge",
+    "game::Behaviour",
+    "game::BehaviourState",
     "geometry::Vector2",
+    "tile::ComplexTile",
+    "terminal::InputSource",
 ]
+
+
+[component.solid]
+[component.collider]
+[component.destroy_on_collision]
+[component.door_opener]
+[component.bullet]
+[component.player_character]
+[component.outside]
+[component.moon]
 
 [component.position]
     type = "Vector2<isize>"
 
+[component.tile]
+    type = "ComplexTile"
+
+[component.tile_depth]
+    type = "isize"
+
 [component.axis_velocity]
     type = "AxisVelocity"
-
-[component.solid]
-
-[component.collider]
-
-[component.opacity]
-    type = "f64"
 
 [component.door]
     type = "DoorState"
 
-[query.movement]
-    prefix = "Movement"
-    components = ["position", "solid", "axis_velocity"]
+[component.opacity]
+    type = "f64"
+
+[component.vision_distance]
+    type = "usize"
+
+[component.beast_transform]
+    type = "StatusCounter"
+
+[component.human_transform]
+    type = "StatusCounter"
+
+[component.form]
+    type = "Form"
+
+[component.walk_speed]
+    type = "f64"
+
+[component.behaviour]
+    type = "Behaviour"
+
+[component.input_source]
+    type = "InputSource"
+
+[component.behaviour_state]
+    type = "RefCell<BehaviourState>"
+
+[component.simple_npc_knowledge]
+    type = "RefCell<SimpleNpcKnowledge>"
+
+[component.drawable_knowledge]
+    type = "RefCell<DrawableKnowledge>"
+
+[component.target_set]
+    type = "RefCell<TargetSet>"
+
+[component.path_traverse]
+    type = "RefCell<PathTraverse>"
+
+[query.clouds_query]
+    prefix = "Clouds"
+    components = ["outside", "position", "moon"]
 
 [action_property.name]
     type = "&'static str"
@@ -34,3 +94,6 @@ imports = [
     type = "u64"
 
 [action_property.axis_velocity_movement]
+
+[action_property.burst_fire]
+    type = "BurstFire"

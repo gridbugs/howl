@@ -21,6 +21,8 @@ pub enum Behaviour {
     Observer,
 }
 
+pub type BehaviourState = State;
+
 #[derive(Clone, Copy)]
 pub struct BehaviourInput<'a> {
     entity_id: EntityId,
