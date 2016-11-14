@@ -1,6 +1,4 @@
-use ecs::{ComponentTypeSet, component_type, EcsCtx};
-
-use geometry::Vector2;
+use ecs::{ComponentTypeSet, component_type};
 
 #[test]
 fn component_set() {
@@ -27,33 +25,4 @@ fn component_set_iter() {
     assert_eq!(iter.next(), Some(component_type::POSITION));
     assert_eq!(iter.next(), Some(component_type::SOLID));
     assert!(iter.next().is_none());
-}
-
-#[test]
-fn entity_create_destroy() {
-    let mut ctx = EcsCtx::new();
-
-    let id = {
-        let mut entity = ctx.alloc_entity_mut();
-        entity.insert_solid();
-        entity.insert_position(Vector2::new(0, 0));
-
-        assert!(entity.contains_solid());
-        assert!(entity.contains_position());
-        assert!(!entity.contains_opacity());
-
-        assert_eq!(*entity.position().unwrap(), Vector2::new(0, 0));
-        assert!(!entity.is_empty());
-
-        entity.id()
-    };
-
-    ctx.remove_entity(id);
-
-    let entity = ctx.entity(id).unwrap();
-
-    assert!(!entity.contains_solid());
-    assert!(!entity.contains_position());
-    assert!(entity.position().is_none());
-    assert!(entity.is_empty());
 }
