@@ -1,0 +1,21 @@
+imports = [
+    "math::Coord",
+    "frontends::ansi::ComplexTile",
+]
+
+[component.solid]
+[component.collider]
+
+[component.position]
+    type = "Coord"
+    copy = true
+
+[component.opacity]
+    type = "f64"
+    copy = true
+
+[component.ansi_tile]
+    type = "ComplexTile"
+
+[component.tile_depth]
+    type = "usize"

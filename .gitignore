@@ -1,0 +1,7 @@
+*.swp
+Cargo.lock
+target
+*.bk
+
+# Generated ecs source file
+src/ecs/generated.rs
