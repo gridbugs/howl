@@ -70,7 +70,7 @@ impl<T> BidirectionalList<T> {
 
 impl<T: Default> BidirectionalList<T> {
     pub fn get_mut_with_default(&mut self, index: isize) -> &mut T {
-        if index > 0 {
+        if index >= 0 {
             let index = index as usize;
             for _ in self.non_negative.len()..(index + 1) {
                 self.non_negative.push(Default::default());
