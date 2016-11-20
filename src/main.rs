@@ -50,6 +50,9 @@ fn main() {
                    "&,,,&,,,,,,,&,,,,,,,,,,,,,,#########,&",
                    "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"];
 
+    let height = strings.len();
+    let width = strings[0].len();
+
     let mut y = 0;
     for line in &strings {
         let mut x = 0;
@@ -84,5 +87,17 @@ fn main() {
     sh.update(&ctx, &g);
     ctx.commit(&mut g);
 
-    println!("Hello, world!");
+    for i in 0..height {
+        for j in 0..width {
+            let coord = math::Coord::new(j as isize, i as isize);
+            if let Some(cell) = sh.get(coord) {
+                if cell.solid() {
+                    print!("#");
+                } else {
+                    print!(" ");
+                }
+            }
+        }
+        print!("\n");
+    }
 }
