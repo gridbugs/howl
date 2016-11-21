@@ -172,3 +172,68 @@ fn track_opacity() {
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.0 * 10.0);
     assert_eq!((env.sh.get(end_coord).opacity() * 10.0).round(), 0.2 * 10.0);
 }
+
+#[test]
+fn insert_move_multiple() {
+     let mut env = Env::new();
+
+    let mut action = EcsAction::new();
+    let start_coord = Coord::new(1, 2);
+    let end_coord = Coord::new(1, 3);
+
+    // add solid entity
+    let id_a = {
+        let mut entity = action.entity_mut(env.ids.reserve());
+        entity.insert_position(start_coord);
+        entity.insert_solid();
+
+        entity.id()
+    };
+
+    env.sh.update(&env.ctx, &action);
+    env.ctx.commit(&mut action);
+
+    assert!(env.sh.get(start_coord).solid());
+
+    // add second solid entity in same cell
+    let id_b = {
+        let mut entity = action.entity_mut(env.ids.reserve());
+        entity.insert_position(start_coord);
+        entity.insert_solid();
+
+        entity.id()
+    };
+
+    env.sh.update(&env.ctx, &action);
+    env.ctx.commit(&mut action);
+
+    assert!(env.sh.get(start_coord).solid());
+
+    // move original entity
+    action.entity_mut(id_a).insert_position(end_coord);
+
+    env.sh.update(&env.ctx, &action);
+    env.ctx.commit(&mut action);
+
+    assert!(env.sh.get(start_coord).solid());
+    assert!(env.sh.get(end_coord).solid());
+
+    // move second entity
+    action.entity_mut(id_b).insert_position(end_coord);
+
+    env.sh.update(&env.ctx, &action);
+    env.ctx.commit(&mut action);
+
+    assert!(!env.sh.get(start_coord).solid());
+    assert!(env.sh.get(end_coord).solid());
+
+    // move both entities in single action
+    action.entity_mut(id_a).insert_position(start_coord);
+    action.entity_mut(id_b).insert_position(start_coord);
+
+    env.sh.update(&env.ctx, &action);
+    env.ctx.commit(&mut action);
+
+    assert!(env.sh.get(start_coord).solid());
+    assert!(!env.sh.get(end_coord).solid());
+}
