@@ -67,9 +67,9 @@ impl SpatialHashTable {
         self.grid.get_mut_with_default(coord)
     }
 
-    fn change_entity_position(&mut self, entity: EntityRef, insertion: ActionInsertionEntityRef, current_position: Coord, new_position: Coord) {
-        self.remove_entity_position(entity, current_position);
-        self.add_entity_position(insertion, new_position);
+    fn change_entity_position(&mut self, entity: PostInsertionEntityRef, current_position: Coord, new_position: Coord) {
+        self.remove_entity_position(entity.to_entity_ref(), current_position);
+        self.add_entity_position(entity, new_position);
     }
 
     fn remove_entity_position(&mut self, entity: EntityRef, position: Coord) {
@@ -83,27 +83,26 @@ impl SpatialHashTable {
         cell.entities.remove(&entity.id());
     }
 
-    fn add_entity_position(&mut self, insertion: ActionInsertionEntityRef, position: Coord) {
+    fn add_entity_position(&mut self, entity: PostInsertionEntityRef, position: Coord) {
         let mut cell = self.get_mut_with_default(position);
-        if insertion.contains_solid() {
+        if entity.contains_solid() {
             cell.solid += 1;
         }
-        if let Some(opacity) = insertion.opacity() {
+        if let Some(opacity) = entity.opacity() {
             cell.opacity += opacity;
         }
-        cell.entities.insert(insertion.id());
+        cell.entities.insert(entity.id());
     }
 
     fn update_insertions(&mut self, ctx: &EcsCtx, insertions: &ActionInsertionTable) {
         for (entity_id, new_position) in insertions.position.iter() {
-            let entity = ctx.entity(*entity_id);
-            let insertion = insertions.entity(*entity_id);
-            if let Some(current_position) = entity.position() {
+            let entity = ctx.post_insertion_entity(*entity_id, insertions);
+            if let Some(current_position) = entity.current_position() {
                 // the entity is changing position
-                self.change_entity_position(entity, insertion, current_position, *new_position);
+                self.change_entity_position(entity, current_position, *new_position);
             } else {
                 // the entity is gaining a position
-                self.add_entity_position(insertion, *new_position);
+                self.add_entity_position(entity, *new_position);
             }
         }
     }
