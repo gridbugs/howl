@@ -16,6 +16,7 @@ pub struct SpatialHashCell {
 
 pub struct SpatialHashTable {
     grid: DynamicGrid<SpatialHashCell>,
+    empty: SpatialHashCell,
 }
 
 impl SpatialHashCell {
@@ -46,11 +47,12 @@ impl SpatialHashTable {
     pub fn new() -> Self {
         SpatialHashTable {
             grid: DynamicGrid::new(),
+            empty: SpatialHashCell::new(),
         }
     }
 
-    pub fn get(&self, coord: Coord) -> Option<&SpatialHashCell> {
-        self.grid.get(coord)
+    pub fn get(&self, coord: Coord) -> &SpatialHashCell {
+        self.grid.get(coord).unwrap_or(&self.empty)
     }
 
     pub fn limits_min(&self) -> Coord {

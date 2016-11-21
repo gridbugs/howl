@@ -5,5 +5,5 @@ use spatial_hash::SpatialHashTable;
 use knowledge::LevelKnowledge;
 
 pub fn blind_observe<K: LevelKnowledge>(eye: Coord, world: &SpatialHashTable, knowledge: &mut K) {
-    world.get(eye).map(|cell| knowledge.update_cell(eye, cell, 1.0));
+    knowledge.update_cell(eye, world.get(eye), 1.0);
 }

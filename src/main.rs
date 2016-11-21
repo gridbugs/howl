@@ -90,12 +90,11 @@ fn main() {
     for i in 0..height {
         for j in 0..width {
             let coord = math::Coord::new(j as isize, i as isize);
-            if let Some(cell) = sh.get(coord) {
-                if cell.solid() {
-                    print!("#");
-                } else {
-                    print!(" ");
-                }
+            let cell = sh.get(coord);
+            if cell.solid() {
+                print!("#");
+            } else {
+                print!(" ");
             }
         }
         print!("\n");

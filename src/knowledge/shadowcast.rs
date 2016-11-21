@@ -353,20 +353,16 @@ impl Shadowcast {
             // update the coord to the current grid position
             coord.set(args.octant.lateral_idx, idx);
 
-            // look up the cell with opacity
-            let cell_opacity = if let Some(cell) = args.world.get(coord) {
-                // report the cell as visible
-                if (coord - args.eye).length_squared() < args.distance_squared {
-                    knowledge.update_cell(coord, cell, scan.frame.visibility);
-                }
+            // look up spatial hash cell
+            let cell = args.world.get(coord);
 
-                cell.opacity()
-            } else {
-                0.0
-            };
+            // report the cell as visible
+            if (coord - args.eye).length_squared() < args.distance_squared {
+                knowledge.update_cell(coord, cell, scan.frame.visibility);
+            }
 
             // compute current visibility
-            let current_visibility = (scan.frame.visibility - cell_opacity).max(0.0);
+            let current_visibility = (scan.frame.visibility - cell.opacity()).max(0.0);
             let current_opaque = current_visibility == 0.0;
 
             // process changes in visibility
@@ -439,7 +435,7 @@ impl Shadowcast {
                                       distance: usize,
                                       knowledge: &mut K) {
 
-        world.get(eye).map(|cell| knowledge.update_cell(eye, cell, 1.0));
+        knowledge.update_cell(eye, world.get(eye), 1.0);
 
         for octant in &self.octants {
             let args = OctantArgs::new(octant, world, eye, distance, 0.0, 1.0);
