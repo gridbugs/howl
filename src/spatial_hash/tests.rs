@@ -39,10 +39,7 @@ fn insert_remove() {
     env.ctx.commit(&mut action); // this resets the action so it can be reused
     assert!(env.sh.get(coord).solid());
 
-    {
-        let mut entity = action.entity_mut(id);
-        entity.remove_solid();
-    }
+    action.entity_mut(id).remove_solid();
 
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
@@ -68,10 +65,7 @@ fn insert_move() {
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
 
-    {
-        let mut entity = action.entity_mut(id);
-        entity.insert_position(end_coord);
-    }
+    action.entity_mut(id).insert_position(end_coord);
 
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
@@ -98,10 +92,7 @@ fn remove_position() {
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
 
-    {
-        let mut entity = action.entity_mut(id);
-        entity.remove_position();
-    }
+    action.entity_mut(id).remove_position();
 
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
@@ -126,10 +117,7 @@ fn insert_solid() {
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
 
-    {
-        let mut entity = action.entity_mut(id);
-        entity.insert_solid();
-    }
+    action.entity_mut(id).insert_solid();
 
     assert!(!env.sh.get(start_coord).solid());
 
@@ -161,10 +149,7 @@ fn track_opacity() {
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.0 * 10.0);
 
     // add an opacity of 0.5
-    {
-        let mut entity = action.entity_mut(id);
-        entity.insert_opacity(0.5);
-    }
+    action.entity_mut(id).insert_opacity(0.5);
 
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
@@ -172,10 +157,7 @@ fn track_opacity() {
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.5 * 10.0);
 
     // decrease opacity to 0.2
-    {
-        let mut entity = action.entity_mut(id);
-        entity.insert_opacity(0.2);
-    }
+    action.entity_mut(id).insert_opacity(0.2);
 
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
@@ -183,10 +165,7 @@ fn track_opacity() {
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.2 * 10.0);
 
     // move the entity
-    {
-        let mut entity = action.entity_mut(id);
-        entity.insert_position(end_coord);
-    }
+    action.entity_mut(id).insert_position(end_coord);
 
     env.sh.update(&env.ctx, &action);
     env.ctx.commit(&mut action);
