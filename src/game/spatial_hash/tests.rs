@@ -1,5 +1,5 @@
 use ecs::*;
-use spatial_hash::*;
+use game::*;
 use util::LeakyReserver;
 use math::Coord;
 

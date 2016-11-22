@@ -1,8 +1,7 @@
 /// Dummy vision system that sees a square around the eye
 
 use math::Coord;
-use spatial_hash::SpatialHashTable;
-use knowledge::LevelKnowledge;
+use game::{SpatialHashTable, LevelKnowledge};
 
 pub fn square_observe<K: LevelKnowledge>(eye: Coord,
                                          distance: usize,

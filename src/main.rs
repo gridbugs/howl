@@ -9,15 +9,14 @@ extern crate rustty;
 mod frontends;
 mod ecs;
 mod math;
-mod knowledge;
-mod spatial_hash;
+mod game;
 mod util;
 mod direction;
 mod grid;
 
 fn main() {
 
-    let mut sh = spatial_hash::SpatialHashTable::new();
+    let mut sh = game::SpatialHashTable::new();
     let mut ctx = ecs::EcsCtx::new();
     let mut ids = util::LeakyReserver::new();
 

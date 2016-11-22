@@ -1,5 +1,5 @@
 use math::Coord;
-use spatial_hash::SpatialHashCell;
+use game::SpatialHashCell;
 
 /// Trait implemented by representations of knowledge about a level
 pub trait LevelKnowledge {

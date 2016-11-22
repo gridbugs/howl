@@ -6,8 +6,7 @@ use std::cmp;
 use math::{Coord, Vector2, Vector2Index};
 use direction::{Direction, CardinalDirection, OrdinalDirection, SubDirection};
 
-use spatial_hash::SpatialHashTable;
-use knowledge::LevelKnowledge;
+use game::{SpatialHashTable, LevelKnowledge};
 
 
 // Different types of rounding functions
