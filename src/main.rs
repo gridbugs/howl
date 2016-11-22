@@ -13,6 +13,7 @@ mod game;
 mod util;
 mod direction;
 mod grid;
+mod behaviour;
 
 fn main() {
 
