@@ -351,6 +351,10 @@ impl State {
         }
     }
 
+    pub fn is_initialised(&self) -> bool {
+        !self.stack.is_empty()
+    }
+
     pub fn initialise<Leaf, Switch>(&mut self,
                                     graph: &Graph<Leaf, Switch>,
                                     index: NodeIndex)

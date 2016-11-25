@@ -1,6 +1,7 @@
 imports = [
     "math::Coord",
     "frontends::ansi::ComplexTile",
+    "game::*",
 ]
 
 [component.solid]
@@ -19,3 +20,11 @@ imports = [
 
 [component.tile_depth]
     type = "usize"
+
+[component.behaviour_type]
+    type = "BehaviourType"
+    copy = true
+
+[component.behaviour_state]
+    type = "BehaviourState"
+    container = "RefCell"

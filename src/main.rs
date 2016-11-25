@@ -53,6 +53,8 @@ fn main() {
     let height = strings.len();
     let width = strings[0].len();
 
+    let mut pc_id = None;
+
     let mut y = 0;
     for line in &strings {
         let mut x = 0;
@@ -74,7 +76,9 @@ fn main() {
                     ecs::prototypes::outside_floor(g.entity_mut(ids.reserve()), coord);
                 }
                 '@' => {
-                    ecs::prototypes::pc(g.entity_mut(ids.reserve()), coord);
+                    let id = ids.reserve();
+                    pc_id = Some(id);
+                    ecs::prototypes::pc(g.entity_mut(id), coord);
                     ecs::prototypes::outside_floor(g.entity_mut(ids.reserve()), coord);
                 }
                 _ => panic!(),
@@ -99,4 +103,31 @@ fn main() {
         }
         print!("\n");
     }
+
+    let action = action_test(ctx.entity(pc_id.unwrap()));
+
+    println!("{:?}", action);
+}
+
+fn action_test(entity: ecs::EntityRef) -> game::ActionArgs {
+    let mut window_allocator = frontends::ansi::WindowAllocator::new().unwrap();
+    let input_source = window_allocator.make_input_source();
+    let behaviour = game::BehaviourContext::new(input_source);
+
+    run_behaviour(&behaviour, entity)
+}
+
+fn run_behaviour(behaviour: &game::BehaviourContext, entity: ecs::EntityRef) -> game::ActionArgs {
+    let mut behaviour_state = entity.behaviour_state_borrow_mut().unwrap();
+
+    if !behaviour_state.is_initialised() {
+        let behaviour_type = entity.behaviour_type().unwrap();
+        behaviour_state.initialise(behaviour.graph(), behaviour.nodes().index(behaviour_type)).unwrap();
+    }
+
+    let input = game::BehaviourInput {
+        entity: entity,
+    };
+
+    behaviour_state.run(behaviour.graph(), input).unwrap()
 }

@@ -2,6 +2,7 @@ use math::Coord;
 use frontends::ansi;
 
 use ecs::EntityPopulate;
+use game::*;
 
 pub fn wall<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
@@ -54,6 +55,8 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_ansi_tile(ansi::foreground('@', ansi::colours::WHITE, ansi::styles::BOLD));
     entity.insert_tile_depth(2);
     entity.insert_collider();
+    entity.insert_behaviour_state(BehaviourState::new());
+    entity.insert_behaviour_type(BehaviourType::AnsiPlayerInput);
 
     entity
 }
