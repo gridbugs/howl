@@ -237,3 +237,51 @@ fn insert_move_multiple() {
     assert!(env.sh.get(start_coord).solid());
     assert!(!env.sh.get(end_coord).solid());
 }
+
+#[test]
+fn entity_set() {
+    let mut env = Env::new();
+
+    let mut action = EcsAction::new();
+
+    let coord_a = Coord::new(1, 2);
+    let coord_b = Coord::new(1, 3);
+
+    let id_a = {
+        let mut entity = action.entity_mut(env.ids.reserve());
+        entity.insert_position(coord_a);
+        entity.id()
+    };
+
+    let id_b = {
+        let mut entity = action.entity_mut(env.ids.reserve());
+        entity.insert_position(coord_a);
+        entity.id()
+    };
+
+    assert!(env.sh.get(coord_a).entities().is_empty());
+
+    env.sh.update(&env.ctx, &action, 0);
+    env.ctx.commit(&mut action);
+
+    {
+        let entities = env.sh.get(coord_a).entities();
+        assert!(entities.contains(&id_a));
+        assert!(entities.contains(&id_b));
+        assert!(entities.len() == 2);
+    }
+
+    action.entity_mut(id_b).insert_position(coord_b);
+    env.sh.update(&env.ctx, &action, 0);
+    env.ctx.commit(&mut action);
+
+    {
+        let entities_a = env.sh.get(coord_a).entities();
+        let entities_b = env.sh.get(coord_b).entities();
+
+        assert!(entities_a.len() == 1);
+        assert!(entities_b.len() == 1);
+        assert!(entities_a.contains(&id_a));
+        assert!(entities_b.contains(&id_b));
+    }
+}

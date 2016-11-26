@@ -37,6 +37,10 @@ impl SpatialHashCell {
         self.last_updated
     }
 
+    pub fn entities(&self) -> &EntitySet {
+        &self.entities
+    }
+
     pub fn opacity(&self) -> f64 {
         self.opacity
     }
