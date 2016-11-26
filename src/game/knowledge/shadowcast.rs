@@ -6,7 +6,7 @@ use std::cmp;
 use math::{Coord, Vector2, Vector2Index};
 use direction::{Direction, CardinalDirection, OrdinalDirection, SubDirection};
 
-use game::{SpatialHashTable, LevelKnowledge};
+use game::{SpatialHashTable, LevelKnowledge, Turn};
 
 
 // Different types of rounding functions
@@ -333,7 +333,7 @@ impl Shadowcast {
         unsafe { &mut *self.stack.get() }.push(frame);
     }
 
-    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K, turn: u64) {
+    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K, turn: Turn) {
         let mut coord = Coord::new(0, 0);
         coord.set(args.octant.depth_idx, scan.depth_idx);
 
@@ -413,7 +413,7 @@ impl Shadowcast {
 
     }
 
-    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K, turn: u64) {
+    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K, turn: Turn) {
         let limits = Limits::new(args.eye, args.world, args.octant);
 
         // Initial stack frame
@@ -433,7 +433,7 @@ impl Shadowcast {
                                       world: &SpatialHashTable,
                                       distance: usize,
                                       knowledge: &mut K,
-                                      turn: u64) {
+                                      turn: Turn) {
 
         knowledge.update_cell(eye, world.get(eye), 1.0, turn);
 

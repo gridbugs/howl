@@ -1,4 +1,4 @@
-use game::{LevelKnowledge, SpatialHashCell};
+use game::{LevelKnowledge, SpatialHashCell, Turn};
 use grid::DynamicGrid;
 use util::BestMap;
 use math::Coord;
@@ -37,6 +37,7 @@ impl AnsiDrawableKnowledgeLevel {
 }
 
 impl LevelKnowledge for AnsiDrawableKnowledgeLevel {
-    fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, turn: u64) {
+    fn update_cell(&mut self, coord: Coord, _world_cell: &SpatialHashCell, _accuracy: f64, _turn: Turn) {
+        let _knowledge_cell = self.grid.get_mut_with_default(coord);
     }
 }
