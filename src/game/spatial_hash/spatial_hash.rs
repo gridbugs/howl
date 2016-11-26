@@ -11,7 +11,11 @@ pub struct SpatialHashCell {
     // count of solid entities in this cell
     solid: usize,
 
+    // set of entities currently in this cell
     entities: EntitySet,
+
+    // turn on which this cell was last updated
+    last_updated: u64,
 }
 
 pub struct SpatialHashTable {
@@ -25,7 +29,12 @@ impl SpatialHashCell {
             opacity: 0.0,
             solid: 0,
             entities: EntitySet::new(),
+            last_updated: 0,
         }
+    }
+
+    pub fn last_updated(&self) -> u64 {
+        self.last_updated
     }
 
     pub fn opacity(&self) -> f64 {
@@ -67,12 +76,12 @@ impl SpatialHashTable {
         self.grid.get_mut_with_default(coord)
     }
 
-    fn change_entity_position(&mut self, entity: EntityRef, current_position: Coord, new_position: Coord) {
-        self.remove_entity_position(entity, current_position);
-        self.add_entity_position(entity, new_position);
+    fn change_entity_position(&mut self, entity: EntityRef, current_position: Coord, new_position: Coord, turn: u64) {
+        self.remove_entity_position(entity, current_position, turn);
+        self.add_entity_position(entity, new_position, turn);
     }
 
-    fn remove_entity_position(&mut self, entity: EntityRef, position: Coord) {
+    fn remove_entity_position(&mut self, entity: EntityRef, position: Coord, turn: u64) {
         let mut cell = self.get_mut_with_default(position);
         if entity.contains_solid() {
             cell.solid -= 1;
@@ -81,9 +90,10 @@ impl SpatialHashTable {
             cell.opacity -= opacity;
         }
         cell.entities.remove(&entity.id());
+        cell.last_updated = turn;
     }
 
-    fn add_entity_position(&mut self, entity: EntityRef, position: Coord) {
+    fn add_entity_position(&mut self, entity: EntityRef, position: Coord, turn: u64) {
         let mut cell = self.get_mut_with_default(position);
         if entity.contains_solid() {
             cell.solid += 1;
@@ -92,9 +102,10 @@ impl SpatialHashTable {
             cell.opacity += opacity;
         }
         cell.entities.insert(entity.id());
+        cell.last_updated = turn;
     }
 
-    fn update_insertions(&mut self, ctx: &EcsCtx, insertions: &ActionInsertionTable) {
+    fn update_insertions(&mut self, ctx: &EcsCtx, insertions: &ActionInsertionTable, turn: u64) {
         for (entity_id, new_position) in insertions.position.iter() {
             let entity = ctx.entity(*entity_id);
             // Add and remove tracked components based on the current data stored about the
@@ -102,10 +113,10 @@ impl SpatialHashTable {
             // applied later.
             if let Some(current_position) = entity.position() {
                 // the entity is changing position
-                self.change_entity_position(entity, current_position, *new_position);
+                self.change_entity_position(entity, current_position, *new_position, turn);
             } else {
                 // the entity is gaining a position
-                self.add_entity_position(entity, *new_position);
+                self.add_entity_position(entity, *new_position, turn);
             }
         }
 
@@ -114,7 +125,9 @@ impl SpatialHashTable {
             if let Some(position) = entity.position() {
                 let current_opacity = entity.current_opacity().unwrap_or(0.0);
                 let opacity_increase = new_opacity - current_opacity;
-                self.get_mut_with_default(position).opacity += opacity_increase;
+                let cell = self.get_mut_with_default(position);
+                cell.opacity += opacity_increase;
+                cell.last_updated = turn;
             }
         }
 
@@ -123,13 +136,15 @@ impl SpatialHashTable {
             if let Some(position) = entity.position() {
                 if !entity.current_contains_solid() {
                     // entity is becoming solid
-                    self.get_mut_with_default(position).solid += 1;
+                    let cell = self.get_mut_with_default(position);
+                    cell.solid += 1;
+                    cell.last_updated = turn;
                 }
             }
         }
     }
 
-    fn update_removals(&mut self, ctx: &EcsCtx, removals: &ActionRemovalTable) {
+    fn update_removals(&mut self, ctx: &EcsCtx, removals: &ActionRemovalTable, turn: u64) {
 
         // loop through each component tracked by the spatial hash
 
@@ -138,7 +153,9 @@ impl SpatialHashTable {
             if let Some(position) = entity.position() {
                 if entity.contains_solid() {
                     // removing solid from entity with position
-                    self.get_mut_with_default(position).solid -= 1;
+                    let cell = self.get_mut_with_default(position);
+                    cell.solid -= 1;
+                    cell.last_updated = turn;
                 }
             }
         }
@@ -148,7 +165,9 @@ impl SpatialHashTable {
             if let Some(position) = entity.position() {
                 if let Some(opacity) = entity.opacity() {
                     // removing opacity from entity with position
-                    self.get_mut_with_default(position).opacity -= opacity;
+                    let cell = self.get_mut_with_default(position);
+                    cell.opacity -= opacity;
+                    cell.last_updated = turn;
                 }
             }
         }
@@ -157,25 +176,26 @@ impl SpatialHashTable {
         for entity_id in removals.position.iter() {
             let entity = ctx.entity(*entity_id);
             if let Some(position) = entity.position() {
-                self.remove_entity_position(entity, position);
+                self.remove_entity_position(entity, position, turn);
             }
         }
     }
 
     fn update_removed_entities(&mut self,
                                ctx: &EcsCtx,
-                               entities: &HashSet<EntityId>) {
+                               entities: &HashSet<EntityId>,
+                               turn: u64) {
         for entity_id in entities.iter() {
             let entity = ctx.entity(*entity_id);
             if let Some(position) = entity.position() {
-                self.remove_entity_position(entity, position);
+                self.remove_entity_position(entity, position, turn);
             }
         }
     }
 
-    pub fn update(&mut self, ctx: &EcsCtx, action: &EcsAction) {
-        self.update_insertions(ctx, &action.insertions);
-        self.update_removals(ctx, &action.removals);
-        self.update_removed_entities(ctx, &action.removed_entities);
+    pub fn update(&mut self, ctx: &EcsCtx, action: &EcsAction, turn: u64) {
+        self.update_insertions(ctx, &action.insertions, turn);
+        self.update_removals(ctx, &action.removals, turn);
+        self.update_removed_entities(ctx, &action.removed_entities, turn);
     }
 }

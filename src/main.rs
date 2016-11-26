@@ -88,7 +88,7 @@ fn main() {
         y += 1;
     }
 
-    sh.update(&ctx, &g);
+    sh.update(&ctx, &g, 0);
     ctx.commit(&mut g);
 
     for i in 0..height {
