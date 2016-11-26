@@ -333,7 +333,7 @@ impl Shadowcast {
         unsafe { &mut *self.stack.get() }.push(frame);
     }
 
-    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K) {
+    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K, turn: u64) {
         let mut coord = Coord::new(0, 0);
         coord.set(args.octant.depth_idx, scan.depth_idx);
 
@@ -357,7 +357,7 @@ impl Shadowcast {
 
             // report the cell as visible
             if (coord - args.eye).length_squared() < args.distance_squared {
-                knowledge.update_cell(coord, cell, scan.frame.visibility);
+                knowledge.update_cell(coord, cell, scan.frame.visibility, turn);
             }
 
             // compute current visibility
@@ -413,7 +413,7 @@ impl Shadowcast {
 
     }
 
-    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K) {
+    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K, turn: u64) {
         let limits = Limits::new(args.eye, args.world, args.octant);
 
         // Initial stack frame
@@ -423,7 +423,7 @@ impl Shadowcast {
             if let Some(scan) = Scan::new(&limits, &frame, args.octant, args.distance) {
                 // Scan::new can yield None if the scan would be entirely off the grid
                 // outside the view distance.
-                self.scan(args, &scan, knowledge);
+                self.scan(args, &scan, knowledge, turn);
             }
         }
     }
@@ -432,13 +432,14 @@ impl Shadowcast {
                                       eye: Coord,
                                       world: &SpatialHashTable,
                                       distance: usize,
-                                      knowledge: &mut K) {
+                                      knowledge: &mut K,
+                                      turn: u64) {
 
-        knowledge.update_cell(eye, world.get(eye), 1.0);
+        knowledge.update_cell(eye, world.get(eye), 1.0, turn);
 
         for octant in &self.octants {
             let args = OctantArgs::new(octant, world, eye, distance, 0.0, 1.0);
-            self.detect_visible_area_octant(&args, knowledge);
+            self.detect_visible_area_octant(&args, knowledge, turn);
         }
     }
 }
