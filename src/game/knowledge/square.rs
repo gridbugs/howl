@@ -12,7 +12,6 @@ pub fn square_observe<K: LevelKnowledge>(eye: Coord,
     for i in -distance..distance + 1 {
         for j in -distance..distance + 1 {
             let coord = eye + Coord::new(j, i);
-            println!("updating {:?}", coord);
             knowledge.update_cell(coord, world.get(coord), 1.0, turn);
         }
     }
