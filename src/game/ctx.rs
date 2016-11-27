@@ -5,7 +5,6 @@ use frontends::ansi;
 use util::LeakyReserver;
 use ecs::{self, EntityId, EcsAction};
 use math::Coord;
-use debug;
 
 pub struct GameCtx<'a> {
     levels: LevelTable,
