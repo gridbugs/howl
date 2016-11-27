@@ -6,7 +6,7 @@ pub struct BehaviourNodes {
     pub ansi_player_input: BehaviourNodeIndex,
 }
 
-pub struct BehaviourContext {
+pub struct BehaviourCtx {
     pub graph: BehaviourGraph,
     pub nodes: BehaviourNodes,
 }
@@ -19,7 +19,7 @@ impl BehaviourNodes {
     }
 }
 
-impl BehaviourContext {
+impl BehaviourCtx {
     pub fn new(input_source: ansi::InputSource) -> Self {
         let mut graph = BehaviourGraph::new();
 
@@ -27,7 +27,7 @@ impl BehaviourContext {
             ansi_player_input: graph.add_leaf(ansi_player_input(input_source)),
         };
 
-        BehaviourContext {
+        BehaviourCtx {
             graph: graph,
             nodes: nodes,
         }

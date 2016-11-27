@@ -28,6 +28,10 @@ impl AnsiDrawableKnowledgeCell {
     pub fn background(&self) -> Option<ComplexTile> {
         self.background.value()
     }
+
+    pub fn last_updated(&self) -> u64 {
+        self.last_updated
+    }
 }
 
 impl Default for AnsiDrawableKnowledgeCell {
