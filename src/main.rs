@@ -61,5 +61,5 @@ fn main() {
 
     debug::init(&mut debug_buffer);
 
-    game.run();
+    game.run().expect("Game ended unexpectedly");
 }

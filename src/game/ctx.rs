@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 
-use game::{LevelTable, Turn, Shadowcast, AnsiRenderer};
+use game::{LevelTable, Turn, Shadowcast, AnsiRenderer, BehaviourCtx, Result, Error,
+           MetaAction, BehaviourInput};
 use frontends::ansi;
 use util::LeakyReserver;
 use ecs::{self, EntityId, EcsAction};
@@ -15,6 +16,7 @@ pub struct GameCtx<'a> {
     level_id: isize,
     pc_id: Option<EntityId>,
     pc_observer: Shadowcast,
+    behaviour_ctx: BehaviourCtx,
 }
 
 impl<'a> GameCtx<'a> {
@@ -28,15 +30,41 @@ impl<'a> GameCtx<'a> {
             level_id: 0,
             pc_id: None,
             pc_observer: Shadowcast::new(),
+            behaviour_ctx: BehaviourCtx::new(input_source),
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<()> {
         self.init_demo();
 
-        self.pc_render_ansi();
+        self.game_loop()
+    }
 
-        self.input_source.get_event();
+    fn get_meta_action(&self, entity_id: EntityId) -> Result<MetaAction> {
+        let entity = self.levels.level(self.level_id).ecs.entity(entity_id);
+        let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
+        if !behaviour_state.is_initialised() {
+            let behaviour_type = entity.behaviour_type().ok_or(Error::MissingComponent)?;
+            behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
+        }
+        let input = BehaviourInput { entity: entity };
+        Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
+    }
+
+    fn game_turn(&mut self, entity_id: EntityId) -> Result<()> {
+
+        let _meta_action = self.get_meta_action(entity_id)?;
+
+        Ok(())
+    }
+
+    fn game_loop(&mut self) -> Result<()> {
+        while let Some(turn_event) = self.levels.level_mut(self.level_id).turn_schedule.next() {
+            let entity_id = turn_event.event;
+            self.game_turn(entity_id)?;
+        }
+
+        Err(Error::ScheduleEmpty)
     }
 
     fn new_id(&self) -> EntityId {
@@ -112,6 +140,7 @@ impl<'a> GameCtx<'a> {
         }
 
         self.commit(&mut g);
+        self.levels.level_mut(self.level_id).turn_schedule.insert(self.pc_id.unwrap(), 0);
     }
 }
 

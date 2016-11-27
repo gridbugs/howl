@@ -50,6 +50,7 @@ pub struct Schedule<T> {
     seq: u64,
 }
 
+#[derive(Debug)]
 pub struct ScheduleEvent<T> {
     pub event: T,
     pub time_delta: u64,

@@ -1,9 +1,11 @@
 use game::SpatialHashTable;
-use ecs::EcsCtx;
+use ecs::{EcsCtx, EntityId};
+use util::Schedule;
 
 pub struct Level {
     pub ecs: EcsCtx,
     pub spatial_hash: SpatialHashTable,
+    pub turn_schedule: Schedule<EntityId>,
 }
 
 impl Level {
@@ -11,6 +13,7 @@ impl Level {
         Level {
             ecs: EcsCtx::new(),
             spatial_hash: SpatialHashTable::new(),
+            turn_schedule: Schedule::new(),
         }
     }
 }

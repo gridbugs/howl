@@ -1,4 +1,4 @@
-use game::ActionArgs;
+use game::MetaAction;
 use behaviour::*;
 use ecs::*;
 
@@ -11,7 +11,7 @@ pub struct BehaviourInput<'a> {
     pub entity: EntityRef<'a>,
 }
 
-pub struct BehaviourLeaf(Box<Fn(BehaviourInput) -> LeafResolution<ActionArgs>>);
+pub struct BehaviourLeaf(Box<Fn(BehaviourInput) -> LeafResolution<MetaAction>>);
 
 pub struct BehaviourSwitch {
     call: Box<Fn(BehaviourInput) -> SwitchResolution>,
@@ -20,8 +20,8 @@ pub struct BehaviourSwitch {
 
 pub type BehaviourGraph = Graph<BehaviourLeaf, BehaviourSwitch>;
 
-impl<'a> LeafFn<BehaviourInput<'a>, ActionArgs> for BehaviourLeaf {
-    fn call(&self, input: BehaviourInput<'a>) -> LeafResolution<ActionArgs> {
+impl<'a> LeafFn<BehaviourInput<'a>, MetaAction> for BehaviourLeaf {
+    fn call(&self, input: BehaviourInput<'a>) -> LeafResolution<MetaAction> {
         (self.0)(input)
     }
 }
@@ -37,7 +37,7 @@ impl<'a> SwitchFn<BehaviourInput<'a>> for BehaviourSwitch {
 }
 
 impl BehaviourLeaf {
-    pub fn new<F: 'static + Fn(BehaviourInput) -> LeafResolution<ActionArgs>>(f: F) -> Self {
+    pub fn new<F: 'static + Fn(BehaviourInput) -> LeafResolution<MetaAction>>(f: F) -> Self {
         BehaviourLeaf(Box::new(f))
     }
 }

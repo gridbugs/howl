@@ -1,11 +1,26 @@
-use game::{BehaviourLeaf, ActionArgs};
+use game::{BehaviourLeaf, ActionArgs, MetaAction, Control};
 use behaviour::LeafResolution;
+use ecs::EntityRef;
 use direction::Direction;
 use frontends::ansi;
+use rustty::Event;
 
 pub fn ansi_player_input(input_source: ansi::InputSource) -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {
-        input_source.get_event(); // TODO
-        LeafResolution::Yield(ActionArgs::Walk(input.entity.id(), Direction::North))
+        loop {
+            if let Some(event) = input_source.get_event() {
+                if let Some(meta_action) = event_to_meta_action(input.entity, event) {
+                    return LeafResolution::Yield(meta_action);
+                }
+            }
+        }
     })
+}
+
+fn event_to_meta_action(entity: EntityRef, event: Event) -> Option<MetaAction> {
+    match event {
+        Event::Char('q') | Event::Char('Q') => Some(MetaAction::Control(Control::Quit)),
+        Event::Up => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::North))),
+        _ => None,
+    }
 }
