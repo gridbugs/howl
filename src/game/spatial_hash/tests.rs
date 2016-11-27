@@ -17,6 +17,10 @@ impl Env {
             ids: LeakyReserver::new(),
         }
     }
+
+    fn turn(&self, id: u64) -> Turn {
+        Turn::new(self, id)
+    }
 }
 
 #[test]
@@ -35,13 +39,13 @@ fn insert_remove() {
     };
 
     assert!(!env.sh.get(coord).solid());
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action); // this resets the action so it can be reused
     assert!(env.sh.get(coord).solid());
 
     action.entity_mut(id).remove_solid();
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
     assert!(!env.sh.get(coord).solid());
 }
@@ -62,12 +66,12 @@ fn insert_move() {
         entity.id()
     };
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     action.entity_mut(id).insert_position(end_coord);
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(!env.sh.get(start_coord).solid());
@@ -89,12 +93,12 @@ fn remove_position() {
         entity.id()
     };
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     action.entity_mut(id).remove_position();
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(!env.sh.get(start_coord).solid());
@@ -114,14 +118,14 @@ fn insert_solid() {
         entity.id()
     };
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     action.entity_mut(id).insert_solid();
 
     assert!(!env.sh.get(start_coord).solid());
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(env.sh.get(start_coord).solid());
@@ -143,7 +147,7 @@ fn track_opacity() {
         entity.id()
     };
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.0 * 10.0);
@@ -151,7 +155,7 @@ fn track_opacity() {
     // add an opacity of 0.5
     action.entity_mut(id).insert_opacity(0.5);
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.5 * 10.0);
@@ -159,7 +163,7 @@ fn track_opacity() {
     // decrease opacity to 0.2
     action.entity_mut(id).insert_opacity(0.2);
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.2 * 10.0);
@@ -167,7 +171,7 @@ fn track_opacity() {
     // move the entity
     action.entity_mut(id).insert_position(end_coord);
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
     assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.0 * 10.0);
     assert_eq!((env.sh.get(end_coord).opacity() * 10.0).round(), 0.2 * 10.0);
@@ -190,7 +194,7 @@ fn insert_move_multiple() {
         entity.id()
     };
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(env.sh.get(start_coord).solid());
@@ -204,7 +208,7 @@ fn insert_move_multiple() {
         entity.id()
     };
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(env.sh.get(start_coord).solid());
@@ -212,7 +216,7 @@ fn insert_move_multiple() {
     // move original entity
     action.entity_mut(id_a).insert_position(end_coord);
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(env.sh.get(start_coord).solid());
@@ -221,7 +225,7 @@ fn insert_move_multiple() {
     // move second entity
     action.entity_mut(id_b).insert_position(end_coord);
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(!env.sh.get(start_coord).solid());
@@ -231,7 +235,7 @@ fn insert_move_multiple() {
     action.entity_mut(id_a).insert_position(start_coord);
     action.entity_mut(id_b).insert_position(start_coord);
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     assert!(env.sh.get(start_coord).solid());
@@ -259,29 +263,29 @@ fn entity_set() {
         entity.id()
     };
 
-    assert!(env.sh.get(coord_a).entities().is_empty());
+    assert!(env.sh.get(coord_a).entity_ids().is_empty());
 
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     {
-        let entities = env.sh.get(coord_a).entities();
-        assert!(entities.contains(&id_a));
-        assert!(entities.contains(&id_b));
+        let entities = env.sh.get(coord_a).entity_ids();
+        assert!(entities.contains(id_a));
+        assert!(entities.contains(id_b));
         assert!(entities.len() == 2);
     }
 
     action.entity_mut(id_b).insert_position(coord_b);
-    env.sh.update(&env.ctx, &action, 0);
+    env.sh.update(env.turn(0), &action);
     env.ctx.commit(&mut action);
 
     {
-        let entities_a = env.sh.get(coord_a).entities();
-        let entities_b = env.sh.get(coord_b).entities();
+        let entities_a = env.sh.get(coord_a).entity_ids();
+        let entities_b = env.sh.get(coord_b).entity_ids();
 
         assert!(entities_a.len() == 1);
         assert!(entities_b.len() == 1);
-        assert!(entities_a.contains(&id_a));
-        assert!(entities_b.contains(&id_b));
+        assert!(entities_a.contains(id_a));
+        assert!(entities_b.contains(id_b));
     }
 }

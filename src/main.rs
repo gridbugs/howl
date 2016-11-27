@@ -88,7 +88,7 @@ fn main() {
         y += 1;
     }
 
-    sh.update(&ctx, &g, 0);
+    sh.update(game::Turn::new(&ctx, 0), &g);
     ctx.commit(&mut g);
 
     for i in 0..height {

@@ -17,9 +17,11 @@ imports = [
 
 [component.ansi_tile]
     type = "ComplexTile"
+    copy = true
 
 [component.tile_depth]
-    type = "usize"
+    type = "isize"
+    copy = true
 
 [component.behaviour_type]
     type = "BehaviourType"
