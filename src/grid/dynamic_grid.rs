@@ -5,13 +5,13 @@ use math::Coord;
 use grid::Grid;
 use util::BidirectionalList;
 
-pub struct DynamicGrid<T> {
+pub struct DynamicGrid<T: Default> {
     elements: BidirectionalList<BidirectionalList<T>>,
     limits_min: Coord,
     limits_max: Coord,
 }
 
-impl<T> DynamicGrid<T> {
+impl<T: Default> DynamicGrid<T> {
     pub fn new() -> Self {
         DynamicGrid {
             elements: BidirectionalList::new(),
@@ -19,9 +19,21 @@ impl<T> DynamicGrid<T> {
             limits_max: Coord::new(0, 0),
         }
     }
+
+    pub fn get_mut_with_default(&mut self, coord: Coord) -> &mut T {
+        self.limits_max.x = cmp::max(self.limits_max.x, coord.x);
+        self.limits_max.y = cmp::max(self.limits_max.y, coord.y);
+        self.limits_min.x = cmp::min(self.limits_min.x, coord.x);
+        self.limits_min.y = cmp::min(self.limits_min.y, coord.y);
+        self.elements.get_mut_with_default(coord.y).get_mut_with_default(coord.x)
+    }
+
+    pub fn get_with_default(&self, coord: Coord) -> &T {
+        self.elements.get_with_default(coord.y).get_with_default(coord.x)
+    }
 }
 
-impl<T> Grid for DynamicGrid<T> {
+impl<T: Default> Grid for DynamicGrid<T> {
     type Item = T;
 
     fn swap(&mut self, other: &mut Self) {
@@ -58,15 +70,5 @@ impl<T> Grid for DynamicGrid<T> {
 
     fn limits_max(&self) -> Coord {
         self.limits_max
-    }
-}
-
-impl<T: Default> DynamicGrid<T> {
-    pub fn get_mut_with_default(&mut self, coord: Coord) -> &mut T {
-        self.limits_max.x = cmp::max(self.limits_max.x, coord.x);
-        self.limits_max.y = cmp::max(self.limits_max.y, coord.y);
-        self.limits_min.x = cmp::min(self.limits_min.x, coord.x);
-        self.limits_min.y = cmp::min(self.limits_min.y, coord.y);
-        self.elements.get_mut_with_default(coord.y).get_mut_with_default(coord.x)
     }
 }

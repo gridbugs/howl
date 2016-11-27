@@ -1,8 +1,10 @@
-use game::{LevelKnowledge, SpatialHashCell, Turn};
+use game::{GameKnowledge, LevelKnowledge, SpatialHashCell, Turn};
 use grid::DynamicGrid;
 use util::BestMap;
 use math::Coord;
 use frontends::ansi::ComplexTile;
+
+pub type AnsiDrawableKnowledge = GameKnowledge<AnsiDrawableKnowledgeLevel>;
 
 pub struct AnsiDrawableKnowledgeCell {
     last_updated: u64,
@@ -17,6 +19,14 @@ impl AnsiDrawableKnowledgeCell {
             foreground: BestMap::new(),
             background: BestMap::new(),
         }
+    }
+
+    pub fn foreground(&self) -> Option<ComplexTile> {
+        self.foreground.value()
+    }
+
+    pub fn background(&self) -> Option<ComplexTile> {
+        self.background.value()
     }
 }
 
@@ -36,12 +46,16 @@ impl AnsiDrawableKnowledgeLevel {
             grid: DynamicGrid::new(),
         }
     }
+
+    pub fn get_with_default(&self, coord: Coord) -> &AnsiDrawableKnowledgeCell {
+        self.grid.get_with_default(coord)
+    }
 }
 
 impl LevelKnowledge for AnsiDrawableKnowledgeLevel {
     fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, _accuracy: f64, turn: Turn) {
         let knowledge_cell = self.grid.get_mut_with_default(coord);
-        if knowledge_cell.last_updated < world_cell.last_updated() {
+        if knowledge_cell.last_updated <= world_cell.last_updated() {
             for entity in turn.ecs.entity_iter(world_cell.entity_id_iter()) {
                 entity.tile_depth().map(|depth| {
                     entity.ansi_tile().map(|tile| {
@@ -54,5 +68,11 @@ impl LevelKnowledge for AnsiDrawableKnowledgeLevel {
             }
         }
         knowledge_cell.last_updated = turn.id;
+    }
+}
+
+impl Default for AnsiDrawableKnowledgeLevel {
+    fn default() -> Self {
+        Self::new()
     }
 }

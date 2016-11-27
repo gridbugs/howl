@@ -57,6 +57,8 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::AnsiPlayerInput);
+    entity.insert_ansi_drawable_knowledge(AnsiDrawableKnowledge::new());
+    entity.insert_vision_distance(20);
 
     entity
 }

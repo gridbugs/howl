@@ -1,13 +1,15 @@
-pub struct BidirectionalList<T> {
+pub struct BidirectionalList<T: Default> {
     negative: Vec<T>,
     non_negative: Vec<T>,
+    default: T,
 }
 
-impl<T> BidirectionalList<T> {
+impl<T: Default> BidirectionalList<T> {
     pub fn new() -> Self {
         BidirectionalList {
             negative: Vec::new(),
             non_negative: Vec::new(),
+            default: Default::default(),
         }
     }
 
@@ -66,9 +68,11 @@ impl<T> BidirectionalList<T> {
             self.negative.get_unchecked_mut(!(index as usize))
         }
     }
-}
 
-impl<T: Default> BidirectionalList<T> {
+    pub fn get_with_default(&self, index: isize) -> &T {
+        self.get(index).unwrap_or(&self.default)
+    }
+
     pub fn get_mut_with_default(&mut self, index: isize) -> &mut T {
         if index >= 0 {
             let index = index as usize;
@@ -93,7 +97,7 @@ impl<T: Default> BidirectionalList<T> {
     }
 }
 
-impl<T> Default for BidirectionalList<T> {
+impl<T: Default> Default for BidirectionalList<T> {
     fn default() -> Self {
         Self::new()
     }

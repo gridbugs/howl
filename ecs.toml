@@ -15,6 +15,10 @@ imports = [
     type = "f64"
     copy = true
 
+[component.vision_distance]
+    type = "usize"
+    copy = true
+
 [component.ansi_tile]
     type = "ComplexTile"
     copy = true
@@ -29,4 +33,8 @@ imports = [
 
 [component.behaviour_state]
     type = "BehaviourState"
+    container = "RefCell"
+
+[component.ansi_drawable_knowledge]
+    type = "AnsiDrawableKnowledge"
     container = "RefCell"
