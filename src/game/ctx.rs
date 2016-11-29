@@ -1,11 +1,18 @@
 use std::cell::RefCell;
 
 use game::{LevelTable, Turn, Shadowcast, AnsiRenderer, BehaviourCtx, Result, Error,
-           MetaAction, BehaviourInput};
+           MetaAction, BehaviourInput, Control};
 use frontends::ansi;
 use util::LeakyReserver;
 use ecs::{self, EntityId, EcsAction};
 use math::Coord;
+
+use debug;
+
+enum TurnResolution {
+    Quit,
+    Reschedule(u64),
+}
 
 pub struct GameCtx<'a> {
     levels: LevelTable,
@@ -44,6 +51,7 @@ impl<'a> GameCtx<'a> {
         let entity = self.levels.level(self.level_id).ecs.entity(entity_id);
         let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
         if !behaviour_state.is_initialised() {
+            debug_println!("Initialising behaviour state for entity {}.", entity_id);
             let behaviour_type = entity.behaviour_type().ok_or(Error::MissingComponent)?;
             behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
         }
@@ -51,17 +59,37 @@ impl<'a> GameCtx<'a> {
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
     }
 
-    fn game_turn(&mut self, entity_id: EntityId) -> Result<()> {
-
-        let _meta_action = self.get_meta_action(entity_id)?;
-
+    fn declare_action_return(&self, entity_id: EntityId, value: bool) -> Result<()> {
+        let entity = self.levels.level(self.level_id).ecs.entity(entity_id);
+        let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
+        behaviour_state.declare_return(value)?;
         Ok(())
+    }
+
+    fn game_turn(&mut self, entity_id: EntityId) -> Result<TurnResolution> {
+
+        let meta_action = self.get_meta_action(entity_id)?;
+
+        match meta_action {
+            MetaAction::Control(Control::Quit) => Ok(TurnResolution::Quit),
+            MetaAction::ActionArgs(action_args) => {
+                debug_println!("{:?}", action_args);
+                self.declare_action_return(entity_id, true)?;
+                Ok(TurnResolution::Reschedule(1))
+            }
+        }
     }
 
     fn game_loop(&mut self) -> Result<()> {
         while let Some(turn_event) = self.levels.level_mut(self.level_id).turn_schedule.next() {
             let entity_id = turn_event.event;
-            self.game_turn(entity_id)?;
+            let resolution = self.game_turn(entity_id)?;
+            match resolution {
+                TurnResolution::Quit => return Ok(()),
+                TurnResolution::Reschedule(delay) => {
+                    self.levels.level_mut(self.level_id).turn_schedule.insert(entity_id, delay);
+                }
+            }
         }
 
         Err(Error::ScheduleEmpty)

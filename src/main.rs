@@ -35,7 +35,11 @@ const DEBUG_WINDOW_BORDER_X: usize = 2;
 const DEBUG_WINDOW_BORDER_Y: usize = 1;
 
 fn main() {
+    game().expect("Game ended unexpectedly");
+    println!("Bye.");
+}
 
+fn game() -> game::Result<()> {
     let mut window_allocator = ansi::WindowAllocator::new().unwrap();
 
     let input_source = window_allocator.make_input_source();
@@ -61,5 +65,5 @@ fn main() {
 
     debug::init(&mut debug_buffer);
 
-    game.run().expect("Game ended unexpectedly");
+    game.run()
 }
