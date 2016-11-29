@@ -60,6 +60,8 @@ impl LevelKnowledge for AnsiDrawableKnowledgeLevel {
     fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, _accuracy: f64, turn: Turn) {
         let knowledge_cell = self.grid.get_mut_with_default(coord);
         if knowledge_cell.last_updated <= world_cell.last_updated() {
+            knowledge_cell.foreground.clear();
+            knowledge_cell.background.clear();
             for entity in turn.ecs.entity_iter(world_cell.entity_id_iter()) {
                 entity.tile_depth().map(|depth| {
                     entity.ansi_tile().map(|tile| {

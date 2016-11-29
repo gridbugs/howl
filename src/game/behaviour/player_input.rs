@@ -21,6 +21,9 @@ fn event_to_meta_action(entity: EntityRef, event: Event) -> Option<MetaAction> {
     match event {
         Event::Char('q') | Event::Char('Q') => Some(MetaAction::Control(Control::Quit)),
         Event::Up => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::North))),
+        Event::Down => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::South))),
+        Event::Left => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::West))),
+        Event::Right => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::East))),
         _ => None,
     }
 }

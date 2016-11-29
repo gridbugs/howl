@@ -7,8 +7,6 @@ use util::LeakyReserver;
 use ecs::{self, EntityId, EcsAction};
 use math::Coord;
 
-use debug;
-
 enum TurnResolution {
     Quit,
     Reschedule(u64),
@@ -51,7 +49,6 @@ impl<'a> GameCtx<'a> {
         let entity = self.levels.level(self.level_id).ecs.entity(entity_id);
         let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
         if !behaviour_state.is_initialised() {
-            debug_println!("Initialising behaviour state for entity {}.", entity_id);
             let behaviour_type = entity.behaviour_type().ok_or(Error::MissingComponent)?;
             behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
         }
@@ -68,12 +65,18 @@ impl<'a> GameCtx<'a> {
 
     fn game_turn(&mut self, entity_id: EntityId) -> Result<TurnResolution> {
 
+        self.turn_id += 1;
+
+        self.pc_render_ansi();
+
         let meta_action = self.get_meta_action(entity_id)?;
 
         match meta_action {
             MetaAction::Control(Control::Quit) => Ok(TurnResolution::Quit),
             MetaAction::ActionArgs(action_args) => {
-                debug_println!("{:?}", action_args);
+                let mut action = ecs::EcsAction::new();
+                action_args.to_action(&mut action, &self.levels.level(self.level_id).ecs)?;
+                self.commit(&mut action);
                 self.declare_action_return(entity_id, true)?;
                 Ok(TurnResolution::Reschedule(1))
             }
