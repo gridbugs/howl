@@ -1,11 +1,12 @@
 use std::cell::RefCell;
 
-use game::{LevelTable, Turn, Shadowcast, AnsiRenderer, BehaviourCtx, Result, Error,
-           MetaAction, BehaviourInput, Control};
+use game::*;
+use ecs::*;
 use frontends::ansi;
 use util::LeakyReserver;
-use ecs::{self, EntityId, EcsAction};
 use math::Coord;
+
+const FAILED_ACTION_DELAY: u64 = 10;
 
 enum TurnResolution {
     Quit,
@@ -22,6 +23,9 @@ pub struct GameCtx<'a> {
     pc_id: Option<EntityId>,
     pc_observer: Shadowcast,
     behaviour_ctx: BehaviourCtx,
+    rules: Vec<Box<Rule>>,
+    rule_resolution: RuleResolution,
+    ecs_action: EcsAction,
 }
 
 impl<'a> GameCtx<'a> {
@@ -36,6 +40,9 @@ impl<'a> GameCtx<'a> {
             pc_id: None,
             pc_observer: Shadowcast::new(),
             behaviour_ctx: BehaviourCtx::new(input_source),
+            rules: Vec::new(),
+            rule_resolution: RuleResolution::new(),
+            ecs_action: EcsAction::new(),
         }
     }
 
@@ -43,6 +50,34 @@ impl<'a> GameCtx<'a> {
         self.init_demo();
 
         self.game_loop()
+    }
+
+    fn check_rules<'b, R>(rules: R,
+                          env: RuleEnv,
+                          action: &EcsAction,
+                          resolution: &mut RuleResolution) -> Result<()>
+        where R: IntoIterator<Item = &'b Box<Rule>>
+    {
+        resolution.reset();
+
+        for rule in rules {
+            rule.check(env, action, resolution)?;
+
+            if resolution.is_reject() {
+                return Ok(())
+            }
+        }
+        Ok(())
+    }
+
+    fn commit_action(action: &mut EcsAction, ecs: &mut EcsCtx, spatial_hash: &mut SpatialHashTable, turn_id: u64) {
+        spatial_hash.update(Turn::new(ecs, turn_id), action);
+        ecs.commit(action);
+    }
+
+    fn try_commit_action(&mut self, _action: ActionArgs) -> Result<Option<u64>> {
+
+        Ok(None)
     }
 
     fn get_meta_action(&self, entity_id: EntityId) -> Result<MetaAction> {
@@ -74,11 +109,13 @@ impl<'a> GameCtx<'a> {
         match meta_action {
             MetaAction::Control(Control::Quit) => Ok(TurnResolution::Quit),
             MetaAction::ActionArgs(action_args) => {
-                let mut action = ecs::EcsAction::new();
-                action_args.to_action(&mut action, &self.levels.level(self.level_id).ecs)?;
-                self.commit(&mut action);
-                self.declare_action_return(entity_id, true)?;
-                Ok(TurnResolution::Reschedule(1))
+                if let Some(delay) = self.try_commit_action(action_args)? {
+                    self.declare_action_return(entity_id, true)?;
+                    Ok(TurnResolution::Reschedule(delay))
+                } else {
+                    self.declare_action_return(entity_id, false)?;
+                    Ok(TurnResolution::Reschedule(FAILED_ACTION_DELAY))
+                }
             }
         }
     }
@@ -144,24 +181,24 @@ impl<'a> GameCtx<'a> {
                 let coord = Coord::new(x, y);
                 match ch {
                     '#' => {
-                        ecs::prototypes::wall(g.entity_mut(self.new_id()), coord);
-                        ecs::prototypes::floor(g.entity_mut(self.new_id()), coord);
+                        prototypes::wall(g.entity_mut(self.new_id()), coord);
+                        prototypes::floor(g.entity_mut(self.new_id()), coord);
                     }
                     '&' => {
-                        ecs::prototypes::tree(g.entity_mut(self.new_id()), coord);
-                        ecs::prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
+                        prototypes::tree(g.entity_mut(self.new_id()), coord);
+                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
                     }
                     '.' => {
-                        ecs::prototypes::floor(g.entity_mut(self.new_id()), coord);
+                        prototypes::floor(g.entity_mut(self.new_id()), coord);
                     }
                     ',' => {
-                        ecs::prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
+                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
                     }
                     '@' => {
                         let id = self.new_id();
                         self.pc_id = Some(id);
-                        ecs::prototypes::pc(g.entity_mut(id), coord);
-                        ecs::prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
+                        prototypes::pc(g.entity_mut(id), coord);
+                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
                     }
                     _ => panic!(),
                 }

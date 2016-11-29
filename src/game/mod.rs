@@ -8,6 +8,7 @@ mod level;
 mod ctx;
 mod result;
 mod ansi_renderer;
+mod rule;
 
 pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -18,3 +19,4 @@ pub use self::level::*;
 pub use self::ctx::*;
 pub use self::result::*;
 pub use self::ansi_renderer::*;
+pub use self::rule::*;

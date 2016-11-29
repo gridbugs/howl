@@ -38,3 +38,9 @@ imports = [
 [component.ansi_drawable_knowledge]
     type = "AnsiDrawableKnowledge"
     container = "RefCell"
+
+[action_property.turn_time]
+    type = "u64"
+
+[action_property.action_time]
+    type = "u64"
