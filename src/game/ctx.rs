@@ -3,15 +3,8 @@ use std::cell::RefCell;
 use game::*;
 use ecs::*;
 use frontends::ansi;
-use util::LeakyReserver;
+use util::{LeakyReserver, Schedule};
 use math::Coord;
-
-const FAILED_ACTION_DELAY: u64 = 10;
-
-enum TurnResolution {
-    Quit,
-    Reschedule(u64),
-}
 
 pub struct GameCtx<'a> {
     levels: LevelTable,
@@ -26,6 +19,7 @@ pub struct GameCtx<'a> {
     rules: Vec<Box<Rule>>,
     rule_resolution: RuleResolution,
     ecs_action: EcsAction,
+    action_schedule: Schedule<ActionArgs>,
 }
 
 impl<'a> GameCtx<'a> {
@@ -43,6 +37,7 @@ impl<'a> GameCtx<'a> {
             rules: Vec::new(),
             rule_resolution: RuleResolution::new(),
             ecs_action: EcsAction::new(),
+            action_schedule: Schedule::new(),
         }
     }
 
@@ -52,87 +47,40 @@ impl<'a> GameCtx<'a> {
         self.game_loop()
     }
 
-    fn check_rules<'b, R>(rules: R,
-                          env: RuleEnv,
-                          action: &EcsAction,
-                          resolution: &mut RuleResolution) -> Result<()>
-        where R: IntoIterator<Item = &'b Box<Rule>>
-    {
-        resolution.reset();
-
-        for rule in rules {
-            rule.check(env, action, resolution)?;
-
-            if resolution.is_reject() {
-                return Ok(())
-            }
-        }
-        Ok(())
-    }
-
-    fn commit_action(action: &mut EcsAction, ecs: &mut EcsCtx, spatial_hash: &mut SpatialHashTable, turn_id: u64) {
-        spatial_hash.update(Turn::new(ecs, turn_id), action);
-        ecs.commit(action);
-    }
-
-    fn try_commit_action(&mut self, _action: ActionArgs) -> Result<Option<u64>> {
-
-        Ok(None)
-    }
-
-    fn get_meta_action(&self, entity_id: EntityId) -> Result<MetaAction> {
-        let entity = self.levels.level(self.level_id).ecs.entity(entity_id);
-        let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
-        if !behaviour_state.is_initialised() {
-            let behaviour_type = entity.behaviour_type().ok_or(Error::MissingComponent)?;
-            behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
-        }
-        let input = BehaviourInput { entity: entity };
-        Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
-    }
-
-    fn declare_action_return(&self, entity_id: EntityId, value: bool) -> Result<()> {
-        let entity = self.levels.level(self.level_id).ecs.entity(entity_id);
-        let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
-        behaviour_state.declare_return(value)?;
-        Ok(())
-    }
-
-    fn game_turn(&mut self, entity_id: EntityId) -> Result<TurnResolution> {
-
-        self.turn_id += 1;
-
-        self.pc_render_ansi();
-
-        let meta_action = self.get_meta_action(entity_id)?;
-
-        match meta_action {
-            MetaAction::Control(Control::Quit) => Ok(TurnResolution::Quit),
-            MetaAction::ActionArgs(action_args) => {
-                if let Some(delay) = self.try_commit_action(action_args)? {
-                    self.declare_action_return(entity_id, true)?;
-                    Ok(TurnResolution::Reschedule(delay))
-                } else {
-                    self.declare_action_return(entity_id, false)?;
-                    Ok(TurnResolution::Reschedule(FAILED_ACTION_DELAY))
-                }
-            }
-        }
-    }
-
     fn game_loop(&mut self) -> Result<()> {
-        while let Some(turn_event) = self.levels.level_mut(self.level_id).turn_schedule.next() {
-            let entity_id = turn_event.event;
-            let resolution = self.game_turn(entity_id)?;
-            match resolution {
-                TurnResolution::Quit => return Ok(()),
-                TurnResolution::Reschedule(delay) => {
-                    self.levels.level_mut(self.level_id).turn_schedule.insert(entity_id, delay);
+        loop {
+
+            self.turn_id += 1;
+
+            let level = self.levels.level_mut(self.level_id);
+            if let Some(turn_event) = level.turn_schedule.next() {
+
+                let resolution = TurnEnv {
+                    turn_id: self.turn_id,
+                    level_id: self.level_id,
+                    entity_id: turn_event.event,
+                    pc_id: self.pc_id.unwrap(),
+                    renderer: &mut self.renderer,
+                    ecs: &mut level.ecs,
+                    spatial_hash: &mut level.spatial_hash,
+                    behaviour_ctx: &self.behaviour_ctx,
+                    rules: &self.rules,
+                    rule_resolution: &mut self.rule_resolution,
+                    ecs_action: &mut self.ecs_action,
+                    action_schedule: &mut self.action_schedule,
+                    pc_observer: &self.pc_observer,
+                }.turn()?;
+
+                match resolution {
+                    TurnResolution::Quit => return Ok(()),
+                    TurnResolution::Schedule(entity_id, delay) => {
+                        level.turn_schedule.insert(entity_id, delay);
+                    }
                 }
+            } else {
+                return Err(Error::ScheduleEmpty);
             }
         }
-
-        Err(Error::ScheduleEmpty)
     }
 
     fn new_id(&self) -> EntityId {
@@ -143,30 +91,6 @@ impl<'a> GameCtx<'a> {
         let level = self.levels.level_mut(self.level_id);
         level.spatial_hash.update(Turn::new(&level.ecs, self.turn_id), action);
         level.ecs.commit(action);
-    }
-
-    fn pc_render_ansi(&mut self) {
-        self.pc_observe_ansi();
-        self.pc_draw_ansi(Coord::new(0, 0), 37, 26);
-    }
-
-    fn pc_observe_ansi(&self) {
-        let level = self.levels.level(self.level_id);
-        let entity = level.ecs.entity(self.pc_id.unwrap());
-        let mut knowledge = entity.ansi_drawable_knowledge_borrow_mut().unwrap();
-        let level_knowledge = knowledge.level_mut(self.level_id);
-        let position = entity.position().unwrap();
-        let vision_distance = entity.vision_distance().unwrap();
-        let turn = Turn::new(&level.ecs, self.turn_id);
-        self.pc_observer.observe(position, &level.spatial_hash, vision_distance, level_knowledge, turn);
-    }
-
-    fn pc_draw_ansi(&mut self, top_left: Coord, width: usize, height: usize) {
-        let level = self.levels.level(self.level_id);
-        let entity = level.ecs.entity(self.pc_id.unwrap());
-        let knowledge = entity.ansi_drawable_knowledge_borrow().unwrap();
-        let level_knowledge = knowledge.level(self.level_id);
-        self.renderer.render(level_knowledge, self.turn_id, top_left, width, height);
     }
 
     fn init_demo(&mut self) {

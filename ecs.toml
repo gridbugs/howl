@@ -41,6 +41,8 @@ imports = [
 
 [action_property.turn_time]
     type = "u64"
+    copy = true
 
 [action_property.action_time]
     type = "u64"
+    copy = true

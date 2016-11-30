@@ -333,7 +333,9 @@ impl Shadowcast {
         unsafe { &mut *self.stack.get() }.push(frame);
     }
 
-    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K, turn: Turn) {
+    // returns true iff knowledge changed as a result of the scan
+    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K, turn: Turn) -> bool {
+        let mut changed = false;
         let mut coord = Coord::new(0, 0);
         coord.set(args.octant.depth_idx, scan.depth_idx);
 
@@ -357,7 +359,7 @@ impl Shadowcast {
 
             // report the cell as visible
             if (coord - args.eye).length_squared() < args.distance_squared {
-                knowledge.update_cell(coord, cell, scan.frame.visibility, turn);
+                changed = knowledge.update_cell(coord, cell, scan.frame.visibility, turn) || changed;
             }
 
             // compute current visibility
@@ -411,9 +413,12 @@ impl Shadowcast {
             idx += args.octant.lateral_step;
         }
 
+        changed
     }
 
-    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K, turn: Turn) {
+    // returns true iff the knowledge was changed
+    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K, turn: Turn) -> bool {
+        let mut changed = false;
         let limits = Limits::new(args.eye, args.world, args.octant);
 
         // Initial stack frame
@@ -423,23 +428,28 @@ impl Shadowcast {
             if let Some(scan) = Scan::new(&limits, &frame, args.octant, args.distance) {
                 // Scan::new can yield None if the scan would be entirely off the grid
                 // outside the view distance.
-                self.scan(args, &scan, knowledge, turn);
+                changed = self.scan(args, &scan, knowledge, turn) || changed;
             }
         }
+
+        changed
     }
 
+    // returns true iff the knowledge was changed
     pub fn observe<K: LevelKnowledge>(&self,
                                       eye: Coord,
                                       world: &SpatialHashTable,
                                       distance: usize,
                                       knowledge: &mut K,
-                                      turn: Turn) {
+                                      turn: Turn) -> bool {
 
-        knowledge.update_cell(eye, world.get(eye), 1.0, turn);
+        let mut changed = knowledge.update_cell(eye, world.get(eye), 1.0, turn);
 
         for octant in &self.octants {
             let args = OctantArgs::new(octant, world, eye, distance, 0.0, 1.0);
-            self.detect_visible_area_octant(&args, knowledge, turn);
+            changed = self.detect_visible_area_octant(&args, knowledge, turn) || changed;
         }
+
+        changed
     }
 }

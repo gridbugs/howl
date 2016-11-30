@@ -1,3 +1,5 @@
+use std::vec;
+
 use game::{SpatialHashTable, ActionArgs, Result};
 use ecs::{EcsCtx, EcsAction};
 
@@ -19,6 +21,15 @@ pub struct RuleResolution {
 
 pub trait Rule {
     fn check(&self, env: RuleEnv, action: &EcsAction, resolution: &mut RuleResolution) -> Result<()>;
+}
+
+impl<'a> RuleEnv<'a> {
+    pub fn new(ecs: &'a EcsCtx, spatial_hash: &'a SpatialHashTable) -> Self {
+        RuleEnv {
+            ecs: ecs,
+            spatial_hash: spatial_hash,
+        }
+    }
 }
 
 impl Reaction {
@@ -58,5 +69,9 @@ impl RuleResolution {
 
     pub fn add_reaction(&mut self, reaction: Reaction) {
         self.reactions.push(reaction);
+    }
+
+    pub fn drain_reactions(&mut self) -> vec::Drain<Reaction> {
+        self.reactions.drain(..)
     }
 }
