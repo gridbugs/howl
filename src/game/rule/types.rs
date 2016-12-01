@@ -55,8 +55,10 @@ impl RuleResolution {
     }
 
     pub fn reject(&mut self) {
-        self.reactions.clear();
-        self.accept = false;
+        if self.accept {
+            self.reactions.clear();
+            self.accept = false;
+        }
     }
 
     pub fn is_accept(&self) -> bool {

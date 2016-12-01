@@ -42,6 +42,7 @@ impl<'a> GameCtx<'a> {
     }
 
     pub fn run(&mut self) -> Result<()> {
+        self.rules.push(Box::new(rules::Collision));
         self.init_demo();
 
         self.game_loop()
