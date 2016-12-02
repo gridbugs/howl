@@ -53,7 +53,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
         self.pc_render_ansi()?;
 
         match self.get_meta_action()? {
-            MetaAction::Control(Control::Quit) => Ok(TurnResolution::Quit),
+            MetaAction::External(External::Quit) => Ok(TurnResolution::Quit),
             MetaAction::ActionArgs(action_args) => {
                 if let Some(delay) = self.try_commit_action(action_args)? {
                     self.declare_action_return(true)?;

@@ -4,14 +4,14 @@ use game::action::actions;
 use direction::Direction;
 
 #[derive(Debug, Clone, Copy)]
-pub enum Control {
+pub enum External {
     Quit,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum MetaAction {
     ActionArgs(ActionArgs),
-    Control(Control),
+    External(External),
 }
 
 #[derive(Debug, Clone, Copy)]

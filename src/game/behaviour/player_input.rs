@@ -1,4 +1,4 @@
-use game::{BehaviourLeaf, ActionArgs, MetaAction, Control};
+use game::{BehaviourLeaf, ActionArgs, MetaAction, External};
 use behaviour::LeafResolution;
 use ecs::EntityRef;
 use direction::Direction;
@@ -19,7 +19,7 @@ pub fn ansi_player_input(input_source: ansi::InputSource) -> BehaviourLeaf {
 
 fn event_to_meta_action(entity: EntityRef, event: Event) -> Option<MetaAction> {
     match event {
-        Event::Char('q') | Event::Char('Q') => Some(MetaAction::Control(Control::Quit)),
+        Event::Char('q') | Event::Char('Q') => Some(MetaAction::External(External::Quit)),
         Event::Up => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::North))),
         Event::Down => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::South))),
         Event::Left => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), Direction::West))),
