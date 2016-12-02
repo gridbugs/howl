@@ -17,6 +17,7 @@ pub enum MetaAction {
 #[derive(Debug, Clone, Copy)]
 pub enum ActionArgs {
     Walk(EntityId, Direction),
+    OpenDoor(EntityId),
 }
 
 impl ActionArgs {
@@ -24,6 +25,9 @@ impl ActionArgs {
         match self {
             ActionArgs::Walk(entity_id, direction) => {
                 actions::walk(action, ecs.entity(entity_id), direction)?;
+            }
+            ActionArgs::OpenDoor(entity_id) => {
+                actions::open_door(action, ecs.entity(entity_id))?;
             }
         }
         Ok(())

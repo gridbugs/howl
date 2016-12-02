@@ -6,6 +6,8 @@ imports = [
 
 [component.solid]
 [component.collider]
+[component.door_opener]
+
 
 [component.position]
     type = "Coord"
@@ -13,6 +15,10 @@ imports = [
 
 [component.opacity]
     type = "f64"
+    copy = true
+
+[component.door_state]
+    type = "data::DoorState"
     copy = true
 
 [component.vision_distance]

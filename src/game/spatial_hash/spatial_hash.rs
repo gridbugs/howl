@@ -4,6 +4,7 @@ use ecs::*;
 use math::Coord;
 use grid::{Grid, DynamicGrid};
 use game::Turn;
+use util::AnySet;
 
 pub struct SpatialHashCell {
     // sum of opacities of everything in this cell
@@ -11,6 +12,9 @@ pub struct SpatialHashCell {
 
     // count of solid entities in this cell
     solid: usize,
+
+    // set of entities that are doors
+    doors: AnySet<EntityId>,
 
     // set of entities currently in this cell
     entities: EntitySet,
@@ -29,6 +33,7 @@ impl SpatialHashCell {
         SpatialHashCell {
             opacity: 0.0,
             solid: 0,
+            doors: AnySet::new(),
             entities: EntitySet::new(),
             last_updated: 0,
         }
@@ -52,6 +57,10 @@ impl SpatialHashCell {
 
     pub fn solid(&self) -> bool {
         self.solid != 0
+    }
+
+    pub fn any_door(&self) -> Option<EntityId> {
+        self.doors.any()
     }
 }
 
@@ -98,6 +107,9 @@ impl SpatialHashTable {
         if let Some(opacity) = entity.opacity() {
             cell.opacity -= opacity;
         }
+        if entity.contains_door_state() {
+            cell.doors.remove(entity.id());
+        }
         cell.entities.remove(entity.id());
         cell.last_updated = turn_id;
     }
@@ -109,6 +121,9 @@ impl SpatialHashTable {
         }
         if let Some(opacity) = entity.opacity() {
             cell.opacity += opacity;
+        }
+        if entity.contains_door_state() {
+            cell.doors.insert(entity.id());
         }
         cell.entities.insert(entity.id());
         cell.last_updated = turn_id;
@@ -151,6 +166,17 @@ impl SpatialHashTable {
                 }
             }
         }
+
+        for entity_id in insertions.door_state.keys() {
+            let entity = turn.ecs.post_insertion_entity(*entity_id, insertions);
+            if let Some(position) = entity.position() {
+                if entity.current_door_state().is_none() {
+                    let cell = self.get_mut_with_default(position);
+                    cell.doors.insert(*entity_id);
+                    cell.last_updated = turn.id;
+                }
+            }
+        }
     }
 
     fn update_removals(&mut self, turn: Turn, removals: &ActionRemovalTable) {
@@ -176,6 +202,18 @@ impl SpatialHashTable {
                     // removing opacity from entity with position
                     let cell = self.get_mut_with_default(position);
                     cell.opacity -= opacity;
+                    cell.last_updated = turn.id;
+                }
+            }
+        }
+
+        for entity_id in removals.door_state.iter() {
+            let entity = turn.ecs.entity(*entity_id);
+            if let Some(position) = entity.position() {
+                if entity.contains_door_state() {
+                    // removing solid from entity with position
+                    let cell = self.get_mut_with_default(position);
+                    cell.doors.remove(*entity_id);
                     cell.last_updated = turn.id;
                 }
             }

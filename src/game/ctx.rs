@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 
 use game::*;
+use game::data::*;
 use ecs::*;
 use frontends::ansi;
 use util::{LeakyReserver, Schedule};
@@ -42,6 +43,7 @@ impl<'a> GameCtx<'a> {
     }
 
     pub fn run(&mut self) -> Result<()> {
+        self.rules.push(Box::new(rules::Door));
         self.rules.push(Box::new(rules::Collision));
         self.init_demo();
 
@@ -119,6 +121,9 @@ impl<'a> GameCtx<'a> {
                     ',' => {
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
                     }
+                    '+' => {
+                        prototypes::door(g.entity_mut(self.new_id()), coord, DoorState::Closed);
+                    }
                     '@' => {
                         let id = self.new_id();
                         self.pc_id = Some(id);
@@ -145,11 +150,11 @@ fn demo_level_str() -> Vec<&'static str> {
          "&,,#.........#................#,,,&,,&",
          "&,,#..........................#,,&,,,&",
          "&&,#.........#................#,,,,,,&",
-         "&,&#.........##########.#######,,,,,,&",
+         "&,&#.........##########+#######,,,,,,&",
          "&,,#.........#,,,,,,,,,,,,,,,,,,,,,,,&",
          "&&,#.........#,,,,,,,,,&,,,,,,,&,&,&,&",
          "&,,#.........#,,,,,&,,,,,,,,&,,,,,,,,&",
-         "&,,#..........,,,,,,&,,,,,,,,,,,,,,,,&",
+         "&,,#.........+,,,,,,&,,,,,,,,,,,,,,,,&",
          "&&,#.........#,,,,,&,,,,,,,,,&,,,,,,,&",
          "&,,#.........#,,,,,,,,,,&,,&,,,&,&,,,&",
          "&,&#.........#,,,,@,,,,&,,,,,,,,,,,,,&",
