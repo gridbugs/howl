@@ -25,6 +25,7 @@ pub struct GameCtx<'a> {
     input_source: ansi::AnsiInputSource,
     entity_ids: EntityIdReserver,
     turn_id: u64,
+    action_id: u64,
     level_id: isize,
     pc_id: Option<EntityId>,
     pc_observer: Shadowcast,
@@ -43,6 +44,7 @@ impl<'a> GameCtx<'a> {
             input_source: input_source,
             entity_ids: EntityIdReserver::new(),
             turn_id: 0,
+            action_id: 0,
             level_id: 0,
             pc_id: None,
             pc_observer: Shadowcast::new(),
@@ -57,7 +59,10 @@ impl<'a> GameCtx<'a> {
     pub fn run(&mut self) -> Result<()> {
         self.rules.push(Box::new(rules::OpenDoor));
         self.rules.push(Box::new(rules::Collision));
+        self.rules.push(Box::new(rules::RealtimeAxisVelocity));
+        self.rules.push(Box::new(rules::RealtimeAxisVelocityStart));
         self.rules.push(Box::new(rules::CloseDoor));
+
         self.init_demo();
 
         self.game_loop()
@@ -73,6 +78,7 @@ impl<'a> GameCtx<'a> {
 
                 let resolution = TurnEnv {
                     turn_id: self.turn_id,
+                    action_id: &mut self.action_id,
                     level_id: self.level_id,
                     entity_id: turn_event.event,
                     pc_id: self.pc_id.unwrap(),
@@ -106,7 +112,7 @@ impl<'a> GameCtx<'a> {
 
     fn commit(&mut self, action: &mut EcsAction) {
         let level = self.levels.level_mut(self.level_id);
-        level.spatial_hash.update(Turn::new(&level.ecs, self.turn_id), action);
+        level.spatial_hash.update(ActionEnv::new(&level.ecs, self.action_id), action);
         level.ecs.commit(action);
     }
 

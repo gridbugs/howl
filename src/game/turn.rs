@@ -9,6 +9,12 @@ use math::Coord;
 const FAILED_ACTION_DELAY: u64 = 10;
 
 #[derive(Clone, Copy)]
+pub struct ActionEnv<'a> {
+    pub ecs: &'a EcsCtx,
+    pub id: u64,
+}
+
+#[derive(Clone, Copy)]
 pub struct Turn<'a> {
     pub ecs: &'a EcsCtx,
     pub id: u64,
@@ -21,6 +27,7 @@ pub enum TurnResolution {
 
 pub struct TurnEnv<'a, 'b, 'c: 'a> {
     pub turn_id: u64,
+    pub action_id: &'a mut u64,
     pub level_id: isize,
     pub entity_id: EntityId,
     pub pc_id: EntityId,
@@ -44,6 +51,17 @@ impl<'a> Turn<'a> {
         }
     }
 }
+
+impl<'a> ActionEnv<'a> {
+    pub fn new(ecs: &'a EcsCtx, id: u64) -> Self {
+        ActionEnv {
+            ecs: ecs,
+            id: id,
+        }
+    }
+}
+
+
 
 const RENDER_WIDTH: usize = 37;
 const RENDER_HEIGHT: usize = 26;
@@ -86,7 +104,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
     }
 
     fn commit(&mut self) {
-        self.spatial_hash.update(Turn::new(self.ecs, self.turn_id), self.ecs_action);
+        self.spatial_hash.update(ActionEnv::new(self.ecs, *self.action_id), self.ecs_action);
         self.ecs.commit(self.ecs_action);
     }
 
@@ -96,10 +114,10 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
         let level_knowledge = knowledge.level_mut(self.level_id);
         let position = entity.position().ok_or(Error::MissingComponent)?;
         let vision_distance = entity.vision_distance().ok_or(Error::MissingComponent)?;
-        let turn = Turn::new(self.ecs, self.turn_id);
+        let action_env = ActionEnv::new(self.ecs, *self.action_id);
 
-        if self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, turn) {
-            self.renderer.render(level_knowledge, self.turn_id, Coord::new(0, 0), RENDER_WIDTH, RENDER_HEIGHT);
+        if self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env) {
+            self.renderer.render(level_knowledge, *self.action_id, Coord::new(0, 0), RENDER_WIDTH, RENDER_HEIGHT);
             Ok(true)
         } else {
             Ok(false)
@@ -122,6 +140,8 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
                 }
             }
 
+            *self.action_id += 1;
+
             // construct an action from the action args
             action_event.event.to_action(&mut self.ecs_action, self.ecs, self.entity_ids)?;
 
@@ -133,7 +153,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
                 if turn_time.is_none() {
                     turn_time = Some(self.ecs_action.turn_time().unwrap_or(0));
                 }
-                action_time = self.ecs_action.action_time().unwrap_or(0);
+                action_time = self.ecs_action.action_time_ms().unwrap_or(0);
 
                 self.commit();
             } else {

@@ -3,6 +3,7 @@
 use game::data::RealtimeSpeed;
 use direction::Direction;
 
+#[derive(Clone, Copy, Debug)]
 pub struct RealtimeAxisVelocity {
     pub speed: RealtimeSpeed,
     pub direction: Direction,

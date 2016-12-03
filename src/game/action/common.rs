@@ -50,3 +50,21 @@ pub fn fire_bullet(action: &mut EcsAction, entity: EntityRef, direction: Directi
 
     Ok(())
 }
+
+pub fn realtime_axis_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeAxisVelocity) -> Result<()> {
+
+    let current_position = entity.position().ok_or(Error::MissingComponent)?;
+
+    action.insert_position(entity.id(), current_position + velocity.direction.vector());
+
+    action.set_action_time_ms(velocity.speed.ms_per_cell());
+
+    Ok(())
+}
+
+pub fn destroy(action: &mut EcsAction, entity_id: EntityId) -> Result<()> {
+
+    action.removed_entities.insert(entity_id);
+
+    Ok(())
+}

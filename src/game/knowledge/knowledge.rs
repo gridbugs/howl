@@ -1,12 +1,12 @@
 use math::Coord;
-use game::{SpatialHashCell, Turn};
+use game::{SpatialHashCell, ActionEnv};
 use util::BidirectionalList;
 
 /// Trait implemented by representations of knowledge about a level
 pub trait LevelKnowledge {
     /// Updates a cell of the knowledge representation, returnig true iff the
     /// knowledge of the cell changed as a result of the update.
-    fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, turn: Turn) -> bool;
+    fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool;
 }
 
 pub struct GameKnowledge<K: LevelKnowledge + Default> {

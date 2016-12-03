@@ -1,6 +1,7 @@
 use ecs::*;
 use game::*;
-use game::action::actions;
+use game::data::*;
+use game::actions;
 use direction::Direction;
 
 #[derive(Debug, Clone, Copy)]
@@ -21,6 +22,8 @@ pub enum ActionArgs {
     CloseDoor(EntityId),
     Close(EntityId, Direction),
     FireBullet(EntityId, Direction),
+    RealtimeAxisVelocityMove(EntityId, RealtimeAxisVelocity),
+    Destroy(EntityId),
 }
 
 impl ActionArgs {
@@ -40,6 +43,12 @@ impl ActionArgs {
             }
             ActionArgs::FireBullet(entity_id, direction) => {
                 actions::fire_bullet(action, ecs.entity(entity_id), direction, entity_ids)?;
+            }
+            ActionArgs::RealtimeAxisVelocityMove(entity_id, velocity) => {
+                actions::realtime_axis_velocity_move(action, ecs.entity(entity_id), velocity)?;
+            }
+            ActionArgs::Destroy(entity_id) => {
+                actions::destroy(action, entity_id)?;
             }
         }
         Ok(())

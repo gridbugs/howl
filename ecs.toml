@@ -56,7 +56,7 @@ imports = [
     type = "u64"
     copy = true
 
-[action_property.action_time]
+[action_property.action_time_ms]
     type = "u64"
     copy = true
 

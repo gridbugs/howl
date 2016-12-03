@@ -6,7 +6,7 @@ use std::cmp;
 use math::{Coord, Vector2, Vector2Index};
 use direction::{Direction, CardinalDirection, OrdinalDirection, SubDirection};
 
-use game::{SpatialHashTable, LevelKnowledge, Turn};
+use game::{SpatialHashTable, LevelKnowledge, ActionEnv};
 
 
 // Different types of rounding functions
@@ -334,7 +334,7 @@ impl Shadowcast {
     }
 
     // returns true iff knowledge changed as a result of the scan
-    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K, turn: Turn) -> bool {
+    fn scan<K: LevelKnowledge>(&self, args: &OctantArgs, scan: &Scan, knowledge: &mut K, action_env: ActionEnv) -> bool {
         let mut changed = false;
         let mut coord = Coord::new(0, 0);
         coord.set(args.octant.depth_idx, scan.depth_idx);
@@ -359,7 +359,7 @@ impl Shadowcast {
 
             // report the cell as visible
             if (coord - args.eye).length_squared() < args.distance_squared {
-                changed = knowledge.update_cell(coord, cell, scan.frame.visibility, turn) || changed;
+                changed = knowledge.update_cell(coord, cell, scan.frame.visibility, action_env) || changed;
             }
 
             // compute current visibility
@@ -417,7 +417,7 @@ impl Shadowcast {
     }
 
     // returns true iff the knowledge was changed
-    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K, turn: Turn) -> bool {
+    fn detect_visible_area_octant<K: LevelKnowledge>(&self, args: &OctantArgs, knowledge: &mut K, action_env: ActionEnv) -> bool {
         let mut changed = false;
         let limits = Limits::new(args.eye, args.world, args.octant);
 
@@ -428,7 +428,7 @@ impl Shadowcast {
             if let Some(scan) = Scan::new(&limits, &frame, args.octant, args.distance) {
                 // Scan::new can yield None if the scan would be entirely off the grid
                 // outside the view distance.
-                changed = self.scan(args, &scan, knowledge, turn) || changed;
+                changed = self.scan(args, &scan, knowledge, action_env) || changed;
             }
         }
 
@@ -441,13 +441,13 @@ impl Shadowcast {
                                       world: &SpatialHashTable,
                                       distance: usize,
                                       knowledge: &mut K,
-                                      turn: Turn) -> bool {
+                                      action_env: ActionEnv) -> bool {
 
-        let mut changed = knowledge.update_cell(eye, world.get(eye), 1.0, turn);
+        let mut changed = knowledge.update_cell(eye, world.get(eye), 1.0, action_env);
 
         for octant in &self.octants {
             let args = OctantArgs::new(octant, world, eye, distance, 0.0, 1.0);
-            changed = self.detect_visible_area_octant(&args, knowledge, turn) || changed;
+            changed = self.detect_visible_area_octant(&args, knowledge, action_env) || changed;
         }
 
         changed

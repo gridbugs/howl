@@ -12,10 +12,14 @@ impl Rule for Collision {
                 continue;
             }
 
-            let entity = env.ecs.entity(entity_id);
+            let entity = env.ecs.post_insertion_entity(entity_id, &action.insertions);
 
             if entity.contains_collider() {
                 resolution.reject();
+            }
+            if entity.contains_destroy_on_collision() {
+                resolution.reject();
+                resolution.add_reaction(Reaction::new(ActionArgs::Destroy(entity_id), 0));
             }
         }
 
