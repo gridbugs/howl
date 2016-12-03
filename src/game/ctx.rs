@@ -10,7 +10,7 @@ use math::Coord;
 pub struct GameCtx<'a> {
     levels: LevelTable,
     renderer: AnsiRenderer<'a>,
-    input_source: ansi::InputSource,
+    input_source: ansi::AnsiInputSource,
     entity_ids: RefCell<LeakyReserver<EntityId>>,
     turn_id: u64,
     level_id: isize,
@@ -24,7 +24,7 @@ pub struct GameCtx<'a> {
 }
 
 impl<'a> GameCtx<'a> {
-    pub fn new(window: ansi::Window<'a>, input_source: ansi::InputSource) -> Self {
+    pub fn new(window: ansi::Window<'a>, input_source: ansi::AnsiInputSource) -> Self {
         GameCtx {
             levels: LevelTable::new(),
             renderer: AnsiRenderer::new(window),
@@ -43,8 +43,9 @@ impl<'a> GameCtx<'a> {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        self.rules.push(Box::new(rules::Door));
+        self.rules.push(Box::new(rules::OpenDoor));
         self.rules.push(Box::new(rules::Collision));
+        self.rules.push(Box::new(rules::CloseDoor));
         self.init_demo();
 
         self.game_loop()

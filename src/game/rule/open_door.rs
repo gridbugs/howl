@@ -1,9 +1,9 @@
 use game::*;
 use ecs::*;
 
-pub struct Door;
+pub struct OpenDoor;
 
-impl Rule for Door {
+impl Rule for OpenDoor {
     fn check(&self, env: RuleEnv, action: &EcsAction, resolution: &mut RuleResolution) -> Result<()> {
 
         for (entity_id, position) in action.insertions.position_iter() {

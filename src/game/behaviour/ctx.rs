@@ -21,7 +21,7 @@ impl BehaviourNodes {
 }
 
 impl BehaviourCtx {
-    pub fn new(input_source: ansi::InputSource) -> Self {
+    pub fn new(input_source: ansi::AnsiInputSource) -> Self {
         let mut graph = BehaviourGraph::new();
 
         let ansi_player_input_leaf = graph.add_leaf(ansi_player_input(input_source));

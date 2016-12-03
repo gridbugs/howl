@@ -20,5 +20,23 @@ pub fn open_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
     action.insert_ansi_tile(door.id(),
         ansi::full('-', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
 
+    action.set_turn_time(1);
+    Ok(())
+}
+
+pub fn close_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
+    action.insert_solid(door.id());
+    action.insert_opacity(door.id(), 1.0);
+    action.insert_door_state(door.id(), DoorState::Closed);
+
+    action.insert_ansi_tile(door.id(),
+        ansi::full('+', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
+
+    action.set_turn_time(1);
+    Ok(())
+}
+
+pub fn close(action: &mut EcsAction, entity_id: EntityId, direction: Direction) -> Result<()> {
+    action.set_close(Close::new(entity_id, direction));
     Ok(())
 }

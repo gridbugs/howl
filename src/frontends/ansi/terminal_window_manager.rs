@@ -9,8 +9,9 @@ use grid::{StaticGrid, Grid, CopyGrid, IterGrid, CoordIterGrid};
 use util::LeakyReserver;
 
 use frontends::ansi::{Style, styles, AnsiColour, colours, WindowBuffer};
+use frontends::{InputEvent, InputSource};
 
-pub type Event = rustty::Event;
+const ETX: char = '\u{3}';
 
 #[derive(PartialEq, Eq)]
 pub enum BufferType {
@@ -156,13 +157,29 @@ impl WindowCell {
 }
 
 #[derive(Clone, Copy)]
-pub struct InputSource {
+pub struct AnsiInputSource {
     terminal: *mut rustty::Terminal,
 }
 
-impl InputSource {
-    pub fn get_event(&self) -> Option<Event> {
+impl AnsiInputSource {
+    pub fn get_event(&self) -> Option<rustty::Event> {
         unsafe { (*self.terminal).get_event(None).unwrap() }
+    }
+}
+
+impl InputSource for AnsiInputSource {
+    fn next_input(&self) -> Option<InputEvent> {
+        self.get_event().and_then(|event| {
+            match event {
+                rustty::Event::Char(ETX) => Some(InputEvent::Quit),
+                rustty::Event::Char(ch) => Some(InputEvent::Char(ch)),
+                rustty::Event::Up => Some(InputEvent::Up),
+                rustty::Event::Down => Some(InputEvent::Down),
+                rustty::Event::Left => Some(InputEvent::Left),
+                rustty::Event::Right => Some(InputEvent::Right),
+                _ => None,
+            }
+        })
     }
 }
 
@@ -198,8 +215,8 @@ impl WindowAllocator {
                           border_y)
     }
 
-    pub fn make_input_source(&mut self) -> InputSource {
-        InputSource { terminal: &mut self.manager.get_mut().terminal }
+    pub fn make_input_source(&mut self) -> AnsiInputSource {
+        AnsiInputSource { terminal: &mut self.manager.get_mut().terminal }
     }
 
     pub fn width(&self) -> usize {

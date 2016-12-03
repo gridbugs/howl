@@ -2,6 +2,7 @@ imports = [
     "math::Coord",
     "frontends::ansi::ComplexTile",
     "game::*",
+    "game::data::*",
 ]
 
 [component.solid]
@@ -18,7 +19,7 @@ imports = [
     copy = true
 
 [component.door_state]
-    type = "data::DoorState"
+    type = "DoorState"
     copy = true
 
 [component.vision_distance]
@@ -28,6 +29,9 @@ imports = [
 [component.ansi_tile]
     type = "ComplexTile"
     copy = true
+
+[component.control_map]
+    type = "ControlMap"
 
 [component.tile_depth]
     type = "isize"
@@ -52,3 +56,6 @@ imports = [
 [action_property.action_time]
     type = "u64"
     copy = true
+
+[action_property.close]
+    type = "Close"

@@ -18,6 +18,8 @@ pub enum MetaAction {
 pub enum ActionArgs {
     Walk(EntityId, Direction),
     OpenDoor(EntityId),
+    CloseDoor(EntityId),
+    Close(EntityId, Direction),
 }
 
 impl ActionArgs {
@@ -28,6 +30,12 @@ impl ActionArgs {
             }
             ActionArgs::OpenDoor(entity_id) => {
                 actions::open_door(action, ecs.entity(entity_id))?;
+            }
+            ActionArgs::CloseDoor(entity_id) => {
+                actions::close_door(action, ecs.entity(entity_id))?;
+            }
+            ActionArgs::Close(entity_id, direction) => {
+                actions::close(action, entity_id, direction)?;
             }
         }
         Ok(())
