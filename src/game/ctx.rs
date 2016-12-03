@@ -62,6 +62,7 @@ impl<'a> GameCtx<'a> {
         self.rules.push(Box::new(rules::RealtimeAxisVelocity));
         self.rules.push(Box::new(rules::RealtimeAxisVelocityStart));
         self.rules.push(Box::new(rules::CloseDoor));
+        self.rules.push(Box::new(rules::BurstFire));
 
         self.init_demo();
 

@@ -4,6 +4,8 @@ use behaviour::LeafResolution;
 use ecs::EntityRef;
 use direction::Direction;
 
+const BURST_SIZE: usize = 10;
+
 pub fn ansi_player_input(input_source: ansi::AnsiInputSource) -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {
         loop {
@@ -40,6 +42,14 @@ fn get_meta_action<I: InputSource>(entity: EntityRef, input: &I) -> Option<MetaA
                     }
                     Control::Fire => {
                         get_direction(map, input).map(|d| MetaAction::ActionArgs(ActionArgs::FireBullet(entity.id(), d)))
+                    }
+                    Control::Burst => {
+                        get_direction(map, input).map(|d| {
+                            MetaAction::ActionArgs(ActionArgs::BurstBullets(entity.id(), d, BURST_SIZE))
+                        })
+                    }
+                    Control::Explode => {
+                        Some(MetaAction::ActionArgs(ActionArgs::ExplodeBullets(entity.id())))
                     }
                     Control::Quit => Some(MetaAction::External(External::Quit)),
                 }

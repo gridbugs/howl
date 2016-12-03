@@ -62,3 +62,6 @@ imports = [
 
 [action_property.close]
     type = "Close"
+
+[action_property.burst_fire]
+    type = "BurstFire"
