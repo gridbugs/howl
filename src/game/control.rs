@@ -7,6 +7,7 @@ use direction::Direction;
 pub enum Control {
     Direction(Direction),
     Close,
+    Fire,
     Quit,
 }
 
@@ -33,6 +34,7 @@ impl ControlMap {
         map.insert(InputEvent::Char('n'), Control::Direction(Direction::SouthEast));
 
         map.insert(InputEvent::Char('c'), Control::Close);
+        map.insert(InputEvent::Char('f'), Control::Fire);
 
         map.insert(InputEvent::Char('q'), Control::Quit);
         map.insert(InputEvent::Quit, Control::Quit);

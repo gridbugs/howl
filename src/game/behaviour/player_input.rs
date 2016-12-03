@@ -37,7 +37,10 @@ fn get_meta_action<I: InputSource>(entity: EntityRef, input: &I) -> Option<MetaA
                     Control::Direction(d) => Some(MetaAction::ActionArgs(ActionArgs::Walk(entity.id(), d))),
                     Control::Close => {
                         get_direction(map, input).map(|d| MetaAction::ActionArgs(ActionArgs::Close(entity.id(), d)))
-                    },
+                    }
+                    Control::Fire => {
+                        get_direction(map, input).map(|d| MetaAction::ActionArgs(ActionArgs::FireBullet(entity.id(), d)))
+                    }
                     Control::Quit => Some(MetaAction::External(External::Quit)),
                 }
             })

@@ -7,11 +7,23 @@ use frontends::ansi;
 use util::{LeakyReserver, Schedule};
 use math::Coord;
 
+pub struct EntityIdReserver(RefCell<LeakyReserver<EntityId>>);
+
+impl EntityIdReserver {
+    pub fn new() -> Self {
+        EntityIdReserver(RefCell::new(LeakyReserver::new()))
+    }
+
+    pub fn new_id(&self) -> EntityId {
+        self.0.borrow_mut().reserve()
+    }
+}
+
 pub struct GameCtx<'a> {
     levels: LevelTable,
     renderer: AnsiRenderer<'a>,
     input_source: ansi::AnsiInputSource,
-    entity_ids: RefCell<LeakyReserver<EntityId>>,
+    entity_ids: EntityIdReserver,
     turn_id: u64,
     level_id: isize,
     pc_id: Option<EntityId>,
@@ -29,7 +41,7 @@ impl<'a> GameCtx<'a> {
             levels: LevelTable::new(),
             renderer: AnsiRenderer::new(window),
             input_source: input_source,
-            entity_ids: RefCell::new(LeakyReserver::new()),
+            entity_ids: EntityIdReserver::new(),
             turn_id: 0,
             level_id: 0,
             pc_id: None,
@@ -73,6 +85,7 @@ impl<'a> GameCtx<'a> {
                     ecs_action: &mut self.ecs_action,
                     action_schedule: &mut self.action_schedule,
                     pc_observer: &self.pc_observer,
+                    entity_ids: &self.entity_ids,
                 }.turn()?;
 
                 match resolution {
@@ -88,7 +101,7 @@ impl<'a> GameCtx<'a> {
     }
 
     fn new_id(&self) -> EntityId {
-        self.entity_ids.borrow_mut().reserve()
+        self.entity_ids.new_id()
     }
 
     fn commit(&mut self, action: &mut EcsAction) {

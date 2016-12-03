@@ -8,7 +8,7 @@ imports = [
 [component.solid]
 [component.collider]
 [component.door_opener]
-
+[component.destroy_on_collision]
 
 [component.position]
     type = "Coord"
@@ -48,6 +48,9 @@ imports = [
 [component.ansi_drawable_knowledge]
     type = "AnsiDrawableKnowledge"
     container = "RefCell"
+
+[component.realtime_axis_velocity]
+    type = "RealtimeAxisVelocity"
 
 [action_property.turn_time]
     type = "u64"

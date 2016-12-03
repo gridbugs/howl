@@ -1,5 +1,6 @@
 use math::Coord;
 use frontends::ansi;
+use direction::Direction;
 
 use ecs::EntityPopulate;
 use game::*;
@@ -79,6 +80,20 @@ pub fn door<E: EntityPopulate>(mut entity: E, position: Coord, state: DoorState)
     }
     entity.insert_tile_depth(1);
     entity.insert_door_state(state);
+
+    entity
+}
+
+pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, direction: Direction) -> E {
+
+    const SPEED_CELLS_PER_SEC: f64 = 100.0;
+
+    entity.insert_position(position);
+    entity.insert_realtime_axis_velocity(RealtimeAxisVelocity::from_cells_per_sec(
+            SPEED_CELLS_PER_SEC, direction));
+    entity.insert_destroy_on_collision();
+    entity.insert_ansi_tile(ansi::foreground('*', ansi::colours::RED, ansi::styles::NONE));
+    entity.insert_tile_depth(1);
 
     entity
 }

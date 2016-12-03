@@ -40,3 +40,13 @@ pub fn close(action: &mut EcsAction, entity_id: EntityId, direction: Direction) 
     action.set_close(Close::new(entity_id, direction));
     Ok(())
 }
+
+pub fn fire_bullet(action: &mut EcsAction, entity: EntityRef, direction: Direction, ids: &EntityIdReserver) -> Result<()> {
+
+    let firer_position = entity.position().ok_or(Error::MissingComponent)?;
+    let bullet_position = firer_position + direction.vector();
+
+    prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, direction);
+
+    Ok(())
+}

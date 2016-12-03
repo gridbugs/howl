@@ -33,6 +33,7 @@ pub struct TurnEnv<'a, 'b, 'c: 'a> {
     pub ecs_action: &'a mut EcsAction,
     pub action_schedule: &'a mut Schedule<ActionArgs>,
     pub pc_observer: &'a Shadowcast,
+    pub entity_ids: &'a EntityIdReserver,
 }
 
 impl<'a> Turn<'a> {
@@ -122,7 +123,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
             }
 
             // construct an action from the action args
-            action_event.event.to_action(&mut self.ecs_action, self.ecs)?;
+            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.entity_ids)?;
 
             self.check_rules()?;
 
