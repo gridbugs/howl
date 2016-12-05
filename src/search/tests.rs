@@ -49,25 +49,50 @@ fn grid_a() -> StaticGrid<Cell> {
     grid
 }
 
-fn dijkstra_a() -> f64 {
+struct Env {
+    ctx: GridSearchCtx,
+    cfg: GridSearchCfg,
+    path: GridPath,
+}
 
-    let ctx = GridSearchCtx::new();
-    let cfg = GridSearchCfg::all_directions();
-
-    let grid = grid_a();
-
-    let mut path = GridPath::new();
-
-    ctx.search_predicate(&grid,
-                         Coord::new(1, 1),
-                         |c| c.coord == Coord::new(7, 1),
-                         &cfg,
-                         &mut path).unwrap();
-
-    path.cost()
+impl Env {
+    pub fn new() -> Self {
+        Env {
+            ctx: GridSearchCtx::new(),
+            cfg: GridSearchCfg::all_directions(),
+            path: GridPath::new(),
+        }
+    }
 }
 
 #[test]
 fn dijkstra_optimality() {
-    assert_eq!((dijkstra_a() * 100.0).floor(), 1724.0);
+
+    let mut env = Env::new();
+
+    let grid = grid_a();
+
+    env.ctx.search_predicate(&grid,
+                         Coord::new(1, 1),
+                         |c| c.coord == Coord::new(7, 1),
+                         &env.cfg,
+                         &mut env.path).unwrap();
+
+    assert_eq!((env.path.cost() * 100.0).floor(), 1724.0);
+}
+
+#[test]
+fn astar_optimality() {
+
+    let mut env = Env::new();
+
+    let grid = grid_a();
+
+    env.ctx.search_coord(&grid,
+                         Coord::new(1, 1),
+                         Coord::new(7, 1),
+                         &env.cfg,
+                         &mut env.path).unwrap();
+
+    assert_eq!((env.path.cost() * 100.0).floor(), 1724.0);
 }

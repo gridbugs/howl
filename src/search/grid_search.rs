@@ -268,6 +268,23 @@ impl InnerGridSearchCtx {
         self.grid.clear();
     }
 
+    fn check_errors<T, G>(&mut self,
+                             grid: &G,
+                             start: Coord) -> Result<()>
+        where T: TraverseCost,
+              G: Grid<Item = T>
+    {
+        if let Some(initial_cell) = grid.get(start) {
+            if !initial_cell.is_traversable() {
+                return Err(Error::NonTraversableStart);
+            }
+        } else {
+            return Err(Error::StartOutOfGrid);
+        }
+
+        Ok(())
+    }
+
     fn search_predicate<T, G, F>(&mut self,
                                  grid: &G,
                                  start: Coord,
@@ -278,13 +295,8 @@ impl InnerGridSearchCtx {
               G: Grid<Item = T>,
               F: Fn(GridCellInfo<G::Item>) -> bool
     {
-        if let Some(initial_cell) = grid.get(start) {
-            if !initial_cell.is_traversable() {
-                return Err(Error::NonTraversableStart);
-            }
-        } else {
-            return Err(Error::StartOutOfGrid);
-        }
+
+        self.check_errors(grid, start)?;
 
         self.clear();
 
@@ -332,6 +344,53 @@ impl InnerGridSearchCtx {
         Err(Error::Exhausted)
     }
 
+    fn search_coord<T, G>(&mut self,
+                                 grid: &G,
+                                 start: Coord,
+                                 destination: Coord,
+                                 config: &GridSearchCfg,
+                                 path: &mut GridPath) -> Result<()>
+        where T: TraverseCost,
+              G: Grid<Item = T>
+    {
+
+        self.check_errors(grid, start)?;
+
+        self.clear();
+
+        self.queue.push(Node::new(start, 0.0, 0.0));
+        self.grid.see_initial(start);
+
+        while let Some(node) = self.queue.pop() {
+
+            if self.grid.is_visited(node.coord) {
+                continue;
+            }
+
+            self.grid.visit(node.coord);
+
+            if node.coord == destination {
+                self.grid.populate_path(node.coord, path);
+                return Ok(());
+            }
+
+            for dir in config.directions {
+                let nei_coord = node.coord + dir.vector();
+                if let Some(cell) = grid.get(nei_coord) {
+                    if let Some(cost) = cell.traverse_cost() {
+                        let total_cost = node.cost + cost * dir.multiplier();
+                        let parent = Parent::new(node.coord, *dir);
+                        if self.grid.maybe_see(nei_coord, total_cost, parent) {
+                            let heuristic = ((nei_coord - destination).length_squared() as f64).sqrt();
+                            self.queue.push(Node::new(nei_coord, total_cost, total_cost + heuristic));
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct GridSearchCtx {
@@ -356,5 +415,17 @@ impl GridSearchCtx {
               F: Fn(GridCellInfo<G::Item>) -> bool
     {
         self.ctx.borrow_mut().search_predicate(grid, start, predicate, config, path)
+    }
+
+   pub  fn search_coord<T, G>(&mut self,
+                                 grid: &G,
+                                 start: Coord,
+                                 destination: Coord,
+                                 config: &GridSearchCfg,
+                                 path: &mut GridPath) -> Result<()>
+        where T: TraverseCost,
+              G: Grid<Item = T>
+    {
+        self.ctx.borrow_mut().search_coord(grid, start, destination, config, path)
     }
 }
