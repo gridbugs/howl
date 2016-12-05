@@ -1,9 +1,10 @@
-use game::{BehaviourGraph, BehaviourNodeIndex, BehaviourType};
+use game::*;
 use game::behaviour::player_input::*;
 use frontends::ansi;
 use behaviour::*;
 
 pub struct BehaviourNodes {
+    pub null: BehaviourNodeIndex,
     pub ansi_player_input: BehaviourNodeIndex,
 }
 
@@ -15,6 +16,7 @@ pub struct BehaviourCtx {
 impl BehaviourNodes {
     pub fn index(&self, behaviour_type: BehaviourType) -> BehaviourNodeIndex {
         match behaviour_type {
+            BehaviourType::Null => self.null,
             BehaviourType::AnsiPlayerInput => self.ansi_player_input,
         }
     }
@@ -24,9 +26,12 @@ impl BehaviourCtx {
     pub fn new(input_source: ansi::AnsiInputSource) -> Self {
         let mut graph = BehaviourGraph::new();
 
+        let null_leaf = graph.add_leaf(BehaviourLeaf::new(|_| LeafResolution::Yield(MetaAction::ActionArgs(ActionArgs::Null))));
+
         let ansi_player_input_leaf = graph.add_leaf(ansi_player_input(input_source));
 
         let nodes = BehaviourNodes {
+            null: graph.add_collection(CollectionNode::Forever(null_leaf)),
             ansi_player_input: graph.add_collection(CollectionNode::Forever(ansi_player_input_leaf)),
         };
 
