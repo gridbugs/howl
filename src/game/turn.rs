@@ -1,5 +1,6 @@
 use std::time::Duration;
 use std::thread;
+use std::cmp;
 
 use game::*;
 use ecs::*;
@@ -7,6 +8,7 @@ use util::Schedule;
 use math::Coord;
 
 const FAILED_ACTION_DELAY: u64 = 10;
+const MIN_TURN_TIME: u64 = 1;
 
 #[derive(Clone, Copy)]
 pub struct ActionEnv<'a> {
@@ -167,7 +169,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
             }
         }
 
-        Ok(turn_time)
+        Ok(turn_time.map(|t| cmp::max(t, MIN_TURN_TIME)))
     }
 
     fn get_meta_action(&self) -> Result<MetaAction> {
