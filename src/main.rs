@@ -16,6 +16,7 @@ mod util;
 mod direction;
 mod grid;
 mod behaviour;
+mod search;
 
 use frontends::ansi;
 
