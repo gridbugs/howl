@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque, vec_deque};
 use std::result;
+use std::cell::RefCell;
 
 use grid::{Grid, DynamicGrid};
 use math::Coord;
@@ -167,12 +168,16 @@ impl SearchGrid {
     }
 
     fn populate_path(&self, end: Coord, path: &mut GridPath) {
-        path.nodes.clear();
+        path.clear();
+        path.cost = self.grid.get_with_default(end).cost;
 
         let mut coord = end;
 
         loop {
-            if let Some(parent) = self.parent(coord) {
+            let cell = self.grid.get_with_default(coord);
+            assert!(cell.visited_seq == self.seq);
+
+            if let Some(ref parent) = cell.parent {
                 path.nodes.push_front(GridPathNode {
                     coord: coord,
                     direction_to: parent.direction,
@@ -205,9 +210,24 @@ pub struct GridPathNode {
 pub struct GridPath {
     start: Coord,
     nodes: VecDeque<GridPathNode>,
+    cost: f64,
 }
 
 impl GridPath {
+    pub fn new() -> Self {
+        GridPath {
+            start: Coord::new(0, 0),
+            cost: 0.0,
+            nodes: VecDeque::new(),
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.start = Coord::new(0, 0);
+        self.cost = 0.0;
+        self.nodes.clear();
+    }
+
     pub fn start(&self) -> Coord {
         self.start
     }
@@ -215,11 +235,24 @@ impl GridPath {
     pub fn nodes(&self) -> vec_deque::Iter<GridPathNode> {
         self.nodes.iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub fn cost(&self) -> f64 {
+        self.cost
+    }
 }
 
 struct InnerGridSearchCtx {
     queue: BinaryHeap<Node>,
     grid: SearchGrid,
+}
+
+pub struct GridCellInfo<'a, T: 'a> {
+    pub cell: &'a T,
+    pub coord: Coord,
 }
 
 impl InnerGridSearchCtx {
@@ -235,15 +268,15 @@ impl InnerGridSearchCtx {
         self.grid.clear();
     }
 
-    pub fn search_predicate<T, G, F>(&mut self,
-                                     grid: &G,
-                                     start: Coord,
-                                     predicate: F,
-                                     config: &GridSearchCfg,
-                                     path: &mut GridPath) -> Result<()>
+    fn search_predicate<T, G, F>(&mut self,
+                                 grid: &G,
+                                 start: Coord,
+                                 predicate: F,
+                                 config: &GridSearchCfg,
+                                 path: &mut GridPath) -> Result<()>
         where T: TraverseCost,
               G: Grid<Item = T>,
-              F: Fn(&G::Item) -> bool
+              F: Fn(GridCellInfo<G::Item>) -> bool
     {
         if let Some(initial_cell) = grid.get(start) {
             if !initial_cell.is_traversable() {
@@ -271,7 +304,12 @@ impl InnerGridSearchCtx {
             // mid-search.
             let cell = unsafe { grid.get_unchecked(node.coord) };
 
-            if predicate(cell) {
+            let info = GridCellInfo {
+                cell: cell,
+                coord: node.coord,
+            };
+
+            if predicate(info) {
                 // found a satisfying cell
                 self.grid.populate_path(node.coord, path);
                 return Ok(());
@@ -294,4 +332,29 @@ impl InnerGridSearchCtx {
         Err(Error::Exhausted)
     }
 
+}
+
+pub struct GridSearchCtx {
+    ctx: RefCell<InnerGridSearchCtx>,
+}
+
+impl GridSearchCtx {
+    pub fn new() -> Self {
+        GridSearchCtx {
+            ctx: RefCell::new(InnerGridSearchCtx::new()),
+        }
+    }
+
+    pub fn search_predicate<T, G, F>(&self,
+                                     grid: &G,
+                                     start: Coord,
+                                     predicate: F,
+                                     config: &GridSearchCfg,
+                                     path: &mut GridPath) -> Result<()>
+        where T: TraverseCost,
+              G: Grid<Item = T>,
+              F: Fn(GridCellInfo<G::Item>) -> bool
+    {
+        self.ctx.borrow_mut().search_predicate(grid, start, predicate, config, path)
+    }
 }
