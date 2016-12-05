@@ -67,6 +67,14 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
+pub fn dog<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+    entity.insert_position(position);
+    entity.insert_ansi_tile(ansi::foreground('d', ansi::colours::YELLOW, ansi::styles::BOLD));
+    entity.insert_tile_depth(2);
+
+    entity
+}
+
 pub fn door<E: EntityPopulate>(mut entity: E, position: Coord, state: DoorState) -> E {
     entity.insert_position(position);
 

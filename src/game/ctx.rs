@@ -150,6 +150,15 @@ impl<'a> GameCtx<'a> {
                         self.pc_id = Some(id);
                         prototypes::pc(g.entity_mut(id), coord);
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
+
+                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 0);
+                    }
+                    'd' => {
+                        let id = self.new_id();
+                        prototypes::dog(g.entity_mut(id), coord);
+                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
+
+                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
                     }
                     _ => panic!(),
                 }
@@ -159,7 +168,6 @@ impl<'a> GameCtx<'a> {
         }
 
         self.commit(&mut g);
-        self.levels.level_mut(self.level_id).turn_schedule.insert(self.pc_id.unwrap(), 0);
     }
 }
 
@@ -173,7 +181,7 @@ fn demo_level_str() -> Vec<&'static str> {
          "&&,#.........#................#,,,,,,&",
          "&,&#.........##########+#######,,,,,,&",
          "&,,#.........#,,,,,,,,,,,,,,,,,,,,,,,&",
-         "&&,#.........#,,,,,,,,,&,,,,,,,&,&,&,&",
+         "&&,#.........#,d,,,,,,,&,,,,,,,&,&,&,&",
          "&,,#.........#,,,,,&,,,,,,,,&,,,,,,,,&",
          "&,,#.........+,,,,,,&,,,,,,,,,,,,,,,,&",
          "&&,#.........#,,,,,&,,,,,,,,,&,,,,,,,&",
