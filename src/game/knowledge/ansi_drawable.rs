@@ -1,4 +1,4 @@
-use game::{GameKnowledge, LevelKnowledge, SpatialHashCell, ActionEnv};
+use game::*;
 use grid::DynamicGrid;
 use util::BestMap;
 use math::Coord;

@@ -63,6 +63,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_vision_distance(8);
     entity.insert_door_opener();
     entity.insert_control_map(ControlMap::new_default());
+    entity.insert_pc();
 
     entity
 }

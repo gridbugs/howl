@@ -13,6 +13,9 @@ pub struct SpatialHashCell {
     // count of solid entities in this cell
     solid: usize,
 
+    // count of pc entities in this cell
+    pc: usize,
+
     // set of entities that are doors
     doors: AnySet<EntityId>,
 
@@ -33,6 +36,7 @@ impl SpatialHashCell {
         SpatialHashCell {
             opacity: 0.0,
             solid: 0,
+            pc: 0,
             doors: AnySet::new(),
             entities: EntitySet::new(),
             last_updated: 0,
@@ -57,6 +61,10 @@ impl SpatialHashCell {
 
     pub fn solid(&self) -> bool {
         self.solid != 0
+    }
+
+    pub fn pc(&self) -> bool {
+        self.pc != 0
     }
 
     pub fn any_door(&self) -> Option<EntityId> {
@@ -104,6 +112,9 @@ impl SpatialHashTable {
         if entity.contains_solid() {
             cell.solid -= 1;
         }
+        if entity.contains_pc() {
+            cell.pc -= 1;
+        }
         if let Some(opacity) = entity.opacity() {
             cell.opacity -= opacity;
         }
@@ -118,6 +129,9 @@ impl SpatialHashTable {
         let mut cell = self.get_mut_with_default(position);
         if entity.contains_solid() {
             cell.solid += 1;
+        }
+        if entity.contains_pc() {
+            cell.pc += 1;
         }
         if let Some(opacity) = entity.opacity() {
             cell.opacity += opacity;
@@ -144,17 +158,6 @@ impl SpatialHashTable {
             }
         }
 
-        for (entity_id, new_opacity) in insertions.opacity.iter() {
-            let entity = action_env.ecs.post_insertion_entity(*entity_id, insertions);
-            if let Some(position) = entity.position() {
-                let current_opacity = entity.current_opacity().unwrap_or(0.0);
-                let opacity_increase = new_opacity - current_opacity;
-                let cell = self.get_mut_with_default(position);
-                cell.opacity += opacity_increase;
-                cell.last_updated = action_env.id;
-            }
-        }
-
         for entity_id in insertions.solid.iter() {
             let entity = action_env.ecs.post_insertion_entity(*entity_id, insertions);
             if let Some(position) = entity.position() {
@@ -164,6 +167,29 @@ impl SpatialHashTable {
                     cell.solid += 1;
                     cell.last_updated = action_env.id;
                 }
+            }
+        }
+
+        for entity_id in insertions.pc.iter() {
+            let entity = action_env.ecs.post_insertion_entity(*entity_id, insertions);
+            if let Some(position) = entity.position() {
+                if !entity.current_contains_pc() {
+                    // entity is becoming pc
+                    let cell = self.get_mut_with_default(position);
+                    cell.pc += 1;
+                    cell.last_updated = action_env.id;
+                }
+            }
+        }
+
+        for (entity_id, new_opacity) in insertions.opacity.iter() {
+            let entity = action_env.ecs.post_insertion_entity(*entity_id, insertions);
+            if let Some(position) = entity.position() {
+                let current_opacity = entity.current_opacity().unwrap_or(0.0);
+                let opacity_increase = new_opacity - current_opacity;
+                let cell = self.get_mut_with_default(position);
+                cell.opacity += opacity_increase;
+                cell.last_updated = action_env.id;
             }
         }
 
@@ -195,6 +221,18 @@ impl SpatialHashTable {
             }
         }
 
+        for entity_id in removals.pc.iter() {
+            let entity = action_env.ecs.entity(*entity_id);
+            if let Some(position) = entity.position() {
+                if entity.contains_pc() {
+                    // removing pc from entity with position
+                    let cell = self.get_mut_with_default(position);
+                    cell.pc -= 1;
+                    cell.last_updated = action_env.id;
+                }
+            }
+        }
+
         for entity_id in removals.opacity.iter() {
             let entity = action_env.ecs.entity(*entity_id);
             if let Some(position) = entity.position() {
@@ -211,7 +249,7 @@ impl SpatialHashTable {
             let entity = action_env.ecs.entity(*entity_id);
             if let Some(position) = entity.position() {
                 if entity.contains_door_state() {
-                    // removing solid from entity with position
+                    // removing door from entity with position
                     let cell = self.get_mut_with_default(position);
                     cell.doors.remove(*entity_id);
                     cell.last_updated = action_env.id;
