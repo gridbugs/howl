@@ -58,7 +58,7 @@ impl ActionArgs {
                 actions::realtime_axis_velocity_move(action, ecs.entity(entity_id), velocity)?;
             }
             ActionArgs::Destroy(entity_id) => {
-                actions::destroy(action, entity_id)?;
+                actions::destroy(action, ecs.entity(entity_id))?;
             }
         }
         Ok(())

@@ -81,9 +81,9 @@ pub fn realtime_axis_velocity_move(action: &mut EcsAction, entity: EntityRef, ve
     Ok(())
 }
 
-pub fn destroy(action: &mut EcsAction, entity_id: EntityId) -> Result<()> {
+pub fn destroy(action: &mut EcsAction, entity: EntityRef) -> Result<()> {
 
-    action.removed_entities.insert(entity_id);
+    action.remove_entity(entity);
 
     Ok(())
 }

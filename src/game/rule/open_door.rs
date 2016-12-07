@@ -6,7 +6,7 @@ pub struct OpenDoor;
 impl Rule for OpenDoor {
     fn check(&self, env: RuleEnv, action: &EcsAction, resolution: &mut RuleResolution) -> Result<()> {
 
-        for (entity_id, position) in action.insertions.position_iter() {
+        for (entity_id, position) in action.position().insertion_copy_iter() {
 
             if let Some(door_id) = env.spatial_hash.get(position).any_door() {
 
