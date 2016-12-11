@@ -50,7 +50,9 @@ imports = [
     type = "AnsiDrawableKnowledge"
     container = "RefCell"
 
-
+[component.simple_npc_knowledge]
+    type = "SimpleNpcKnowledge"
+    container = "RefCell"
 
 [component.realtime_axis_velocity]
     type = "RealtimeAxisVelocity"

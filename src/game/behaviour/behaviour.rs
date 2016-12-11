@@ -1,4 +1,4 @@
-use game::MetaAction;
+use game::*;
 use behaviour::*;
 use ecs::*;
 
@@ -9,6 +9,9 @@ pub type BehaviourNodeIndex = NodeIndex;
 #[derive(Clone, Copy)]
 pub struct BehaviourInput<'a> {
     pub entity: EntityRef<'a>,
+    pub spatial_hash: &'a SpatialHashTable,
+    pub level_id: isize,
+    pub action_env: ActionEnv<'a>,
 }
 
 pub struct BehaviourLeaf(Box<Fn(BehaviourInput) -> LeafResolution<MetaAction>>);

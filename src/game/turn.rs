@@ -179,7 +179,12 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
             let behaviour_type = entity.behaviour_type().ok_or(Error::MissingComponent)?;
             behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
         }
-        let input = BehaviourInput { entity: entity };
+        let input = BehaviourInput {
+            entity: entity,
+            spatial_hash: self.spatial_hash,
+            level_id: self.level_id,
+            action_env: ActionEnv::new(self.ecs, *self.action_id),
+        };
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
     }
 

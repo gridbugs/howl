@@ -72,8 +72,11 @@ pub fn dog<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_ansi_tile(ansi::foreground('d', ansi::colours::YELLOW, ansi::styles::BOLD));
     entity.insert_tile_depth(2);
+    entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::Null);
+    entity.insert_vision_distance(8);
+    entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
 
     entity
 }
