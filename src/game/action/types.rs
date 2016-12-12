@@ -18,6 +18,7 @@ pub enum MetaAction {
 #[derive(Debug, Clone, Copy)]
 pub enum ActionArgs {
     Null,
+    Wait,
     Walk(EntityId, Direction),
     OpenDoor(EntityId),
     CloseDoor(EntityId),
@@ -33,6 +34,9 @@ impl ActionArgs {
     pub fn to_action(self, action: &mut EcsAction, ecs: &EcsCtx, entity_ids: &EntityIdReserver) -> Result<()> {
         match self {
             ActionArgs::Null => (),
+            ActionArgs::Wait => {
+                actions::wait(action)?;
+            }
             ActionArgs::Walk(entity_id, direction) => {
                 actions::walk(action, ecs.entity(entity_id), direction)?;
             }

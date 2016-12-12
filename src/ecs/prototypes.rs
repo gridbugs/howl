@@ -64,6 +64,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_door_opener();
     entity.insert_control_map(ControlMap::new_default());
     entity.insert_pc();
+    entity.insert_walk_delay(10);
 
     entity
 }
@@ -74,9 +75,12 @@ pub fn dog<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_tile_depth(2);
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
-    entity.insert_behaviour_type(BehaviourType::Null);
+    entity.insert_behaviour_type(BehaviourType::SimpleNpc);
     entity.insert_vision_distance(8);
     entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
+    entity.insert_path_traverse(PathTraverse::new());
+    entity.insert_door_opener();
+    entity.insert_walk_delay(15);
 
     entity
 }

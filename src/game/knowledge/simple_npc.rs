@@ -1,13 +1,15 @@
+use std::collections::HashSet;
+
 use game::*;
 use grid::DynamicGrid;
 use math::Coord;
+use search::TraverseCost;
 
 pub type SimpleNpcKnowledge = GameKnowledge<SimpleNpcKnowledgeLevel>;
 
 pub struct SimpleNpcKnowledgeCell {
     last_updated: u64,
     solid: bool,
-    pc: bool,
 }
 
 impl SimpleNpcKnowledgeCell {
@@ -15,16 +17,7 @@ impl SimpleNpcKnowledgeCell {
         SimpleNpcKnowledgeCell {
             last_updated: 0,
             solid: false,
-            pc: false,
         }
-    }
-
-    fn solid(&self) -> bool {
-        self.solid
-    }
-
-    fn pc(&self) -> bool {
-        self.pc
     }
 }
 
@@ -34,19 +27,45 @@ impl Default for SimpleNpcKnowledgeCell {
     }
 }
 
+impl TraverseCost for SimpleNpcKnowledgeCell {
+    fn traverse_cost(&self) -> Option<f64> {
+        if self.solid {
+            None
+        } else {
+            Some(1.0)
+        }
+    }
+}
+
 pub struct SimpleNpcKnowledgeLevel {
     grid: DynamicGrid<SimpleNpcKnowledgeCell>,
+    targets: HashSet<Coord>,
+    latest_target: u64,
 }
 
 impl SimpleNpcKnowledgeLevel {
     pub fn new() -> Self {
         SimpleNpcKnowledgeLevel {
             grid: DynamicGrid::new(),
+            targets: HashSet::new(),
+            latest_target: 0,
         }
     }
 
     pub fn get_with_default(&self, coord: Coord) -> &SimpleNpcKnowledgeCell {
         self.grid.get_with_default(coord)
+    }
+
+    pub fn grid(&self) -> &DynamicGrid<SimpleNpcKnowledgeCell> {
+        &self.grid
+    }
+
+    pub fn last_target_update(&self) -> u64 {
+        self.latest_target
+    }
+
+    pub fn contains_target(&self, coord: Coord) -> bool {
+        self.targets.contains(&coord)
     }
 }
 
@@ -58,7 +77,16 @@ impl LevelKnowledge for SimpleNpcKnowledgeLevel {
             changed = true;
 
             knowledge_cell.solid = world_cell.solid();
-            knowledge_cell.pc = world_cell.pc();
+
+            if world_cell.pc() {
+                if action_env.id == self.latest_target {
+                    self.targets.insert(coord);
+                } else if action_env.id > self.latest_target {
+                    self.targets.clear();
+                    self.targets.insert(coord);
+                    self.latest_target = action_env.id;
+                }
+            }
         }
         knowledge_cell.last_updated = action_env.id;
 

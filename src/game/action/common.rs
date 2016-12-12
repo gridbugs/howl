@@ -4,11 +4,18 @@ use game::data::*;
 use direction::{self, Direction};
 use frontends::ansi;
 
+pub fn wait(action: &mut EcsAction) -> Result<()> {
+    action.set_turn_time(1);
+    Ok(())
+}
+
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) -> Result<()> {
     let current_position = entity.position().ok_or(Error::MissingComponent)?;
     let new_position = current_position + direction.vector();
     action.insert_position(entity.id(), new_position);
-    action.set_turn_time(1);
+
+    let walk_delay = entity.walk_delay().unwrap_or(1);
+    action.set_turn_time(walk_delay);
     Ok(())
 }
 

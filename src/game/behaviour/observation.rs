@@ -15,6 +15,11 @@ pub fn simple_npc_shadowcast(child: NodeIndex) -> BehaviourSwitch {
         shadowcast.observe(eye, input.spatial_hash, vision_distance,
                            level_knowledge, input.action_env);
 
-        SwitchResolution::Select(child)
+        if level_knowledge.last_target_update() == input.action_env.id {
+            // the targets have changed
+            SwitchResolution::Reset(child)
+        } else {
+            SwitchResolution::Select(child)
+        }
     })
 }

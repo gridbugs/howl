@@ -1,11 +1,15 @@
 use game::*;
 use game::behaviour::player_input::*;
+use game::behaviour::observation::*;
+use game::behaviour::search::*;
+
 use frontends::ansi;
 use behaviour::*;
 
 pub struct BehaviourNodes {
     pub null: BehaviourNodeIndex,
     pub ansi_player_input: BehaviourNodeIndex,
+    pub simple_npc: BehaviourNodeIndex,
 }
 
 pub struct BehaviourCtx {
@@ -18,6 +22,7 @@ impl BehaviourNodes {
         match behaviour_type {
             BehaviourType::Null => self.null,
             BehaviourType::AnsiPlayerInput => self.ansi_player_input,
+            BehaviourType::SimpleNpc => self.simple_npc,
         }
     }
 }
@@ -30,9 +35,19 @@ impl BehaviourCtx {
 
         let ansi_player_input_leaf = graph.add_leaf(ansi_player_input(input_source));
 
+        let simple_npc_update_path_leaf = graph.add_leaf(simple_npc_update_path());
+        let follow_path_step_leaf = graph.add_leaf(follow_path_step());
+        let follow_path_loop = graph.add_collection(CollectionNode::Forever(follow_path_step_leaf));
+        let simple_npc_loop = graph.add_collection(CollectionNode::All(vec![
+                                                                       simple_npc_update_path_leaf,
+                                                                       follow_path_loop]));
+
+        let simple_npc = graph.add_switch(simple_npc_shadowcast(simple_npc_loop));
+
         let nodes = BehaviourNodes {
             null: graph.add_collection(CollectionNode::Forever(null_leaf)),
             ansi_player_input: graph.add_collection(CollectionNode::Forever(ansi_player_input_leaf)),
+            simple_npc: graph.add_collection(CollectionNode::Forever(simple_npc)),
         };
 
         BehaviourCtx {

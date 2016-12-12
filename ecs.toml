@@ -57,6 +57,14 @@ imports = [
 [component.realtime_axis_velocity]
     type = "RealtimeAxisVelocity"
 
+[component.path_traverse]
+    type = "PathTraverse"
+    container = "RefCell"
+
+[component.walk_delay]
+    type = "u64"
+    copy = true
+
 [action_property.turn_time]
     type = "u64"
     copy = true

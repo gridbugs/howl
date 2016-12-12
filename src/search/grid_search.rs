@@ -236,6 +236,10 @@ impl GridPath {
         self.nodes.iter()
     }
 
+    pub fn get_node(&self, index: usize) -> Option<&GridPathNode> {
+        self.nodes.get(index)
+    }
+
     pub fn len(&self) -> usize {
         self.nodes.len()
     }
