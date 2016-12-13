@@ -13,6 +13,11 @@ impl<T: Default> BidirectionalList<T> {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.negative.clear();
+        self.non_negative.clear();
+    }
+
     pub fn len(&self) -> usize {
         self.negative.len() + self.non_negative.len()
     }

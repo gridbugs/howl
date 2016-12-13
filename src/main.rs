@@ -17,6 +17,7 @@ mod direction;
 mod grid;
 mod behaviour;
 mod search;
+mod perlin;
 
 use frontends::ansi;
 

@@ -185,3 +185,9 @@ impl<T> Vector2<T>
         self.dot(self)
     }
 }
+
+impl From<Vector2<usize>> for Vector2<isize> {
+    fn from(v: Vector2<usize>) -> Self {
+        Vector2::new(v.x as isize, v.y as isize)
+    }
+}

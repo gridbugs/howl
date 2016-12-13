@@ -31,6 +31,12 @@ impl<T: Default> DynamicGrid<T> {
     pub fn get_with_default(&self, coord: Coord) -> &T {
         self.elements.get_with_default(coord.y).get_with_default(coord.x)
     }
+
+    pub fn clear(&mut self) {
+        self.elements.clear();
+        self.limits_min = Coord::new(0, 0);
+        self.limits_max = Coord::new(0, 0);
+    }
 }
 
 impl<T: Default> Grid for DynamicGrid<T> {

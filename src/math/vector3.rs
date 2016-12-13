@@ -32,6 +32,14 @@ impl Vector3<f64> {
         let r = length * v_angle.cos();
         Vector3::new(r * h_angle.cos(), r * h_angle.sin(), length * v_angle.sin())
     }
+
+    pub fn length(self) -> f64 {
+        self.length_squared().sqrt()
+    }
+
+    pub fn normalize(self) -> Self {
+        self / self.length()
+    }
 }
 
 // Vector Addition
