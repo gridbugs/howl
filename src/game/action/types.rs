@@ -66,7 +66,7 @@ impl ActionArgs {
                 actions::destroy(action, ecs.entity(entity_id))?;
             }
             ActionArgs::MoveClouds(entity_id) => {
-                actions::move_clouds(action, ecs.entity(entity_id), spatial_hash)?;
+                actions::move_clouds(action, entity_id, ecs, spatial_hash)?;
             }
         }
         Ok(())

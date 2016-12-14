@@ -1,4 +1,4 @@
-use math::Coord;
+use math::{Coord, Vector2};
 use frontends::ansi;
 use direction::Direction;
 
@@ -119,7 +119,15 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, direction: Dire
 
 pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize) -> E {
 
-    entity.insert_cloud_state(CloudState::new(width, height));
+    const PERLIN_ZOOM: f64 = 0.05;
+    const PERLIN_MIN: f64 = -0.1;
+    const PERLIN_MAX: f64 = 0.1;
+    const SCROLL_RATE: Vector2<f64> = Vector2 { x: 0.005, y: 0.002 };
+    const MUTATE_RATE: f64 = 0.001;
+
+    entity.insert_cloud_state(CloudState::new(width, height, PERLIN_ZOOM,
+                                              PERLIN_MIN, PERLIN_MAX,
+                                              SCROLL_RATE, MUTATE_RATE));
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::Clouds);
 

@@ -95,7 +95,15 @@ pub fn destroy(action: &mut EcsAction, entity: EntityRef) -> Result<()> {
     Ok(())
 }
 
-pub fn move_clouds(action: &mut EcsAction, _entity: EntityRef, _spatial_hash: &SpatialHashTable) -> Result<()> {
+pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, _spatial_hash: &SpatialHashTable) -> Result<()> {
+
+    let mut cloud_state = ecs.cloud_state_borrow_mut(entity_id).ok_or(Error::MissingComponent)?;
+
+    cloud_state.progress(1.0);
+
+    for _moon_query_result in ecs.query_moon() {
+
+    }
 
     action.set_turn_time(20);
 
