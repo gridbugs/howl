@@ -34,10 +34,12 @@ pub struct GameCtx<'a> {
     rule_resolution: RuleResolution,
     ecs_action: EcsAction,
     action_schedule: Schedule<ActionArgs>,
+    width: usize,
+    height: usize,
 }
 
 impl<'a> GameCtx<'a> {
-    pub fn new(window: ansi::Window<'a>, input_source: ansi::AnsiInputSource) -> Self {
+    pub fn new(window: ansi::Window<'a>, input_source: ansi::AnsiInputSource, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
             renderer: AnsiRenderer::new(window),
@@ -53,6 +55,8 @@ impl<'a> GameCtx<'a> {
             rule_resolution: RuleResolution::new(),
             ecs_action: EcsAction::new(),
             action_schedule: Schedule::new(),
+            width: width,
+            height: height,
         }
     }
 
@@ -158,7 +162,7 @@ impl<'a> GameCtx<'a> {
                         prototypes::dog(g.entity_mut(id), coord);
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
 
-                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
+                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 0);
                     }
                     _ => panic!(),
                 }
@@ -166,6 +170,10 @@ impl<'a> GameCtx<'a> {
             }
             y += 1;
         }
+
+        let cloud_id = self.new_id();
+        prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height);
+        self.levels.level_mut(self.level_id).turn_schedule.insert(cloud_id, 0);
 
         self.commit(&mut g);
     }
@@ -197,7 +205,7 @@ fn demo_level_str() -> Vec<&'static str> {
          "&,&,&,,,,&&,,,&,&,,,,,,,&,,#.......#,&",
          "&,,,,,,,,,,,,,,,,,,,&,,,,,,#.......#,&",
          "&,,,&,,,,,,,&,,,,,,,,,,,,,,#########,&",
-          "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"]
+         "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"]
 }
 
 

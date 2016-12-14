@@ -2,6 +2,7 @@ use game::*;
 use game::behaviour::player_input::*;
 use game::behaviour::observation::*;
 use game::behaviour::search::*;
+use game::behaviour::clouds::*;
 
 use frontends::ansi;
 use behaviour::*;
@@ -10,6 +11,7 @@ pub struct BehaviourNodes {
     pub null: BehaviourNodeIndex,
     pub ansi_player_input: BehaviourNodeIndex,
     pub simple_npc: BehaviourNodeIndex,
+    pub clouds: BehaviourNodeIndex,
 }
 
 pub struct BehaviourCtx {
@@ -23,6 +25,7 @@ impl BehaviourNodes {
             BehaviourType::Null => self.null,
             BehaviourType::AnsiPlayerInput => self.ansi_player_input,
             BehaviourType::SimpleNpc => self.simple_npc,
+            BehaviourType::Clouds => self.clouds,
         }
     }
 }
@@ -44,10 +47,13 @@ impl BehaviourCtx {
 
         let simple_npc = graph.add_switch(simple_npc_shadowcast(simple_npc_loop));
 
+        let move_clouds = graph.add_leaf(move_clouds());
+
         let nodes = BehaviourNodes {
             null: graph.add_collection(CollectionNode::Forever(null_leaf)),
             ansi_player_input: graph.add_collection(CollectionNode::Forever(ansi_player_input_leaf)),
             simple_npc: graph.add_collection(CollectionNode::Forever(simple_npc)),
+            clouds: graph.add_collection(CollectionNode::Forever(move_clouds)),
         };
 
         BehaviourCtx {

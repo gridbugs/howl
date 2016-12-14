@@ -53,7 +53,7 @@ fn game() -> game::Result<()> {
         GAME_WINDOW_HEIGHT,
         ansi::BufferType::Double);
 
-    let mut game = game::GameCtx::new(game_window, input_source);
+    let mut game = game::GameCtx::new(game_window, input_source, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
 
     let mut debug_buffer = window_allocator.make_window_buffer(
         (window_allocator.width() - DEBUG_WINDOW_WIDTH - DEBUG_WINDOW_BORDER_X - DEBUG_WINDOW_RIGHT_X) as isize,

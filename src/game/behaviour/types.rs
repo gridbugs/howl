@@ -3,4 +3,5 @@ pub enum BehaviourType {
     Null,
     AnsiPlayerInput,
     SimpleNpc,
+    Clouds,
 }

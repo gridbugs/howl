@@ -65,6 +65,10 @@ imports = [
     type = "u64"
     copy = true
 
+[component.cloud_state]
+    type = "CloudState"
+    container = "RefCell"
+
 [action_property.turn_time]
     type = "u64"
     copy = true

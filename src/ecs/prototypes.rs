@@ -115,3 +115,12 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, direction: Dire
 
     entity
 }
+
+pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize) -> E {
+
+    entity.insert_cloud_state(CloudState::new(width, height));
+    entity.insert_behaviour_state(BehaviourState::new());
+    entity.insert_behaviour_type(BehaviourType::Clouds);
+
+    entity
+}

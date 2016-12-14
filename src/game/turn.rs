@@ -145,7 +145,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
             *self.action_id += 1;
 
             // construct an action from the action args
-            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.entity_ids)?;
+            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids)?;
 
             self.check_rules()?;
 

@@ -94,3 +94,10 @@ pub fn destroy(action: &mut EcsAction, entity: EntityRef) -> Result<()> {
 
     Ok(())
 }
+
+pub fn move_clouds(action: &mut EcsAction, _entity: EntityRef, _spatial_hash: &SpatialHashTable) -> Result<()> {
+
+    action.set_turn_time(20);
+
+    Ok(())
+}

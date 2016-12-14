@@ -28,10 +28,11 @@ pub enum ActionArgs {
     BurstBullets(EntityId, Direction, usize),
     RealtimeAxisVelocityMove(EntityId, RealtimeAxisVelocity),
     Destroy(EntityId),
+    MoveClouds(EntityId),
 }
 
 impl ActionArgs {
-    pub fn to_action(self, action: &mut EcsAction, ecs: &EcsCtx, entity_ids: &EntityIdReserver) -> Result<()> {
+    pub fn to_action(self, action: &mut EcsAction, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver) -> Result<()> {
         match self {
             ActionArgs::Null => (),
             ActionArgs::Wait => {
@@ -63,6 +64,9 @@ impl ActionArgs {
             }
             ActionArgs::Destroy(entity_id) => {
                 actions::destroy(action, ecs.entity(entity_id))?;
+            }
+            ActionArgs::MoveClouds(entity_id) => {
+                actions::move_clouds(action, ecs.entity(entity_id), spatial_hash)?;
             }
         }
         Ok(())
