@@ -3,6 +3,8 @@ use frontends::ansi::{self, ComplexTile, SimpleTile};
 use math::Coord;
 use direction::Direction;
 
+const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
+
 pub struct AnsiRenderer<'a> {
     window: ansi::Window<'a>,
 }
@@ -74,6 +76,10 @@ impl<'a> AnsiRenderer<'a> {
                     if let Some(s) = tile.style() {
                         style = s;
                     }
+                }
+
+                if cell.moon() {
+                    bg = MOON_COLOUR;
                 }
 
                 if cell.last_updated() != turn_id {

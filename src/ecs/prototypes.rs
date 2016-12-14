@@ -48,6 +48,7 @@ pub fn outside_floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_ansi_tile(ansi::full('.', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
     entity.insert_tile_depth(0);
+    entity.insert_outside();
 
     entity
 }

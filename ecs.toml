@@ -10,6 +10,8 @@ imports = [
 [component.door_opener]
 [component.destroy_on_collision]
 [component.pc]
+[component.outside]
+[component.moon]
 
 [component.position]
     type = "Coord"

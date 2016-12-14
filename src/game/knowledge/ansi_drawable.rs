@@ -10,6 +10,7 @@ pub struct AnsiDrawableKnowledgeCell {
     last_updated: u64,
     foreground: BestMap<isize, ComplexTile>,
     background: BestMap<isize, ComplexTile>,
+    moon: bool,
 }
 
 impl AnsiDrawableKnowledgeCell {
@@ -18,6 +19,7 @@ impl AnsiDrawableKnowledgeCell {
             last_updated: 0,
             foreground: BestMap::new(),
             background: BestMap::new(),
+            moon: false,
         }
     }
 
@@ -27,6 +29,10 @@ impl AnsiDrawableKnowledgeCell {
 
     pub fn background(&self) -> Option<ComplexTile> {
         self.background.value()
+    }
+
+    pub fn moon(&self) -> bool {
+        self.moon
     }
 
     pub fn last_updated(&self) -> u64 {
@@ -63,6 +69,7 @@ impl LevelKnowledge for AnsiDrawableKnowledgeLevel {
         if knowledge_cell.last_updated <= world_cell.last_updated() {
             changed = true;
 
+            knowledge_cell.moon = world_cell.moon();
             knowledge_cell.foreground.clear();
             knowledge_cell.background.clear();
             for entity in action_env.ecs.entity_iter(world_cell.entity_id_iter()) {

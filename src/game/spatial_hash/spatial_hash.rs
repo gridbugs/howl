@@ -14,6 +14,9 @@ pub struct SpatialHashCell {
     // count of pc entities in this cell
     pc: usize,
 
+    // count of moon entities in this cell
+    moon: usize,
+
     // set of entities that are doors
     doors: AnySet<EntityId>,
 
@@ -35,6 +38,7 @@ impl SpatialHashCell {
             opacity: 0.0,
             solid: 0,
             pc: 0,
+            moon: 0,
             doors: AnySet::new(),
             entities: EntitySet::new(),
             last_updated: 0,
@@ -59,6 +63,10 @@ impl SpatialHashCell {
 
     pub fn solid(&self) -> bool {
         self.solid != 0
+    }
+
+    pub fn moon(&self) -> bool {
+        self.moon != 0
     }
 
     pub fn pc(&self) -> bool {
@@ -113,6 +121,9 @@ impl SpatialHashTable {
         if entity.contains_pc() {
             cell.pc -= 1;
         }
+        if entity.contains_moon() {
+            cell.moon -= 1;
+        }
         if let Some(opacity) = entity.opacity() {
             cell.opacity -= opacity;
         }
@@ -130,6 +141,9 @@ impl SpatialHashTable {
         }
         if entity.contains_pc() {
             cell.pc += 1;
+        }
+        if entity.contains_moon() {
+            cell.moon += 1;
         }
         if let Some(opacity) = entity.opacity() {
             cell.opacity += opacity;
@@ -187,6 +201,32 @@ impl SpatialHashTable {
                     // removing pc from entity with position
                     let cell = self.get_mut_with_default(position);
                     cell.pc -= 1;
+                    cell.last_updated = action_env.id;
+                }
+            }
+        }
+    }
+
+    fn update_moon(&mut self, action_env: ActionEnv, action: &EcsAction) {
+        for entity_id in action.moon_positive_iter(action_env.ecs) {
+            let entity = action_env.ecs.post_action_entity(entity_id, action);
+            if let Some(position) = entity.position() {
+                if !entity.current_contains_moon() {
+                    // entity is gaining moon
+                    let cell = self.get_mut_with_default(position);
+                    cell.moon += 1;
+                    cell.last_updated = action_env.id;
+                }
+            }
+        }
+
+        for entity_id in action.moon_negative_iter(action_env.ecs) {
+            let entity = action_env.ecs.entity(entity_id);
+            if let Some(position) = entity.position() {
+                if entity.contains_moon() {
+                    // removing moon from entity with position
+                    let cell = self.get_mut_with_default(position);
+                    cell.moon -= 1;
                     cell.last_updated = action_env.id;
                 }
             }
@@ -268,6 +308,7 @@ impl SpatialHashTable {
 
         self.update_solid(action_env, action);
         self.update_pc(action_env, action);
+        self.update_moon(action_env, action);
         self.update_opacity(action_env, action);
         self.update_doors(action_env, action);
     }
