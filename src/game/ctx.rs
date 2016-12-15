@@ -155,14 +155,14 @@ impl<'a> GameCtx<'a> {
                         prototypes::pc(g.entity_mut(id), coord);
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
 
-                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 0);
+                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
                     }
                     'd' => {
                         let id = self.new_id();
                         prototypes::dog(g.entity_mut(id), coord);
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
 
-                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 0);
+                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
                     }
                     _ => panic!(),
                 }

@@ -5,7 +5,7 @@ use direction::{self, Direction};
 use frontends::ansi;
 
 pub fn wait(action: &mut EcsAction) -> Result<()> {
-    action.set_turn_time(1);
+    action.set_turn_time(10);
     Ok(())
 }
 
