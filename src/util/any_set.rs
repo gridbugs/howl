@@ -18,6 +18,10 @@ impl<T: Copy + Hash + Eq> AnySet<T> {
         self.any
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.any.is_none()
+    }
+
     pub fn insert(&mut self, value: T) {
         if self.inner.is_empty() {
             self.any = Some(value);

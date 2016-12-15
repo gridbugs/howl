@@ -61,7 +61,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::AnsiPlayerInput);
     entity.insert_ansi_drawable_knowledge(AnsiDrawableKnowledge::new());
-    entity.insert_vision_distance(8);
+    entity.insert_vision_distance(20);
     entity.insert_door_opener();
     entity.insert_control_map(ControlMap::new_default());
     entity.insert_pc();
@@ -122,8 +122,8 @@ pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize) -> 
     const PERLIN_ZOOM: f64 = 0.05;
     const PERLIN_MIN: f64 = -0.1;
     const PERLIN_MAX: f64 = 0.1;
-    const SCROLL_RATE: Vector2<f64> = Vector2 { x: 0.005, y: 0.002 };
-    const MUTATE_RATE: f64 = 0.001;
+    const SCROLL_RATE: Vector2<f64> = Vector2 { x: 0.05, y: 0.02 };
+    const MUTATE_RATE: f64 = 0.01;
 
     entity.insert_cloud_state(CloudState::new(width, height, PERLIN_ZOOM,
                                               PERLIN_MIN, PERLIN_MAX,

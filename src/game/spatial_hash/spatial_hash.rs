@@ -20,6 +20,9 @@ pub struct SpatialHashCell {
     // set of entities that are doors
     doors: AnySet<EntityId>,
 
+    // set of entities that are outside
+    outside: AnySet<EntityId>,
+
     // set of entities currently in this cell
     entities: EntitySet,
 
@@ -40,6 +43,7 @@ impl SpatialHashCell {
             pc: 0,
             moon: 0,
             doors: AnySet::new(),
+            outside: AnySet::new(),
             entities: EntitySet::new(),
             last_updated: 0,
         }
@@ -75,6 +79,14 @@ impl SpatialHashCell {
 
     pub fn any_door(&self) -> Option<EntityId> {
         self.doors.any()
+    }
+
+    pub fn any_outside(&self) -> Option<EntityId> {
+        self.outside.any()
+    }
+
+    pub fn outside(&self) -> bool {
+        !self.outside.is_empty()
     }
 }
 
@@ -130,6 +142,9 @@ impl SpatialHashTable {
         if entity.contains_door_state() {
             cell.doors.remove(entity.id());
         }
+        if entity.contains_outside() {
+            cell.outside.remove(entity.id());
+        }
         cell.entities.remove(entity.id());
         cell.last_updated = action_id;
     }
@@ -150,6 +165,9 @@ impl SpatialHashTable {
         }
         if entity.contains_door_state() {
             cell.doors.insert(entity.id());
+        }
+        if entity.contains_outside() {
+            cell.outside.insert(entity.id());
         }
         cell.entities.insert(entity.id());
         cell.last_updated = action_id;
@@ -283,6 +301,31 @@ impl SpatialHashTable {
         }
     }
 
+    fn update_outside(&mut self, action_env: ActionEnv, action: &EcsAction) {
+        for entity_id in action.outside_positive_iter(action_env.ecs) {
+            let entity = action_env.ecs.post_action_entity(entity_id, action);
+            if let Some(position) = entity.position() {
+                if !entity.current_contains_outside() {
+                    let cell = self.get_mut_with_default(position);
+                    cell.outside.insert(entity_id);
+                    cell.last_updated = action_env.id;
+                }
+            }
+        }
+
+        for entity_id in action.outside_negative_iter(action_env.ecs) {
+            let entity = action_env.ecs.entity(entity_id);
+            if let Some(position) = entity.position() {
+                if entity.contains_outside() {
+                    // removing outside from entity with position
+                    let cell = self.get_mut_with_default(position);
+                    cell.outside.remove(entity_id);
+                    cell.last_updated = action_env.id;
+                }
+            }
+        }
+    }
+
     pub fn update(&mut self, action_env: ActionEnv, action: &EcsAction) {
 
         for (entity_id, new_position) in action.position_positive_iter(action_env.ecs) {
@@ -311,5 +354,6 @@ impl SpatialHashTable {
         self.update_moon(action_env, action);
         self.update_opacity(action_env, action);
         self.update_doors(action_env, action);
+        self.update_outside(action_env, action);
     }
 }

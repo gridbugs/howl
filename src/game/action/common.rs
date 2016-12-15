@@ -95,14 +95,21 @@ pub fn destroy(action: &mut EcsAction, entity: EntityRef) -> Result<()> {
     Ok(())
 }
 
-pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, _spatial_hash: &SpatialHashTable) -> Result<()> {
+pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable) -> Result<()> {
 
     let mut cloud_state = ecs.cloud_state_borrow_mut(entity_id).ok_or(Error::MissingComponent)?;
 
     cloud_state.progress(1.0);
 
-    for _moon_query_result in ecs.query_moon() {
-
+    for (coord, moon) in cloud_state.iter() {
+        let cell = spatial_hash.get(coord);
+        if cell.outside() && cell.moon() != moon {
+            if moon {
+                action.insert_moon(cell.any_outside().ok_or(Error::MissingComponent)?);
+            } else {
+                action.remove_moon(cell.any_outside().ok_or(Error::MissingComponent)?);
+            }
+        }
     }
 
     action.set_turn_time(20);

@@ -84,7 +84,3 @@ imports = [
 
 [action_property.burst_fire]
     type = "BurstFire"
-
-[query.query_moon]
-    prefix = "Moon"
-    components = ["outside", "position", "moon"]
