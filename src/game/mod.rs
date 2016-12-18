@@ -26,3 +26,4 @@ pub use self::control::*;
 pub use self::transformation::*;
 
 pub mod data;
+pub mod prototypes;
