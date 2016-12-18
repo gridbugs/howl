@@ -173,159 +173,6 @@ impl SpatialHashTable {
         cell.last_updated = action_id;
     }
 
-    fn update_solid(&mut self, action_env: ActionEnv, action: &EcsAction) {
-        for entity_id in action.solid_positive_iter(action_env.ecs) {
-            let entity = action_env.ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                if !entity.current_contains_solid() {
-                    // entity is becoming solid
-                    let cell = self.get_mut_with_default(position);
-                    cell.solid += 1;
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-
-        for entity_id in action.solid_negative_iter(action_env.ecs) {
-            let entity = action_env.ecs.entity(entity_id);
-            if let Some(position) = entity.position() {
-                if entity.contains_solid() {
-                    // removing solid from entity with position
-                    let cell = self.get_mut_with_default(position);
-                    cell.solid -= 1;
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-    }
-
-    fn update_pc(&mut self, action_env: ActionEnv, action: &EcsAction) {
-        for entity_id in action.pc_positive_iter(action_env.ecs) {
-            let entity = action_env.ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                if !entity.current_contains_pc() {
-                    // entity is gaining pc
-                    let cell = self.get_mut_with_default(position);
-                    cell.pc += 1;
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-
-        for entity_id in action.pc_negative_iter(action_env.ecs) {
-            let entity = action_env.ecs.entity(entity_id);
-            if let Some(position) = entity.position() {
-                if entity.contains_pc() {
-                    // removing pc from entity with position
-                    let cell = self.get_mut_with_default(position);
-                    cell.pc -= 1;
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-    }
-
-    fn update_moon(&mut self, action_env: ActionEnv, action: &EcsAction) {
-        for entity_id in action.moon_positive_iter(action_env.ecs) {
-            let entity = action_env.ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                if !entity.current_contains_moon() {
-                    // entity is gaining moon
-                    let cell = self.get_mut_with_default(position);
-                    cell.moon += 1;
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-
-        for entity_id in action.moon_negative_iter(action_env.ecs) {
-            let entity = action_env.ecs.entity(entity_id);
-            if let Some(position) = entity.position() {
-                if entity.contains_moon() {
-                    // removing moon from entity with position
-                    let cell = self.get_mut_with_default(position);
-                    cell.moon -= 1;
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-    }
-
-    fn update_opacity(&mut self, action_env: ActionEnv, action: &EcsAction) {
-        for (entity_id, new_opacity) in action.opacity_positive_iter(action_env.ecs) {
-            let entity = action_env.ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                let current_opacity = entity.current_opacity().unwrap_or(0.0);
-                let opacity_increase = new_opacity - current_opacity;
-                let cell = self.get_mut_with_default(position);
-                cell.opacity += opacity_increase;
-                cell.last_updated = action_env.id;
-            }
-        }
-
-        for entity_id in action.opacity_negative_iter(action_env.ecs) {
-            let entity = action_env.ecs.entity(entity_id);
-            if let Some(position) = entity.position() {
-                if let Some(opacity) = entity.opacity() {
-                    // removing opacity from entity with position
-                    let cell = self.get_mut_with_default(position);
-                    cell.opacity -= opacity;
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-    }
-
-    fn update_doors(&mut self, action_env: ActionEnv, action: &EcsAction) {
-        for (entity_id, _) in action.door_state_positive_iter(action_env.ecs) {
-            let entity = action_env.ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                if entity.current_door_state().is_none() {
-                    let cell = self.get_mut_with_default(position);
-                    cell.doors.insert(entity_id);
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-
-        for entity_id in action.door_state_negative_iter(action_env.ecs) {
-            let entity = action_env.ecs.entity(entity_id);
-            if let Some(position) = entity.position() {
-                if entity.contains_door_state() {
-                    // removing door from entity with position
-                    let cell = self.get_mut_with_default(position);
-                    cell.doors.remove(entity_id);
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-    }
-
-    fn update_outside(&mut self, action_env: ActionEnv, action: &EcsAction) {
-        for entity_id in action.outside_positive_iter(action_env.ecs) {
-            let entity = action_env.ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                if !entity.current_contains_outside() {
-                    let cell = self.get_mut_with_default(position);
-                    cell.outside.insert(entity_id);
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-
-        for entity_id in action.outside_negative_iter(action_env.ecs) {
-            let entity = action_env.ecs.entity(entity_id);
-            if let Some(position) = entity.position() {
-                if entity.contains_outside() {
-                    // removing outside from entity with position
-                    let cell = self.get_mut_with_default(position);
-                    cell.outside.remove(entity_id);
-                    cell.last_updated = action_env.id;
-                }
-            }
-        }
-    }
-
     pub fn update(&mut self, action_env: ActionEnv, action: &EcsAction) {
 
         for (entity_id, new_position) in action.position_positive_iter(action_env.ecs) {
@@ -356,4 +203,14 @@ impl SpatialHashTable {
         self.update_doors(action_env, action);
         self.update_outside(action_env, action);
     }
+
+    update_count!(update_solid, solid, solid_positive_iter, solid_negative_iter, contains_solid, current_contains_solid);
+    update_count!(update_pc, pc, pc_positive_iter, pc_negative_iter, contains_pc, current_contains_pc);
+    update_count!(update_moon, moon, moon_positive_iter, moon_negative_iter, contains_moon, current_contains_moon);
+
+    update_sum!(update_opacity, opacity, current_opacity, opacity_positive_iter, opacity_negative_iter, 0.0);
+
+    update_set!(update_outside, outside, outside_positive_iter, outside_negative_iter, contains_outside, current_contains_outside);
+
+    update_set_typed!(update_doors, doors, door_state_positive_iter, door_state_negative_iter, contains_door_state, current_door_state);
 }
