@@ -11,6 +11,11 @@ const TURN_DELAY_MS: u64 = 20;
 const FAILED_ACTION_DELAY: u64 = 16;
 const MIN_TURN_TIME: u64 = 1;
 
+pub const TURN_DURATION_BASE: u64 = 16;
+pub const ENV_TURN_OFFSET: u64 = 0;
+pub const NPC_TURN_OFFSET: u64 = 1;
+pub const PC_TURN_OFFSET: u64 = 2;
+
 #[derive(Clone, Copy)]
 pub struct ActionEnv<'a> {
     pub ecs: &'a EcsCtx,

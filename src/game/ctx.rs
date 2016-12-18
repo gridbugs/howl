@@ -157,14 +157,14 @@ impl<'a> GameCtx<'a> {
                         prototypes::pc(g.entity_mut(id), coord);
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
 
-                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
+                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, PC_TURN_OFFSET);
                         g.insert_schedule_ticket(id, ticket);
                     }
                     't' => {
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
                         let id = prototypes::terror_pillar(&mut g, &self.entity_ids, coord);
 
-                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
+                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, NPC_TURN_OFFSET);
                         g.insert_schedule_ticket(id, ticket);
                     }
                     _ => panic!(),
@@ -177,7 +177,7 @@ impl<'a> GameCtx<'a> {
         {
             let cloud_id = self.new_id();
             prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height);
-            let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(cloud_id, 0);
+            let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(cloud_id, ENV_TURN_OFFSET);
             g.insert_schedule_ticket(cloud_id, ticket);
         }
 

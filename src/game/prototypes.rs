@@ -65,7 +65,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_door_opener();
     entity.insert_control_map(ControlMap::new_default());
     entity.insert_pc();
-    entity.insert_turn_time(16);
+    entity.insert_turn_time(TURN_DURATION_BASE);
 
     entity
 }
@@ -76,7 +76,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
         let mut entity = action.entity_mut(ids.new_id());
 
         entity.insert_ansi_tile(ansi::foreground('T', ansi::colours::GREEN, ansi::styles::BOLD));
-        entity.insert_turn_time(8);
+        entity.insert_turn_time(TURN_DURATION_BASE / 2);
         entity.insert_transformation_state(TransformationState::Other);
 
         entity.id()
@@ -92,7 +92,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_vision_distance(8);
     entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
     entity.insert_path_traverse(PathTraverse::new());
-    entity.insert_turn_time(32);
+    entity.insert_turn_time(TURN_DURATION_BASE * 2);
     entity.insert_shadow_entity(shadow_id);
     entity.insert_transformation_type(TransformationType::TerrorPillarTerrorFly);
     entity.insert_transformation_state(TransformationState::Real);
@@ -145,7 +145,7 @@ pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize) -> 
                                               SCROLL_RATE, MUTATE_RATE));
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::Clouds);
-    entity.insert_turn_time(16);
+    entity.insert_turn_time(TURN_DURATION_BASE);
 
     entity
 }
