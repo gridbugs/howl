@@ -2,7 +2,7 @@ use math::{Coord, Vector2};
 use frontends::ansi;
 use direction::Direction;
 
-use ecs::EntityPopulate;
+use ecs::*;
 use game::*;
 use game::data::*;
 
@@ -61,18 +61,30 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::AnsiPlayerInput);
     entity.insert_ansi_drawable_knowledge(AnsiDrawableKnowledge::new());
-    entity.insert_vision_distance(20);
+    entity.insert_vision_distance(16);
     entity.insert_door_opener();
     entity.insert_control_map(ControlMap::new_default());
     entity.insert_pc();
-    entity.insert_walk_delay(10);
+    entity.insert_turn_time(16);
 
     entity
 }
 
-pub fn dog<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> EntityId {
+
+    let shadow_id = {
+        let mut entity = action.entity_mut(ids.new_id());
+
+        entity.insert_ansi_tile(ansi::foreground('T', ansi::colours::GREEN, ansi::styles::BOLD));
+        entity.insert_turn_time(8);
+        entity.insert_transformation_state(TransformationState::Other);
+
+        entity.id()
+    };
+
+    let mut entity = action.entity_mut(ids.new_id());
     entity.insert_position(position);
-    entity.insert_ansi_tile(ansi::foreground('d', ansi::colours::YELLOW, ansi::styles::BOLD));
+    entity.insert_ansi_tile(ansi::foreground('t', ansi::colours::GREEN, ansi::styles::BOLD));
     entity.insert_tile_depth(2);
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
@@ -80,11 +92,14 @@ pub fn dog<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_vision_distance(8);
     entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
     entity.insert_path_traverse(PathTraverse::new());
-    entity.insert_door_opener();
-    entity.insert_walk_delay(15);
+    entity.insert_turn_time(32);
+    entity.insert_shadow_entity(shadow_id);
+    entity.insert_transformation_type(TransformationType::TerrorPillarTerrorFly);
+    entity.insert_transformation_state(TransformationState::Real);
 
-    entity
+    entity.id()
 }
+
 
 pub fn door<E: EntityPopulate>(mut entity: E, position: Coord, state: DoorState) -> E {
     entity.insert_position(position);
@@ -130,6 +145,7 @@ pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize) -> 
                                               SCROLL_RATE, MUTATE_RATE));
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::Clouds);
+    entity.insert_turn_time(16);
 
     entity
 }

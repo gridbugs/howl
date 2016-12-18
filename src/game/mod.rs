@@ -10,6 +10,7 @@ mod result;
 mod ansi_renderer;
 mod rule;
 mod control;
+mod transformation;
 
 pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -22,5 +23,6 @@ pub use self::result::*;
 pub use self::ansi_renderer::*;
 pub use self::rule::*;
 pub use self::control::*;
+pub use self::transformation::*;
 
 pub mod data;

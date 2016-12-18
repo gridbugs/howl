@@ -3,6 +3,7 @@ imports = [
     "frontends::ansi::ComplexTile",
     "game::*",
     "game::data::*",
+    "util::ScheduleTicket",
 ]
 
 [component.solid]
@@ -63,7 +64,7 @@ imports = [
     type = "PathTraverse"
     container = "RefCell"
 
-[component.walk_delay]
+[component.turn_time]
     type = "u64"
     copy = true
 
@@ -71,7 +72,22 @@ imports = [
     type = "CloudState"
     container = "RefCell"
 
-[action_property.turn_time]
+[component.shadow_entity]
+    type = "EntityId"
+    copy = true
+
+[component.transformation_state]
+    type = "TransformationState"
+    copy = true
+
+[component.transformation_type]
+    type = "TransformationType"
+    copy = true
+
+[component.schedule_ticket]
+    type = "ScheduleTicket"
+
+[action_property.alternative_turn_time]
     type = "u64"
     copy = true
 

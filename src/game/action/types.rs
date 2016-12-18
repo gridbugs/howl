@@ -18,7 +18,6 @@ pub enum MetaAction {
 #[derive(Debug, Clone, Copy)]
 pub enum ActionArgs {
     Null,
-    Wait,
     Walk(EntityId, Direction),
     OpenDoor(EntityId),
     CloseDoor(EntityId),
@@ -29,15 +28,13 @@ pub enum ActionArgs {
     RealtimeAxisVelocityMove(EntityId, RealtimeAxisVelocity),
     Destroy(EntityId),
     MoveClouds(EntityId),
+    TransformTerrorPillarTerrorFly(EntityId),
 }
 
 impl ActionArgs {
     pub fn to_action(self, action: &mut EcsAction, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver) -> Result<()> {
         match self {
             ActionArgs::Null => (),
-            ActionArgs::Wait => {
-                actions::wait(action)?;
-            }
             ActionArgs::Walk(entity_id, direction) => {
                 actions::walk(action, ecs.entity(entity_id), direction)?;
             }
@@ -67,6 +64,9 @@ impl ActionArgs {
             }
             ActionArgs::MoveClouds(entity_id) => {
                 actions::move_clouds(action, entity_id, ecs, spatial_hash)?;
+            }
+            ActionArgs::TransformTerrorPillarTerrorFly(entity_id) => {
+                actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id))?;
             }
         }
         Ok(())

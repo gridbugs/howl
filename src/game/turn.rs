@@ -7,7 +7,8 @@ use ecs::*;
 use util::Schedule;
 use math::Coord;
 
-const FAILED_ACTION_DELAY: u64 = 10;
+const TURN_DELAY_MS: u64 = 20;
+const FAILED_ACTION_DELAY: u64 = 16;
 const MIN_TURN_TIME: u64 = 1;
 
 #[derive(Clone, Copy)]
@@ -27,6 +28,15 @@ pub enum TurnResolution {
     Schedule(EntityId, u64),
 }
 
+impl TurnResolution {
+    pub fn game_continues(&self) -> bool {
+        match *self {
+            TurnResolution::Quit => false,
+            _ => true,
+        }
+    }
+}
+
 pub struct TurnEnv<'a, 'b, 'c: 'a> {
     pub turn_id: u64,
     pub action_id: &'a mut u64,
@@ -41,6 +51,7 @@ pub struct TurnEnv<'a, 'b, 'c: 'a> {
     pub rule_resolution: &'a mut RuleResolution,
     pub ecs_action: &'a mut EcsAction,
     pub action_schedule: &'a mut Schedule<ActionArgs>,
+    pub turn_schedule: &'a mut Schedule<EntityId>,
     pub pc_observer: &'a Shadowcast,
     pub entity_ids: &'a EntityIdReserver,
 }
@@ -63,28 +74,90 @@ impl<'a> ActionEnv<'a> {
     }
 }
 
-
-
 const RENDER_WIDTH: usize = 37;
 const RENDER_HEIGHT: usize = 26;
 
 impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
-        self.pc_render_ansi()?;
+        if self.pc_render_ansi()? {
+            thread::sleep(Duration::from_millis(TURN_DELAY_MS));
+        }
 
-        match self.get_meta_action()? {
-            MetaAction::External(External::Quit) => Ok(TurnResolution::Quit),
-            MetaAction::ActionArgs(action_args) => {
-                if let Some(delay) = self.try_commit_action(action_args)? {
-                    self.declare_action_return(true)?;
-                    Ok(TurnResolution::Schedule(self.entity_id, delay))
+        let resolution = self.take_turn()?;
+
+        match resolution {
+            TurnResolution::Schedule(id, old_delay) => {
+                let new_delay = if let Some(delay) = self.process_transformation()? {
+                    delay
                 } else {
-                    self.declare_action_return(false)?;
-                    Ok(TurnResolution::Schedule(self.entity_id, FAILED_ACTION_DELAY))
+                    old_delay
+                };
+
+                Ok(TurnResolution::Schedule(id, new_delay))
+            }
+            other => Ok(other),
+        }
+    }
+
+    fn process_transformation(&mut self) -> Result<Option<u64>> {
+        if let Some(transformation) = self.get_transformation() {
+            let action_args = transformation.to_action_args(self.entity_id);
+            self.try_commit_action(action_args)?;
+
+            let delay = self.ecs.turn_time(self.entity_id);
+            return Ok(delay);
+        }
+
+        Ok(None)
+    }
+
+    fn get_transformation(&self) -> Option<TransformationType> {
+        // The state of the cell in which an actor ends their turn determines
+        // whether a transformation will occur.
+
+        let entity = self.ecs.entity(self.entity_id);
+
+        if let Some(position) = entity.position() {
+            if let Some(transformation_state) = entity.transformation_state() {
+                if self.spatial_hash.get(position).moon() {
+                    if transformation_state == TransformationState::Real {
+                        return entity.transformation_type();
+                    }
+                } else {
+                    if transformation_state == TransformationState::Other {
+                        return entity.transformation_type();
+                    }
                 }
             }
         }
+
+        None
+    }
+
+    fn take_turn(&mut self) -> Result<TurnResolution> {
+        loop {
+            match self.get_meta_action()? {
+                MetaAction::External(External::Quit) => return Ok(TurnResolution::Quit),
+                MetaAction::ActionArgs(action_args) => {
+                    if let Some(delay) = self.try_commit_action(action_args)? {
+                        self.declare_action_return(true)?;
+                        return Ok(TurnResolution::Schedule(self.entity_id, delay));
+                    } else {
+                        self.declare_action_return(false)?;
+                        if self.is_pc_turn() {
+                            continue;
+                        } else {
+                            return Ok(TurnResolution::Schedule(self.entity_id, FAILED_ACTION_DELAY));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn is_pc_turn(&self) -> bool {
+        self.entity_id == self.pc_id
     }
 
     fn check_rules(&mut self) -> Result<()> {
@@ -128,7 +201,8 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
 
     fn try_commit_action(&mut self, action: ActionArgs) -> Result<Option<u64>> {
 
-        let mut turn_time = None;
+        let mut turn_time = self.ecs.turn_time(self.entity_id);
+        let mut first = true;
 
         self.action_schedule.insert(action, 0);
 
@@ -152,8 +226,11 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
             let mut action_time = 0;
 
             if self.rule_resolution.is_accept() {
-                if turn_time.is_none() {
-                    turn_time = Some(self.ecs_action.turn_time().unwrap_or(0));
+                if first {
+                    first = false;
+                    if let Some(alternative_turn_time) = self.ecs_action.alternative_turn_time() {
+                        turn_time = Some(alternative_turn_time);
+                    }
                 }
                 action_time = self.ecs_action.action_time_ms().unwrap_or(0);
 
@@ -167,6 +244,10 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
             for reaction in self.rule_resolution.drain_reactions() {
                 self.action_schedule.insert(reaction.action, action_time + reaction.delay);
             }
+        }
+
+        if first {
+            return Ok(None);
         }
 
         Ok(turn_time.map(|t| cmp::max(t, MIN_TURN_TIME)))

@@ -52,7 +52,7 @@ fn get_meta_action<I: InputSource>(entity: EntityRef, input: &I) -> Option<MetaA
                         Some(MetaAction::ActionArgs(ActionArgs::ExplodeBullets(entity.id())))
                     }
                     Control::Wait => {
-                        Some(MetaAction::ActionArgs(ActionArgs::Wait))
+                        Some(MetaAction::ActionArgs(ActionArgs::Null))
                     }
                     Control::Quit => Some(MetaAction::External(External::Quit)),
                 }

@@ -4,18 +4,11 @@ use game::data::*;
 use direction::{self, Direction};
 use frontends::ansi;
 
-pub fn wait(action: &mut EcsAction) -> Result<()> {
-    action.set_turn_time(10);
-    Ok(())
-}
-
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) -> Result<()> {
     let current_position = entity.position().ok_or(Error::MissingComponent)?;
     let new_position = current_position + direction.vector();
     action.insert_position(entity.id(), new_position);
 
-    let walk_delay = entity.walk_delay().unwrap_or(1);
-    action.set_turn_time(walk_delay);
     Ok(())
 }
 
@@ -27,7 +20,6 @@ pub fn open_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
     action.insert_ansi_tile(door.id(),
         ansi::full('-', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
 
-    action.set_turn_time(1);
     Ok(())
 }
 
@@ -39,7 +31,6 @@ pub fn close_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
     action.insert_ansi_tile(door.id(),
         ansi::full('+', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
 
-    action.set_turn_time(1);
     Ok(())
 }
 
@@ -111,8 +102,6 @@ pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, sp
             }
         }
     }
-
-    action.set_turn_time(20);
 
     Ok(())
 }

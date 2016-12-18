@@ -1,4 +1,4 @@
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashSet};
 use std::cmp::Ordering;
 
 struct ScheduleEntry<T> {
@@ -44,55 +44,76 @@ impl<T> PartialEq for ScheduleEntry<T> {
 
 impl<T> Eq for ScheduleEntry<T> {}
 
-pub struct Schedule<T> {
-    heap: BinaryHeap<ScheduleEntry<T>>,
-    abs_time: u64,
-    seq: u64,
-}
-
 #[derive(Debug)]
 pub struct ScheduleEvent<T> {
     pub event: T,
     pub time_delta: u64,
     pub time_queued: u64,
+    pub absolute_time: u64,
 }
 
 impl<T> ScheduleEvent<T> {
-    fn new(event: T, time_delta: u64, time_queued: u64) -> Self {
+    fn new(event: T, time_delta: u64, time_queued: u64, absolute_time: u64) -> Self {
         ScheduleEvent {
             event: event,
             time_delta: time_delta,
             time_queued: time_queued,
+            absolute_time: absolute_time,
         }
     }
+}
+
+pub struct ScheduleTicket {
+    pub sequence_no: u64,
+    pub absolute_time: u64,
+}
+
+pub struct Schedule<T> {
+    heap: BinaryHeap<ScheduleEntry<T>>,
+    invalid: HashSet<u64>,
+    abs_time: u64,
+    seq: u64,
+
 }
 
 impl<T> Schedule<T> {
     pub fn new() -> Self {
         Schedule {
             heap: BinaryHeap::new(),
+            invalid: HashSet::new(),
             abs_time: 0,
             seq: 0,
         }
     }
 
-    pub fn insert(&mut self, value: T, rel_time: u64) {
-        let entry = ScheduleEntry::new(value, self.abs_time + rel_time, rel_time, self.seq);
+    pub fn insert(&mut self, value: T, rel_time: u64) -> ScheduleTicket {
+        let seq = self.seq;
+        let abs_time = self.abs_time + rel_time;
+
+        let entry = ScheduleEntry::new(value, abs_time, rel_time, seq);
         self.heap.push(entry);
         self.seq += 1;
+
+        ScheduleTicket {
+            sequence_no: seq,
+            absolute_time: abs_time,
+        }
     }
 
     pub fn next(&mut self) -> Option<ScheduleEvent<T>> {
-        self.heap.pop().map(|entry| {
-            assert!(entry.abs_time >= self.abs_time,
-                    "{} < {}",
-                    entry.abs_time,
-                    self.abs_time);
+
+        while let Some(entry) = self.heap.pop() {
+            if self.invalid.remove(&entry.seq) {
+                continue;
+            }
+
             let time_delta = entry.abs_time - self.abs_time;
             self.abs_time = entry.abs_time;
 
-            ScheduleEvent::new(entry.value, time_delta, entry.rel_time)
-        })
+            return Some(ScheduleEvent::new(entry.value, time_delta, entry.rel_time, entry.abs_time));
+        }
+
+        None
     }
 
     pub fn reset(&mut self) {
@@ -103,5 +124,9 @@ impl<T> Schedule<T> {
 
     pub fn time(&self) -> u64 {
         self.abs_time
+    }
+
+    pub fn invalidate(&mut self, seq: u64) {
+        self.invalid.insert(seq);
     }
 }

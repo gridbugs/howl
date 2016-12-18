@@ -95,6 +95,7 @@ impl<'a> GameCtx<'a> {
                     rule_resolution: &mut self.rule_resolution,
                     ecs_action: &mut self.ecs_action,
                     action_schedule: &mut self.action_schedule,
+                    turn_schedule: &mut level.turn_schedule,
                     pc_observer: &self.pc_observer,
                     entity_ids: &self.entity_ids,
                 }.turn()?;
@@ -102,7 +103,8 @@ impl<'a> GameCtx<'a> {
                 match resolution {
                     TurnResolution::Quit => return Ok(()),
                     TurnResolution::Schedule(entity_id, delay) => {
-                        level.turn_schedule.insert(entity_id, delay);
+                        let ticket = level.turn_schedule.insert(entity_id, delay);
+                        level.ecs.insert_schedule_ticket(turn_event.event, ticket);
                     }
                 }
             } else {
@@ -155,14 +157,15 @@ impl<'a> GameCtx<'a> {
                         prototypes::pc(g.entity_mut(id), coord);
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
 
-                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
+                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
+                        g.insert_schedule_ticket(id, ticket);
                     }
-                    'd' => {
-                        let id = self.new_id();
-                        prototypes::dog(g.entity_mut(id), coord);
+                    't' => {
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
+                        let id = prototypes::terror_pillar(&mut g, &self.entity_ids, coord);
 
-                        self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
+                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, 1);
+                        g.insert_schedule_ticket(id, ticket);
                     }
                     _ => panic!(),
                 }
@@ -171,9 +174,12 @@ impl<'a> GameCtx<'a> {
             y += 1;
         }
 
-        let cloud_id = self.new_id();
-        prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height);
-        self.levels.level_mut(self.level_id).turn_schedule.insert(cloud_id, 0);
+        {
+            let cloud_id = self.new_id();
+            prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height);
+            let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(cloud_id, 0);
+            g.insert_schedule_ticket(cloud_id, ticket);
+        }
 
         self.commit(&mut g);
     }
@@ -189,7 +195,7 @@ fn demo_level_str() -> Vec<&'static str> {
          "&&,#.........#................#,,,,,,&",
          "&,&#.........##########+#######,,,,,,&",
          "&,,#.........#,,,,,,,,,,,,,,,,,,,,,,,&",
-         "&&,#.........#,d,,,,,,,&,,,,,,,&,&,&,&",
+         "&&,#.........#,t,,,,,,,&,,,,,,,&,&,&,&",
          "&,,#.........#,,,,,&,,,,,,,,&,,,,,,,,&",
          "&,,#.........+,,,,,,&,,,,,,,,,,,,,,,,&",
          "&&,#.........#,,,,,&,,,,,,,,,&,,,,,,,&",
