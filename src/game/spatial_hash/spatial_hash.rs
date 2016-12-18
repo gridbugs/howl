@@ -23,6 +23,9 @@ pub struct SpatialHashCell {
     // set of entities that are outside
     outside: AnySet<EntityId>,
 
+    // set of entities that transform on moon change
+    transform_on_moon_change: EntitySet,
+
     // set of entities currently in this cell
     entities: EntitySet,
 
@@ -44,6 +47,7 @@ impl SpatialHashCell {
             moon: 0,
             doors: AnySet::new(),
             outside: AnySet::new(),
+            transform_on_moon_change: EntitySet::new(),
             entities: EntitySet::new(),
             last_updated: 0,
         }
@@ -87,6 +91,14 @@ impl SpatialHashCell {
 
     pub fn outside(&self) -> bool {
         !self.outside.is_empty()
+    }
+
+    pub fn transform_on_moon_change(&self) -> bool {
+        !self.transform_on_moon_change.is_empty()
+    }
+
+    pub fn transform_on_moon_change_iter(&self) -> EntitySetIter {
+        self.transform_on_moon_change.iter()
     }
 }
 
@@ -145,6 +157,10 @@ impl SpatialHashTable {
         if entity.contains_outside() {
             cell.outside.remove(entity.id());
         }
+        if entity.contains_transform_on_moon_change() {
+            cell.transform_on_moon_change.remove(entity.id());
+        }
+
         cell.entities.remove(entity.id());
         cell.last_updated = action_id;
     }
@@ -169,6 +185,10 @@ impl SpatialHashTable {
         if entity.contains_outside() {
             cell.outside.insert(entity.id());
         }
+        if entity.contains_transform_on_moon_change() {
+            cell.transform_on_moon_change.insert(entity.id());
+        }
+
         cell.entities.insert(entity.id());
         cell.last_updated = action_id;
     }
@@ -202,6 +222,7 @@ impl SpatialHashTable {
         self.update_opacity(action_env, action);
         self.update_doors(action_env, action);
         self.update_outside(action_env, action);
+        self.update_transform_on_moon_change(action_env, action);
     }
 
     update_count!(update_solid, solid, solid_positive_iter, solid_negative_iter, contains_solid, current_contains_solid);
@@ -211,6 +232,9 @@ impl SpatialHashTable {
     update_sum!(update_opacity, opacity, current_opacity, opacity_positive_iter, opacity_negative_iter, 0.0);
 
     update_set!(update_outside, outside, outside_positive_iter, outside_negative_iter, contains_outside, current_contains_outside);
+    update_set!(update_transform_on_moon_change, transform_on_moon_change,
+                transform_on_moon_change_positive_iter, transform_on_moon_change_negative_iter,
+                contains_transform_on_moon_change, current_contains_transform_on_moon_change);
 
     update_set_typed!(update_doors, doors, door_state_positive_iter, door_state_negative_iter, contains_door_state, current_door_state);
 }

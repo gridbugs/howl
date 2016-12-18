@@ -29,6 +29,7 @@ pub enum ActionArgs {
     Destroy(EntityId),
     MoveClouds(EntityId),
     TransformTerrorPillarTerrorFly(EntityId),
+    TransformTree(EntityId),
 }
 
 impl ActionArgs {
@@ -67,6 +68,9 @@ impl ActionArgs {
             }
             ActionArgs::TransformTerrorPillarTerrorFly(entity_id) => {
                 actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id))?;
+            }
+            ActionArgs::TransformTree(entity_id) => {
+                actions::transform_tree(action, ecs.entity(entity_id))?;
             }
         }
         Ok(())

@@ -4,6 +4,7 @@ use game::*;
 #[derive(Clone, Copy)]
 pub enum TransformationType {
     TerrorPillarTerrorFly,
+    Tree,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -17,6 +18,9 @@ impl TransformationType {
         match self {
             TransformationType::TerrorPillarTerrorFly => {
                 ActionArgs::TransformTerrorPillarTerrorFly(entity_id)
+            }
+            TransformationType::Tree => {
+                ActionArgs::TransformTree(entity_id)
             }
         }
     }

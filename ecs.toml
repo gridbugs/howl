@@ -13,6 +13,7 @@ imports = [
 [component.pc]
 [component.outside]
 [component.moon]
+[component.transform_on_moon_change]
 
 [component.position]
     type = "Coord"

@@ -25,15 +25,31 @@ pub fn wall<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
-pub fn tree<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn tree(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> EntityId {
+
+    let shadow_id = {
+        let mut entity = action.entity_mut(ids.new_id());
+
+        entity.insert_ansi_tile(ansi::foreground('£', ansi::colours::YELLOW, ansi::styles::BOLD));
+        entity.insert_transformation_state(TransformationState::Other);
+        entity.insert_opacity(0.0);
+
+        entity.id()
+    };
+
+    let mut entity = action.entity_mut(ids.new_id());
     entity.insert_position(position);
-    entity.insert_opacity(0.4);
+    entity.insert_opacity(0.6);
     entity.insert_solid();
 
     entity.insert_ansi_tile(ansi::foreground('&', ansi::colours::GREEN, ansi::styles::NONE));
     entity.insert_tile_depth(1);
+    entity.insert_shadow_entity(shadow_id);
+    entity.insert_transformation_state(TransformationState::Real);
+    entity.insert_transformation_type(TransformationType::Tree);
+    entity.insert_transform_on_moon_change();
 
-    entity
+    entity.id()
 }
 
 pub fn floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
@@ -96,6 +112,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_shadow_entity(shadow_id);
     entity.insert_transformation_type(TransformationType::TerrorPillarTerrorFly);
     entity.insert_transformation_state(TransformationState::Real);
+    entity.insert_transform_on_moon_change();
 
     entity.id()
 }

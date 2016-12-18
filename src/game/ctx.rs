@@ -67,6 +67,7 @@ impl<'a> GameCtx<'a> {
         self.rules.push(Box::new(rules::RealtimeAxisVelocityStart));
         self.rules.push(Box::new(rules::CloseDoor));
         self.rules.push(Box::new(rules::BurstFire));
+        self.rules.push(Box::new(rules::MoonTransform));
 
         self.init_demo();
 
@@ -139,7 +140,8 @@ impl<'a> GameCtx<'a> {
                         prototypes::floor(g.entity_mut(self.new_id()), coord);
                     }
                     '&' => {
-                        prototypes::tree(g.entity_mut(self.new_id()), coord);
+                        prototypes::tree(&mut g, &self.entity_ids, coord);
+
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
                     }
                     '.' => {
