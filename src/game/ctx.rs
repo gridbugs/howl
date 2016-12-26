@@ -42,7 +42,7 @@ impl<'a> GameCtx<'a> {
     pub fn new(window: ansi::Window<'a>, input_source: ansi::AnsiInputSource, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
-            renderer: AnsiRenderer::new(window),
+            renderer: AnsiRenderer::new(window, true),
             input_source: input_source,
             entity_ids: EntityIdReserver::new(),
             turn_id: 0,

@@ -5,7 +5,6 @@ use std::cmp;
 use game::*;
 use ecs::*;
 use util::Schedule;
-use math::Coord;
 
 const TURN_DELAY_MS: u64 = 20;
 const FAILED_ACTION_DELAY: u64 = 16;
@@ -78,9 +77,6 @@ impl<'a> ActionEnv<'a> {
         }
     }
 }
-
-const RENDER_WIDTH: usize = 37;
-const RENDER_HEIGHT: usize = 26;
 
 impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
@@ -197,7 +193,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
 
         if self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env) {
-            self.renderer.render(level_knowledge, *self.action_id, Coord::new(0, 0), RENDER_WIDTH, RENDER_HEIGHT);
+            self.renderer.render(level_knowledge, *self.action_id, position);
             Ok(true)
         } else {
             Ok(false)

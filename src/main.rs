@@ -21,8 +21,8 @@ mod perlin;
 
 use frontends::ansi;
 
-const GAME_WINDOW_WIDTH: usize = 80;
-const GAME_WINDOW_HEIGHT: usize = 30;
+const GAME_WINDOW_WIDTH: usize = 41;
+const GAME_WINDOW_HEIGHT: usize = 31;
 
 const ANSI_GAME_WINDOW_X: usize = 1;
 const ANSI_GAME_WINDOW_Y: usize = 1;
