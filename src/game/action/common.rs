@@ -1,7 +1,7 @@
 use ecs::*;
 use game::*;
 use game::data::*;
-use direction::{self, Direction};
+use direction::Direction;
 use frontends::ansi;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) -> Result<()> {
@@ -52,18 +52,6 @@ pub fn fire_bullet(action: &mut EcsAction, entity: EntityRef, direction: Directi
 pub fn burst_bullets(action: &mut EcsAction, entity_id: EntityId, direction: Direction, count: usize) -> Result<()> {
 
     action.set_burst_fire(BurstFire::new(entity_id, direction, count));
-
-    Ok(())
-}
-
-pub fn explode_bullets(action: &mut EcsAction, entity: EntityRef, ids: &EntityIdReserver) -> Result<()> {
-
-    let firer_position = entity.position().ok_or(Error::MissingComponent)?;
-
-    for direction in direction::iter() {
-        let bullet_position = firer_position + direction.vector();
-        prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, direction);
-    }
 
     Ok(())
 }

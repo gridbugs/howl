@@ -23,7 +23,6 @@ pub enum ActionArgs {
     CloseDoor(EntityId),
     Close(EntityId, Direction),
     FireBullet(EntityId, Direction),
-    ExplodeBullets(EntityId),
     BurstBullets(EntityId, Direction, usize),
     RealtimeAxisVelocityMove(EntityId, RealtimeAxisVelocity),
     Destroy(EntityId),
@@ -53,9 +52,6 @@ impl ActionArgs {
             }
             ActionArgs::BurstBullets(entity_id, direction, count) => {
                 actions::burst_bullets(action, entity_id, direction, count)?;
-            }
-            ActionArgs::ExplodeBullets(entity_id) => {
-                actions::explode_bullets(action, ecs.entity(entity_id), entity_ids)?;
             }
             ActionArgs::RealtimeAxisVelocityMove(entity_id, velocity) => {
                 actions::realtime_axis_velocity_move(action, ecs.entity(entity_id), velocity)?;
