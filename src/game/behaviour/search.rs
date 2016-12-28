@@ -16,7 +16,7 @@ pub fn follow_path_step() -> BehaviourLeaf {
 
 pub fn simple_npc_update_path() -> BehaviourLeaf {
     let search_ctx = GridSearchCtx::new();
-    let search_cfg = GridSearchCfg::all_directions();
+    let search_cfg = GridSearchCfg::cardinal_directions();
 
     BehaviourLeaf::new(move |input| {
         let position = input.entity.position().unwrap();

@@ -201,11 +201,29 @@ pub static DIRECTIONS: [Direction; NUM_DIRECTIONS] = [Direction::North,
 
 pub const NUM_CARDINAL_DIRECTIONS: usize = 4;
 pub static CARDINAL_DIRECTIONS: [Direction; NUM_CARDINAL_DIRECTIONS] =
-    [Direction::North, Direction::East, Direction::South, Direction::West];
+    [Direction::North,
+     Direction::East,
+     Direction::South,
+     Direction::West];
+
+pub static CARDINALS: [CardinalDirection; NUM_CARDINAL_DIRECTIONS] =
+    [CardinalDirection::North,
+     CardinalDirection::East,
+     CardinalDirection::South,
+     CardinalDirection::West];
 
 pub const NUM_ORDINAL_DIRECTIONS: usize = 4;
 pub static ORDINAL_DIRECTIONS: [Direction; NUM_ORDINAL_DIRECTIONS] =
-    [Direction::NorthEast, Direction::SouthEast, Direction::SouthWest, Direction::NorthWest];
+    [Direction::NorthEast,
+     Direction::SouthEast,
+     Direction::SouthWest,
+     Direction::NorthWest];
+
+pub static ORDINALS: [OrdinalDirection; NUM_ORDINAL_DIRECTIONS] =
+    [OrdinalDirection::NorthEast,
+     OrdinalDirection::SouthEast,
+     OrdinalDirection::SouthWest,
+     OrdinalDirection::NorthWest];
 
 pub static DIRECTION_PROFILES: [&'static DirectionProfile; NUM_DIRECTIONS] =
     [&directions::NORTH,
@@ -244,6 +262,9 @@ impl Direction {
     }
     pub fn multiplier(self) -> f64 {
         self.profile().multiplier
+    }
+    pub fn sub_direction(self) -> DirectionType {
+        self.profile().direction_type
     }
 }
 
@@ -315,17 +336,32 @@ impl OrdinalDirection {
     }
 }
 
-pub trait SubDirection {
-    fn direction(&self) -> Direction;
+pub trait SubDirection: Sized {
+    fn direction(self) -> Direction;
 
-    fn profile(&self) -> &'static DirectionProfile {
+    fn profile(self) -> &'static DirectionProfile {
         self.direction().profile()
+    }
+    fn opposite(self) -> Direction {
+        self.profile().opposite
+    }
+    fn vector(self) -> Vector2<isize> {
+        self.profile().vector
+    }
+    fn left90(self) -> Direction {
+        self.profile().left90
+    }
+    fn right90(self) -> Direction {
+        self.profile().right90
+    }
+    fn multiplier(self) -> f64 {
+        self.profile().multiplier
     }
 }
 
 impl SubDirection for CardinalDirection {
-    fn direction(&self) -> Direction {
-        match *self {
+    fn direction(self) -> Direction {
+        match self {
             CardinalDirection::North => Direction::North,
             CardinalDirection::East => Direction::East,
             CardinalDirection::South => Direction::South,
@@ -335,8 +371,8 @@ impl SubDirection for CardinalDirection {
 }
 
 impl SubDirection for OrdinalDirection {
-    fn direction(&self) -> Direction {
-        match *self {
+    fn direction(self) -> Direction {
+        match self {
             OrdinalDirection::NorthEast => Direction::NorthEast,
             OrdinalDirection::SouthEast => Direction::SouthEast,
             OrdinalDirection::SouthWest => Direction::SouthWest,
@@ -363,27 +399,49 @@ impl Iterator for Iter {
     }
 }
 
-pub struct CardinalIter(usize);
-impl Iterator for CardinalIter {
+pub struct CardinalDirectionIter(usize);
+impl Iterator for CardinalDirectionIter {
     type Item = Direction;
     fn next(&mut self) -> Option<Self::Item> {
         iter_helper(&mut self.0, NUM_CARDINAL_DIRECTIONS, &CARDINAL_DIRECTIONS)
     }
 }
 
-pub struct OrdinalIter(usize);
-impl Iterator for OrdinalIter {
+pub struct CardinalIter(usize);
+impl Iterator for CardinalIter {
+    type Item = CardinalDirection;
+    fn next(&mut self) -> Option<Self::Item> {
+        iter_helper(&mut self.0, NUM_CARDINAL_DIRECTIONS, &CARDINALS)
+    }
+}
+
+pub struct OrdinalDirectionIter(usize);
+impl Iterator for OrdinalDirectionIter {
     type Item = Direction;
     fn next(&mut self) -> Option<Self::Item> {
         iter_helper(&mut self.0, NUM_ORDINAL_DIRECTIONS, &ORDINAL_DIRECTIONS)
     }
 }
 
+pub struct OrdinalIter(usize);
+impl Iterator for OrdinalIter {
+    type Item = OrdinalDirection;
+    fn next(&mut self) -> Option<Self::Item> {
+        iter_helper(&mut self.0, NUM_ORDINAL_DIRECTIONS, &ORDINALS)
+    }
+}
+
 pub fn iter() -> Iter {
     Iter(0)
 }
+pub fn cardinal_direction_iter() -> CardinalDirectionIter {
+    CardinalDirectionIter(0)
+}
 pub fn cardinal_iter() -> CardinalIter {
     CardinalIter(0)
+}
+pub fn ordinal_direction_iter() -> OrdinalDirectionIter {
+    OrdinalDirectionIter(0)
 }
 pub fn ordinal_iter() -> OrdinalIter {
     OrdinalIter(0)

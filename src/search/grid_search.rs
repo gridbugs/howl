@@ -200,6 +200,9 @@ impl GridSearchCfg {
     pub fn all_directions() -> Self {
         GridSearchCfg { directions: &direction::DIRECTIONS }
     }
+    pub fn cardinal_directions() -> Self {
+        GridSearchCfg { directions: &direction::CARDINAL_DIRECTIONS }
+    }
 }
 
 pub struct GridPathNode {
