@@ -10,7 +10,7 @@ pub type BehaviourNodeIndex = NodeIndex;
 pub struct BehaviourInput<'a> {
     pub entity: EntityRef<'a>,
     pub spatial_hash: &'a SpatialHashTable,
-    pub level_id: isize,
+    pub level_id: LevelId,
     pub action_env: ActionEnv<'a>,
 }
 

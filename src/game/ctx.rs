@@ -26,7 +26,7 @@ pub struct GameCtx<'a> {
     entity_ids: EntityIdReserver,
     turn_id: u64,
     action_id: u64,
-    level_id: isize,
+    level_id: LevelId,
     pc_id: Option<EntityId>,
     pc_observer: Shadowcast,
     behaviour_ctx: BehaviourCtx,
@@ -42,7 +42,7 @@ impl<'a> GameCtx<'a> {
     pub fn new(window: ansi::Window<'a>, input_source: ansi::AnsiInputSource, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
-            renderer: AnsiRenderer::new(window, true),
+            renderer: AnsiRenderer::new(window, false),
             input_source: input_source,
             entity_ids: EntityIdReserver::new(),
             turn_id: 0,
@@ -127,6 +127,8 @@ impl<'a> GameCtx<'a> {
     fn init_demo(&mut self) {
         let strings = demo_level_str();
 
+        let mut level = Level::new(self.width, self.height);
+
         let mut g = EcsAction::new();
 
         let mut y = 0;
@@ -159,14 +161,14 @@ impl<'a> GameCtx<'a> {
                         prototypes::pc(g.entity_mut(id), coord);
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
 
-                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, PC_TURN_OFFSET);
+                        let ticket = level.turn_schedule.insert(id, PC_TURN_OFFSET);
                         g.insert_schedule_ticket(id, ticket);
                     }
                     't' => {
                         prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
                         let id = prototypes::terror_pillar(&mut g, &self.entity_ids, coord);
 
-                        let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(id, NPC_TURN_OFFSET);
+                        let ticket = level.turn_schedule.insert(id, NPC_TURN_OFFSET);
                         g.insert_schedule_ticket(id, ticket);
                     }
                     _ => panic!(),
@@ -179,7 +181,8 @@ impl<'a> GameCtx<'a> {
         {
             let cloud_id = self.new_id();
             prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height);
-            let ticket = self.levels.level_mut(self.level_id).turn_schedule.insert(cloud_id, ENV_TURN_OFFSET);
+            let ticket = level.turn_schedule.insert(cloud_id, ENV_TURN_OFFSET);
+            self.levels.add_level(level);
             g.insert_schedule_ticket(cloud_id, ticket);
         }
 

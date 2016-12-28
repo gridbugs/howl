@@ -1,8 +1,11 @@
 use ecs::*;
 use game::*;
 use math::Coord;
-use grid::{Grid, DynamicGrid};
+use grid::{Grid, StaticGrid, DefaultGrid, IterGrid, CoordIterGrid};
 use util::AnySet;
+
+pub type SpatialHashCellIter<'a> = <StaticGrid<SpatialHashCell> as IterGrid<'a>>::Iter;
+pub type SpatialHashCoordIter = <StaticGrid<SpatialHashCell> as CoordIterGrid>::CoordIter;
 
 pub struct SpatialHashCell {
     // sum of opacities of everything in this cell
@@ -34,7 +37,7 @@ pub struct SpatialHashCell {
 }
 
 pub struct SpatialHashTable {
-    grid: DynamicGrid<SpatialHashCell>,
+    grid: StaticGrid<SpatialHashCell>,
     empty: SpatialHashCell,
 }
 
@@ -109,11 +112,19 @@ impl Default for SpatialHashCell {
 }
 
 impl SpatialHashTable {
-    pub fn new() -> Self {
+    pub fn new(width: usize, height: usize) -> Self {
         SpatialHashTable {
-            grid: DynamicGrid::new(),
+            grid: StaticGrid::new_default(width, height),
             empty: SpatialHashCell::new(),
         }
+    }
+
+    pub fn cell_iter(&self) -> SpatialHashCellIter {
+        self.grid.iter()
+    }
+
+    pub fn coord_iter(&self) -> SpatialHashCoordIter {
+        self.grid.coord_iter()
     }
 
     pub fn get(&self, coord: Coord) -> &SpatialHashCell {
@@ -128,8 +139,16 @@ impl SpatialHashTable {
         self.grid.limits_max()
     }
 
-    fn get_mut_with_default(&mut self, coord: Coord) -> &mut SpatialHashCell {
-        self.grid.get_mut_with_default(coord)
+    pub fn width(&self) -> usize {
+        self.grid.width()
+    }
+
+    pub fn height(&self) -> usize {
+        self.grid.height()
+    }
+
+    fn get_mut(&mut self, coord: Coord) -> &mut SpatialHashCell {
+        unsafe { self.grid.get_unchecked_mut(coord) }
     }
 
     fn change_entity_position(&mut self, entity: EntityRef, current_position: Coord, new_position: Coord, action_id: u64) {
@@ -138,7 +157,7 @@ impl SpatialHashTable {
     }
 
     fn remove_entity_position(&mut self, entity: EntityRef, position: Coord, action_id: u64) {
-        let mut cell = self.get_mut_with_default(position);
+        let mut cell = self.get_mut(position);
         if entity.contains_solid() {
             cell.solid -= 1;
         }
@@ -166,7 +185,7 @@ impl SpatialHashTable {
     }
 
     fn add_entity_position(&mut self, entity: EntityRef, position: Coord, action_id: u64) {
-        let mut cell = self.get_mut_with_default(position);
+        let mut cell = self.get_mut(position);
         if entity.contains_solid() {
             cell.solid += 1;
         }

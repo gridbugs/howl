@@ -9,17 +9,11 @@ pub struct Level {
 }
 
 impl Level {
-    pub fn new() -> Self {
+    pub fn new(width: usize, height: usize) -> Self {
         Level {
             ecs: EcsCtx::new(),
-            spatial_hash: SpatialHashTable::new(),
+            spatial_hash: SpatialHashTable::new(width, height),
             turn_schedule: Schedule::new(),
         }
-    }
-}
-
-impl Default for Level {
-    fn default() -> Self {
-        Self::new()
     }
 }

@@ -82,6 +82,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_control_map(ControlMap::new_default());
     entity.insert_pc();
     entity.insert_turn_time(TURN_DURATION_BASE);
+    entity.insert_should_render();
 
     entity
 }

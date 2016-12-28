@@ -1,6 +1,8 @@
+use std::collections::BTreeMap;
+
+use game::*;
 use math::Coord;
-use game::{SpatialHashCell, ActionEnv};
-use util::BidirectionalList;
+use util::TwoDimensionalCons;
 
 /// Trait implemented by representations of knowledge about a level
 pub trait LevelKnowledge {
@@ -9,28 +11,35 @@ pub trait LevelKnowledge {
     fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool;
 }
 
-pub struct GameKnowledge<K: LevelKnowledge + Default> {
-    levels: BidirectionalList<K>,
+pub struct GameKnowledge<K: LevelKnowledge> {
+    levels: BTreeMap<LevelId, K>,
 }
 
-impl<K: LevelKnowledge + Default> GameKnowledge<K> {
+impl<K: LevelKnowledge> GameKnowledge<K> {
     pub fn new() -> Self {
         GameKnowledge {
-            levels: BidirectionalList::new(),
+            levels: BTreeMap::new(),
         }
     }
 
-    pub fn level(&self, level_id: isize) -> &K {
-        self.levels.get_with_default(level_id)
+    pub fn level(&self, level_id: LevelId) -> &K {
+        self.levels.get(&level_id).expect("No such level")
     }
 
-    pub fn level_mut(&mut self, level_id: isize) -> &mut K {
-        self.levels.get_mut_with_default(level_id)
+    pub fn level_mut(&mut self, level_id: LevelId) -> &mut K {
+        self.levels.get_mut(&level_id).expect("No such level")
     }
 }
 
 impl<K: LevelKnowledge + Default> Default for GameKnowledge<K> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<K: LevelKnowledge + TwoDimensionalCons> GameKnowledge<K> {
+    pub fn level_mut_or_insert_size(&mut self, level_id: LevelId,
+                                    width: usize, height: usize) -> &mut K {
+        self.levels.entry(level_id).or_insert_with(|| K::new(width, height))
     }
 }

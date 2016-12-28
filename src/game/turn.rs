@@ -6,7 +6,6 @@ use game::*;
 use ecs::*;
 use util::Schedule;
 
-const TURN_DELAY_MS: u64 = 20;
 const FAILED_ACTION_DELAY: u64 = 16;
 const MIN_TURN_TIME: u64 = 1;
 
@@ -44,7 +43,7 @@ impl TurnResolution {
 pub struct TurnEnv<'a, 'b, 'c: 'a> {
     pub turn_id: u64,
     pub action_id: &'a mut u64,
-    pub level_id: isize,
+    pub level_id: LevelId,
     pub entity_id: EntityId,
     pub pc_id: EntityId,
     pub renderer: &'a mut AnsiRenderer<'c>,
@@ -81,9 +80,7 @@ impl<'a> ActionEnv<'a> {
 impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
-        if self.pc_render_ansi()? {
-            thread::sleep(Duration::from_millis(TURN_DELAY_MS));
-        }
+        self.pc_render_ansi()?;
 
         let resolution = self.take_turn()?;
 
@@ -185,9 +182,17 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
     }
 
     fn pc_render_ansi(&mut self) -> Result<bool> {
+
         let entity = self.ecs.entity(self.pc_id);
+
+        if !entity.contains_should_render() {
+            return Ok(false);
+        }
+
         let mut knowledge = entity.ansi_drawable_knowledge_borrow_mut().ok_or(Error::MissingComponent)?;
-        let level_knowledge = knowledge.level_mut(self.level_id);
+        let level_knowledge = knowledge.level_mut_or_insert_size(self.level_id,
+                                                                 self.spatial_hash.width(),
+                                                                 self.spatial_hash.height());
         let position = entity.position().ok_or(Error::MissingComponent)?;
         let vision_distance = entity.vision_distance().ok_or(Error::MissingComponent)?;
         let action_env = ActionEnv::new(self.ecs, *self.action_id);

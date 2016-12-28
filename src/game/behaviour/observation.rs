@@ -10,7 +10,9 @@ pub fn simple_npc_shadowcast(child: NodeIndex) -> BehaviourSwitch {
         let eye = input.entity.position().unwrap();
         let vision_distance = input.entity.vision_distance().unwrap();
         let mut knowledge = input.entity.simple_npc_knowledge_borrow_mut().unwrap();
-        let level_knowledge = knowledge.level_mut(input.level_id);
+        let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
+                                                                 input.spatial_hash.width(),
+                                                                 input.spatial_hash.height());
 
         shadowcast.observe(eye, input.spatial_hash, vision_distance,
                            level_knowledge, input.action_env);

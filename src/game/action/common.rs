@@ -92,8 +92,8 @@ pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, sp
 
     cloud_state.progress(1.0);
 
-    for (coord, moon) in cloud_state.iter() {
-        let cell = spatial_hash.get(coord);
+    for (coord, cell) in izip!(spatial_hash.coord_iter(), spatial_hash.cell_iter()) {
+        let moon = !cloud_state.is_cloud(coord);
         if cell.outside() && cell.moon() != moon {
             if moon {
                 action.insert_moon(cell.any_outside().ok_or(Error::MissingComponent)?);

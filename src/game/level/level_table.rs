@@ -1,22 +1,29 @@
 use game::Level;
-use util::BidirectionalList;
+
+pub type LevelId = usize;
 
 pub struct LevelTable {
-    levels: BidirectionalList<Level>,
+    levels: Vec<Level>,
 }
 
 impl LevelTable {
     pub fn new() -> Self {
         LevelTable {
-            levels: BidirectionalList::new(),
+            levels: Vec::new(),
         }
     }
 
-    pub fn level(&self, level_id: isize) -> &Level {
-        self.levels.get_with_default(level_id)
+    pub fn add_level(&mut self, level: Level) -> LevelId {
+        let index = self.levels.len();
+        self.levels.push(level);
+        index
     }
 
-    pub fn level_mut(&mut self, level_id: isize) -> &mut Level {
-        self.levels.get_mut_with_default(level_id)
+    pub fn level(&self, level_id: LevelId) -> &Level {
+        self.levels.get(level_id).expect("No such level")
+    }
+
+    pub fn level_mut(&mut self, level_id: LevelId) -> &mut Level {
+        self.levels.get_mut(level_id).expect("No such level")
     }
 }

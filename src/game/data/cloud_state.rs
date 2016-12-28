@@ -19,7 +19,7 @@ impl CloudState {
         let zoomed_height = ((height as f64) * zoom).ceil() as usize;
 
         CloudState {
-            perlin: PerlinGrid::new(zoomed_width, zoomed_height, PerlinWrapType::Regenerate).unwrap(),
+            perlin: PerlinGrid::new_from_seed(zoomed_width, zoomed_height, PerlinWrapType::Regenerate, 0),
             zoom: zoom,
             min: min,
             max: max,

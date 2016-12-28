@@ -6,7 +6,7 @@ macro_rules! update_count {
                 let entity = action_env.ecs.post_action_entity(entity_id, action);
                 if let Some(position) = entity.position() {
                     if !entity.$current_contains_component() {
-                        let cell = self.get_mut_with_default(position);
+                        let cell = self.get_mut(position);
                         cell.$component += 1;
                         cell.last_updated = action_env.id;
                     }
@@ -17,7 +17,7 @@ macro_rules! update_count {
                 let entity = action_env.ecs.entity(entity_id);
                 if let Some(position) = entity.position() {
                     if entity.$contains_component() {
-                        let cell = self.get_mut_with_default(position);
+                        let cell = self.get_mut(position);
                         cell.$component -= 1;
                         cell.last_updated = action_env.id;
                     }
@@ -35,7 +35,7 @@ macro_rules! update_set {
                 let entity = action_env.ecs.post_action_entity(entity_id, action);
                 if let Some(position) = entity.position() {
                     if !entity.$current_contains_component() {
-                        let cell = self.get_mut_with_default(position);
+                        let cell = self.get_mut(position);
                         cell.$component.insert(entity_id);
                         cell.last_updated = action_env.id;
                     }
@@ -45,7 +45,7 @@ macro_rules! update_set {
                 let entity = action_env.ecs.entity(entity_id);
                 if let Some(position) = entity.position() {
                     if entity.$contains_component() {
-                        let cell = self.get_mut_with_default(position);
+                        let cell = self.get_mut(position);
                         cell.$component.remove(entity_id);
                         cell.last_updated = action_env.id;
                     }
@@ -63,7 +63,7 @@ macro_rules! update_set_typed {
                 let entity = action_env.ecs.post_action_entity(entity_id, action);
                 if let Some(position) = entity.position() {
                     if entity.$current_component().is_none() {
-                        let cell = self.get_mut_with_default(position);
+                        let cell = self.get_mut(position);
                         cell.$component.insert(entity_id);
                         cell.last_updated = action_env.id;
                     }
@@ -73,7 +73,7 @@ macro_rules! update_set_typed {
                 let entity = action_env.ecs.entity(entity_id);
                 if let Some(position) = entity.position() {
                     if entity.$contains_component() {
-                        let cell = self.get_mut_with_default(position);
+                        let cell = self.get_mut(position);
                         cell.$component.remove(entity_id);
                         cell.last_updated = action_env.id;
                     }
@@ -91,7 +91,7 @@ macro_rules! update_sum {
                 if let Some(position) = entity.position() {
                     let current = entity.$current_component().unwrap_or($default);
                     let increase = new - current;
-                    let cell = self.get_mut_with_default(position);
+                    let cell = self.get_mut(position);
                     cell.$component += increase;
                     cell.last_updated = action_env.id;
                 }
@@ -100,7 +100,7 @@ macro_rules! update_sum {
                 let entity = action_env.ecs.entity(entity_id);
                 if let Some(position) = entity.position() {
                     if let Some(value) = entity.$component() {
-                        let cell = self.get_mut_with_default(position);
+                        let cell = self.get_mut(position);
                         cell.$component -= value;
                         cell.last_updated = action_env.id;
                     }
