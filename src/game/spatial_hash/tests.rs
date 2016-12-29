@@ -12,7 +12,7 @@ struct Env {
 impl Env {
     fn new() -> Self {
         Env {
-            sh: SpatialHashTable::new(),
+            sh: SpatialHashTable::new(10, 10),
             ctx: EcsCtx::new(),
             ids: LeakyReserver::new(),
         }
