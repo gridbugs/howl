@@ -189,7 +189,7 @@ impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
             return Ok(false);
         }
 
-        let mut knowledge = entity.ansi_drawable_knowledge_borrow_mut().ok_or(Error::MissingComponent)?;
+        let mut knowledge = entity.drawable_knowledge_borrow_mut().ok_or(Error::MissingComponent)?;
         let level_knowledge = knowledge.level_mut_or_insert_size(self.level_id,
                                                                  self.spatial_hash.width(),
                                                                  self.spatial_hash.height());

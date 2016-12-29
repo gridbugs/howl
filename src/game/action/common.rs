@@ -2,7 +2,6 @@ use ecs::*;
 use game::*;
 use game::data::*;
 use direction::Direction;
-use frontends::ansi;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) -> Result<()> {
     let current_position = entity.position().ok_or(Error::MissingComponent)?;
@@ -17,8 +16,7 @@ pub fn open_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
     action.insert_opacity(door.id(), 0.0);
     action.insert_door_state(door.id(), DoorState::Open);
 
-    action.insert_ansi_tile(door.id(),
-        ansi::full('-', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
+    action.insert_tile(door.id(), TileType::OpenDoor);
 
     Ok(())
 }
@@ -28,8 +26,7 @@ pub fn close_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
     action.insert_opacity(door.id(), 1.0);
     action.insert_door_state(door.id(), DoorState::Closed);
 
-    action.insert_ansi_tile(door.id(),
-        ansi::full('+', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
+    action.insert_tile(door.id(), TileType::ClosedDoor);
 
     Ok(())
 }

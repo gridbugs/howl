@@ -1,4 +1,4 @@
-use game::{AnsiDrawableKnowledgeLevel, AnsiDrawableKnowledgeCell};
+use game::*;
 use frontends::ansi::{self, ComplexTile, SimpleTile};
 use math::Coord;
 use direction::Direction;
@@ -8,6 +8,7 @@ const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 pub struct AnsiRenderer<'a> {
     window: ansi::Window<'a>,
     scroll: bool,
+    tile_resolver: frontends::ansi::AnsiTileResolver,
 }
 
 impl<'a> AnsiRenderer<'a> {
@@ -15,6 +16,7 @@ impl<'a> AnsiRenderer<'a> {
         AnsiRenderer {
             window: window,
             scroll: scroll,
+            tile_resolver: frontends::ansi::AnsiTileResolver,
         }
     }
 
@@ -26,17 +28,23 @@ impl<'a> AnsiRenderer<'a> {
         self.window.height()
     }
 
-    fn cell_has_wall(cell: &AnsiDrawableKnowledgeCell) -> bool {
-        if let Some(ComplexTile::Wall {..}) = cell.foreground() {
-            true
-        } else if let Some(ComplexTile::Wall {..}) = cell.background() {
-            true
-        } else {
-            false
+    fn cell_has_wall(cell: &DrawableKnowledgeCell) -> bool {
+        if let Some(tile) = cell.foreground() {
+            if tile.has_front_variant() {
+                return true;
+            }
         }
+
+        if let Some(tile) = cell.background() {
+            if tile.has_front_variant() {
+                return true;
+            }
+        }
+
+        false
     }
 
-    fn simple_tile(tile: ComplexTile, coord: Coord, knowledge: &AnsiDrawableKnowledgeLevel) -> SimpleTile {
+    fn simple_tile(tile: ComplexTile, coord: Coord, knowledge: &DrawableKnowledgeLevel) -> SimpleTile {
         match tile {
             ComplexTile::Simple(s) => s,
             ComplexTile::Wall { front, back } => {
@@ -50,8 +58,10 @@ impl<'a> AnsiRenderer<'a> {
             }
         }
     }
+}
 
-    pub fn render(&mut self, knowledge: &AnsiDrawableKnowledgeLevel, turn_id: u64, position: Coord) {
+impl<'a> KnowledgeRenderer for AnsiRenderer<'a> {
+    fn render(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
         let width = self.width() as isize;
         let height = self.height() as isize;
         let offset = if self.scroll {
@@ -71,7 +81,8 @@ impl<'a> AnsiRenderer<'a> {
                 let mut ch = ' ';
                 let mut style = ansi::styles::NONE;
 
-                if let Some(bg_tile) = cell.background() {
+                if let Some(bg_tile_type) = cell.background() {
+                    let bg_tile = self.tile_resolver.resolve(bg_tile_type);
                     let tile = Self::simple_tile(bg_tile, world_coord, knowledge);
                     if let Some(c) = tile.background_colour() {
                         bg = c;
@@ -84,7 +95,8 @@ impl<'a> AnsiRenderer<'a> {
                     }
                 }
 
-                if let Some(fg_tile) = cell.foreground() {
+                if let Some(fg_tile_type) = cell.foreground() {
+                    let fg_tile = self.tile_resolver.resolve(fg_tile_type);
                     let tile = Self::simple_tile(fg_tile, world_coord, knowledge);
                     if let Some(c) = tile.foreground_colour() {
                         fg = c;

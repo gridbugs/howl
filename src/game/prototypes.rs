@@ -1,5 +1,4 @@
 use math::{Coord, Vector2};
-use frontends::ansi;
 use direction::Direction;
 
 use ecs::*;
@@ -11,15 +10,8 @@ pub fn wall<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_opacity(1.0);
     entity.insert_solid();
 
-    entity.insert_ansi_tile(ansi::ComplexTile::Wall {
-        front: ansi::SimpleTile::Full {
-            ch: '▄',
-            fg: ansi::colours::YELLOW,
-            bg: ansi::colours::GREY,
-            style: ansi::styles::NONE,
-        },
-        back: ansi::SimpleTile::Foreground('█', ansi::colours::GREY, ansi::styles::NONE),
-    });
+    entity.insert_tile(TileType::Wall);
+
     entity.insert_tile_depth(1);
 
     entity
@@ -30,7 +22,8 @@ pub fn tree(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> 
     let shadow_id = {
         let mut entity = action.entity_mut(ids.new_id());
 
-        entity.insert_ansi_tile(ansi::foreground('£', ansi::colours::YELLOW, ansi::styles::BOLD));
+        entity.insert_tile(TileType::DeadTree);
+
         entity.insert_transformation_state(TransformationState::Other);
         entity.insert_opacity(0.0);
 
@@ -42,7 +35,8 @@ pub fn tree(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> 
     entity.insert_opacity(0.6);
     entity.insert_solid();
 
-    entity.insert_ansi_tile(ansi::foreground('&', ansi::colours::GREEN, ansi::styles::NONE));
+    entity.insert_tile(TileType::Tree);
+
     entity.insert_tile_depth(1);
     entity.insert_shadow_entity(shadow_id);
     entity.insert_transformation_state(TransformationState::Real);
@@ -54,7 +48,9 @@ pub fn tree(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> 
 
 pub fn floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
-    entity.insert_ansi_tile(ansi::full('.', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
+
+    entity.insert_tile(TileType::Floor);
+
     entity.insert_tile_depth(0);
 
     entity
@@ -62,7 +58,9 @@ pub fn floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
 pub fn outside_floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
-    entity.insert_ansi_tile(ansi::full('.', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
+
+    entity.insert_tile(TileType::Ground);
+
     entity.insert_tile_depth(0);
     entity.insert_outside();
 
@@ -71,12 +69,14 @@ pub fn outside_floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
 pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
-    entity.insert_ansi_tile(ansi::foreground('@', ansi::colours::WHITE, ansi::styles::BOLD));
+
+    entity.insert_tile(TileType::Player);
+
     entity.insert_tile_depth(2);
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::AnsiPlayerInput);
-    entity.insert_ansi_drawable_knowledge(AnsiDrawableKnowledge::new());
+    entity.insert_drawable_knowledge(DrawableKnowledge::new());
     entity.insert_vision_distance(16);
     entity.insert_door_opener();
     entity.insert_control_map(ControlMap::new_default());
@@ -92,7 +92,8 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     let shadow_id = {
         let mut entity = action.entity_mut(ids.new_id());
 
-        entity.insert_ansi_tile(ansi::foreground('T', ansi::colours::GREEN, ansi::styles::BOLD));
+        entity.insert_tile(TileType::TerrorFly);
+
         entity.insert_turn_time(TURN_DURATION_BASE / 2);
         entity.insert_transformation_state(TransformationState::Other);
 
@@ -101,7 +102,9 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
 
     let mut entity = action.entity_mut(ids.new_id());
     entity.insert_position(position);
-    entity.insert_ansi_tile(ansi::foreground('t', ansi::colours::GREEN, ansi::styles::BOLD));
+
+    entity.insert_tile(TileType::TerrorPillar);
+
     entity.insert_tile_depth(2);
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
@@ -123,10 +126,10 @@ pub fn door<E: EntityPopulate>(mut entity: E, position: Coord, state: DoorState)
     entity.insert_position(position);
 
     if state.is_open() {
-        entity.insert_ansi_tile(ansi::full('-', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
+        entity.insert_tile(TileType::OpenDoor);
         entity.insert_opacity(0.0);
     } else {
-        entity.insert_ansi_tile(ansi::full('+', ansi::colours::WHITE, ansi::colours::DARK_GREY, ansi::styles::NONE));
+        entity.insert_tile(TileType::ClosedDoor);
         entity.insert_solid();
         entity.insert_opacity(1.0);
     }
@@ -144,7 +147,9 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, direction: Dire
     entity.insert_realtime_axis_velocity(RealtimeAxisVelocity::from_cells_per_sec(
             SPEED_CELLS_PER_SEC, direction));
     entity.insert_destroy_on_collision();
-    entity.insert_ansi_tile(ansi::foreground('*', ansi::colours::RED, ansi::styles::NONE));
+
+    entity.insert_tile(TileType::Bullet);
+
     entity.insert_tile_depth(1);
 
     entity

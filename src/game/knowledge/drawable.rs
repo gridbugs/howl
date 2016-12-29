@@ -2,20 +2,19 @@ use game::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
 use util::{BestMap, TwoDimensionalCons};
 use math::Coord;
-use frontends::ansi::ComplexTile;
 
-pub type AnsiDrawableKnowledge = GameKnowledge<AnsiDrawableKnowledgeLevel>;
+pub type DrawableKnowledge = GameKnowledge<DrawableKnowledgeLevel>;
 
-pub struct AnsiDrawableKnowledgeCell {
+pub struct DrawableKnowledgeCell {
     last_updated: u64,
-    foreground: BestMap<isize, ComplexTile>,
-    background: BestMap<isize, ComplexTile>,
+    foreground: BestMap<isize, TileType>,
+    background: BestMap<isize, TileType>,
     moon: bool,
 }
 
-impl AnsiDrawableKnowledgeCell {
+impl DrawableKnowledgeCell {
     fn new() -> Self {
-        AnsiDrawableKnowledgeCell {
+        DrawableKnowledgeCell {
             last_updated: 0,
             foreground: BestMap::new(),
             background: BestMap::new(),
@@ -23,11 +22,11 @@ impl AnsiDrawableKnowledgeCell {
         }
     }
 
-    pub fn foreground(&self) -> Option<ComplexTile> {
+    pub fn foreground(&self) -> Option<TileType> {
         self.foreground.value()
     }
 
-    pub fn background(&self) -> Option<ComplexTile> {
+    pub fn background(&self) -> Option<TileType> {
         self.background.value()
     }
 
@@ -50,7 +49,7 @@ impl AnsiDrawableKnowledgeCell {
             self.background.clear();
             for entity in action_env.ecs.entity_iter(world_cell.entity_id_iter()) {
                 entity.tile_depth().map(|depth| {
-                    entity.ansi_tile().map(|tile| {
+                    entity.tile().map(|tile| {
                         self.foreground.insert(depth, tile);
                         if tile.opaque_bg() {
                             self.background.insert(depth, tile);
@@ -68,24 +67,24 @@ impl AnsiDrawableKnowledgeCell {
     }
 }
 
-impl Default for AnsiDrawableKnowledgeCell {
+impl Default for DrawableKnowledgeCell {
     fn default() -> Self {
         Self::new()
     }
 }
 
-pub struct AnsiDrawableKnowledgeLevel {
-    grid: StaticGrid<AnsiDrawableKnowledgeCell>,
-    default: AnsiDrawableKnowledgeCell,
+pub struct DrawableKnowledgeLevel {
+    grid: StaticGrid<DrawableKnowledgeCell>,
+    default: DrawableKnowledgeCell,
 }
 
-impl AnsiDrawableKnowledgeLevel {
-    pub fn get_with_default(&self, coord: Coord) -> &AnsiDrawableKnowledgeCell {
+impl DrawableKnowledgeLevel {
+    pub fn get_with_default(&self, coord: Coord) -> &DrawableKnowledgeCell {
         self.grid.get(coord).unwrap_or_else(|| &self.default)
     }
 }
 
-impl LevelKnowledge for AnsiDrawableKnowledgeLevel {
+impl LevelKnowledge for DrawableKnowledgeLevel {
     fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool {
         if let Some(knowledge_cell) = self.grid.get_mut(coord) {
             knowledge_cell.update(world_cell, accuracy, action_env)
@@ -95,11 +94,11 @@ impl LevelKnowledge for AnsiDrawableKnowledgeLevel {
     }
 }
 
-impl TwoDimensionalCons for AnsiDrawableKnowledgeLevel {
+impl TwoDimensionalCons for DrawableKnowledgeLevel {
     fn new(width: usize, height: usize) -> Self {
-        AnsiDrawableKnowledgeLevel {
+        DrawableKnowledgeLevel {
             grid: StaticGrid::new_default(width, height),
-            default: AnsiDrawableKnowledgeCell::new(),
+            default: DrawableKnowledgeCell::new(),
         }
     }
 }

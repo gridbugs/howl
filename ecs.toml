@@ -1,6 +1,5 @@
 imports = [
     "math::Coord",
-    "frontends::ansi::ComplexTile",
     "game::*",
     "game::data::*",
     "util::ScheduleTicket",
@@ -15,6 +14,10 @@ imports = [
 [component.moon]
 [component.transform_on_moon_change]
 [component.should_render]
+
+[component.tile]
+    type = "TileType"
+    copy = true
 
 [component.position]
     type = "Coord"
@@ -32,10 +35,6 @@ imports = [
     type = "usize"
     copy = true
 
-[component.ansi_tile]
-    type = "ComplexTile"
-    copy = true
-
 [component.control_map]
     type = "ControlMap"
 
@@ -51,8 +50,8 @@ imports = [
     type = "BehaviourState"
     container = "RefCell"
 
-[component.ansi_drawable_knowledge]
-    type = "AnsiDrawableKnowledge"
+[component.drawable_knowledge]
+    type = "DrawableKnowledge"
     container = "RefCell"
 
 [component.simple_npc_knowledge]

@@ -11,6 +11,9 @@ mod ansi_renderer;
 mod rule;
 mod control;
 mod transformation;
+mod tile_types;
+mod tile_resolver;
+mod knowledge_renderer;
 
 pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -24,6 +27,11 @@ pub use self::ansi_renderer::*;
 pub use self::rule::*;
 pub use self::control::*;
 pub use self::transformation::*;
+pub use self::tile_types::*;
+pub use self::tile_resolver::*;
+pub use self::knowledge_renderer::*;
 
 pub mod data;
 pub mod prototypes;
+
+pub mod frontends;
