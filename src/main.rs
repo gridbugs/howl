@@ -43,7 +43,7 @@ fn main() {
 }
 
 fn game() -> game::Result<()> {
-    let mut window_allocator = ansi::WindowAllocator::new().unwrap();
+    let mut window_allocator = Box::new(ansi::WindowAllocator::new().unwrap());
 
     let input_source = window_allocator.make_input_source();
 
@@ -54,7 +54,9 @@ fn game() -> game::Result<()> {
         GAME_WINDOW_HEIGHT,
         ansi::BufferType::Double);
 
-    let mut game = game::GameCtx::new(game_window, input_source, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
+    let renderer = game::frontends::ansi::AnsiRenderer::new(game_window, false);
+
+    let mut game = game::GameCtx::new(Box::new(renderer), input_source, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
 
     let mut debug_buffer = window_allocator.make_window_buffer(
         (window_allocator.width() - DEBUG_WINDOW_WIDTH - DEBUG_WINDOW_BORDER_X - DEBUG_WINDOW_RIGHT_X) as isize,

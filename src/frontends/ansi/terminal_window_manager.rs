@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::UnsafeCell;
 use std::io::Error;
 use std::collections::HashMap;
 
@@ -82,15 +82,15 @@ impl WindowData {
     }
 }
 
-pub struct Window<'a> {
+pub struct Window {
     id: u64,
-    manager: &'a RefCell<WindowManager>,
+    manager: *mut WindowManager,
     data: WindowData,
     buffer_type: BufferType,
 }
 
-impl<'a> Window<'a> {
-    fn new(manager: &'a RefCell<WindowManager>,
+impl Window {
+    fn new(manager: *mut WindowManager,
            x: isize,
            y: isize,
            width: usize,
@@ -98,7 +98,7 @@ impl<'a> Window<'a> {
            buffer_type: BufferType)
            -> Self {
         Window {
-            id: manager.borrow_mut().allocate_window(x, y, width, height),
+            id: unsafe { &mut (*manager) }.allocate_window(x, y, width, height),
             manager: manager,
             data: WindowData::new(x, y, width, height),
             buffer_type: buffer_type,
@@ -114,16 +114,18 @@ impl<'a> Window<'a> {
     }
 
     pub fn flush(&mut self) {
-        let mut manager = self.manager.borrow_mut();
-        {
-            let mut shadow = manager.windows.get_mut(&self.id).unwrap();
-            if self.buffer_type == BufferType::Double {
-                self.data.grid.swap(&mut shadow.grid);
-            } else {
-                shadow.grid.copy_from(&self.data.grid);
+        unsafe {
+            let mut manager = &mut (*self.manager);
+            {
+                let mut shadow = manager.windows.get_mut(&self.id).unwrap();
+                if self.buffer_type == BufferType::Double {
+                    self.data.grid.swap(&mut shadow.grid);
+                } else {
+                    shadow.grid.copy_from(&self.data.grid);
+                }
             }
+            manager.flush_window(self.id);
         }
-        manager.flush_window(self.id);
     }
 
     pub fn coord(&self) -> (isize, isize) {
@@ -184,12 +186,12 @@ impl InputSource for AnsiInputSource {
 }
 
 pub struct WindowAllocator {
-    manager: RefCell<WindowManager>,
+    manager: UnsafeCell<WindowManager>,
 }
 
 impl WindowAllocator {
     pub fn new() -> Result<Self, Error> {
-        WindowManager::new().map(|manager| WindowAllocator { manager: RefCell::new(manager) })
+        WindowManager::new().map(|manager| WindowAllocator { manager: UnsafeCell::new(manager) })
     }
 
     pub fn make_window(&self,
@@ -199,7 +201,7 @@ impl WindowAllocator {
                        height: usize,
                        buffer_type: BufferType)
                        -> Window {
-        Window::new(&self.manager, x, y, width, height, buffer_type)
+        Window::new(self.manager.get(), x, y, width, height, buffer_type)
     }
 
     pub fn make_window_buffer(&self,
@@ -216,15 +218,22 @@ impl WindowAllocator {
     }
 
     pub fn make_input_source(&mut self) -> AnsiInputSource {
-        AnsiInputSource { terminal: &mut self.manager.get_mut().terminal }
+        let terminal = unsafe {
+            &mut (*self.manager.get()).terminal
+        };
+        AnsiInputSource { terminal: terminal }
     }
 
     pub fn width(&self) -> usize {
-        self.manager.borrow().width()
+        unsafe {
+            (*self.manager.get()).width()
+        }
     }
 
     pub fn height(&self) -> usize {
-        self.manager.borrow().height()
+        unsafe {
+            (*self.manager.get()).height()
+        }
     }
 }
 

@@ -40,13 +40,13 @@ impl TurnResolution {
     }
 }
 
-pub struct TurnEnv<'a, 'b, 'c: 'a> {
+pub struct TurnEnv<'a, 'b: 'a> {
     pub turn_id: u64,
     pub action_id: &'a mut u64,
     pub level_id: LevelId,
     pub entity_id: EntityId,
     pub pc_id: EntityId,
-    pub renderer: &'a mut AnsiRenderer<'c>,
+    pub renderer: &'a mut Box<KnowledgeRenderer>,
     pub ecs: &'b mut EcsCtx,
     pub spatial_hash: &'b mut SpatialHashTable,
     pub behaviour_ctx: &'a BehaviourCtx,
@@ -77,7 +77,7 @@ impl<'a> ActionEnv<'a> {
     }
 }
 
-impl<'a, 'b, 'c: 'a> TurnEnv<'a, 'b, 'c> {
+impl<'a, 'b> TurnEnv<'a, 'b> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
         self.pc_render_ansi()?;

@@ -19,9 +19,9 @@ impl EntityIdReserver {
     }
 }
 
-pub struct GameCtx<'a> {
+pub struct GameCtx {
     levels: LevelTable,
-    renderer: AnsiRenderer<'a>,
+    renderer: Box<KnowledgeRenderer>,
     input_source: ansi::AnsiInputSource,
     entity_ids: EntityIdReserver,
     turn_id: u64,
@@ -38,11 +38,11 @@ pub struct GameCtx<'a> {
     height: usize,
 }
 
-impl<'a> GameCtx<'a> {
-    pub fn new(window: ansi::Window<'a>, input_source: ansi::AnsiInputSource, width: usize, height: usize) -> Self {
+impl GameCtx {
+    pub fn new(renderer: Box<KnowledgeRenderer>, input_source: ansi::AnsiInputSource, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
-            renderer: AnsiRenderer::new(window, false),
+            renderer: renderer,
             input_source: input_source,
             entity_ids: EntityIdReserver::new(),
             turn_id: 0,

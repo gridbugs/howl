@@ -2,8 +2,8 @@ use std::io;
 
 use frontends::ansi::{colours, styles, Window};
 
-pub struct WindowBuffer<'a> {
-    window: Window<'a>,
+pub struct WindowBuffer {
+    window: Window,
     lines: Vec<String>,
     current_line: usize,
     cursor_pos: (isize, isize),
@@ -15,8 +15,8 @@ pub struct WindowBuffer<'a> {
     height: usize,
 }
 
-impl<'a> WindowBuffer<'a> {
-    pub fn new(mut window: Window<'a>, border_x: usize, border_y: usize) -> Self {
+impl WindowBuffer {
+    pub fn new(mut window: Window, border_x: usize, border_y: usize) -> Self {
         let (width, height) = window.size();
 
         window.fill(' ', colours::WHITE, colours::BLACK, styles::NONE);
@@ -94,7 +94,7 @@ impl<'a> WindowBuffer<'a> {
     }
 }
 
-impl<'a> io::Write for WindowBuffer<'a> {
+impl io::Write for WindowBuffer {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let mut count = 0;
         for ch in buf {

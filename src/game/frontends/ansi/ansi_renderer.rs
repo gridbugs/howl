@@ -5,14 +5,14 @@ use direction::Direction;
 
 const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 
-pub struct AnsiRenderer<'a> {
-    window: ansi::Window<'a>,
+pub struct AnsiRenderer {
+    window: ansi::Window,
     scroll: bool,
     tile_resolver: frontends::ansi::AnsiTileResolver,
 }
 
-impl<'a> AnsiRenderer<'a> {
-    pub fn new(window: ansi::Window<'a>, scroll: bool) -> Self {
+impl AnsiRenderer {
+    pub fn new(window: ansi::Window, scroll: bool) -> Self {
         AnsiRenderer {
             window: window,
             scroll: scroll,
@@ -60,7 +60,7 @@ impl<'a> AnsiRenderer<'a> {
     }
 }
 
-impl<'a> KnowledgeRenderer for AnsiRenderer<'a> {
+impl KnowledgeRenderer for AnsiRenderer {
     fn render(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
         let width = self.width() as isize;
         let height = self.height() as isize;
