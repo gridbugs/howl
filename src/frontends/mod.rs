@@ -1,4 +1,4 @@
 pub mod ansi;
 
-mod input_source;
-pub use self::input_source::*;
+mod input;
+pub use self::input::*;

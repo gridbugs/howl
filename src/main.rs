@@ -54,7 +54,7 @@ fn game() -> game::Result<()> {
         GAME_WINDOW_HEIGHT,
         ansi::BufferType::Double);
 
-    let renderer = game::frontends::ansi::AnsiRenderer::new(game_window, false);
+    let renderer = game::frontends::ansi::AnsiKnowledgeRenderer::new(game_window, false);
 
     let mut game = game::GameCtx::new(Box::new(renderer), input_source, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
 
