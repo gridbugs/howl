@@ -185,7 +185,7 @@ impl<'a, 'b> TurnEnv<'a, 'b> {
 
         let entity = self.ecs.entity(self.pc_id);
 
-        if !entity.contains_should_render() {
+        if !self.ecs.contains_should_render(self.entity_id) {
             return Ok(false);
         }
 
