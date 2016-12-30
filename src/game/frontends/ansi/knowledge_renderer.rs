@@ -1,4 +1,5 @@
 use game::*;
+use game::frontends::ansi::resolve_tile;
 use frontends::ansi::{self, ComplexTile, SimpleTile};
 use math::Coord;
 use direction::Direction;
@@ -8,7 +9,6 @@ const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 pub struct AnsiKnowledgeRenderer {
     window: ansi::Window,
     scroll: bool,
-    tile_resolver: frontends::ansi::AnsiTileResolver,
 }
 
 impl AnsiKnowledgeRenderer {
@@ -16,7 +16,6 @@ impl AnsiKnowledgeRenderer {
         AnsiKnowledgeRenderer {
             window: window,
             scroll: scroll,
-            tile_resolver: frontends::ansi::AnsiTileResolver,
         }
     }
 
@@ -82,7 +81,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
                 let mut style = ansi::styles::NONE;
 
                 if let Some(bg_tile_type) = cell.background() {
-                    let bg_tile = self.tile_resolver.resolve(bg_tile_type);
+                    let bg_tile = resolve_tile::resolve_tile(bg_tile_type);
                     let tile = Self::simple_tile(bg_tile, world_coord, knowledge);
                     if let Some(c) = tile.background_colour() {
                         bg = c;
@@ -96,7 +95,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
                 }
 
                 if let Some(fg_tile_type) = cell.foreground() {
-                    let fg_tile = self.tile_resolver.resolve(fg_tile_type);
+                    let fg_tile = resolve_tile::resolve_tile(fg_tile_type);
                     let tile = Self::simple_tile(fg_tile, world_coord, knowledge);
                     if let Some(c) = tile.foreground_colour() {
                         fg = c;

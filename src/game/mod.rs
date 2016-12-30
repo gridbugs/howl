@@ -11,7 +11,6 @@ mod rule;
 mod control;
 mod transformation;
 mod tile_types;
-mod tile_resolver;
 mod knowledge_renderer;
 mod input;
 
@@ -27,7 +26,6 @@ pub use self::rule::*;
 pub use self::control::*;
 pub use self::transformation::*;
 pub use self::tile_types::*;
-pub use self::tile_resolver::*;
 pub use self::knowledge_renderer::*;
 pub use self::input::*;
 
