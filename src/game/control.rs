@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use frontends::InputEvent;
+use game::InputEvent;
 use direction::Direction;
 
 #[derive(Clone, Copy)]
