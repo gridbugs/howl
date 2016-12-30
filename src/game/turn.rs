@@ -80,7 +80,7 @@ impl<'a> ActionEnv<'a> {
 impl<'a, 'b> TurnEnv<'a, 'b> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
-        self.pc_render_ansi()?;
+        self.pc_render()?;
 
         let resolution = self.take_turn()?;
 
@@ -181,7 +181,7 @@ impl<'a, 'b> TurnEnv<'a, 'b> {
         self.ecs.commit(self.ecs_action);
     }
 
-    fn pc_render_ansi(&mut self) -> Result<bool> {
+    fn pc_render(&mut self) -> Result<bool> {
 
         let entity = self.ecs.entity(self.pc_id);
 
@@ -216,7 +216,7 @@ impl<'a, 'b> TurnEnv<'a, 'b> {
 
             // render the scene if time has passed
             if action_event.time_delta != 0 {
-                if self.pc_render_ansi()? {
+                if self.pc_render()? {
                     // if the change in scene was visible, add a delay
                     thread::sleep(Duration::from_millis(action_event.time_delta));
                 }

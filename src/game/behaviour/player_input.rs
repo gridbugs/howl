@@ -3,7 +3,7 @@ use behaviour::LeafResolution;
 use ecs::EntityRef;
 use direction::Direction;
 
-pub fn ansi_player_input(input_source: InputSourceRef) -> BehaviourLeaf {
+pub fn player_input(input_source: InputSourceRef) -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {
         loop {
             if let Some(meta_action) = get_meta_action(input.entity, input_source) {

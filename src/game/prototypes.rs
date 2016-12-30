@@ -75,7 +75,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_tile_depth(2);
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
-    entity.insert_behaviour_type(BehaviourType::AnsiPlayerInput);
+    entity.insert_behaviour_type(BehaviourType::PlayerInput);
     entity.insert_drawable_knowledge(DrawableKnowledge::new());
     entity.insert_vision_distance(16);
     entity.insert_door_opener();

@@ -1,7 +1,7 @@
 #[derive(Clone, Copy)]
 pub enum BehaviourType {
     Null,
-    AnsiPlayerInput,
+    PlayerInput,
     SimpleNpc,
     Clouds,
 }
