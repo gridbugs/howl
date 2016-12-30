@@ -45,7 +45,7 @@ fn main() {
 fn game() -> game::Result<()> {
     let mut window_allocator = Box::new(ansi::WindowAllocator::new().unwrap());
 
-    let input_source = window_allocator.make_input_source();
+    let input_source = game::InputSourceRef::new(&window_allocator.make_input_source());
 
     let game_window = window_allocator.make_window(
         ANSI_GAME_WINDOW_X as isize,

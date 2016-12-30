@@ -3,7 +3,6 @@ use std::cell::RefCell;
 use game::*;
 use game::data::*;
 use ecs::*;
-use frontends::ansi;
 use util::{LeakyReserver, Schedule};
 use math::Coord;
 
@@ -22,7 +21,7 @@ impl EntityIdReserver {
 pub struct GameCtx {
     levels: LevelTable,
     renderer: Box<KnowledgeRenderer>,
-    input_source: ansi::AnsiInputSource,
+    input_source: InputSourceRef,
     entity_ids: EntityIdReserver,
     turn_id: u64,
     action_id: u64,
@@ -39,7 +38,7 @@ pub struct GameCtx {
 }
 
 impl GameCtx {
-    pub fn new(renderer: Box<KnowledgeRenderer>, input_source: ansi::AnsiInputSource, width: usize, height: usize) -> Self {
+    pub fn new(renderer: Box<KnowledgeRenderer>, input_source: InputSourceRef, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
             renderer: renderer,

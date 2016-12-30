@@ -4,7 +4,6 @@ use game::behaviour::observation::*;
 use game::behaviour::search::*;
 use game::behaviour::clouds::*;
 
-use frontends::ansi;
 use behaviour::*;
 
 pub struct BehaviourNodes {
@@ -31,7 +30,7 @@ impl BehaviourNodes {
 }
 
 impl BehaviourCtx {
-    pub fn new(input_source: ansi::AnsiInputSource) -> Self {
+    pub fn new(input_source: InputSourceRef) -> Self {
         let mut graph = BehaviourGraph::new();
 
         let null_leaf = graph.add_leaf(BehaviourLeaf::new(|_| LeafResolution::Yield(MetaAction::ActionArgs(ActionArgs::Null))));
