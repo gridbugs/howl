@@ -102,3 +102,23 @@ impl TwoDimensionalCons for DrawableKnowledgeLevel {
         }
     }
 }
+
+pub struct CellDrawInfo {
+    pub foreground: Option<TileType>,
+    pub background: Option<TileType>,
+    pub visible: bool,
+    pub moon: bool,
+    pub front: bool,
+}
+
+impl Default for CellDrawInfo {
+    fn default() -> Self {
+        CellDrawInfo {
+            foreground: None,
+            background: None,
+            visible: false,
+            moon: false,
+            front: false,
+        }
+    }
+}
