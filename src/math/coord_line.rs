@@ -23,11 +23,11 @@ impl CoordLine {
     }
 
     pub fn start(&self) -> Coord {
-        *self.coords.first().unwrap()
+        *self.coords.first().expect("empty line")
     }
 
     pub fn end(&self) -> Coord {
-        *self.coords.last().unwrap()
+        *self.coords.last().expect("empty line")
     }
 
     pub fn clear(&mut self, coord: Coord) {
