@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use game::*;
 use behaviour::*;
 use ecs::*;
@@ -12,6 +14,7 @@ pub struct BehaviourInput<'a> {
     pub spatial_hash: &'a SpatialHashTable,
     pub level_id: LevelId,
     pub action_env: ActionEnv<'a>,
+    pub renderer: &'a RefCell<Box<KnowledgeRenderer>>,
 }
 
 pub struct BehaviourLeaf(Box<Fn(BehaviourInput) -> LeafResolution<MetaAction>>);

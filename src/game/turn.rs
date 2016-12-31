@@ -1,6 +1,7 @@
 use std::time::Duration;
 use std::thread;
 use std::cmp;
+use std::cell::RefCell;
 
 use game::*;
 use ecs::*;
@@ -46,7 +47,7 @@ pub struct TurnEnv<'a, 'b: 'a> {
     pub level_id: LevelId,
     pub entity_id: EntityId,
     pub pc_id: EntityId,
-    pub renderer: &'a mut Box<KnowledgeRenderer>,
+    pub renderer: &'a RefCell<Box<KnowledgeRenderer>>,
     pub ecs: &'b mut EcsCtx,
     pub spatial_hash: &'b mut SpatialHashTable,
     pub behaviour_ctx: &'a BehaviourCtx,
@@ -198,7 +199,7 @@ impl<'a, 'b> TurnEnv<'a, 'b> {
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
 
         if self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env) {
-            self.renderer.render(level_knowledge, *self.action_id, position);
+            self.renderer.borrow_mut().render(level_knowledge, *self.action_id, position);
             Ok(true)
         } else {
             Ok(false)
@@ -271,6 +272,7 @@ impl<'a, 'b> TurnEnv<'a, 'b> {
             spatial_hash: self.spatial_hash,
             level_id: self.level_id,
             action_env: ActionEnv::new(self.ecs, *self.action_id),
+            renderer: self.renderer,
         };
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
     }

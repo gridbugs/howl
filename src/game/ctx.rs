@@ -20,7 +20,7 @@ impl EntityIdReserver {
 
 pub struct GameCtx {
     levels: LevelTable,
-    renderer: Box<KnowledgeRenderer>,
+    renderer: RefCell<Box<KnowledgeRenderer>>,
     input_source: InputSourceRef,
     entity_ids: EntityIdReserver,
     turn_id: u64,
@@ -41,7 +41,7 @@ impl GameCtx {
     pub fn new(renderer: Box<KnowledgeRenderer>, input_source: InputSourceRef, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
-            renderer: renderer,
+            renderer: RefCell::new(renderer),
             input_source: input_source,
             entity_ids: EntityIdReserver::new(),
             turn_id: 0,
@@ -87,7 +87,7 @@ impl GameCtx {
                     level_id: self.level_id,
                     entity_id: turn_event.event,
                     pc_id: self.pc_id.unwrap(),
-                    renderer: &mut self.renderer,
+                    renderer: &self.renderer,
                     ecs: &mut level.ecs,
                     spatial_hash: &mut level.spatial_hash,
                     behaviour_ctx: &self.behaviour_ctx,
