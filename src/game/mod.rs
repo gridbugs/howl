@@ -13,6 +13,7 @@ mod transformation;
 mod tile_types;
 mod knowledge_renderer;
 mod input;
+mod render_overlay;
 mod tile_buffer;
 
 pub use self::spatial_hash::*;
@@ -29,6 +30,7 @@ pub use self::transformation::*;
 pub use self::tile_types::*;
 pub use self::knowledge_renderer::*;
 pub use self::input::*;
+pub use self::render_overlay::*;
 pub use self::tile_buffer::*;
 
 pub mod data;

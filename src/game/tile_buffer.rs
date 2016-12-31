@@ -44,7 +44,7 @@ impl TileBuffer {
     }
 
     pub fn update(&mut self, knowledge: &DrawableKnowledgeLevel,
-                  turn_id: u64, scroll_position: Option<Coord>) {
+                  turn_id: u64, scroll_position: Option<Coord>) -> Coord {
 
         let offset = if let Some(position) = scroll_position {
             position - Coord::new(self.grid.width() as isize / 2, self.grid.height() as isize / 2)
@@ -61,5 +61,11 @@ impl TileBuffer {
             cell.visible = knowledge_cell.last_updated() == turn_id;
             cell.front = Self::is_front(world_coord, knowledge);
         }
+
+        offset
+    }
+
+    pub fn get(&self, coord: Coord) -> Option<&CellDrawInfo> {
+        self.grid.get(coord)
     }
 }
