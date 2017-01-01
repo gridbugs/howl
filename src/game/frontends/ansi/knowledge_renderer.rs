@@ -135,6 +135,10 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         self.window.height()
     }
 
+    fn world_offset(&self) -> Coord {
+        self.scroll_position
+    }
+
     fn update(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
         let scroll_position = if self.scroll {
             Some(position)
