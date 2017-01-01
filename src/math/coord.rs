@@ -1,3 +1,5 @@
+use std::cmp;
+
 use math::Vector2;
 use direction::OrdinalDirection;
 
@@ -14,5 +16,19 @@ impl Coord {
 
     pub fn cell_corner(self, dir: OrdinalDirection) -> Vector2<f64> {
         self.as_f64_vector() + dir.corner_offset()
+    }
+}
+
+impl PartialOrd for Coord {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        if self == other {
+            Some(cmp::Ordering::Equal)
+        } else if self.x <= other.x && self.y <= other.y {
+            Some(cmp::Ordering::Less)
+        } else if self.x >= other.x && self.y >= other.y {
+            Some(cmp::Ordering::Greater)
+        } else {
+            None
+        }
     }
 }
