@@ -17,6 +17,18 @@ impl Coord {
     pub fn cell_corner(self, dir: OrdinalDirection) -> Vector2<f64> {
         self.as_f64_vector() + dir.corner_offset()
     }
+
+    pub fn real_distance(self, other: Coord) -> f64 {
+        ((self - other).length_squared() as f64).sqrt()
+    }
+
+    pub fn manhatten_distance(self, other: Coord) -> usize {
+        ((self.x - other.x).abs() + (self.y - other.y).abs()) as usize
+    }
+
+    pub fn square_distance(self, other: Coord) -> usize {
+        cmp::max((self.x - other.x).abs(), (self.y - other.y).abs()) as usize
+    }
 }
 
 impl PartialOrd for Coord {

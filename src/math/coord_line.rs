@@ -39,8 +39,20 @@ impl CoordLine {
         self.coords.push(coord);
     }
 
-    pub fn len(&self) -> usize {
+    pub fn count(&self) -> usize {
         self.coords.len()
+    }
+
+    pub fn real_len(&self) -> f64 {
+        self.end().real_distance(self.start())
+    }
+
+    pub fn manhatten_len(&self) -> usize {
+        self.end().manhatten_distance(self.start())
+    }
+
+    pub fn square_len(&self) -> usize {
+        self.end().square_distance(self.start())
     }
 
     pub fn get(&self, idx: usize) -> Option<Coord> {
