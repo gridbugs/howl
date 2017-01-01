@@ -26,6 +26,135 @@ fn choose_octant(delta: Coord) -> Octant {
     }
 }
 
+pub struct InfiniteLineState {
+    octant: Octant,
+    major_delta_abs: usize,
+    minor_delta_abs: usize,
+    accumulator: isize,
+}
+
+impl InfiniteLineState {
+    pub fn new(delta: Coord) -> Self {
+        let octant = choose_octant(delta);
+        InfiniteLineState {
+            major_delta_abs: delta.get(octant.major_axis).abs() as usize,
+            minor_delta_abs: delta.get(octant.minor_axis).abs() as usize,
+            accumulator: 0,
+            octant: octant,
+        }
+    }
+
+    pub fn step(&mut self) -> Coord {
+        self.accumulator += self.minor_delta_abs as isize;
+
+        let mut coord = Coord::new(0, 0);
+        coord.set(self.octant.major_axis, self.octant.major_sign);
+
+        if self.accumulator > (self.major_delta_abs as isize) / 2 {
+            self.accumulator -= self.major_delta_abs as isize;
+            coord.set(self.octant.minor_axis, self.octant.minor_sign);
+        }
+
+        coord
+    }
+}
+
+impl Iterator for InfiniteLineState {
+    type Item = Coord;
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(self.step())
+    }
+}
+
+pub struct FiniteLineState {
+    infinite_line_state: InfiniteLineState,
+    count: usize,
+}
+
+impl FiniteLineState {
+    pub fn new(delta: Coord) -> Self {
+        FiniteLineState {
+            infinite_line_state: InfiniteLineState::new(delta),
+            count: 0,
+        }
+    }
+
+    fn step(&mut self) -> Coord {
+        self.count += 1;
+        self.infinite_line_state.step()
+    }
+
+    fn len(&self) -> usize {
+        self.infinite_line_state.major_delta_abs
+    }
+
+    fn complete(&self) -> bool {
+        self.count >= self.len()
+    }
+}
+
+impl Iterator for FiniteLineState {
+    type Item = Coord;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.complete() {
+            None
+        } else {
+            Some(self.step())
+        }
+    }
+}
+
+pub struct InfiniteAccumulatingLineState {
+    infinite_line_state: InfiniteLineState,
+    coord: Coord,
+}
+
+impl InfiniteAccumulatingLineState {
+    pub fn new_from(delta: Coord, coord: Coord) -> Self {
+        InfiniteAccumulatingLineState {
+            infinite_line_state: InfiniteLineState::new(delta),
+            coord: coord,
+        }
+    }
+
+    pub fn new(delta: Coord) -> Self {
+        Self::new_from(delta, Coord::new(0, 0))
+    }
+
+    pub fn step(&mut self) -> Coord {
+        self.coord += self.infinite_line_state.step();
+        self.coord
+    }
+}
+
+pub struct FiniteAccumulatingLineState {
+    finite_line_state: FiniteLineState,
+    coord: Coord,
+}
+
+impl FiniteAccumulatingLineState {
+    pub fn new_from(delta: Coord, coord: Coord) -> Self {
+        FiniteAccumulatingLineState {
+            finite_line_state: FiniteLineState::new(delta),
+            coord: coord,
+        }
+    }
+
+    pub fn new(delta: Coord) -> Self {
+        Self::new_from(delta, Coord::new(0, 0))
+    }
+}
+
+impl Iterator for FiniteAccumulatingLineState {
+    type Item = Coord;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.finite_line_state.next().map(|offset| {
+            self.coord += offset;
+            self.coord
+        })
+    }
+}
+
 pub fn make_line(src: Coord, dst: Coord, line: &mut CoordLine) {
 
     line.clear(src);
@@ -35,42 +164,7 @@ pub fn make_line(src: Coord, dst: Coord, line: &mut CoordLine) {
     }
 
     let delta = dst - src;
-
-    let octant = choose_octant(delta);
-
-    let major_delta = delta.get(octant.major_axis).abs();
-    let minor_delta = delta.get(octant.minor_axis).abs();
-
-    let mut minor_offset = 0;
-    let mut numerator = 0;
-    let half_major_delta = major_delta / 2;
-    let mut coord = Coord::new(0, 0);
-    let mut major_offset = 0;
-
-    let src_major_coord = src.get(octant.major_axis);
-    let src_minor_coord = src.get(octant.minor_axis);
-
-    for _ in 1..major_delta {
-
-        numerator += minor_delta;
-        if numerator >= major_delta {
-            numerator -= major_delta;
-            minor_offset += octant.minor_sign;
-        }
-
-        major_offset += octant.major_sign;
-        let major_coord = src_major_coord + major_offset;
-        coord.set(octant.major_axis, major_coord);
-
-        let mut minor_coord = src_minor_coord + minor_offset;
-        if numerator > half_major_delta {
-            minor_coord += octant.minor_sign;
-        }
-
-        coord.set(octant.minor_axis, minor_coord);
-
+    for coord in FiniteAccumulatingLineState::new_from(delta, src) {
         line.extend(coord);
     }
-
-    line.extend(dst);
 }
