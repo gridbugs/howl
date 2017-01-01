@@ -33,23 +33,39 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
     let start = input.entity.position().unwrap();
     let mut end = start;
     let mut overlay = RenderOverlay {
-        aim_line: Some(CoordLine::new()),
+        aim_line: Some(AimLine {
+            line: CoordLine::new(),
+            range: RangeType::ShortRange,
+        }),
     };
+
+    let mut renderer = input.renderer.borrow_mut();
 
     loop {
 
-        overlay.aim_line.as_mut().map(|line| {
-            bresenham::make_line(start, end, line);
+        overlay.aim_line.as_mut().map(|aim_line| {
+            let range = match start.square_distance(end) {
+                0...2 => RangeType::ShortRange,
+                2...6 => RangeType::NormalRange,
+                6...12 => RangeType::LongRange,
+                _ => RangeType::OutOfRange,
+            };
+
+            bresenham::make_line(start, end, &mut aim_line.line);
+            aim_line.range = range;
         });
 
-        input.renderer.borrow_mut().draw_with_overlay(&overlay);
+        renderer.draw_with_overlay(&overlay);
 
         if let Some(event) = input_source.next_input() {
             if let Some(control) = map.control(event) {
                 if let Some(direction) = control_to_direction(control) {
-                    end += direction.vector();
+                    let next_end = end + direction.vector();
+                    if renderer.contains_world_coord(next_end) {
+                        end = next_end;
+                    }
                 } else {
-                    input.renderer.borrow_mut().draw();
+                    renderer.draw();
                     return None;
                 }
             }

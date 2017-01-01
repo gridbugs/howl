@@ -15,6 +15,7 @@ mod knowledge_renderer;
 mod input;
 mod render_overlay;
 mod tile_buffer;
+mod range;
 
 pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -32,6 +33,7 @@ pub use self::knowledge_renderer::*;
 pub use self::input::*;
 pub use self::render_overlay::*;
 pub use self::tile_buffer::*;
+pub use self::range::*;
 
 pub mod data;
 pub mod prototypes;
