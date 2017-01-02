@@ -1,6 +1,6 @@
 use game::*;
-use behaviour::*;
-use search::*;
+use behaviour::LeafResolution;
+use search::{GridSearchCfg, GridSearchCtx};
 
 pub fn follow_path_step() -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {

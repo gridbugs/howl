@@ -4,7 +4,7 @@ use game::behaviour::observation::*;
 use game::behaviour::search::*;
 use game::behaviour::clouds::*;
 
-use behaviour::*;
+use behaviour::{LeafResolution, CollectionNode};
 
 pub struct BehaviourNodes {
     pub null: BehaviourNodeIndex,

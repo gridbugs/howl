@@ -1,8 +1,8 @@
 use std::cell::RefCell;
 
 use game::*;
-use behaviour::*;
 use ecs::*;
+use behaviour::{State, NodeIndex, Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
 
 
 pub type BehaviourState = State;

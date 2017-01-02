@@ -1,5 +1,5 @@
 use game::*;
-use behaviour::*;
+use behaviour::LeafResolution;
 
 pub fn move_clouds() -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {
