@@ -1,5 +1,5 @@
 use game::*;
-use math::Coord;
+use coord::Coord;
 
 pub trait KnowledgeRenderer {
 

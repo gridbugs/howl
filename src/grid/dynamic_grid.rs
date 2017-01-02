@@ -1,7 +1,7 @@
 use std::mem;
 use std::cmp;
 
-use math::Coord;
+use coord::Coord;
 use grid::Grid;
 use util::BidirectionalList;
 

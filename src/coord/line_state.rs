@@ -1,4 +1,5 @@
-use math::{Vector2Index, Coord, CoordLine};
+use math::Vector2Index;
+use coord::Coord;
 
 #[derive(Debug)]
 struct Octant {
@@ -31,23 +32,32 @@ pub struct InfiniteLineState {
     major_delta_abs: usize,
     minor_delta_abs: usize,
     accumulator: isize,
+    zero: bool,
 }
 
 impl InfiniteLineState {
-    pub fn new(delta: Coord) -> Self {
+    pub fn new(delta: Coord, zero: bool) -> Self {
         let octant = choose_octant(delta);
         InfiniteLineState {
             major_delta_abs: delta.get(octant.major_axis).abs() as usize,
             minor_delta_abs: delta.get(octant.minor_axis).abs() as usize,
             accumulator: 0,
             octant: octant,
+            zero: zero,
         }
     }
 
     pub fn step(&mut self) -> Coord {
+        let mut coord = Coord::new(0, 0);
+
+        if self.zero {
+            self.zero = false;
+            return coord;
+        }
+
+        // a single step of bresenham's algorithm
         self.accumulator += self.minor_delta_abs as isize;
 
-        let mut coord = Coord::new(0, 0);
         coord.set(self.octant.major_axis, self.octant.major_sign);
 
         if self.accumulator > (self.major_delta_abs as isize) / 2 {
@@ -72,9 +82,9 @@ pub struct FiniteLineState {
 }
 
 impl FiniteLineState {
-    pub fn new(delta: Coord) -> Self {
+    pub fn new(delta: Coord, zero: bool) -> Self {
         FiniteLineState {
-            infinite_line_state: InfiniteLineState::new(delta),
+            infinite_line_state: InfiniteLineState::new(delta, zero),
             count: 0,
         }
     }
@@ -110,15 +120,19 @@ pub struct InfiniteAccumulatingLineState {
 }
 
 impl InfiniteAccumulatingLineState {
-    pub fn new_from(delta: Coord, coord: Coord) -> Self {
+    pub fn new_from(delta: Coord, coord: Coord, zero: bool) -> Self {
         InfiniteAccumulatingLineState {
-            infinite_line_state: InfiniteLineState::new(delta),
+            infinite_line_state: InfiniteLineState::new(delta, zero),
             coord: coord,
         }
     }
 
-    pub fn new(delta: Coord) -> Self {
-        Self::new_from(delta, Coord::new(0, 0))
+    pub fn new(delta: Coord, zero: bool) -> Self {
+        Self::new_from(delta, Coord::new(0, 0), zero)
+    }
+
+    pub fn new_between(start: Coord, end: Coord, zero: bool) -> Self {
+        Self::new_from(end - start, start, zero)
     }
 
     pub fn step(&mut self) -> Coord {
@@ -133,15 +147,19 @@ pub struct FiniteAccumulatingLineState {
 }
 
 impl FiniteAccumulatingLineState {
-    pub fn new_from(delta: Coord, coord: Coord) -> Self {
+    pub fn new_from(delta: Coord, coord: Coord, zero: bool) -> Self {
         FiniteAccumulatingLineState {
-            finite_line_state: FiniteLineState::new(delta),
+            finite_line_state: FiniteLineState::new(delta, zero),
             coord: coord,
         }
     }
 
-    pub fn new(delta: Coord) -> Self {
-        Self::new_from(delta, Coord::new(0, 0))
+    pub fn new(delta: Coord, zero: bool) -> Self {
+        Self::new_from(delta, Coord::new(0, 0), zero)
+    }
+
+    pub fn new_between(start: Coord, end: Coord, zero: bool) -> Self {
+        Self::new_from(end - start, start, zero)
     }
 }
 
@@ -152,19 +170,5 @@ impl Iterator for FiniteAccumulatingLineState {
             self.coord += offset;
             self.coord
         })
-    }
-}
-
-pub fn make_line(src: Coord, dst: Coord, line: &mut CoordLine) {
-
-    line.clear(src);
-
-    if src == dst {
-        return;
-    }
-
-    let delta = dst - src;
-    for coord in FiniteAccumulatingLineState::new_from(delta, src) {
-        line.extend(coord);
     }
 }

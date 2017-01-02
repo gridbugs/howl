@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use game::*;
-use math::Coord;
+use coord::Coord;
 use util::TwoDimensionalCons;
 
 /// Trait implemented by representations of knowledge about a level

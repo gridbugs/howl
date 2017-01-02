@@ -1,4 +1,4 @@
-use math::Coord;
+use coord::Coord;
 use grid::*;
 
 #[test]

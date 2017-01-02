@@ -1,6 +1,6 @@
 use search::*;
 use grid::*;
-use math::Coord;
+use coord::Coord;
 
 #[derive(Clone, Copy, Debug)]
 struct Cell {

@@ -4,7 +4,7 @@ use std::result;
 use std::cell::RefCell;
 
 use grid::{Grid, DynamicGrid};
-use math::Coord;
+use coord::Coord;
 use direction::{self, Direction};
 
 #[derive(Debug)]

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use game::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
-use math::Coord;
+use coord::Coord;
 use search::TraverseCost;
 use util::TwoDimensionalCons;
 

@@ -1,8 +1,8 @@
 use game::RangeType;
-use math::CoordLine;
+use coord::StraightLine;
 
 pub struct AimLine {
-    pub line: CoordLine,
+    pub line: StraightLine,
     pub range: RangeType,
 }
 

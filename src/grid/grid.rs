@@ -1,6 +1,6 @@
 use std::marker::Sized;
 
-use math::Coord;
+use coord::Coord;
 use direction::Direction;
 
 use grid::{NeiCoordIter, NeiIter, SomeNeiIter, SomeNeiCoordIter};

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use rustty;
 
-use math::Coord;
+use coord::Coord;
 use grid::{StaticGrid, Grid, CopyGrid, IterGrid, CoordIterGrid};
 use util::LeakyReserver;
 

@@ -1,5 +1,6 @@
 use perlin::*;
-use math::{Coord, Vector2};
+use math::Vector2;
+use coord::Coord;
 
 pub struct CloudState {
     perlin: PerlinGrid,

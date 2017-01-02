@@ -18,7 +18,7 @@ mod grid;
 mod behaviour;
 mod search;
 mod perlin;
-mod bresenham;
+mod coord;
 
 use frontends::ansi;
 

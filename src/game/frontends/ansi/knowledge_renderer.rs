@@ -1,7 +1,7 @@
 use game::*;
 use game::frontends::ansi::resolve_tile;
 use frontends::ansi::{self, ComplexTile, SimpleTile, AnsiColour, Style};
-use math::Coord;
+use coord::Coord;
 
 const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 const AIM_LINE_COLOUR: ansi::AnsiColour = ansi::colours::YELLOW;

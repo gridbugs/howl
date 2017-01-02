@@ -3,7 +3,8 @@
 use std::cell::UnsafeCell;
 use std::cmp;
 
-use math::{Coord, Vector2, Vector2Index};
+use math::{Vector2, Vector2Index};
+use coord::Coord;
 use direction::{Direction, CardinalDirection, OrdinalDirection, SubDirection};
 
 use game::{SpatialHashTable, LevelKnowledge, ActionEnv};

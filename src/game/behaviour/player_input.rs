@@ -1,8 +1,7 @@
 use game::*;
 use behaviour::LeafResolution;
 use direction::Direction;
-use math::CoordLine;
-use bresenham;
+use coord::StraightLine;
 
 pub fn player_input(input_source: InputSourceRef) -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {
@@ -29,12 +28,12 @@ fn control_to_direction(control: Control) -> Option<Direction> {
     }
 }
 
-fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) -> Option<CoordLine> {
+fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) -> Option<StraightLine> {
     let start = input.entity.position().unwrap();
     let mut end = start;
     let mut overlay = RenderOverlay {
         aim_line: Some(AimLine {
-            line: CoordLine::new(),
+            line: StraightLine::new_point(start),
             range: RangeType::ShortRange,
         }),
     };
@@ -51,7 +50,7 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
                 _ => RangeType::OutOfRange,
             };
 
-            bresenham::make_line(start, end, &mut aim_line.line);
+            aim_line.line.set_end(end);
             aim_line.range = range;
         });
 

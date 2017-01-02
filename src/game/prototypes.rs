@@ -1,4 +1,5 @@
-use math::{Coord, Vector2};
+use math::Vector2;
+use coord::Coord;
 use direction::Direction;
 
 use ecs::*;

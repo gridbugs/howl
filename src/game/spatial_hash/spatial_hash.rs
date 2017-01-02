@@ -1,6 +1,6 @@
 use ecs::*;
 use game::*;
-use math::Coord;
+use coord::Coord;
 use grid::{Grid, StaticGrid, DefaultGrid, IterGrid, CoordIterGrid};
 use util::AnySet;
 

@@ -1,5 +1,6 @@
 use grid::{Grid, StaticGrid, IterGrid};
-use math::{Dot, Vector2, Vector3, Coord};
+use math::{Dot, Vector2, Vector3};
+use coord::Coord;
 
 use rand::{Rng, StdRng, SeedableRng};
 

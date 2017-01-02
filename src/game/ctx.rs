@@ -4,7 +4,7 @@ use game::*;
 use game::data::*;
 use ecs::*;
 use util::{LeakyReserver, Schedule};
-use math::Coord;
+use coord::Coord;
 
 pub struct EntityIdReserver(RefCell<LeakyReserver<EntityId>>);
 

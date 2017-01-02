@@ -1,7 +1,8 @@
 use std::mem;
 use std::slice;
 
-use math::{Coord, Vector2};
+use math::Vector2;
+use coord::Coord;
 
 use grid::{Grid, DefaultGrid, CopyGrid, IterGrid, RowGrid, CoordCell, CoordIterGrid};
 

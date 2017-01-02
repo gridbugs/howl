@@ -1,7 +1,7 @@
 use game::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
 use util::{BestMap, TwoDimensionalCons};
-use math::Coord;
+use coord::Coord;
 
 pub type DrawableKnowledge = GameKnowledge<DrawableKnowledgeLevel>;
 

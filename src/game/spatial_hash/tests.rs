@@ -1,7 +1,7 @@
 use ecs::*;
 use game::*;
 use util::LeakyReserver;
-use math::Coord;
+use coord::Coord;
 
 struct Env {
     sh: SpatialHashTable,

@@ -1,5 +1,5 @@
 use std::slice;
-use math::Coord;
+use coord::Coord;
 
 pub struct CoordLineIter<'a>(slice::Iter<'a, Coord>);
 
@@ -38,11 +38,11 @@ impl CoordLine {
     pub fn extend(&mut self, coord: Coord) {
         self.coords.push(coord);
     }
-
+/*
     pub fn count(&self) -> usize {
         self.coords.len()
     }
-
+*/
     pub fn real_len(&self) -> f64 {
         self.end().real_distance(self.start())
     }
@@ -54,11 +54,11 @@ impl CoordLine {
     pub fn square_len(&self) -> usize {
         self.end().square_distance(self.start())
     }
-
+/*
     pub fn get(&self, idx: usize) -> Option<Coord> {
         self.coords.get(idx).map(|c| *c)
     }
-
+*/
     pub fn iter(&self) -> CoordLineIter {
         CoordLineIter(self.coords.iter())
     }

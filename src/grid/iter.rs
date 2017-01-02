@@ -1,4 +1,4 @@
-use math::Coord;
+use coord::Coord;
 use direction;
 
 use grid::Grid;
