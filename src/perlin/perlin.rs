@@ -1,11 +1,11 @@
-use grid::{Grid, StaticGrid, IterGrid};
-use math::{Dot, Vector2, Vector3};
-use coord::Coord;
+use std::fmt;
+use std::io;
 
 use rand::{Rng, StdRng, SeedableRng};
 
-use std::fmt;
-use std::io;
+use grid::{Grid, StaticGrid, IterGrid};
+use math::{Dot, Vector2, Vector3};
+use coord::Coord;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PerlinWrapType {
