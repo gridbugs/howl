@@ -23,11 +23,12 @@ mod perlin;
 mod coord;
 
 fn main() {
-    game().expect("Game ended unexpectedly");
-    println!("Bye.");
+    if let Err(message) = game() {
+        println!("Error: {}", message);
+    }
 }
 
-fn game() -> game::Result<()> {
+fn game() -> game::ExternalResult<()> {
 
 #[cfg(unix)]
     game::frontends::ansi::launch()?;

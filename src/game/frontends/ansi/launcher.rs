@@ -17,8 +17,14 @@ const DEBUG_WINDOW_BOTTOM_Y: usize = 0;
 const DEBUG_WINDOW_BORDER_X: usize = 2;
 const DEBUG_WINDOW_BORDER_Y: usize = 1;
 
-pub fn launch() -> Result<()> {
+pub fn launch() -> ExternalResult<()> {
     let mut window_allocator = Box::new(WindowAllocator::new().unwrap());
+
+    if window_allocator.width() <= GAME_WINDOW_WIDTH || window_allocator.height() <= GAME_WINDOW_HEIGHT {
+        return Err(format!("Terminal too small. Must be at least {}x{}.",
+                           GAME_WINDOW_WIDTH + 1,
+                           GAME_WINDOW_HEIGHT + 1));
+    }
 
     let input_source = InputSourceRef::new(&window_allocator.make_input_source());
 
@@ -45,5 +51,7 @@ pub fn launch() -> Result<()> {
 
     debug::init(&mut debug_buffer);
 
-    game.run()
+    game.run()?;
+
+    Ok(())
 }

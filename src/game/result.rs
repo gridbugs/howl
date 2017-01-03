@@ -15,3 +15,11 @@ impl From<behaviour::Error> for Error {
         Error::BehaviourError(e)
     }
 }
+
+pub type ExternalResult<T> = result::Result<T, String>;
+
+impl From<Error> for String {
+    fn from(e: Error) -> Self {
+        format!("{:?}", e)
+    }
+}
