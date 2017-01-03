@@ -8,6 +8,8 @@ build = "build.rs"
 rand = "0.3.14"
 num = "0.1.36"
 itertools = "0.5.6"
+
+[target.'cfg(unix)'.dependencies]
 rustty = { git = "https://github.com/stevebob/rustty.git" }
 
 [build-dependencies]

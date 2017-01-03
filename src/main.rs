@@ -4,6 +4,8 @@
 extern crate itertools;
 extern crate rand;
 extern crate num;
+
+#[cfg(unix)]
 extern crate rustty;
 
 #[macro_use]
@@ -20,6 +22,7 @@ mod search;
 mod perlin;
 mod coord;
 
+#[cfg(unix)]
 use frontends::ansi;
 
 const GAME_WINDOW_WIDTH: usize = 41;
@@ -43,6 +46,15 @@ fn main() {
 }
 
 fn game() -> game::Result<()> {
+
+#[cfg(unix)]
+    game_ansi()?;
+
+    Ok(())
+}
+
+#[cfg(unix)]
+fn game_ansi() -> game::Result<()> {
     let mut window_allocator = Box::new(ansi::WindowAllocator::new().unwrap());
 
     let input_source = game::InputSourceRef::new(&window_allocator.make_input_source());
