@@ -17,7 +17,7 @@ const DEBUG_WINDOW_BOTTOM_Y: usize = 0;
 const DEBUG_WINDOW_BORDER_X: usize = 2;
 const DEBUG_WINDOW_BORDER_Y: usize = 1;
 
-pub fn launch() -> ExternalResult<()> {
+pub fn launch(args: Arguments) -> ExternalResult<()> {
     let mut window_allocator = Box::new(WindowAllocator::new().unwrap());
 
     if window_allocator.width() <= GAME_WINDOW_WIDTH || window_allocator.height() <= GAME_WINDOW_HEIGHT {
@@ -39,17 +39,19 @@ pub fn launch() -> ExternalResult<()> {
 
     let mut game = GameCtx::new(Box::new(renderer), input_source, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
 
-    let mut debug_buffer = window_allocator.make_window_buffer(
-        (window_allocator.width() - DEBUG_WINDOW_WIDTH - DEBUG_WINDOW_BORDER_X - DEBUG_WINDOW_RIGHT_X) as isize,
-        (window_allocator.height() - DEBUG_WINDOW_HEIGHT - DEBUG_WINDOW_BORDER_Y - DEBUG_WINDOW_BOTTOM_Y) as isize,
-        DEBUG_WINDOW_WIDTH,
-        DEBUG_WINDOW_HEIGHT,
-        DEBUG_WINDOW_BORDER_X,
-        DEBUG_WINDOW_BORDER_Y);
+    if args.debug {
+        let mut debug_buffer = window_allocator.make_window_buffer(
+            (window_allocator.width() - DEBUG_WINDOW_WIDTH - DEBUG_WINDOW_BORDER_X - DEBUG_WINDOW_RIGHT_X) as isize,
+            (window_allocator.height() - DEBUG_WINDOW_HEIGHT - DEBUG_WINDOW_BORDER_Y - DEBUG_WINDOW_BOTTOM_Y) as isize,
+            DEBUG_WINDOW_WIDTH,
+            DEBUG_WINDOW_HEIGHT,
+            DEBUG_WINDOW_BORDER_X,
+            DEBUG_WINDOW_BORDER_Y);
 
-    debug_buffer.draw_borders();
+        debug_buffer.draw_borders();
 
-    debug::init(&mut debug_buffer);
+        debug::init(&mut debug_buffer);
+    }
 
     game.run()?;
 
