@@ -35,10 +35,11 @@ pub struct GameCtx {
     action_schedule: Schedule<ActionArgs>,
     width: usize,
     height: usize,
+    rng: GameRng,
 }
 
 impl GameCtx {
-    pub fn new(renderer: Box<KnowledgeRenderer>, input_source: InputSourceRef, width: usize, height: usize) -> Self {
+    pub fn new(renderer: Box<KnowledgeRenderer>, input_source: InputSourceRef, seed: usize, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
             renderer: RefCell::new(renderer),
@@ -56,6 +57,7 @@ impl GameCtx {
             action_schedule: Schedule::new(),
             width: width,
             height: height,
+            rng: GameRng::new(seed),
         }
     }
 
@@ -179,7 +181,7 @@ impl GameCtx {
 
         {
             let cloud_id = self.new_id();
-            prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height);
+            prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height, self.rng.gen_usize());
             let ticket = level.turn_schedule.insert(cloud_id, ENV_TURN_OFFSET);
             self.levels.add_level(level);
             g.insert_schedule_ticket(cloud_id, ticket);

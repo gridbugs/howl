@@ -34,6 +34,7 @@ fn make_options() -> getopts::Options {
     opts.optflag("d", "debug", "enable debugging output");
     opts.optopt("f", "frontend", "specify frontend", frontends.as_ref());
     opts.optflag("h", "help", "print this help menu");
+    opts.optopt("r", "rngseed", "seed the random number generator with a non-negative integer", "SEED");
 
     opts
 }
@@ -50,8 +51,12 @@ fn main() {
     let opts = make_options();
 
     let matches = match opts.parse(&args[1..]) {
-        Ok(m) => { m }
-        Err(f) => { panic!(f.to_string()) }
+        Ok(m) => m,
+        Err(f) => {
+            println!("{}", f.to_string());
+            print_usage(&program, opts);
+            return;
+        }
     };
 
     if matches.opt_present("h") {
@@ -67,6 +72,8 @@ fn main() {
             return;
         }
     };
+
+    println!("RNG Seed: {}", args.rng_seed);
 
     if let Err(message) = game(args) {
         panic!("Error: {}", message);

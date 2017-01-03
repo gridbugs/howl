@@ -14,13 +14,20 @@ pub struct CloudState {
 }
 
 impl CloudState {
-    pub fn new(width: usize, height: usize, zoom: f64, min: f64, max: f64, scroll_rate: Vector2<f64>, mutate_rate: f64) -> Self {
+    pub fn new(seed: usize,
+               width: usize,
+               height: usize,
+               zoom: f64,
+               min: f64,
+               max: f64,
+               scroll_rate: Vector2<f64>,
+               mutate_rate: f64) -> Self {
 
         let zoomed_width = ((width as f64) * zoom).ceil() as usize;
         let zoomed_height = ((height as f64) * zoom).ceil() as usize;
 
         CloudState {
-            perlin: PerlinGrid::new_from_seed(zoomed_width, zoomed_height, PerlinWrapType::Regenerate, 0),
+            perlin: PerlinGrid::new_from_seed(zoomed_width, zoomed_height, PerlinWrapType::Regenerate, seed),
             zoom: zoom,
             min: min,
             max: max,

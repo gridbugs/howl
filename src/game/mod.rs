@@ -18,6 +18,7 @@ mod tile_buffer;
 mod range;
 mod args;
 mod frontend_types;
+mod rng;
 
 pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -38,6 +39,7 @@ pub use self::tile_buffer::*;
 pub use self::range::*;
 pub use self::args::*;
 pub use self::frontend_types::*;
+pub use self::rng::*;
 
 pub mod data;
 pub mod prototypes;

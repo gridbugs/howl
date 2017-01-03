@@ -37,7 +37,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     let renderer = frontends::ansi::AnsiKnowledgeRenderer::new(game_window, false);
 
-    let mut game = GameCtx::new(Box::new(renderer), input_source, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
+    let mut game = GameCtx::new(Box::new(renderer), input_source, args.rng_seed, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
 
     if args.debug {
         let mut debug_buffer = window_allocator.make_window_buffer(
