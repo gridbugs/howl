@@ -1,4 +1,3 @@
-use game::*;
 use game::data::*;
 use coord::{InfiniteLineState, Coord};
 

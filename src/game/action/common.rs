@@ -4,8 +4,6 @@ use game::data::*;
 use direction::Direction;
 use coord::Coord;
 
-use debug;
-
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) -> Result<()> {
     let current_position = entity.position().ok_or(Error::MissingComponent)?;
     let new_position = current_position + direction.vector();

@@ -2,7 +2,7 @@ use game::*;
 use ecs::EntityRef;
 use behaviour::LeafResolution;
 use direction::Direction;
-use coord::{Coord, StraightLine, Rect, InfiniteAccumulatingLineState};
+use coord::{Coord, StraightLine, Rect};
 
 pub fn player_input(input_source: InputSourceRef) -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {

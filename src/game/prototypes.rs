@@ -1,6 +1,5 @@
 use math::Vector2;
-use coord::{Coord, InfiniteAccumulatingLineState};
-use direction::Direction;
+use coord::Coord;
 
 use ecs::*;
 use game::*;
