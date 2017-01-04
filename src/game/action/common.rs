@@ -2,6 +2,9 @@ use ecs::*;
 use game::*;
 use game::data::*;
 use direction::Direction;
+use coord::Coord;
+
+use debug;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) -> Result<()> {
     let current_position = entity.position().ok_or(Error::MissingComponent)?;
@@ -36,30 +39,33 @@ pub fn close(action: &mut EcsAction, entity_id: EntityId, direction: Direction) 
     Ok(())
 }
 
-pub fn fire_bullet(action: &mut EcsAction, entity: EntityRef, direction: Direction, ids: &EntityIdReserver) -> Result<()> {
+pub fn fire_bullet(action: &mut EcsAction,
+                   entity: EntityRef,
+                   delta: Coord,
+                   ids: &EntityIdReserver) -> Result<()> {
 
+    const SPEED_CELLS_PER_SEC: f64 = 40.0;
+
+    let mut velocity = RealtimeVelocity::new(delta, SPEED_CELLS_PER_SEC);
     let firer_position = entity.position().ok_or(Error::MissingComponent)?;
-    let bullet_position = firer_position + direction.vector();
+    let bullet_position = firer_position + velocity.step_in_place();
 
-    prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, direction);
-
-    Ok(())
-}
-
-pub fn burst_bullets(action: &mut EcsAction, entity_id: EntityId, direction: Direction, count: usize) -> Result<()> {
-
-    action.set_burst_fire(BurstFire::new(entity_id, direction, count));
+    prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity);
 
     Ok(())
 }
 
-pub fn realtime_axis_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeAxisVelocity) -> Result<()> {
+pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity) -> Result<()> {
 
     let current_position = entity.position().ok_or(Error::MissingComponent)?;
+    let current_velocity = entity.realtime_velocity().ok_or(Error::MissingComponent)?;
 
-    action.insert_position(entity.id(), current_position + velocity.direction.vector());
+    let (new_velocity, offset) = current_velocity.step();
 
-    action.set_action_time_ms(velocity.speed.ms_per_cell());
+    action.insert_realtime_velocity(entity.id(), new_velocity);
+    action.insert_position(entity.id(), current_position + offset);
+
+    action.set_action_time_ms(velocity.ms_per_cell());
 
     Ok(())
 }

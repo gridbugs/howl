@@ -1,5 +1,5 @@
 use math::Vector2;
-use coord::Coord;
+use coord::{Coord, InfiniteAccumulatingLineState};
 use direction::Direction;
 
 use ecs::*;
@@ -140,13 +140,10 @@ pub fn door<E: EntityPopulate>(mut entity: E, position: Coord, state: DoorState)
     entity
 }
 
-pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, direction: Direction) -> E {
-
-    const SPEED_CELLS_PER_SEC: f64 = 40.0;
+pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: RealtimeVelocity) -> E {
 
     entity.insert_position(position);
-    entity.insert_realtime_axis_velocity(RealtimeAxisVelocity::from_cells_per_sec(
-            SPEED_CELLS_PER_SEC, direction));
+    entity.insert_realtime_velocity(velocity);
     entity.insert_destroy_on_collision();
 
     entity.insert_tile(TileType::Bullet);

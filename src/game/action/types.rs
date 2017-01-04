@@ -2,6 +2,7 @@ use ecs::*;
 use game::*;
 use game::data::*;
 use direction::Direction;
+use coord::Coord;
 
 #[derive(Debug, Clone, Copy)]
 pub enum External {
@@ -21,9 +22,8 @@ pub enum ActionArgs {
     OpenDoor(EntityId),
     CloseDoor(EntityId),
     Close(EntityId, Direction),
-    FireBullet(EntityId, Direction),
-    BurstBullets(EntityId, Direction, usize),
-    RealtimeAxisVelocityMove(EntityId, RealtimeAxisVelocity),
+    FireBullet(EntityId, Coord),
+    RealtimeVelocityMove(EntityId, RealtimeVelocity),
     Destroy(EntityId),
     MoveClouds(EntityId),
     TransformTerrorPillarTerrorFly(EntityId),
@@ -46,14 +46,11 @@ impl ActionArgs {
             ActionArgs::Close(entity_id, direction) => {
                 actions::close(action, entity_id, direction)?;
             }
-            ActionArgs::FireBullet(entity_id, direction) => {
-                actions::fire_bullet(action, ecs.entity(entity_id), direction, entity_ids)?;
+            ActionArgs::FireBullet(entity_id, delta) => {
+                actions::fire_bullet(action, ecs.entity(entity_id), delta, entity_ids)?;
             }
-            ActionArgs::BurstBullets(entity_id, direction, count) => {
-                actions::burst_bullets(action, entity_id, direction, count)?;
-            }
-            ActionArgs::RealtimeAxisVelocityMove(entity_id, velocity) => {
-                actions::realtime_axis_velocity_move(action, ecs.entity(entity_id), velocity)?;
+            ActionArgs::RealtimeVelocityMove(entity_id, velocity) => {
+                actions::realtime_velocity_move(action, ecs.entity(entity_id), velocity)?;
             }
             ActionArgs::Destroy(entity_id) => {
                 actions::destroy(action, ecs.entity(entity_id))?;

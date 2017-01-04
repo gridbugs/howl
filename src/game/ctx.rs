@@ -64,10 +64,9 @@ impl GameCtx {
     pub fn run(&mut self) -> Result<()> {
         self.rules.push(Box::new(rules::OpenDoor));
         self.rules.push(Box::new(rules::Collision));
-        self.rules.push(Box::new(rules::RealtimeAxisVelocity));
-        self.rules.push(Box::new(rules::RealtimeAxisVelocityStart));
         self.rules.push(Box::new(rules::CloseDoor));
-        self.rules.push(Box::new(rules::BurstFire));
+        self.rules.push(Box::new(rules::RealtimeVelocityStart));
+        self.rules.push(Box::new(rules::RealtimeVelocity));
         self.rules.push(Box::new(rules::MoonTransform));
 
         self.init_demo();
@@ -100,6 +99,7 @@ impl GameCtx {
                     turn_schedule: &mut level.turn_schedule,
                     pc_observer: &self.pc_observer,
                     entity_ids: &self.entity_ids,
+                    rng: &self.rng,
                 }.turn()?;
 
                 match resolution {

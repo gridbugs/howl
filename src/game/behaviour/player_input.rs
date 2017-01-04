@@ -1,7 +1,8 @@
 use game::*;
+use ecs::EntityRef;
 use behaviour::LeafResolution;
 use direction::Direction;
-use coord::StraightLine;
+use coord::{Coord, StraightLine, Rect, InfiniteAccumulatingLineState};
 
 pub fn player_input(input_source: InputSourceRef) -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {
@@ -28,31 +29,22 @@ fn control_to_direction(control: Control) -> Option<Direction> {
     }
 }
 
-fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) -> Option<StraightLine> {
+fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) -> Option<Coord> {
     let start = input.entity.position().unwrap();
     let mut end = start;
-    let mut overlay = RenderOverlay {
-        aim_line: Some(AimLine {
-            line: StraightLine::new_point(start),
-            range: RangeType::ShortRange,
-        }),
-    };
 
     let mut renderer = input.renderer.borrow_mut();
 
     loop {
 
-        overlay.aim_line.as_mut().map(|aim_line| {
-            let range = match start.square_distance(end) {
-                0...2 => RangeType::ShortRange,
-                2...6 => RangeType::NormalRange,
-                6...12 => RangeType::LongRange,
-                _ => RangeType::OutOfRange,
-            };
+        let range = distance_to_range(start.square_distance(end));
 
-            aim_line.line.set_end(end);
-            aim_line.range = range;
-        });
+        let overlay = RenderOverlay {
+            aim_line: Some(AimLine {
+                line: StraightLine::new(start, end),
+                range: range,
+            }),
+        };
 
         renderer.draw_with_overlay(&overlay);
 
@@ -63,13 +55,49 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
                     if renderer.contains_world_coord(next_end) {
                         end = next_end;
                     }
-                } else {
+                } else if control == Control::Fire {
                     renderer.draw();
-                    return None;
+                    return Some(end);
+                } else {
+                    break;
                 }
             }
         }
     }
+
+    renderer.draw();
+    None
+}
+
+fn distance_to_range(distance: usize) -> RangeType {
+    match distance {
+        0...2 => RangeType::ShortRange,
+        2...6 => RangeType::NormalRange,
+        6...12 => RangeType::LongRange,
+        _ => RangeType::OutOfRange,
+    }
+}
+
+fn get_chance_to_hit(_entity: EntityRef, _range: RangeType) -> f64 {
+    0.75
+}
+
+fn get_hit_coord(input: BehaviourInput, coord: Coord) -> Coord {
+    let range = distance_to_range(input.entity.position().unwrap().square_distance(coord));
+    let hit_chance = get_chance_to_hit(input.entity, range);
+    let radius = input.rng.count_failures(hit_chance, 2);
+
+    if radius == 0 {
+        coord
+    } else {
+        let rect = Rect::new_centred_square(coord, radius).unwrap();
+        rect.border_get(input.rng.gen_usize_below(rect.border_count())).unwrap()
+    }
+}
+
+fn get_fire_delta(input: BehaviourInput, coord: Coord) -> Coord {
+    let hit_coord = get_hit_coord(input, coord);
+    hit_coord - input.entity.position().unwrap()
 }
 
 fn get_meta_action(input: BehaviourInput, input_source: InputSourceRef) -> Option<MetaAction> {
@@ -82,8 +110,11 @@ fn get_meta_action(input: BehaviourInput, input_source: InputSourceRef) -> Optio
                         get_direction(map, input_source).map(|d| MetaAction::ActionArgs(ActionArgs::Close(input.entity.id(), d)))
                     }
                     Control::Fire => {
-                        aim(input, map, input_source);
-                        None
+                        aim(input, map, input_source).map(|coord| {
+                            let delta = get_fire_delta(input, coord);
+
+                            MetaAction::ActionArgs(ActionArgs::FireBullet(input.entity.id(), delta))
+                        })
                     }
                     Control::Wait => {
                         Some(MetaAction::ActionArgs(ActionArgs::Null))

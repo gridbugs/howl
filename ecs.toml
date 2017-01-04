@@ -15,6 +15,9 @@ imports = [
 [component.transform_on_moon_change]
 [component.should_render]
 
+[component.realtime_velocity]
+    type = "RealtimeVelocity"
+
 [component.tile]
     type = "TileType"
     copy = true
@@ -58,9 +61,6 @@ imports = [
     type = "SimpleNpcKnowledge"
     container = "RefCell"
 
-[component.realtime_axis_velocity]
-    type = "RealtimeAxisVelocity"
-
 [component.path_traverse]
     type = "PathTraverse"
     container = "RefCell"
@@ -98,6 +98,3 @@ imports = [
 
 [action_property.close]
     type = "Close"
-
-[action_property.burst_fire]
-    type = "BurstFire"

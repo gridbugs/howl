@@ -58,6 +58,7 @@ pub struct TurnEnv<'a, 'b: 'a> {
     pub turn_schedule: &'a mut Schedule<EntityId>,
     pub pc_observer: &'a Shadowcast,
     pub entity_ids: &'a EntityIdReserver,
+    pub rng: &'a GameRng,
 }
 
 impl<'a> Turn<'a> {
@@ -273,6 +274,7 @@ impl<'a, 'b> TurnEnv<'a, 'b> {
             level_id: self.level_id,
             action_env: ActionEnv::new(self.ecs, *self.action_id),
             renderer: self.renderer,
+            rng: self.rng,
         };
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
     }

@@ -1,7 +1,7 @@
 use math::Vector2Index;
 use coord::Coord;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Octant {
     major_sign: isize,
     minor_sign: isize,
@@ -27,6 +27,7 @@ fn choose_octant(delta: Coord) -> Octant {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct InfiniteLineState {
     octant: Octant,
     major_delta_abs: usize,
@@ -76,6 +77,7 @@ impl Iterator for InfiniteLineState {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct FiniteLineState {
     infinite_line_state: InfiniteLineState,
     count: usize,
@@ -114,6 +116,7 @@ impl Iterator for FiniteLineState {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct InfiniteAccumulatingLineState {
     infinite_line_state: InfiniteLineState,
     coord: Coord,
@@ -141,6 +144,7 @@ impl InfiniteAccumulatingLineState {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct FiniteAccumulatingLineState {
     finite_line_state: FiniteLineState,
     coord: Coord,

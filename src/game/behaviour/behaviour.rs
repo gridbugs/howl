@@ -15,6 +15,7 @@ pub struct BehaviourInput<'a> {
     pub level_id: LevelId,
     pub action_env: ActionEnv<'a>,
     pub renderer: &'a RefCell<Box<KnowledgeRenderer>>,
+    pub rng: &'a GameRng,
 }
 
 pub struct BehaviourLeaf(Box<Fn(BehaviourInput) -> LeafResolution<MetaAction>>);

@@ -29,6 +29,10 @@ impl Rect {
         })
     }
 
+    pub fn new_centred_square(centre: Coord, radius: usize) -> Result<Self> {
+        Self::new(centre - Coord::new(radius as isize, radius as isize), radius * 2 + 1, radius * 2 + 1)
+    }
+
     pub fn border_iter(&self) -> RectBorderIter {
         RectBorderIter::new(self.top_left, self.width, self.height)
     }

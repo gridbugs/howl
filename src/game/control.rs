@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use game::InputEvent;
 use direction::Direction;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Control {
     Direction(Direction),
     Close,
