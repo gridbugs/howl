@@ -9,7 +9,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
             frontends::ansi::launch(args)?;
 
         #[cfg(not(unix))]
-            return Err("ansi frontend only available on unix");
+            return Err("ansi frontend only available on unix".to_string());
         }
     }
 
