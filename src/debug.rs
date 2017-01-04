@@ -1,12 +1,21 @@
 use std::io;
-use std::mem;
 
 static mut TARGET: Option<*mut io::Write> = None;
 
-pub fn init(w: &mut io::Write) {
-    let ptr = w as *mut io::Write;
+pub fn init(w: Box<io::Write>) {
     unsafe {
-        TARGET = mem::transmute(Some(ptr));
+        TARGET = Some(Box::into_raw(w));
+    }
+}
+
+pub struct NullDebug;
+
+impl io::Write for NullDebug {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
     }
 }
 

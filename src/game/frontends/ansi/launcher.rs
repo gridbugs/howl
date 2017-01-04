@@ -1,3 +1,5 @@
+use std::io;
+
 use game::*;
 use frontends::ansi::{WindowAllocator, BufferType};
 use debug;
@@ -22,8 +24,8 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     if window_allocator.width() <= GAME_WINDOW_WIDTH || window_allocator.height() <= GAME_WINDOW_HEIGHT {
         return Err(format!("Terminal too small. Must be at least {}x{}.",
-                           GAME_WINDOW_WIDTH + 1,
-                           GAME_WINDOW_HEIGHT + 1));
+                           GAME_WINDOW_WIDTH + ANSI_GAME_WINDOW_X,
+                           GAME_WINDOW_HEIGHT + ANSI_GAME_WINDOW_Y));
     }
 
     let input_source = InputSourceRef::new(&window_allocator.make_input_source());
@@ -39,7 +41,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     let mut game = GameCtx::new(Box::new(renderer), input_source, args.rng_seed, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
 
-    if args.debug {
+    let debug_buffer: Box<io::Write> = if args.debug {
         let mut debug_buffer = window_allocator.make_window_buffer(
             (window_allocator.width() - DEBUG_WINDOW_WIDTH - DEBUG_WINDOW_BORDER_X - DEBUG_WINDOW_RIGHT_X) as isize,
             (window_allocator.height() - DEBUG_WINDOW_HEIGHT - DEBUG_WINDOW_BORDER_Y - DEBUG_WINDOW_BOTTOM_Y) as isize,
@@ -50,8 +52,12 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
         debug_buffer.draw_borders();
 
-        debug::init(&mut debug_buffer);
-    }
+        Box::new(debug_buffer)
+    } else {
+        Box::new(debug::NullDebug)
+    };
+
+    debug::init(debug_buffer);
 
     game.run()?;
 
