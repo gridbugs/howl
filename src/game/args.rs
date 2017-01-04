@@ -3,6 +3,20 @@ use rand::{Rng, StdRng};
 
 use game::*;
 
+pub fn make_options() -> getopts::Options {
+
+    let mut opts = getopts::Options::new();
+
+    let frontends = format!("[ {} ]", FRONTEND_STRINGS.join(" | "));
+
+    opts.optflag("d", "debug", "enable debugging output");
+    opts.optopt("f", "frontend", "specify frontend", frontends.as_ref());
+    opts.optflag("h", "help", "print this help menu");
+    opts.optopt("r", "rngseed", "seed the random number generator with a non-negative integer", "SEED");
+
+    opts
+}
+
 #[derive(Debug)]
 pub struct Arguments {
     pub debug: bool,
