@@ -20,6 +20,9 @@ pub struct SpatialHashCell {
     // count of moon entities in this cell
     moon: usize,
 
+    // count of enemy entities in this cell
+    enemy: usize,
+
     // set of entities that are doors
     doors: AnySet<EntityId>,
 
@@ -48,6 +51,7 @@ impl SpatialHashCell {
             solid: 0,
             pc: 0,
             moon: 0,
+            enemy: 0,
             doors: AnySet::new(),
             outside: AnySet::new(),
             transform_on_moon_change: EntitySet::new(),
@@ -78,6 +82,10 @@ impl SpatialHashCell {
 
     pub fn moon(&self) -> bool {
         self.moon != 0
+    }
+
+    pub fn enemy(&self) -> bool {
+        self.enemy != 0
     }
 
     pub fn pc(&self) -> bool {
@@ -167,6 +175,9 @@ impl SpatialHashTable {
         if entity.contains_moon() {
             cell.moon -= 1;
         }
+        if entity.contains_enemy() {
+            cell.enemy -= 1;
+        }
         if let Some(opacity) = entity.opacity() {
             cell.opacity -= opacity;
         }
@@ -194,6 +205,9 @@ impl SpatialHashTable {
         }
         if entity.contains_moon() {
             cell.moon += 1;
+        }
+        if entity.contains_enemy() {
+            cell.enemy += 1;
         }
         if let Some(opacity) = entity.opacity() {
             cell.opacity += opacity;
@@ -238,6 +252,7 @@ impl SpatialHashTable {
         self.update_solid(action_env, action);
         self.update_pc(action_env, action);
         self.update_moon(action_env, action);
+        self.update_enemy(action_env, action);
         self.update_opacity(action_env, action);
         self.update_doors(action_env, action);
         self.update_outside(action_env, action);
@@ -247,6 +262,7 @@ impl SpatialHashTable {
     update_count!(update_solid, solid, solid_positive_iter, solid_negative_iter, contains_solid, current_contains_solid);
     update_count!(update_pc, pc, pc_positive_iter, pc_negative_iter, contains_pc, current_contains_pc);
     update_count!(update_moon, moon, moon_positive_iter, moon_negative_iter, contains_moon, current_contains_moon);
+    update_count!(update_enemy, enemy, enemy_positive_iter, enemy_negative_iter, contains_enemy, current_contains_enemy);
 
     update_sum!(update_opacity, opacity, current_opacity, opacity_positive_iter, opacity_negative_iter, 0.0);
 

@@ -8,6 +8,8 @@ pub enum Control {
     Direction(Direction),
     Close,
     Fire,
+    NextTarget,
+    PrevTarget,
     Wait,
     Quit,
 }
@@ -27,6 +29,8 @@ impl ControlMap {
 
         map.insert(InputEvent::Char('c'), Control::Close);
         map.insert(InputEvent::Char('f'), Control::Fire);
+        map.insert(InputEvent::Char('n'), Control::NextTarget);
+        map.insert(InputEvent::Char('m'), Control::PrevTarget);
 
         map.insert(InputEvent::Char('.'), Control::Wait);
 

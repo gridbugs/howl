@@ -31,7 +31,19 @@ fn control_to_direction(control: Control) -> Option<Direction> {
 
 fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) -> Option<Coord> {
     let start = input.entity.position().unwrap();
-    let mut end = start;
+    let mut knowledge = input.entity.drawable_knowledge_borrow_mut().unwrap();
+    let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
+                                                             input.spatial_hash.width(),
+                                                             input.spatial_hash.height());
+
+    let targets = level_knowledge.sort_targets(start);
+    let mut target_idx = 0;
+
+    let mut end = if !targets.is_empty() {
+        targets[target_idx]
+    } else {
+        start
+    };
 
     let mut renderer = input.renderer.borrow_mut();
 
@@ -54,6 +66,16 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
                     let next_end = end + direction.vector();
                     if renderer.contains_world_coord(next_end) {
                         end = next_end;
+                    }
+                } else if control == Control::NextTarget {
+                    if !targets.is_empty() {
+                        target_idx = (target_idx + 1) % targets.len();
+                        end = targets[target_idx];
+                    }
+                } else if control == Control::PrevTarget {
+                    if !targets.is_empty() {
+                        target_idx = (target_idx + targets.len() - 1) % targets.len();
+                        end = targets[target_idx];
                     }
                 } else if control == Control::Fire {
                     renderer.draw();
@@ -120,6 +142,8 @@ fn get_meta_action(input: BehaviourInput, input_source: InputSourceRef) -> Optio
                         Some(MetaAction::ActionArgs(ActionArgs::Null))
                     }
                     Control::Quit => Some(MetaAction::External(External::Quit)),
+                    Control::NextTarget => None,
+                    Control::PrevTarget => None,
                 }
             })
         })

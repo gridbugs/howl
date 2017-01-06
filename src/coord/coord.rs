@@ -19,7 +19,11 @@ impl Coord {
     }
 
     pub fn real_distance(self, other: Coord) -> f64 {
-        ((self - other).length_squared() as f64).sqrt()
+        (self.squared_distance(other) as f64).sqrt()
+    }
+
+    pub fn squared_distance(self, other: Coord) -> usize {
+        (self - other).length_squared() as usize
     }
 
     pub fn manhatten_distance(self, other: Coord) -> usize {

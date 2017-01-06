@@ -76,18 +76,43 @@ impl Default for DrawableKnowledgeCell {
 pub struct DrawableKnowledgeLevel {
     grid: StaticGrid<DrawableKnowledgeCell>,
     default: DrawableKnowledgeCell,
+    targets: Vec<Coord>,
+    last_action_id: u64,
 }
 
 impl DrawableKnowledgeLevel {
     pub fn get_with_default(&self, coord: Coord) -> &DrawableKnowledgeCell {
         self.grid.get(coord).unwrap_or_else(|| &self.default)
     }
+
+    pub fn sort_targets(&mut self, position: Coord) -> &[Coord] {
+        self.targets.sort_by(|a, b| a.squared_distance(position).cmp(&b.squared_distance(position)));
+        self.targets.as_slice()
+    }
 }
 
 impl LevelKnowledge for DrawableKnowledgeLevel {
     fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool {
+
         if let Some(knowledge_cell) = self.grid.get_mut(coord) {
-            knowledge_cell.update(world_cell, accuracy, action_env)
+
+            if knowledge_cell.last_updated == action_env.id {
+                // this cell has already been updated
+                return false;
+            }
+
+            let change = knowledge_cell.update(world_cell, accuracy, action_env);
+
+            if self.last_action_id != action_env.id {
+                self.targets.clear();
+                self.last_action_id = action_env.id;
+            }
+
+            if world_cell.enemy() {
+                self.targets.push(coord);
+            }
+
+            change
         } else {
             false
         }
@@ -99,6 +124,8 @@ impl TwoDimensionalCons for DrawableKnowledgeLevel {
         DrawableKnowledgeLevel {
             grid: StaticGrid::new_default(width, height),
             default: DrawableKnowledgeCell::new(),
+            targets: Vec::new(),
+            last_action_id: 0,
         }
     }
 }

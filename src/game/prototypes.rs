@@ -117,6 +117,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_transformation_type(TransformationType::TerrorPillarTerrorFly);
     entity.insert_transformation_state(TransformationState::Real);
     entity.insert_transform_on_moon_change();
+    entity.insert_enemy();
 
     entity.id()
 }
