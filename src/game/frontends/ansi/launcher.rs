@@ -28,7 +28,8 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
                            GAME_WINDOW_HEIGHT + ANSI_GAME_WINDOW_Y));
     }
 
-    let input_source = InputSourceRef::new(&window_allocator.make_input_source());
+    let input_source = window_allocator.make_input_source();
+    let input_source_ref = InputSourceRef::new(&input_source);
 
     let game_window = window_allocator.make_window(
         ANSI_GAME_WINDOW_X as isize,
@@ -39,7 +40,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     let renderer = frontends::ansi::AnsiKnowledgeRenderer::new(game_window, false);
 
-    let mut game = GameCtx::new(Box::new(renderer), input_source, args.rng_seed, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
+    let mut game = GameCtx::new(Box::new(renderer), input_source_ref, args.rng_seed, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
 
     let debug_buffer: Box<io::Write> = if args.debug {
         let mut debug_buffer = window_allocator.make_window_buffer(
