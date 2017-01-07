@@ -3,6 +3,7 @@ use coord::*;
 pub type StraightLineIter = FiniteAccumulatingLineState;
 pub type StraightLineInfiniteIter = InfiniteAccumulatingLineState;
 
+#[derive(Debug, Clone, Copy)]
 pub struct StraightLine {
     start: Coord,
     end: Coord,

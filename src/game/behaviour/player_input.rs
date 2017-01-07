@@ -1,8 +1,7 @@
 use game::*;
-use ecs::EntityRef;
 use behaviour::LeafResolution;
 use direction::Direction;
-use coord::{Coord, StraightLine, Rect};
+use coord::{Coord, StraightLine};
 
 pub fn player_input(input_source: InputSourceRef) -> BehaviourLeaf {
     BehaviourLeaf::new(move |input| {
@@ -49,13 +48,8 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
 
     loop {
 
-        let range = distance_to_range(start.square_distance(end));
-
         let overlay = RenderOverlay {
-            aim_line: Some(AimLine {
-                line: StraightLine::new(start, end),
-                range: range,
-            }),
+            aim_line: Some(StraightLine::new(start, end)),
         };
 
         renderer.draw_with_overlay(&overlay);
@@ -91,37 +85,6 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
     None
 }
 
-fn distance_to_range(distance: usize) -> RangeType {
-    match distance {
-        0...2 => RangeType::ShortRange,
-        2...6 => RangeType::NormalRange,
-        6...12 => RangeType::LongRange,
-        _ => RangeType::OutOfRange,
-    }
-}
-
-fn get_chance_to_hit(_entity: EntityRef, _range: RangeType) -> f64 {
-    0.75
-}
-
-fn get_hit_coord(input: BehaviourInput, coord: Coord) -> Coord {
-    let range = distance_to_range(input.entity.position().unwrap().square_distance(coord));
-    let hit_chance = get_chance_to_hit(input.entity, range);
-    let radius = input.rng.count_failures(hit_chance, 2);
-
-    if radius == 0 {
-        coord
-    } else {
-        let rect = Rect::new_centred_square(coord, radius).unwrap();
-        rect.border_get(input.rng.gen_usize_below(rect.border_count())).unwrap()
-    }
-}
-
-fn get_fire_delta(input: BehaviourInput, coord: Coord) -> Coord {
-    let hit_coord = get_hit_coord(input, coord);
-    hit_coord - input.entity.position().unwrap()
-}
-
 fn get_meta_action(input: BehaviourInput, input_source: InputSourceRef) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         input.entity.control_map().and_then(|map| {
@@ -133,7 +96,7 @@ fn get_meta_action(input: BehaviourInput, input_source: InputSourceRef) -> Optio
                     }
                     Control::Fire => {
                         aim(input, map, input_source).map(|coord| {
-                            let delta = get_fire_delta(input, coord);
+                            let delta = coord - input.entity.position().unwrap();
 
                             MetaAction::ActionArgs(ActionArgs::FireBullet(input.entity.id(), delta))
                         })

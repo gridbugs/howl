@@ -117,24 +117,13 @@ impl AnsiKnowledgeRenderer {
 
     fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
         if let Some(ref aim_line) = overlay.aim_line {
-            for coord in aim_line.line.iter() {
+            for coord in aim_line.iter() {
                 let screen_coord = self.world_to_screen(coord);
                 if let Some(cell) = self.buffer.get(screen_coord) {
                     let mut info = Self::to_ansi_info(cell);
                     info.bg = AIM_LINE_COLOUR;
                     self.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
                 }
-            }
-            let end_screen_coord = self.world_to_screen(aim_line.line.end());
-            if let Some(cell) = self.buffer.get(end_screen_coord) {
-                let mut info = Self::to_ansi_info(cell);
-                info.bg = match aim_line.range {
-                    RangeType::ShortRange => AIM_COLOUR_SHORT,
-                    RangeType::NormalRange => AIM_COLOUR_NORMAL,
-                    RangeType::LongRange => AIM_COLOUR_LONG,
-                    RangeType::OutOfRange => AIM_COLOUR_OUT_OF_RANGE,
-                };
-                self.window.get_cell(end_screen_coord.x, end_screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
             }
         }
     }

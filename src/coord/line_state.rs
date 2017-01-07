@@ -101,7 +101,7 @@ impl FiniteLineState {
     }
 
     fn complete(&self) -> bool {
-        self.count >= self.len()
+        self.count > self.len()
     }
 }
 
