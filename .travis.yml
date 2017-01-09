@@ -1,5 +1,32 @@
+sudo: required
 language: rust
 rust:
   - stable
   - beta
   - nightly
+
+before_install:
+
+  - pushd ~
+
+# build sdl2 from source
+  - wget https://www.libsdl.org/release/SDL2-2.0.5.tar.gz
+  - tar xzf SDL2-2.0.5.tar.gz
+  - pushd SDL2-2.0.5
+  - ./configure
+  - make
+  - sudo make install
+  - popd
+
+# build sdl2_image from source
+  - wget https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz
+  - tar xzf SDL2_image-2.0.1.tar.gz
+  - pushd SDL2_image-2.0.1
+  - ./configure
+  - make
+  - sudo make install
+  - popd
+
+  - popd
+
+  - export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
