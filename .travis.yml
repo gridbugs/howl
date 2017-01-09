@@ -1,32 +1,35 @@
 sudo: required
+
 language: rust
+
 rust:
-  - stable
-  - beta
-  - nightly
+- stable
+- beta
+- nightly
+
+os:
+- osx
+- linux
 
 before_install:
+- "./.travis_before_install.sh"
+- export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 
-  - pushd ~
+script:
+- "./.travis_script.sh"
 
-# build sdl2 from source
-  - wget https://www.libsdl.org/release/SDL2-2.0.5.tar.gz
-  - tar xzf SDL2-2.0.5.tar.gz
-  - pushd SDL2-2.0.5
-  - ./configure
-  - make
-  - sudo make install
-  - popd
-
-# build sdl2_image from source
-  - wget https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz
-  - tar xzf SDL2_image-2.0.1.tar.gz
-  - pushd SDL2_image-2.0.1
-  - ./configure
-  - make
-  - sudo make install
-  - popd
-
-  - popd
-
-  - export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+deploy:
+  skip_cleanup: true
+  provider: s3
+  region: ap-southeast-2
+  access_key_id: AKIAJTZWT26OECTU2UVQ
+  secret_access_key:
+    secure: cvwOB/tryVfZhnyYnh/OGPTtlijviDutmWVMI1zxCnTWE/Or3/xIt3TBUfcgp744o3+DkC+rY/RnGdfou/6FAqVVVwgeqmxnkvKsi3oHaSIhGDzMGPNPSqGVb1vN0te3k7Lan9pjFwMwEGMfFRyMfLfUplp5Yv1TJfHasD3pjLDikbSp26aQ4tSgaQs14AepvvjtsbjCMXeWTzH8QxQAF3fnyGfaIPS5mQm1FMb641KUXT5uozMF6LpRmDKssTgJ52vUSDi0VA+5brUNxoMJCM+mRPCa+g1pgvb5A3J11Cl9CgDQjYi2CUFb4cK+gXqVGvszR33PfVXzu8Fxu2qavKlkuHCPj6VxrVaJJlz7BjI80OeKWuIjIyXPjVDlOq3vkSD5mEiM+xJ1cL1J8x6ygE2fbCWZYTHmi/sib+gDfrrvXC/XMawsnzBa5eS6i2J7lKCY63BJfwQ1tsiOGy0dG/SO+NFLsFvmwDGWXjcaWIwey2QaYgQmDcMMP6R5eX+/PHmFIP8UScFPUIUCmdoKDLN/jkz7koCYAqde1hgXPyiUDhHtvpd3KI0SG9p0XMtkh82W6d8KITtPpqaX8ylfD8NAIFBSEYCauK+CLMNIBIq1+rVx5przWZnUHjTVs/okOqs0FXG1lwW4K2Ic1RcLEMM2ZVue0CGdIbk26RIsnxQ=
+  bucket: gridbugs.org
+  local-dir: uploads
+  upload-dir: downloads
+  acl: public_read
+  on:
+    repo: stevebob/howl
+    branch: master
+    condition: $TRAVIS_RUST_VERSION = stable
