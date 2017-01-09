@@ -1,7 +1,12 @@
+use std::env;
+use std::path;
+
 use getopts;
 use rand::{Rng, StdRng};
 
 use game::*;
+
+const RESOURCE_DIR: &'static str = "resources";
 
 pub fn make_options() -> getopts::Options {
 
@@ -22,6 +27,7 @@ pub struct Arguments {
     pub debug: bool,
     pub frontend: Frontend,
     pub rng_seed: usize,
+    pub resource_path: path::PathBuf,
 }
 
 impl Arguments {
@@ -52,9 +58,38 @@ impl Arguments {
             } else {
                 return Err(format!("No such frontend: {}", frontend_str));
             }
+        } else if let Some(frontend) = sane_frontend() {
+            args.frontend = frontend;
+        } else {
+            return Err("Could not find suitable frontend".to_string());
+        }
+
+        if let Some(path) = resource_dir_path() {
+            args.resource_path = path;
         }
 
         Ok(args)
+    }
+}
+
+fn resource_dir_path() -> Option<path::PathBuf> {
+    env::current_exe().ok().and_then(|mut path| {
+        // get directory containing exe
+        if !path.pop() {
+            return None;
+        }
+
+        Some(path.join(RESOURCE_DIR))
+    })
+}
+
+fn sane_frontend() -> Option<Frontend> {
+    if cfg!(feature = "sdl2") {
+        Some(Frontend::Sdl)
+    } else if cfg!(all(unix, feature = "rustty")) {
+        Some(Frontend::Ansi)
+    } else {
+        None
     }
 }
 
@@ -62,8 +97,9 @@ impl Default for Arguments {
     fn default() -> Self {
         Arguments {
             debug: false,
-            frontend: Frontend::Ansi,
+            frontend: Frontend::Sdl,
             rng_seed: 0,
+            resource_path: path::PathBuf::new(),
         }
     }
 }

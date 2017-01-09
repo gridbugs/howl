@@ -155,6 +155,7 @@ impl GameCtx {
                     }
                     '+' => {
                         prototypes::door(g.entity_mut(self.new_id()), coord, DoorState::Closed);
+                        prototypes::floor(g.entity_mut(self.new_id()), coord);
                     }
                     '@' => {
                         let id = self.new_id();

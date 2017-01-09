@@ -1,0 +1,44 @@
+tile_width = 16
+tile_height = 16
+tile_padding = 1
+
+blank = { x = 7, y = 0 }
+
+[tiles.Player]
+foreground = { x = 0, y = 0 }
+
+[tiles.TerrorPillar]
+foreground = { x = 1, y = 0 }
+
+[tiles.TerrorFly]
+foreground = { x = 2, y = 0 }
+
+[tiles.Tree]
+foreground = { x = 3, y = 0 }
+
+[tiles.DeadTree]
+foreground = { x = 4, y = 0 }
+
+[tiles.Floor]
+background = { x = 7, y = 0 }
+foreground = { x = 5, y = 0 }
+
+[tiles.Ground]
+background = { x = 7, y = 0 }
+foreground = { x = 6, y = 0 }
+
+[tiles.Wall.front]
+background = { x = 8, y = 0 }
+
+[tiles.Wall.back]
+background = { x = 9, y = 0 }
+
+[tiles.ClosedDoor]
+background = { x = 10, y = 0 }
+
+[tiles.OpenDoor]
+foreground = { x = 11, y = 0 }
+
+[tiles.Bullet]
+foreground = { x = 12, y = 0 }
+

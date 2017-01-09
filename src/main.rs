@@ -5,9 +5,13 @@ extern crate itertools;
 extern crate rand;
 extern crate num;
 extern crate getopts;
+extern crate toml;
 
-#[cfg(unix)]
+#[cfg(all(unix, feature = "rustty"))]
 extern crate rustty;
+
+#[cfg(feature = "sdl2")]
+extern crate sdl2;
 
 use std::env;
 

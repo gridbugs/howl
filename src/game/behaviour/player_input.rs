@@ -92,6 +92,7 @@ fn get_meta_action(input: BehaviourInput, input_source: InputSourceRef) -> Optio
                 match control {
                     Control::Direction(d) => Some(MetaAction::ActionArgs(ActionArgs::Walk(input.entity.id(), d))),
                     Control::Close => {
+                        println!("getting direction");
                         get_direction(map, input_source).map(|d| MetaAction::ActionArgs(ActionArgs::Close(input.entity.id(), d)))
                     }
                     Control::Fire => {

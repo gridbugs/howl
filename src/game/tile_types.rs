@@ -1,4 +1,4 @@
-#[derive(Clone, Copy)]
+#[derive(Hash, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TileType {
     Wall,
     Tree,
@@ -30,5 +30,24 @@ impl TileType {
             TileType::Wall => true,
             _ => false,
         }
+    }
+
+    pub fn from_str(s: &str) -> Option<Self> {
+        let tile = match s {
+            "Wall" => TileType::Wall,
+            "Tree" => TileType::Tree,
+            "DeadTree" => TileType::DeadTree,
+            "Floor" => TileType::Floor,
+            "Ground" => TileType::Ground,
+            "OpenDoor" => TileType::OpenDoor,
+            "ClosedDoor" => TileType::ClosedDoor,
+            "Bullet" => TileType::Bullet,
+            "Player" => TileType::Player,
+            "TerrorPillar" => TileType::TerrorPillar,
+            "TerrorFly" => TileType::TerrorFly,
+            _ => return None,
+        };
+
+        Some(tile)
     }
 }

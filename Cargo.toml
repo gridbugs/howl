@@ -4,14 +4,25 @@ version = "0.1.0"
 authors = ["Stephen Sherratt <stephen@sherra.tt>"]
 build = "build.rs"
 
+[features]
+default = ["sdl2", "rustty"]
+
 [dependencies]
 rand = "0.3.14"
 num = "0.1.36"
 itertools = "0.5.6"
 getopts = "0.2.14"
+toml = "0.2.1"
+
+[dependencies.sdl2]
+version = "0.27.3"
+optional = true
+default-features = false
+features = ["image"]
 
 [target.'cfg(unix)'.dependencies]
-rustty = { git = "https://github.com/stevebob/rustty.git" }
+rustty = { git = "https://github.com/stevebob/rustty.git", optional = true }
 
 [build-dependencies]
+copy_dir = "0.1.2"
 genecs = { git = "https://github.com/stevebob/genecs.git" }

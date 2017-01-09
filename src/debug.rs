@@ -1,4 +1,5 @@
 use std::io;
+use std::str;
 
 static mut TARGET: Option<*mut io::Write> = None;
 
@@ -12,6 +13,18 @@ pub struct NullDebug;
 
 impl io::Write for NullDebug {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+pub struct PrintDebug;
+
+impl io::Write for PrintDebug {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        print!("{}", str::from_utf8(buf).unwrap());
         Ok(buf.len())
     }
     fn flush(&mut self) -> io::Result<()> {

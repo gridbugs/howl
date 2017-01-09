@@ -18,7 +18,7 @@ mod tile_buffer;
 mod args;
 mod frontend_types;
 mod rng;
-mod launch;
+mod launcher;
 
 pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -39,7 +39,7 @@ pub use self::tile_buffer::*;
 pub use self::args::*;
 pub use self::frontend_types::*;
 pub use self::rng::*;
-pub use self::launch::*;
+pub use self::launcher::*;
 
 pub mod data;
 pub mod prototypes;
