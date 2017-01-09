@@ -1,0 +1,56 @@
+version: '{build}'
+clone_depth: 1
+environment:
+  matrix:
+  - TARGET: x86_64-pc-windows-msvc
+    NAME: howl
+    BIN_PATH: target\release
+    BIN_NAME: howl-windows-x86_64-latest
+install:
+- cmd: >-
+
+    curl -sSf -o rustup-init.exe https://win.rustup.rs  &
+    rustup-init.exe -y --default-host %TARGET%          &
+    set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+
+    rustc -V &
+    cargo -V
+
+    curl -sSf -o sdl.zip https://www.libsdl.org/release/SDL2-devel-2.0.5-VC.zip &
+    curl -sSf -o sdl_image.zip https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.1-VC.zip
+
+    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('sdl.zip', 'sdl'); }" &
+    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('sdl_image.zip', 'sdl_image'); }"
+
+    set LIB=%LIB%;sdl\SDL2-2.0.5\lib\x64;sdl_image\SDL2_image-2.0.1\lib\x64
+
+    copy sdl\SDL2-2.0.5\lib\x64\SDL2.dll . &
+    copy sdl_image\SDL2_image-2.0.1\lib\x64\SDL2_image.dll .
+
+build_script:
+- cmd: >-
+
+    cargo rustc --release -- -Clink-args="/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
+
+    mkdir tmp &
+    mkdir tmp\%BIN_NAME%
+
+    copy %BIN_PATH%\%NAME%.exe tmp\%BIN_NAME%\%BIN_NAME%.exe
+
+    xcopy %BIN_PATH%\resources tmp\%BIN_NAME%\resources /s/h/e/k/f/c/i
+
+    copy sdl\SDL2-2.0.5\lib\x64\*.dll tmp\%BIN_NAME% &
+    copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll tmp\%BIN_NAME%
+
+    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', '%BIN_NAME%.zip'); }"
+
+test_script:
+- cmd: cargo test
+
+artifacts:
+- path: '%BIN_NAME%.zip'
+  name: gridbugs.org
+
+deploy:
+- provider: Environment
+  name: gridbugs.org
