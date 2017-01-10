@@ -34,19 +34,10 @@ function build_app {
     cargo build --release --verbose --target=$target
 
     full_name=$APP_NAME-$os-$machine-$SUFFIX
-    mkdir -pv $full_name/lib
+    mkdir -pv $full_name
 
     cp -rv $RESOURCES $full_name
-    cp -v target/$target/release/$APP_NAME $full_name/.app
-    cp -v $DIR/launch.sh $full_name/$APP_NAME
-
-    # copying shared libraries is os-specific
-    if [[ "$os" == "linux" ]]; then
-        cp -rv $SDL_LIB/*.so.* $full_name/lib
-    elif [[ "$os" == "macos" ]]; then
-        # this assumes sdl2 was installed with brew
-        cp -rv /usr/local/lib/libSDL2*.dylib $full_name/lib
-    fi
+    cp -v target/$target/release/$APP_NAME $full_name/$APP_NAME
 
     zip -rv $full_name.zip $full_name
 
