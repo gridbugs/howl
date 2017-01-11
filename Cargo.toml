@@ -6,6 +6,7 @@ build = "build.rs"
 
 [features]
 default = ["sdl2", "rustty"]
+use_sdl2_mac_framework = ["sdl2/use_mac_framework"]
 
 [dependencies]
 rand = "0.3.14"
@@ -15,10 +16,10 @@ getopts = "0.2.14"
 toml = "0.2.1"
 
 [dependencies.sdl2]
-version = "0.27.3"
+git = "https://github.com/stevebob/rust-sdl2.git"
 optional = true
 default-features = false
-features = ["image"]
+features = ["use_mac_framework", "image"]
 
 [target.'cfg(unix)'.dependencies]
 rustty = { git = "https://github.com/stevebob/rustty.git", optional = true }
