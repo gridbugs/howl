@@ -18,6 +18,7 @@ pub type TilesetResult<T> = result::Result<T, TilesetError>;
 pub enum ExtraTileType {
     Blank,
     Moon,
+    AimLine,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -198,6 +199,7 @@ impl Tileset {
         let mut extra = HashMap::new();
         extra.insert(ExtraTileType::Blank, extra_rect(&extra_table, "Blank",  tile_width, tile_height, tile_padding)?);
         extra.insert(ExtraTileType::Moon, extra_rect(&extra_table, "Moon",  tile_width, tile_height, tile_padding)?);
+        extra.insert(ExtraTileType::AimLine, extra_rect(&extra_table, "AimLine",  tile_width, tile_height, tile_padding)?);
 
         Ok(Tileset {
             tiles: tile_map,

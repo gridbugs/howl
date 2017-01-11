@@ -114,25 +114,6 @@ impl SdlKnowledgeRenderer {
         info
     }
 
-    fn draw_cell(renderer: &mut Renderer<'static>, texture: &Texture, dest: Rect, info: SdlCellInfo, blank: Rect, moon: Rect) {
-        if !info.visible {
-            // TODO grey out cells rather than hiding them
-            renderer.copy(texture, Some(blank), Some(dest)).expect("Rendering failed");
-            return;
-        }
-
-        if let Some(bg_rect) = info.bg {
-            renderer.copy(texture, Some(bg_rect), Some(dest)).expect("Rendering failed");
-        }
-        if let Some(fg_rect) = info.fg {
-            renderer.copy(texture, Some(fg_rect), Some(dest)).expect("Rendering failed");
-        }
-
-        if info.moon {
-            renderer.copy(texture, Some(moon), Some(dest)).expect("Rendering failed");
-        }
-    }
-
     fn draw_internal(&mut self) {
 
         let blank = *self.tileset.resolve_extra(ExtraTileType::Blank);
@@ -141,7 +122,37 @@ impl SdlKnowledgeRenderer {
         for (coord, cell) in izip!(self.buffer.coord_iter(), self.buffer.iter()) {
             let rect = self.screen_rect(coord);
             let info = self.to_sdl_info(cell);
-            Self::draw_cell(&mut self.sdl_renderer, &self.tile_texture, rect, info, blank, moon);
+
+            if !info.visible {
+                self.sdl_renderer.copy(&self.tile_texture, Some(blank), Some(rect)).expect("Rendering failed");
+                continue;
+            }
+            if let Some(bg_rect) = info.bg {
+                self.sdl_renderer.copy(&self.tile_texture, Some(bg_rect), Some(rect)).expect("Rendering failed");
+            }
+            if let Some(fg_rect) = info.fg {
+                self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect("Rendering failed");
+            }
+            if info.moon {
+                self.sdl_renderer.copy(&self.tile_texture, Some(moon), Some(rect)).expect("Rendering failed");
+            }
+        }
+    }
+
+    fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
+        let aim_line_bg = *self.tileset.resolve_extra(ExtraTileType::AimLine);
+        if let Some(ref aim_line) = overlay.aim_line {
+            for coord in aim_line.iter() {
+                if let Some(cell) = self.buffer.get(coord) {
+                    let rect = self.screen_rect(coord);
+                    let info = self.to_sdl_info(cell);
+
+                    self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect("Rendering failed");
+                    if let Some(fg_rect) = info.fg {
+                        self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect("Rendering failed");
+                    }
+                }
+            }
         }
     }
 }
@@ -169,9 +180,10 @@ impl KnowledgeRenderer for SdlKnowledgeRenderer {
         self.sdl_renderer.present();
     }
 
-    fn draw_with_overlay(&mut self, _overlay: &RenderOverlay) {
+    fn draw_with_overlay(&mut self, overlay: &RenderOverlay) {
         // TODO render overlay
         self.draw_internal();
+        self.draw_overlay_internal(overlay);
         self.sdl_renderer.present();
     }
 }

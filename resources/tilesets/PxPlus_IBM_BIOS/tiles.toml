@@ -5,6 +5,7 @@ tile_padding = 1
 [extra]
 Blank = { x = 7, y = 0 }
 Moon = { x = 13, y = 0 }
+AimLine = { x = 14, y = 0 }
 
 [tiles.Player]
 foreground = { x = 0, y = 0 }
