@@ -19,7 +19,6 @@ elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         --disable-sudo
 
     brew update
-    brew install sdl2
-    brew install sdl2_image
+    brew install wget
 
 fi
