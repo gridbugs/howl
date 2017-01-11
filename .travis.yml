@@ -12,11 +12,10 @@ os:
 - linux
 
 before_install:
-- "./.travis_before_install.sh"
-- export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+- "scripts/install.sh"
 
 script:
-- "./.travis_script.sh"
+- "scripts/build.sh"
 
 deploy:
   skip_cleanup: true
