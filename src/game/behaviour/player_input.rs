@@ -77,6 +77,8 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
                 } else {
                     break;
                 }
+            } else {
+                break;
             }
         }
     }
