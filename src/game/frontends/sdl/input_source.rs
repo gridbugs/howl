@@ -57,6 +57,8 @@ impl InputSource for SdlInputSource {
                         Keycode::X => Some(InputEvent::Char('x')),
                         Keycode::Y => Some(InputEvent::Char('y')),
                         Keycode::Z => Some(InputEvent::Char('z')),
+                        Keycode::Period => Some(InputEvent::Char('.')),
+                        Keycode::Escape => Some(InputEvent::Escape),
                         _ => None,
                     };
                 },
