@@ -2,7 +2,9 @@ tile_width = 16
 tile_height = 16
 tile_padding = 1
 
-blank = { x = 7, y = 0 }
+[extra]
+Blank = { x = 7, y = 0 }
+Moon = { x = 13, y = 0 }
 
 [tiles.Player]
 foreground = { x = 0, y = 0 }

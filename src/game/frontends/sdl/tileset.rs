@@ -14,6 +14,12 @@ pub enum TilesetError {
 
 pub type TilesetResult<T> = result::Result<T, TilesetError>;
 
+#[derive(Hash, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExtraTileType {
+    Blank,
+    Moon,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum SimpleTile {
     Background(Rect),
@@ -60,6 +66,17 @@ fn rect_from_toml(table: &toml::Table, width: i32, height: i32, padding: i32) ->
     };
 
     Some(new_rect(x, y, width, height, padding))
+}
+
+fn extra_rect(table: &toml::Table, name: &str, width: i32, height: i32, padding: i32) -> TilesetResult<Rect> {
+    let sub_table = table.get(name).ok_or(TilesetError::TileNotFound)?
+        .as_table().ok_or(TilesetError::InvalidSpec)?;
+    let x = sub_table.get("x").ok_or(TilesetError::InvalidSpec)?.
+        as_integer().ok_or(TilesetError::InvalidSpec)? as i32;
+    let y = sub_table.get("y").ok_or(TilesetError::InvalidSpec)?.
+        as_integer().ok_or(TilesetError::InvalidSpec)? as i32;
+
+    Ok(new_rect(x, y, width, height, padding))
 }
 
 impl SimpleTile {
@@ -146,9 +163,9 @@ impl ComplexTile {
 #[derive(Debug)]
 pub struct Tileset {
     tiles: HashMap<TileType, ComplexTile>,
+    extra: HashMap<ExtraTileType, Rect>,
     tile_width: usize,
     tile_height: usize,
-    blank: Rect,
 }
 
 impl Tileset {
@@ -175,20 +192,18 @@ impl Tileset {
             tile_map.insert(tile_type, tile);
         }
 
-        let blank_table = table.get("blank").ok_or(TilesetError::InvalidSpec)?
+        let extra_table = table.get("extra").ok_or(TilesetError::InvalidSpec)?
             .as_table().ok_or(TilesetError::InvalidSpec)?;
-        let blank_x = blank_table.get("x").ok_or(TilesetError::InvalidSpec)?.
-            as_integer().ok_or(TilesetError::InvalidSpec)? as i32;
-        let blank_y = blank_table.get("y").ok_or(TilesetError::InvalidSpec)?.
-            as_integer().ok_or(TilesetError::InvalidSpec)? as i32;
 
-        let blank = new_rect(blank_x, blank_y, tile_width, tile_height, tile_padding);
+        let mut extra = HashMap::new();
+        extra.insert(ExtraTileType::Blank, extra_rect(&extra_table, "Blank",  tile_width, tile_height, tile_padding)?);
+        extra.insert(ExtraTileType::Moon, extra_rect(&extra_table, "Moon",  tile_width, tile_height, tile_padding)?);
 
         Ok(Tileset {
             tiles: tile_map,
+            extra: extra,
             tile_width: tile_width as usize,
             tile_height: tile_height as usize,
-            blank: blank,
         })
     }
 
@@ -204,7 +219,7 @@ impl Tileset {
         self.tiles.get(&tile_type).expect(format!("Couldn't find tile for {:?}", tile_type).as_ref())
     }
 
-    pub fn blank(&self) -> &Rect {
-        &self.blank
+    pub fn resolve_extra(&self, tile_type: ExtraTileType) -> &Rect {
+        self.extra.get(&tile_type).expect(format!("Couldn't find extra tile for {:?}", tile_type).as_ref())
     }
 }

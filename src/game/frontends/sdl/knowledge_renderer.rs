@@ -6,6 +6,7 @@ use sdl2::render::{Renderer, Texture};
 use sdl2::image::{LoadTexture, INIT_PNG};
 
 use game::*;
+use game::frontends::sdl::{Tileset, ExtraTileType};
 
 use coord::Coord;
 
@@ -26,11 +27,11 @@ pub struct SdlKnowledgeRenderer {
     tile_texture: Texture,
     width: usize,
     height: usize,
-    tileset: frontends::sdl::Tileset,
+    tileset: Tileset,
 }
 
 impl SdlKnowledgeRenderer {
-    pub fn new(sdl: Sdl, width: usize, height: usize, tile_path: path::PathBuf, tileset: frontends::sdl::Tileset) -> Self {
+    pub fn new(sdl: Sdl, width: usize, height: usize, tile_path: path::PathBuf, tileset: Tileset) -> Self {
 
         let width_px = (width * tileset.tile_width()) as u32;
         let height_px = (height * tileset.tile_height()) as u32;
@@ -113,7 +114,7 @@ impl SdlKnowledgeRenderer {
         info
     }
 
-    fn draw_cell(renderer: &mut Renderer<'static>, texture: &Texture, dest: Rect, info: SdlCellInfo, blank: Rect) {
+    fn draw_cell(renderer: &mut Renderer<'static>, texture: &Texture, dest: Rect, info: SdlCellInfo, blank: Rect, moon: Rect) {
         if !info.visible {
             // TODO grey out cells rather than hiding them
             renderer.copy(texture, Some(blank), Some(dest)).expect("Rendering failed");
@@ -126,14 +127,21 @@ impl SdlKnowledgeRenderer {
         if let Some(fg_rect) = info.fg {
             renderer.copy(texture, Some(fg_rect), Some(dest)).expect("Rendering failed");
         }
+
+        if info.moon {
+            renderer.copy(texture, Some(moon), Some(dest)).expect("Rendering failed");
+        }
     }
 
     fn draw_internal(&mut self) {
+
+        let blank = *self.tileset.resolve_extra(ExtraTileType::Blank);
+        let moon = *self.tileset.resolve_extra(ExtraTileType::Moon);
+
         for (coord, cell) in izip!(self.buffer.coord_iter(), self.buffer.iter()) {
             let rect = self.screen_rect(coord);
             let info = self.to_sdl_info(cell);
-            let blank = *self.tileset.blank();
-            Self::draw_cell(&mut self.sdl_renderer, &self.tile_texture, rect, info, blank);
+            Self::draw_cell(&mut self.sdl_renderer, &self.tile_texture, rect, info, blank, moon);
         }
     }
 }
