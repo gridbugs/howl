@@ -11,6 +11,8 @@ os:
 - osx
 - linux
 
+dist: trusty
+
 before_install:
 - "scripts/install.sh"
 

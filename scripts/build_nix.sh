@@ -2,8 +2,10 @@
 
 set -e
 
-cargo test --release --verbose --target=$TARGET
-cargo build --release --verbose --target=$TARGET
+cargo build \
+    --release \
+    --verbose \
+    --target=$TARGET
 
 FULL_NAME=$APP_NAME-$OS-$MACHINE-$SUFFIX
 mkdir -pv $FULL_NAME

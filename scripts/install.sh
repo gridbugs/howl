@@ -10,6 +10,11 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
         -y \
         --disable-sudo
 
+    sudo apt-get update -yq
+
+    sudo apt-get install -yq libsdl2-dev libsdl2-image-dev
+
+
 elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 
     sh ~/rust-installer/rustup.sh \

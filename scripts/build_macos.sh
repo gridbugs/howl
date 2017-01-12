@@ -14,7 +14,6 @@ mkdir -p $MACOS_APP_DIR/Contents/MacOS
 echo "Copying frameworks"
 cp -r $MACOS_FRAMEWORKS $MACOS_APP_DIR/Contents
 
-cargo test --release --verbose --target=$TARGET --no-default-features
 cargo rustc \
     --verbose \
     --release \
