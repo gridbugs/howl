@@ -17,14 +17,13 @@ cp -r $MACOS_FRAMEWORKS $MACOS_APP_DIR/Contents
 cargo rustc \
     --verbose \
     --release \
-    --target=$TARGET \
     --features use_sdl2_mac_framework \
     -- \
     -Clink-args="-Wl,-F,$MACOS_FRAMEWORKS"
 
 echo "Copying binary"
 MACOS_APP_BIN=$MACOS_APP_DIR/Contents/MacOS/$MACOS_BIN_NAME
-cp target/$TARGET/release/$APP_NAME $MACOS_APP_BIN
+cp target/release/$APP_NAME $MACOS_APP_BIN
 
 echo "Linking binary with frameworks"
 for old in `otool -L $MACOS_APP_BIN | grep @rpath | cut -f2 | cut -d' ' -f1`; do

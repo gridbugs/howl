@@ -25,17 +25,15 @@ function build_deps_macos {
 }
 
 function build_nix {
-    TARGET=$1
-    OS=$2
-    MACHINE=$3
+    OS=$1
+    MACHINE=$2
 
     source $DIR/build_nix.sh
 }
 
 function build_macos {
-    TARGET=$1
-    OS=$2
-    MACHINE=$3
+    OS=$1
+    MACHINE=$2
 
     source $DIR/build_macos.sh
 }
@@ -54,15 +52,15 @@ if [ -z ${TRAVIS_OS_NAME+x} ]; then
     esac
 fi
 
-#cargo test --release --verbose --no-default-features
+cargo test --release --verbose
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 
-    build_nix x86_64-unknown-linux-gnu linux x86_64
+    build_nix linux x86_64
 
 elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 
     build_deps_macos
-    build_macos x86_64-apple-darwin macos x86_64
+    build_macos macos x86_64
 
 fi

@@ -4,14 +4,13 @@ set -e
 
 cargo build \
     --release \
-    --verbose \
-    --target=$TARGET
+    --verbose
 
 FULL_NAME=$APP_NAME-$OS-$MACHINE-$SUFFIX
 mkdir -pv $FULL_NAME
 
 cp -rv $RESOURCES $FULL_NAME
-cp -v target/$TARGET/release/$APP_NAME $FULL_NAME/$APP_NAME
+cp -v target/release/$APP_NAME $FULL_NAME/$APP_NAME
 
 zip -rv $FULL_NAME.zip $FULL_NAME
 
