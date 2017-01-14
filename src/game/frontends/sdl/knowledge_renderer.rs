@@ -189,7 +189,6 @@ impl KnowledgeRenderer for SdlKnowledgeRenderer {
     }
 
     fn draw_with_overlay(&mut self, overlay: &RenderOverlay) {
-        // TODO render overlay
         self.clear_internal();
         self.draw_internal();
         self.draw_overlay_internal(overlay);
