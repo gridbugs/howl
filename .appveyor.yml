@@ -35,7 +35,7 @@ build_script:
     mkdir tmp &
     mkdir tmp\%BIN_NAME%
 
-    copy %BIN_PATH%\%NAME%.exe tmp\%BIN_NAME%\%BIN_NAME%.exe
+    copy %BIN_PATH%\%NAME%.exe tmp\%BIN_NAME%\%NAME%.exe
 
     xcopy %BIN_PATH%\resources tmp\%BIN_NAME%\resources /s/h/e/k/f/c/i
 
