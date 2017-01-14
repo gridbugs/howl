@@ -4,6 +4,7 @@ use sdl2::{self, Sdl};
 use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
 use sdl2::image::{LoadTexture, INIT_PNG};
+use sdl2::pixels::Color;
 
 use game::*;
 use game::frontends::sdl::{Tileset, ExtraTileType};
@@ -41,9 +42,11 @@ impl SdlKnowledgeRenderer {
             .build()
             .expect("Failed to create window");
 
-        let renderer = window.renderer()
+        let mut renderer = window.renderer()
             .build()
             .expect("Failed to initialise renderer");
+
+        renderer.set_draw_color(Color::RGB(0, 0, 0));
 
         sdl2::image::init(INIT_PNG).expect("Failed to initialise image subsystem");
 
@@ -114,6 +117,10 @@ impl SdlKnowledgeRenderer {
         info
     }
 
+    fn clear_internal(&mut self) {
+        self.sdl_renderer.clear();
+    }
+
     fn draw_internal(&mut self) {
 
         let blank = *self.tileset.resolve_extra(ExtraTileType::Blank);
@@ -176,12 +183,14 @@ impl KnowledgeRenderer for SdlKnowledgeRenderer {
     }
 
     fn draw(&mut self) {
+        self.clear_internal();
         self.draw_internal();
         self.sdl_renderer.present();
     }
 
     fn draw_with_overlay(&mut self, overlay: &RenderOverlay) {
         // TODO render overlay
+        self.clear_internal();
         self.draw_internal();
         self.draw_overlay_internal(overlay);
         self.sdl_renderer.present();
