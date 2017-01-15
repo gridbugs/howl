@@ -41,6 +41,7 @@ pub fn write(buf: &[u8]) -> io::Result<usize> {
 
 macro_rules! debug_print {
     ($($arg:tt)*) => {
+        use debug;
         debug::write(format!($($arg)*).as_bytes()).unwrap()
     };
 }
