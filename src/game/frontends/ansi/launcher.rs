@@ -4,9 +4,6 @@ use game::*;
 use frontends::ansi::WindowAllocator;
 use debug;
 
-const GAME_WINDOW_WIDTH: usize = 41;
-const GAME_WINDOW_HEIGHT: usize = 31;
-
 const DEBUG_WINDOW_WIDTH: usize = 80;
 const DEBUG_WINDOW_HEIGHT: usize = 10;
 
@@ -41,14 +38,14 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
     let input_source = window_allocator.make_input_source();
     let input_source_ref = InputSourceRef::new(&input_source);
 
-    let renderer = match frontends::ansi::AnsiKnowledgeRenderer::new(&window_allocator, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT, false) {
+    let renderer = match frontends::ansi::AnsiKnowledgeRenderer::new(&window_allocator, GAME_WIDTH, GAME_HEIGHT, false) {
         Ok(r) => r,
         Err(frontends::ansi::AnsiKnowledgeRendererError::TerminalTooSmall { min_width, min_height }) => {
             return Err(format!("Terminal too small. Must be at least {}x{}.", min_width, min_height));
         },
     };
 
-    let mut game = GameCtx::new(Box::new(renderer), input_source_ref, args.rng_seed, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
+    let mut game = GameCtx::new(Box::new(renderer), input_source_ref, args.rng_seed, GAME_WIDTH, GAME_HEIGHT);
 
     game.run()?;
 

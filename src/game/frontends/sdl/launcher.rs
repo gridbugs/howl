@@ -8,9 +8,6 @@ use toml;
 use game::*;
 use debug;
 
-const GAME_WINDOW_WIDTH: usize = 41;
-const GAME_WINDOW_HEIGHT: usize = 31;
-
 const TILESET_NAME: &'static str = "PxPlus_IBM_BIOS";
 
 pub fn launch(args: Arguments) -> ExternalResult<()> {
@@ -29,8 +26,8 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     let renderer = frontends::sdl::SdlKnowledgeRenderer::new(
         sdl.clone(),
-        GAME_WINDOW_WIDTH,
-        GAME_WINDOW_HEIGHT,
+        GAME_WIDTH,
+        GAME_HEIGHT,
         tile_path,
         tileset);
 
@@ -40,8 +37,8 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
     let mut game = GameCtx::new(Box::new(renderer),
                                 input_ref,
                                 args.rng_seed,
-                                GAME_WINDOW_WIDTH,
-                                GAME_WINDOW_HEIGHT);
+                                GAME_WIDTH,
+                                GAME_HEIGHT);
 
     let debug_buffer: Box<io::Write> = if args.debug {
         Box::new(debug::PrintDebug)
