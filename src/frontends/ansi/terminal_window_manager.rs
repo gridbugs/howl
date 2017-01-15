@@ -198,7 +198,7 @@ impl WindowAllocator {
                           border_y)
     }
 
-    pub fn make_input_source(&mut self) -> AnsiInputSource {
+    pub fn make_input_source(&self) -> AnsiInputSource {
         let terminal = unsafe {
             &mut (*self.manager.get()).terminal
         };

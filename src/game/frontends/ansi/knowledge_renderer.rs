@@ -1,3 +1,5 @@
+use std::result;
+
 use game::*;
 use game::frontends::ansi::resolve_tile;
 use frontends::ansi::{self, ComplexTile, SimpleTile, AnsiColour, Style};
@@ -9,6 +11,9 @@ const AIM_COLOUR_SHORT: ansi::AnsiColour = ansi::colours::GREEN;
 const AIM_COLOUR_NORMAL: ansi::AnsiColour = ansi::colours::BLUE;
 const AIM_COLOUR_LONG: ansi::AnsiColour = ansi::colours::RED;
 const AIM_COLOUR_OUT_OF_RANGE: ansi::AnsiColour = ansi::colours::BLACK;
+
+const ANSI_GAME_WINDOW_X: usize = 1;
+const ANSI_GAME_WINDOW_Y: usize = 1;
 
 struct AnsiInfo {
     ch: char,
@@ -35,17 +40,39 @@ pub struct AnsiKnowledgeRenderer {
     scroll_position: Coord,
 }
 
-impl AnsiKnowledgeRenderer {
-    pub fn new(window: ansi::Window, scroll: bool) -> Self {
-        let width = window.width();
-        let height = window.height();
+pub enum AnsiKnowledgeRendererError {
+    TerminalTooSmall {
+        min_width: usize,
+        min_height: usize,
+    },
+}
 
-        AnsiKnowledgeRenderer {
+impl AnsiKnowledgeRenderer {
+    pub fn new(window_allocator: &ansi::WindowAllocator,
+               game_width: usize,
+               game_height: usize,
+               scroll: bool) -> result::Result<Self, AnsiKnowledgeRendererError> {
+
+        if window_allocator.width() <= game_width || window_allocator.height() <= game_height {
+            return Err(AnsiKnowledgeRendererError::TerminalTooSmall {
+                min_width: game_width + ANSI_GAME_WINDOW_X,
+                min_height: game_height + ANSI_GAME_WINDOW_Y,
+            });
+        }
+
+        let window = window_allocator.make_window(
+            ANSI_GAME_WINDOW_X as isize,
+            ANSI_GAME_WINDOW_Y as isize,
+            game_width,
+            game_height,
+            ansi::BufferType::Double);
+
+        Ok(AnsiKnowledgeRenderer {
             window: window,
-            buffer: TileBuffer::new(width, height),
+            buffer: TileBuffer::new(game_width, game_height),
             scroll: scroll,
             scroll_position: Coord::new(0, 0),
-        }
+        })
     }
 
     fn simple_tile(tile: ComplexTile, is_front: bool) -> SimpleTile {
