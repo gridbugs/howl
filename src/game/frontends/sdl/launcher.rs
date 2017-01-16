@@ -59,10 +59,9 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
     };
 
     let input = frontends::sdl::SdlInputSource::new(sdl.clone());
-    let input_ref = InputSourceRef::new(&input);
 
     let mut game = GameCtx::new(renderer,
-                                input_ref,
+                                input,
                                 args.rng_seed,
                                 GAME_WIDTH,
                                 GAME_HEIGHT);

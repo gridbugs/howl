@@ -3,17 +3,17 @@ use behaviour::LeafResolution;
 use direction::Direction;
 use coord::{Coord, StraightLine};
 
-pub fn player_input<K: KnowledgeRenderer>(input_source: InputSourceRef) -> BehaviourLeaf<K> {
+pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(input_source: I) -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
         loop {
-            if let Some(meta_action) = get_meta_action(input, input_source) {
+            if let Some(meta_action) = get_meta_action(input, input_source.clone()) {
                 return LeafResolution::Yield(meta_action);
             }
         }
     })
 }
 
-fn get_direction(map: &ControlMap, input_source: InputSourceRef) -> Option<Direction> {
+fn get_direction<I: InputSource>(map: &ControlMap, input_source: I) -> Option<Direction> {
     input_source.next_input().and_then(|event| {
         map.control(event).and_then(|control| {
             control_to_direction(control)
@@ -28,7 +28,7 @@ fn control_to_direction(control: Control) -> Option<Direction> {
     }
 }
 
-fn aim<R: KnowledgeRenderer>(input: BehaviourInput<R>, map: &ControlMap, input_source: InputSourceRef) -> Option<Coord> {
+fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &ControlMap, input_source: I) -> Option<Coord> {
     let start = input.entity.position().unwrap();
     let mut knowledge = input.entity.drawable_knowledge_borrow_mut().unwrap();
     let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
@@ -87,7 +87,7 @@ fn aim<R: KnowledgeRenderer>(input: BehaviourInput<R>, map: &ControlMap, input_s
     None
 }
 
-fn get_meta_action<K: KnowledgeRenderer>(input: BehaviourInput<K>, input_source: InputSourceRef) -> Option<MetaAction> {
+fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         input.entity.control_map().and_then(|map| {
             map.control(event).and_then(|control| {

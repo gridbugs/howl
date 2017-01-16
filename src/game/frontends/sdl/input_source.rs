@@ -4,6 +4,7 @@ use sdl2::keyboard::Keycode;
 
 use game::*;
 
+#[derive(Clone)]
 pub struct SdlInputSource {
     sdl: Sdl,
 }

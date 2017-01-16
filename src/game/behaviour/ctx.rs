@@ -30,7 +30,7 @@ impl BehaviourNodes {
 }
 
 impl<K: KnowledgeRenderer> BehaviourCtx<K> {
-    pub fn new(input_source: InputSourceRef) -> Self {
+    pub fn new<I: 'static + InputSource + Clone>(input_source: I) -> Self {
         let mut graph = BehaviourGraph::new();
 
         let null_leaf = graph.add_leaf(BehaviourLeaf::new(|_| LeafResolution::Yield(MetaAction::ActionArgs(ActionArgs::Null))));

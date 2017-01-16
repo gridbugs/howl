@@ -18,10 +18,10 @@ impl EntityIdReserver {
     }
 }
 
-pub struct GameCtx<Renderer: KnowledgeRenderer> {
+pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     levels: LevelTable,
     renderer: RefCell<Renderer>,
-    input_source: InputSourceRef,
+    input_source: Input,
     entity_ids: EntityIdReserver,
     turn_id: u64,
     action_id: u64,
@@ -38,12 +38,12 @@ pub struct GameCtx<Renderer: KnowledgeRenderer> {
     rng: GameRng,
 }
 
-impl<Renderer: KnowledgeRenderer> GameCtx<Renderer> {
-    pub fn new(renderer: Renderer, input_source: InputSourceRef, seed: usize, width: usize, height: usize) -> Self {
+impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<Renderer, Input> {
+    pub fn new(renderer: Renderer, input_source: Input, seed: usize, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
             renderer: RefCell::new(renderer),
-            input_source: input_source,
+            input_source: input_source.clone(),
             entity_ids: EntityIdReserver::new(),
             turn_id: 0,
             action_id: 0,
