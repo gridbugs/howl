@@ -7,10 +7,6 @@ use coord::Coord;
 
 const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 const AIM_LINE_COLOUR: ansi::AnsiColour = ansi::colours::YELLOW;
-const AIM_COLOUR_SHORT: ansi::AnsiColour = ansi::colours::GREEN;
-const AIM_COLOUR_NORMAL: ansi::AnsiColour = ansi::colours::BLUE;
-const AIM_COLOUR_LONG: ansi::AnsiColour = ansi::colours::RED;
-const AIM_COLOUR_OUT_OF_RANGE: ansi::AnsiColour = ansi::colours::BLACK;
 
 const ANSI_GAME_WINDOW_X: usize = 1;
 const ANSI_GAME_WINDOW_Y: usize = 1;

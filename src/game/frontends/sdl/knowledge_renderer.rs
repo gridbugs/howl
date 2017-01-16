@@ -12,9 +12,6 @@ use game::frontends::sdl::{Tileset, ExtraTileType};
 
 use coord::Coord;
 
-const CELL_WIDTH: usize = 7;
-const CELL_HEIGHT: usize = 7;
-
 struct SdlCellInfo {
     fg: Option<Rect>,
     bg: Option<Rect>,
