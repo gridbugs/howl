@@ -42,9 +42,11 @@ build_script:
 
     xcopy %BIN_PATH%\resources tmp\%BIN_NAME%\resources /s/h/e/k/f/c/i
 
-    copy sdl\SDL2-2.0.5\lib\x64\*.dll tmp\%BIN_NAME% &
-    copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll tmp\%BIN_NAME% &
-    copy sdl_ttf\SDL2_ttf-2.0.14\lib\x64\*.dll . tmp\%BIN_NAME%
+    copy sdl\SDL2-2.0.5\lib\x64\*.dll               tmp\%BIN_NAME% &
+    copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll   tmp\%BIN_NAME% &
+    copy sdl_ttf\SDL2_ttf-2.0.14\lib\x64\*.dll      tmp\%BIN_NAME%
+
+    tmp\%BIN_NAME%\%NAME --help
 
     powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', '%BIN_NAME%.zip'); }"
 

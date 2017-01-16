@@ -18,7 +18,7 @@ hdiutil attach SDL2_image-2.0.1.dmg -mountpoint mnt
 cp -rv mnt/SDL2_image.framework .
 hdiutil detach mnt
 
-hdiutil attach SDL2_tff-2.0.14.dmg -mountpoint mnt
+hdiutil attach SDL2_ttf-2.0.14.dmg -mountpoint mnt
 cp -rv mnt/SDL2_ttf.framework .
 hdiutil detach mnt
 
