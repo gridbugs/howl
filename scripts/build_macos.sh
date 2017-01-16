@@ -47,10 +47,5 @@ rm -rf $MACOS_APP_NAME/.Trashes
 
 FULL_NAME=$APP_NAME-$OS-$MACHINE-$SUFFIX
 
-BRANCH=`git rev-parse --abbrev-ref HEAD`
-if [ "$BRANCH" != "master" ]; then
-    FULL_NAME="$FULL_NAME-$BRANCH"
-fi
-
 hdiutil create uploads/$FULL_NAME.dmg -srcfolder $MACOS_APP_NAME -ov
 rm -rf $MACOS_APP_NAME

@@ -5,7 +5,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 APP_NAME=howl
-SUFFIX=latest
+SUFFIX=`git rev-parse --abbrev-ref HEAD`
 RESOURCES=resources
 UPLOADS=uploads
 

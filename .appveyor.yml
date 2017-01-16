@@ -5,7 +5,7 @@ environment:
   - TARGET: x86_64-pc-windows-msvc
     NAME: howl
     BIN_PATH: target\release
-    BIN_NAME: howl-windows-x86_64-latest
+    BIN_NAME: howl-windows-x86_64
 install:
 - cmd: >-
 
@@ -35,26 +35,30 @@ build_script:
 
     cargo rustc --release -- -Clink-args="/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
 
+    set FULL_NAME=%BIN_NAME%-%APPVEYOR_REPO_BRANCH%
+
     mkdir tmp &
-    mkdir tmp\%BIN_NAME%
+    mkdir tmp\%FULL_NAME%
 
-    copy %BIN_PATH%\%NAME%.exe tmp\%BIN_NAME%\%NAME%.exe
+    copy %BIN_PATH%\%NAME%.exe tmp\%FULL_NAME%\%NAME%.exe
 
-    xcopy %BIN_PATH%\resources tmp\%BIN_NAME%\resources /s/h/e/k/f/c/i
+    xcopy %BIN_PATH%\resources tmp\%FULL_NAME%\resources /s/h/e/k/f/c/i
 
-    copy sdl\SDL2-2.0.5\lib\x64\*.dll               tmp\%BIN_NAME% &
-    copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll   tmp\%BIN_NAME% &
-    copy sdl_ttf\SDL2_ttf-2.0.14\lib\x64\*.dll      tmp\%BIN_NAME%
+    copy sdl\SDL2-2.0.5\lib\x64\*.dll               tmp\%FULL_NAME% &
+    copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll   tmp\%FULL_NAME% &
+    copy sdl_ttf\SDL2_ttf-2.0.14\lib\x64\*.dll      tmp\%FULL_NAME%
 
-    tmp\%BIN_NAME%\%NAME --help
+    tmp\%FULL_NAME%\%NAME% --help
 
-    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', '%BIN_NAME%.zip'); }"
+    mkdir uploads
+
+    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', 'uploads/%FULL_NAME%.zip'); }"
 
 test_script:
 - cmd: cargo test
 
 artifacts:
-- path: '%BIN_NAME%.zip'
+- path: 'uploads/*'
   name: gridbugs.org
 
 deploy:
