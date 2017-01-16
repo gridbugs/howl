@@ -16,16 +16,19 @@ install:
     rustc -V &
     cargo -V
 
-    curl -sSf -o sdl.zip https://www.libsdl.org/release/SDL2-devel-2.0.5-VC.zip &
-    curl -sSf -o sdl_image.zip https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.1-VC.zip
+    curl -sSf -o sdl.zip        https://www.libsdl.org/release/SDL2-devel-2.0.5-VC.zip &
+    curl -sSf -o sdl_image.zip  https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.1-VC.zip &
+    curl -sSf -o sdl_ttf.zip    https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-devel-2.0.14-VC.zip
 
     powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('sdl.zip', 'sdl'); }" &
-    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('sdl_image.zip', 'sdl_image'); }"
+    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('sdl_image.zip', 'sdl_image'); }" &
+    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('sdl_ttf.zip', 'sdl_ttf'); }"
 
-    set LIB=%LIB%;sdl\SDL2-2.0.5\lib\x64;sdl_image\SDL2_image-2.0.1\lib\x64
+    set LIB=%LIB%;sdl\SDL2-2.0.5\lib\x64;sdl_image\SDL2_image-2.0.1\lib\x64;sdl_ttf\SDL2_ttf-2.0.14\lib\x64
 
     copy sdl\SDL2-2.0.5\lib\x64\SDL2.dll . &
-    copy sdl_image\SDL2_image-2.0.1\lib\x64\SDL2_image.dll .
+    copy sdl_image\SDL2_image-2.0.1\lib\x64\SDL2_image.dll . &
+    copy sdl_ttf\SDL2_ttf-2.0.14\lib\x64\SDL2_ttf.dll .
 
 build_script:
 - cmd: >-
@@ -40,7 +43,8 @@ build_script:
     xcopy %BIN_PATH%\resources tmp\%BIN_NAME%\resources /s/h/e/k/f/c/i
 
     copy sdl\SDL2-2.0.5\lib\x64\*.dll tmp\%BIN_NAME% &
-    copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll tmp\%BIN_NAME%
+    copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll tmp\%BIN_NAME% &
+    copy sdl_ttf\SDL2_ttf-2.0.14\lib\x64\*.dll . tmp\%BIN_NAME%
 
     powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', '%BIN_NAME%.zip'); }"
 

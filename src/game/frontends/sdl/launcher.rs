@@ -12,6 +12,8 @@ use game::frontends::sdl::SdlKnowledgeRendererError;
 use debug;
 
 const TILESET_NAME: &'static str = "PxPlus_IBM_BIOS";
+const FONT_NAME: &'static str = "PxPlus_IBM_BIOS";
+const FONT_SIZE: u16 = 48;
 
 pub fn launch(args: Arguments) -> ExternalResult<()> {
 
@@ -38,13 +40,18 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
     let video = sdl.video().map_err(|_| "Failed to connect to video subsystem")?;
     sdl2::image::init(INIT_PNG).map_err(|_| "Failed to connect to image subsystem")?;
 
+    let ttf = sdl2::ttf::init().map_err(|_| "Failed to connect to ttf subsystem")?;
+    let font_path = get_font_path(&args.resource_path);
+    let font = ttf.load_font(&font_path, FONT_SIZE).map_err(|_| format!("Failed to load font {:?}", &font_path))?;
+
     let renderer = match frontends::sdl::SdlKnowledgeRenderer::new(
         &video,
         "Howl",
         GAME_WIDTH,
         GAME_HEIGHT,
         tile_path,
-        tileset) {
+        tileset,
+        font) {
         Ok(r) => r,
         Err(SdlKnowledgeRendererError::WindowCreationFailure) => return Err("Failed to create window".to_string()),
         Err(SdlKnowledgeRendererError::RendererInitialisationFailure) => return Err("Failed to initialise renderer".to_string()),
@@ -78,4 +85,8 @@ fn parse_tileset_spec(resource_path: &path::PathBuf) -> Option<(toml::Table, pat
     }).ok().and_then(|mut parser| parser.parse()).map(|value| {
         (value, tileset_base_path.join("tiles.png"))
     })
+}
+
+fn get_font_path(resource_path: &path::PathBuf) -> path::PathBuf {
+    resource_path.join("fonts").join(format!("{}.ttf", FONT_NAME))
 }

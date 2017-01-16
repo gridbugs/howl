@@ -6,6 +6,7 @@ use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
 use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
+use sdl2::ttf::Font;
 
 use game::*;
 use game::frontends::sdl::{Tileset, ExtraTileType};
@@ -21,10 +22,11 @@ struct SdlCellInfo {
     visible: bool,
 }
 
-pub struct SdlKnowledgeRenderer {
+pub struct SdlKnowledgeRenderer<'a> {
     buffer: TileBuffer,
     sdl_renderer: Renderer<'static>,
     tile_texture: Texture,
+    font: Font<'a>,
     width: usize,
     height: usize,
     tileset: Tileset,
@@ -37,14 +39,15 @@ pub enum SdlKnowledgeRendererError {
     TileLoadFailure,
 }
 
-impl SdlKnowledgeRenderer {
+impl<'a> SdlKnowledgeRenderer<'a> {
 
     pub fn new(video: &VideoSubsystem,
                title: &str,
                game_width: usize,
                game_height: usize,
                tile_path: path::PathBuf,
-               tileset: Tileset) -> result::Result<Self, SdlKnowledgeRendererError> {
+               tileset: Tileset,
+               font: Font<'a>) -> result::Result<Self, SdlKnowledgeRendererError> {
 
         let width_px = (game_width * tileset.tile_width()) as u32;
         let height_px = (game_height * tileset.tile_height()) as u32;
@@ -64,6 +67,7 @@ impl SdlKnowledgeRenderer {
             buffer: TileBuffer::new(game_width, game_height),
             sdl_renderer: renderer,
             tile_texture: tile_texture,
+            font: font,
             width: game_width,
             height: game_height,
             tileset: tileset,
@@ -171,7 +175,7 @@ impl SdlKnowledgeRenderer {
     }
 }
 
-impl KnowledgeRenderer for SdlKnowledgeRenderer {
+impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     fn width(&self) -> usize {
         self.width
     }

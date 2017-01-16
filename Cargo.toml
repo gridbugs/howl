@@ -19,7 +19,7 @@ toml = "0.2.1"
 git = "https://github.com/stevebob/rust-sdl2.git"
 optional = true
 default-features = false
-features = ["image"]
+features = ["image", "ttf"]
 
 [target.'cfg(unix)'.dependencies]
 rustty = { git = "https://github.com/stevebob/rustty.git", optional = true }
