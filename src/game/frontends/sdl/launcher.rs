@@ -3,9 +3,12 @@ use std::fs;
 use std::path;
 
 use sdl2;
+use sdl2::image::INIT_PNG;
 use toml;
 
 use game::*;
+use game::frontends::sdl::SdlKnowledgeRendererError;
+
 use debug;
 
 const TILESET_NAME: &'static str = "PxPlus_IBM_BIOS";
@@ -24,12 +27,21 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         Err(e) => return Err(format!("Couldn't parse tileset: {:?}", e).to_string()),
     };
 
-    let renderer = frontends::sdl::SdlKnowledgeRenderer::new(
-        sdl.clone(),
+    let video = sdl.video().map_err(|_| "Failed to connect to video subsystem")?;
+    sdl2::image::init(INIT_PNG).map_err(|_| "Failed to connect to image subsystem")?;
+
+    let renderer = match frontends::sdl::SdlKnowledgeRenderer::new(
+        video,
+        "Howl",
         GAME_WIDTH,
         GAME_HEIGHT,
         tile_path,
-        tileset);
+        tileset) {
+        Ok(r) => r,
+        Err(SdlKnowledgeRendererError::WindowCreationFailure) => return Err("Failed to create window".to_string()),
+        Err(SdlKnowledgeRendererError::RendererInitialisationFailure) => return Err("Failed to initialise renderer".to_string()),
+        Err(SdlKnowledgeRendererError::TileLoadFailure) => return Err("Failed to load tiles".to_string()),
+    };
 
     let input = frontends::sdl::SdlInputSource::new(sdl.clone());
     let input_ref = InputSourceRef::new(&input);

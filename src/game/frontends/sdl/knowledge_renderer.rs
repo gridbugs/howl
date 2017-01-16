@@ -1,9 +1,10 @@
 use std::path;
+use std::result;
 
-use sdl2::{self, Sdl};
+use sdl2::VideoSubsystem;
 use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
-use sdl2::image::{LoadTexture, INIT_PNG};
+use sdl2::image::LoadTexture;
 use sdl2::pixels::Color;
 
 use game::*;
@@ -23,7 +24,6 @@ struct SdlCellInfo {
 
 pub struct SdlKnowledgeRenderer {
     buffer: TileBuffer,
-    sdl: Sdl,
     sdl_renderer: Renderer<'static>,
     tile_texture: Texture,
     width: usize,
@@ -31,36 +31,44 @@ pub struct SdlKnowledgeRenderer {
     tileset: Tileset,
 }
 
-impl SdlKnowledgeRenderer {
-    pub fn new(sdl: Sdl, width: usize, height: usize, tile_path: path::PathBuf, tileset: Tileset) -> Self {
+#[derive(Debug)]
+pub enum SdlKnowledgeRendererError {
+    WindowCreationFailure,
+    RendererInitialisationFailure,
+    TileLoadFailure,
+}
 
-        let width_px = (width * tileset.tile_width()) as u32;
-        let height_px = (height * tileset.tile_height()) as u32;
-        let window = sdl.video()
-            .expect("Failed to connect to video subsystem")
-            .window("Howl", width_px, height_px)
+impl SdlKnowledgeRenderer {
+
+    pub fn new(video: VideoSubsystem,
+               title: &str,
+               game_width: usize,
+               game_height: usize,
+               tile_path: path::PathBuf,
+               tileset: Tileset) -> result::Result<Self, SdlKnowledgeRendererError> {
+
+        let width_px = (game_width * tileset.tile_width()) as u32;
+        let height_px = (game_height * tileset.tile_height()) as u32;
+        let window = video.window(title, width_px, height_px)
             .build()
-            .expect("Failed to create window");
+            .map_err(|_| SdlKnowledgeRendererError::WindowCreationFailure)?;
 
         let mut renderer = window.renderer()
             .build()
-            .expect("Failed to initialise renderer");
+            .map_err(|_| SdlKnowledgeRendererError::RendererInitialisationFailure)?;
 
         renderer.set_draw_color(Color::RGB(0, 0, 0));
 
-        sdl2::image::init(INIT_PNG).expect("Failed to initialise image subsystem");
+        let tile_texture = renderer.load_texture(&tile_path).map_err(|_| SdlKnowledgeRendererError::TileLoadFailure)?;
 
-        let tile_texture = renderer.load_texture(&tile_path).expect("Failed to load tiles from file");
-
-        SdlKnowledgeRenderer {
-            buffer: TileBuffer::new(width, height),
-            sdl: sdl,
+        Ok(SdlKnowledgeRenderer {
+            buffer: TileBuffer::new(game_width, game_height),
             sdl_renderer: renderer,
             tile_texture: tile_texture,
-            width: width,
-            height: height,
+            width: game_width,
+            height: game_height,
             tileset: tileset,
-        }
+        })
     }
 
     fn tile_width(&self) -> usize {
