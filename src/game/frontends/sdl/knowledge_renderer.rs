@@ -12,6 +12,8 @@ use game::frontends::sdl::{Tileset, ExtraTileType};
 
 use coord::Coord;
 
+const RENDERING_FAILED_MSG: &'static str = "Rendering failed";
+
 struct SdlCellInfo {
     fg: Option<Rect>,
     bg: Option<Rect>,
@@ -136,17 +138,17 @@ impl SdlKnowledgeRenderer {
             let info = self.to_sdl_info(cell);
 
             if !info.visible {
-                self.sdl_renderer.copy(&self.tile_texture, Some(blank), Some(rect)).expect("Rendering failed");
+                self.sdl_renderer.copy(&self.tile_texture, Some(blank), Some(rect)).expect(RENDERING_FAILED_MSG);
                 continue;
             }
             if let Some(bg_rect) = info.bg {
-                self.sdl_renderer.copy(&self.tile_texture, Some(bg_rect), Some(rect)).expect("Rendering failed");
+                self.sdl_renderer.copy(&self.tile_texture, Some(bg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
             if let Some(fg_rect) = info.fg {
-                self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect("Rendering failed");
+                self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
             if info.moon {
-                self.sdl_renderer.copy(&self.tile_texture, Some(moon), Some(rect)).expect("Rendering failed");
+                self.sdl_renderer.copy(&self.tile_texture, Some(moon), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
         }
     }
@@ -159,9 +161,9 @@ impl SdlKnowledgeRenderer {
                     let rect = self.screen_rect(coord);
                     let info = self.to_sdl_info(cell);
 
-                    self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect("Rendering failed");
+                    self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect(RENDERING_FAILED_MSG);
                     if let Some(fg_rect) = info.fg {
-                        self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect("Rendering failed");
+                        self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
                     }
                 }
             }
