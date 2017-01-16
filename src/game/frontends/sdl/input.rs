@@ -18,7 +18,7 @@ impl SdlInputSource {
 }
 
 impl InputSource for SdlInputSource {
-    fn next_input(&self) -> Option<InputEvent> {
+    fn next_input(&mut self) -> Option<InputEvent> {
         let mut event_pump = self.sdl.event_pump().expect("Failed to initialise event pump");
 
         loop {

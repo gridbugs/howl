@@ -161,7 +161,7 @@ pub struct AnsiInputSource {
 }
 
 impl AnsiInputSource {
-    pub fn get_event(&self) -> Option<rustty::Event> {
+    pub fn get_event(&mut self) -> Option<rustty::Event> {
         unsafe { (*self.terminal).get_event(None).unwrap() }
     }
 }

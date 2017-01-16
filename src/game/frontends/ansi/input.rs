@@ -7,7 +7,7 @@ const ETX: char = '\u{3}';
 const ESC: char = '\u{1b}';
 
 impl InputSource for AnsiInputSource {
-    fn next_input(&self) -> Option<InputEvent> {
+    fn next_input(&mut self) -> Option<InputEvent> {
         self.get_event().and_then(|event| {
             match event {
                 rustty::Event::Char(ETX) => Some(InputEvent::Quit),

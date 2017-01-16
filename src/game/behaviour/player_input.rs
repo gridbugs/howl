@@ -13,7 +13,7 @@ pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(inpu
     })
 }
 
-fn get_direction<I: InputSource>(map: &ControlMap, input_source: I) -> Option<Direction> {
+fn get_direction<I: InputSource>(map: &ControlMap, mut input_source: I) -> Option<Direction> {
     input_source.next_input().and_then(|event| {
         map.control(event).and_then(|control| {
             control_to_direction(control)
@@ -28,7 +28,7 @@ fn control_to_direction(control: Control) -> Option<Direction> {
     }
 }
 
-fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &ControlMap, input_source: I) -> Option<Coord> {
+fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<Coord> {
     let start = input.entity.position().unwrap();
     let mut knowledge = input.entity.drawable_knowledge_borrow_mut().unwrap();
     let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
@@ -87,7 +87,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     None
 }
 
-fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, input_source: I) -> Option<MetaAction> {
+fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         input.entity.control_map().and_then(|map| {
             map.control(event).and_then(|control| {

@@ -10,5 +10,5 @@ pub enum InputEvent {
 }
 
 pub trait InputSource {
-    fn next_input(&self) -> Option<InputEvent>;
+    fn next_input(&mut self) -> Option<InputEvent>;
 }
