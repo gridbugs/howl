@@ -32,5 +32,4 @@ deploy:
   acl: public_read
   on:
     repo: stevebob/howl
-    branch: master
     condition: $TRAVIS_RUST_VERSION = stable
