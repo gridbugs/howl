@@ -1,9 +1,9 @@
 mod knowledge_renderer;
-mod input_source;
+mod input;
 mod launcher;
 mod tileset;
 
 pub use self::knowledge_renderer::*;
-pub use self::input_source::*;
+pub use self::input::*;
 pub use self::launcher::*;
 pub use self::tileset::*;
