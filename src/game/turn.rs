@@ -16,14 +16,14 @@ pub const NPC_TURN_OFFSET: u64 = 1;
 pub const PC_TURN_OFFSET: u64 = 2;
 
 #[derive(Clone, Copy)]
-pub struct ActionEnv<'a> {
-    pub ecs: &'a EcsCtx,
+pub struct ActionEnv<'game> {
+    pub ecs: &'game EcsCtx,
     pub id: u64,
 }
 
 #[derive(Clone, Copy)]
-pub struct Turn<'a> {
-    pub ecs: &'a EcsCtx,
+pub struct Turn<'game> {
+    pub ecs: &'game EcsCtx,
     pub id: u64,
 }
 
@@ -41,28 +41,28 @@ impl TurnResolution {
     }
 }
 
-pub struct TurnEnv<'a, 'b: 'a, Renderer: 'a + KnowledgeRenderer> {
+pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub turn_id: u64,
-    pub action_id: &'a mut u64,
+    pub action_id: &'game mut u64,
     pub level_id: LevelId,
     pub entity_id: EntityId,
     pub pc_id: EntityId,
-    pub renderer: &'a RefCell<Renderer>,
-    pub ecs: &'b mut EcsCtx,
-    pub spatial_hash: &'b mut SpatialHashTable,
-    pub behaviour_ctx: &'a BehaviourCtx<Renderer>,
-    pub rules: &'a Vec<Box<Rule>>,
-    pub rule_resolution: &'a mut RuleResolution,
-    pub ecs_action: &'a mut EcsAction,
-    pub action_schedule: &'a mut Schedule<ActionArgs>,
-    pub turn_schedule: &'a mut Schedule<EntityId>,
-    pub pc_observer: &'a Shadowcast,
-    pub entity_ids: &'a EntityIdReserver,
-    pub rng: &'a GameRng,
+    pub renderer: &'game RefCell<Renderer>,
+    pub ecs: &'level mut EcsCtx,
+    pub spatial_hash: &'level mut SpatialHashTable,
+    pub behaviour_ctx: &'game BehaviourCtx<Renderer>,
+    pub rules: &'game Vec<Box<Rule>>,
+    pub rule_resolution: &'game mut RuleResolution,
+    pub ecs_action: &'game mut EcsAction,
+    pub action_schedule: &'game mut Schedule<ActionArgs>,
+    pub turn_schedule: &'game mut Schedule<EntityId>,
+    pub pc_observer: &'game Shadowcast,
+    pub entity_ids: &'game EntityIdReserver,
+    pub rng: &'game GameRng,
 }
 
-impl<'a> Turn<'a> {
-    pub fn new(ecs: &'a EcsCtx, id: u64) -> Self {
+impl<'game> Turn<'game> {
+    pub fn new(ecs: &'game EcsCtx, id: u64) -> Self {
         Turn {
             ecs: ecs,
             id: id,
@@ -70,8 +70,8 @@ impl<'a> Turn<'a> {
     }
 }
 
-impl<'a> ActionEnv<'a> {
-    pub fn new(ecs: &'a EcsCtx, id: u64) -> Self {
+impl<'game> ActionEnv<'game> {
+    pub fn new(ecs: &'game EcsCtx, id: u64) -> Self {
         ActionEnv {
             ecs: ecs,
             id: id,
@@ -79,7 +79,7 @@ impl<'a> ActionEnv<'a> {
     }
 }
 
-impl<'a, 'b, Renderer: KnowledgeRenderer> TurnEnv<'a, 'b, Renderer> {
+impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
         self.pc_render()?;
