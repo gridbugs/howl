@@ -31,5 +31,6 @@ deploy:
   upload-dir: downloads
   acl: public_read
   on:
+    all_branches: true
     repo: stevebob/howl
     condition: $TRAVIS_RUST_VERSION = stable
