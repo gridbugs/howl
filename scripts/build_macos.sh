@@ -28,6 +28,7 @@ cp target/release/$APP_NAME $MACOS_APP_BIN
 echo "Linking binary with frameworks"
 for old in `otool -L $MACOS_APP_BIN | grep @rpath | cut -f2 | cut -d' ' -f1`; do
     new=`echo $old | sed -e "s/@rpath/@executable_path\/..\/Frameworks/"`
+    echo "Replacing '$old' with '$new'"
     install_name_tool -change $old $new $MACOS_APP_BIN
 done
 
