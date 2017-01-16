@@ -39,7 +39,7 @@ pub enum SdlKnowledgeRendererError {
 
 impl SdlKnowledgeRenderer {
 
-    pub fn new(video: VideoSubsystem,
+    pub fn new(video: &VideoSubsystem,
                title: &str,
                game_width: usize,
                game_height: usize,

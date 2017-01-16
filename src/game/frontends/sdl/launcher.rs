@@ -39,7 +39,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
     sdl2::image::init(INIT_PNG).map_err(|_| "Failed to connect to image subsystem")?;
 
     let renderer = match frontends::sdl::SdlKnowledgeRenderer::new(
-        video,
+        &video,
         "Howl",
         GAME_WIDTH,
         GAME_HEIGHT,
