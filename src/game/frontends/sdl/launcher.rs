@@ -15,6 +15,14 @@ const TILESET_NAME: &'static str = "PxPlus_IBM_BIOS";
 
 pub fn launch(args: Arguments) -> ExternalResult<()> {
 
+    let debug_buffer: Box<io::Write> = if args.debug {
+        Box::new(debug::PrintDebug)
+    } else {
+        Box::new(debug::NullDebug)
+    };
+
+    debug::init(debug_buffer);
+
     let sdl = sdl2::init().expect("SDL2 initialization failed");
 
     let (tile_spec, tile_path) = match parse_tileset_spec(&args.resource_path) {
@@ -51,14 +59,6 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
                                 args.rng_seed,
                                 GAME_WIDTH,
                                 GAME_HEIGHT);
-
-    let debug_buffer: Box<io::Write> = if args.debug {
-        Box::new(debug::PrintDebug)
-    } else {
-        Box::new(debug::NullDebug)
-    };
-
-    debug::init(debug_buffer);
 
     game.run()?;
 
