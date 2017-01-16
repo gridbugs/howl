@@ -50,15 +50,13 @@ build_script:
 
     tmp\%FULL_NAME%\%NAME% --help
 
-    mkdir uploads
-
-    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', 'uploads/%FULL_NAME%.zip'); }"
+    powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', '%FULL_NAME%.zip'); }"
 
 test_script:
 - cmd: cargo test
 
 artifacts:
-- path: 'uploads/*'
+- path: '*'
   name: gridbugs.org
 
 deploy:
