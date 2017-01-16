@@ -2,7 +2,7 @@ use game::*;
 use behaviour::LeafResolution;
 use search::{GridSearchCfg, GridSearchCtx};
 
-pub fn follow_path_step() -> BehaviourLeaf {
+pub fn follow_path_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
         let mut path_traverse = input.entity.path_traverse_borrow_mut().unwrap();
         let action = if let Some(direction) = path_traverse.next_direction() {
@@ -14,7 +14,7 @@ pub fn follow_path_step() -> BehaviourLeaf {
     })
 }
 
-pub fn simple_npc_update_path() -> BehaviourLeaf {
+pub fn simple_npc_update_path<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     let search_ctx = GridSearchCtx::new();
     let search_cfg = GridSearchCfg::cardinal_directions();
 

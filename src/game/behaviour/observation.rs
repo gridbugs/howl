@@ -1,7 +1,7 @@
 use game::*;
 use behaviour::SwitchResolution;
 
-pub fn simple_npc_shadowcast(child: BehaviourNodeIndex) -> BehaviourSwitch {
+pub fn simple_npc_shadowcast<K: KnowledgeRenderer>(child: BehaviourNodeIndex) -> BehaviourSwitch<K> {
 
     let shadowcast = Shadowcast::new();
 

@@ -41,16 +41,16 @@ impl TurnResolution {
     }
 }
 
-pub struct TurnEnv<'a, 'b: 'a> {
+pub struct TurnEnv<'a, 'b: 'a, Renderer: 'a + KnowledgeRenderer> {
     pub turn_id: u64,
     pub action_id: &'a mut u64,
     pub level_id: LevelId,
     pub entity_id: EntityId,
     pub pc_id: EntityId,
-    pub renderer: &'a RefCell<Box<KnowledgeRenderer>>,
+    pub renderer: &'a RefCell<Renderer>,
     pub ecs: &'b mut EcsCtx,
     pub spatial_hash: &'b mut SpatialHashTable,
-    pub behaviour_ctx: &'a BehaviourCtx,
+    pub behaviour_ctx: &'a BehaviourCtx<Renderer>,
     pub rules: &'a Vec<Box<Rule>>,
     pub rule_resolution: &'a mut RuleResolution,
     pub ecs_action: &'a mut EcsAction,
@@ -79,7 +79,7 @@ impl<'a> ActionEnv<'a> {
     }
 }
 
-impl<'a, 'b> TurnEnv<'a, 'b> {
+impl<'a, 'b, Renderer: KnowledgeRenderer> TurnEnv<'a, 'b, Renderer> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
         self.pc_render()?;

@@ -18,9 +18,9 @@ impl EntityIdReserver {
     }
 }
 
-pub struct GameCtx {
+pub struct GameCtx<Renderer: KnowledgeRenderer> {
     levels: LevelTable,
-    renderer: RefCell<Box<KnowledgeRenderer>>,
+    renderer: RefCell<Renderer>,
     input_source: InputSourceRef,
     entity_ids: EntityIdReserver,
     turn_id: u64,
@@ -28,7 +28,7 @@ pub struct GameCtx {
     level_id: LevelId,
     pc_id: Option<EntityId>,
     pc_observer: Shadowcast,
-    behaviour_ctx: BehaviourCtx,
+    behaviour_ctx: BehaviourCtx<Renderer>,
     rules: Vec<Box<Rule>>,
     rule_resolution: RuleResolution,
     ecs_action: EcsAction,
@@ -38,8 +38,8 @@ pub struct GameCtx {
     rng: GameRng,
 }
 
-impl GameCtx {
-    pub fn new(renderer: Box<KnowledgeRenderer>, input_source: InputSourceRef, seed: usize, width: usize, height: usize) -> Self {
+impl<Renderer: KnowledgeRenderer> GameCtx<Renderer> {
+    pub fn new(renderer: Renderer, input_source: InputSourceRef, seed: usize, width: usize, height: usize) -> Self {
         GameCtx {
             levels: LevelTable::new(),
             renderer: RefCell::new(renderer),

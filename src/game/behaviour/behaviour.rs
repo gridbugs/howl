@@ -8,33 +8,48 @@ use behaviour::{State, NodeIndex, Graph, LeafFn, SwitchFn, SwitchReturn, SwitchR
 pub type BehaviourState = State;
 pub type BehaviourNodeIndex = NodeIndex;
 
-#[derive(Clone, Copy)]
-pub struct BehaviourInput<'a> {
+pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub entity: EntityRef<'a>,
     pub spatial_hash: &'a SpatialHashTable,
     pub level_id: LevelId,
     pub action_env: ActionEnv<'a>,
-    pub renderer: &'a RefCell<Box<KnowledgeRenderer>>,
+    pub renderer: &'a RefCell<R>,
     pub rng: &'a GameRng,
 }
 
-pub struct BehaviourLeaf(Box<Fn(BehaviourInput) -> LeafResolution<MetaAction>>);
+impl<'a, R: KnowledgeRenderer> Clone for BehaviourInput<'a, R> {
+    fn clone(&self) -> Self {
+        BehaviourInput {
+            entity: self.entity,
+            spatial_hash: self.spatial_hash,
+            level_id: self.level_id,
+            action_env: self.action_env,
+            renderer: self.renderer,
+            rng: self.rng,
+        }
+    }
+}
 
-pub struct BehaviourSwitch {
-    call: Box<Fn(BehaviourInput) -> SwitchResolution>,
+impl<'a, R: KnowledgeRenderer> Copy for BehaviourInput<'a, R> {}
+
+
+pub struct BehaviourLeaf<R: KnowledgeRenderer>(Box<Fn(BehaviourInput<R>) -> LeafResolution<MetaAction>>);
+
+pub struct BehaviourSwitch<R: KnowledgeRenderer> {
+    call: Box<Fn(BehaviourInput<R>) -> SwitchResolution>,
     return_to: Box<Fn(bool) -> SwitchReturn>,
 }
 
-pub type BehaviourGraph = Graph<BehaviourLeaf, BehaviourSwitch>;
+pub type BehaviourGraph<K> = Graph<BehaviourLeaf<K>, BehaviourSwitch<K>>;
 
-impl<'a> LeafFn<BehaviourInput<'a>, MetaAction> for BehaviourLeaf {
-    fn call(&self, input: BehaviourInput<'a>) -> LeafResolution<MetaAction> {
+impl<'a, R: KnowledgeRenderer> LeafFn<BehaviourInput<'a, R>, MetaAction> for BehaviourLeaf<R> {
+    fn call(&self, input: BehaviourInput<'a, R>) -> LeafResolution<MetaAction> {
         (self.0)(input)
     }
 }
 
-impl<'a> SwitchFn<BehaviourInput<'a>> for BehaviourSwitch {
-    fn call(&self, input: BehaviourInput<'a>) -> SwitchResolution {
+impl<'a, R: KnowledgeRenderer> SwitchFn<BehaviourInput<'a, R>> for BehaviourSwitch<R> {
+    fn call(&self, input: BehaviourInput<'a, R>) -> SwitchResolution {
         (self.call)(input)
     }
 
@@ -43,14 +58,14 @@ impl<'a> SwitchFn<BehaviourInput<'a>> for BehaviourSwitch {
     }
 }
 
-impl BehaviourLeaf {
-    pub fn new<F: 'static + Fn(BehaviourInput) -> LeafResolution<MetaAction>>(f: F) -> Self {
+impl<R: KnowledgeRenderer> BehaviourLeaf<R> {
+    pub fn new<F: 'static + Fn(BehaviourInput<R>) -> LeafResolution<MetaAction>>(f: F) -> Self {
         BehaviourLeaf(Box::new(f))
     }
 }
 
-impl BehaviourSwitch {
-    pub fn new_returning<F: 'static + Fn(BehaviourInput) -> SwitchResolution>(f: F) -> Self {
+impl<R: KnowledgeRenderer> BehaviourSwitch<R> {
+    pub fn new_returning<F: 'static + Fn(BehaviourInput<R>) -> SwitchResolution>(f: F) -> Self {
         BehaviourSwitch {
             call: Box::new(f),
             return_to: Box::new(|value| SwitchReturn::Return(value)),

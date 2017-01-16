@@ -45,7 +45,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         },
     };
 
-    let mut game = GameCtx::new(Box::new(renderer), input_source_ref, args.rng_seed, GAME_WIDTH, GAME_HEIGHT);
+    let mut game = GameCtx::new(renderer, input_source_ref, args.rng_seed, GAME_WIDTH, GAME_HEIGHT);
 
     game.run()?;
 

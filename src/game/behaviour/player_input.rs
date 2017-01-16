@@ -3,7 +3,7 @@ use behaviour::LeafResolution;
 use direction::Direction;
 use coord::{Coord, StraightLine};
 
-pub fn player_input(input_source: InputSourceRef) -> BehaviourLeaf {
+pub fn player_input<K: KnowledgeRenderer>(input_source: InputSourceRef) -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
         loop {
             if let Some(meta_action) = get_meta_action(input, input_source) {
@@ -28,7 +28,7 @@ fn control_to_direction(control: Control) -> Option<Direction> {
     }
 }
 
-fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) -> Option<Coord> {
+fn aim<R: KnowledgeRenderer>(input: BehaviourInput<R>, map: &ControlMap, input_source: InputSourceRef) -> Option<Coord> {
     let start = input.entity.position().unwrap();
     let mut knowledge = input.entity.drawable_knowledge_borrow_mut().unwrap();
     let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
@@ -87,7 +87,7 @@ fn aim(input: BehaviourInput, map: &ControlMap, input_source: InputSourceRef) ->
     None
 }
 
-fn get_meta_action(input: BehaviourInput, input_source: InputSourceRef) -> Option<MetaAction> {
+fn get_meta_action<K: KnowledgeRenderer>(input: BehaviourInput<K>, input_source: InputSourceRef) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         input.entity.control_map().and_then(|map| {
             map.control(event).and_then(|control| {

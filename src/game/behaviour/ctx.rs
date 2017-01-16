@@ -13,8 +13,8 @@ pub struct BehaviourNodes {
     pub clouds: BehaviourNodeIndex,
 }
 
-pub struct BehaviourCtx {
-    pub graph: BehaviourGraph,
+pub struct BehaviourCtx<K: KnowledgeRenderer> {
+    pub graph: BehaviourGraph<K>,
     pub nodes: BehaviourNodes,
 }
 
@@ -29,7 +29,7 @@ impl BehaviourNodes {
     }
 }
 
-impl BehaviourCtx {
+impl<K: KnowledgeRenderer> BehaviourCtx<K> {
     pub fn new(input_source: InputSourceRef) -> Self {
         let mut graph = BehaviourGraph::new();
 
@@ -61,7 +61,7 @@ impl BehaviourCtx {
         }
     }
 
-    pub fn graph(&self) -> &BehaviourGraph {
+    pub fn graph(&self) -> &BehaviourGraph<K> {
         &self.graph
     }
 
