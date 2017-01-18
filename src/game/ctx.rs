@@ -29,8 +29,7 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     pc_id: Option<EntityId>,
     pc_observer: Shadowcast,
     behaviour_ctx: BehaviourCtx<Renderer>,
-    rules: Vec<Box<Rule>>,
-    rule_resolution: RuleResolution,
+    rule_reactions: Vec<Reaction>,
     ecs_action: EcsAction,
     action_schedule: Schedule<ActionArgs>,
     width: usize,
@@ -52,8 +51,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             pc_id: None,
             pc_observer: Shadowcast::new(),
             behaviour_ctx: BehaviourCtx::new(input_source),
-            rules: Vec::new(),
-            rule_resolution: RuleResolution::new(),
+            rule_reactions: Vec::new(),
             ecs_action: EcsAction::new(),
             action_schedule: Schedule::new(),
             width: width,
@@ -64,15 +62,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     pub fn run(&mut self) -> Result<()> {
-        self.rules.push(Box::new(rules::OpenDoor));
-        self.rules.push(Box::new(rules::Collision));
-        self.rules.push(Box::new(rules::CloseDoor));
-        self.rules.push(Box::new(rules::RealtimeVelocityStart));
-        self.rules.push(Box::new(rules::RealtimeVelocity));
-        self.rules.push(Box::new(rules::MoonTransform));
-
         self.init_demo();
-
         self.game_loop()
     }
 
@@ -94,8 +84,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     ecs: &mut level.ecs,
                     spatial_hash: &mut level.spatial_hash,
                     behaviour_ctx: &self.behaviour_ctx,
-                    rules: &self.rules,
-                    rule_resolution: &mut self.rule_resolution,
+                    rule_reactions: &mut self.rule_reactions,
                     ecs_action: &mut self.ecs_action,
                     action_schedule: &mut self.action_schedule,
                     turn_schedule: &mut level.turn_schedule,

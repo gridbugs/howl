@@ -1,7 +1,23 @@
-use std::vec;
+use std::result;
 
-use game::{SpatialHashTable, ActionArgs, Result};
-use ecs::{EcsCtx, EcsAction};
+use game::*;
+use ecs::*;
+
+pub type RuleResult = result::Result<(), RuleError>;
+
+pub enum RuleError {
+    Rejection,
+    GameError(Error),
+}
+
+impl From<Error> for RuleError {
+    fn from(e: Error) -> Self {
+        RuleError::GameError(e)
+    }
+}
+
+pub const RULE_ACCEPT: RuleResult = Ok(());
+pub const RULE_REJECT: RuleResult = Err(RuleError::Rejection);
 
 pub struct Reaction {
     pub action: ActionArgs,
@@ -14,66 +30,11 @@ pub struct RuleEnv<'a> {
     pub spatial_hash: &'a SpatialHashTable,
 }
 
-pub struct RuleResolution {
-    reactions: Vec<Reaction>,
-    accept: bool,
-}
-
-pub trait Rule {
-    fn check(&self, env: RuleEnv, action: &EcsAction, resolution: &mut RuleResolution) -> Result<()>;
-}
-
-impl<'a> RuleEnv<'a> {
-    pub fn new(ecs: &'a EcsCtx, spatial_hash: &'a SpatialHashTable) -> Self {
-        RuleEnv {
-            ecs: ecs,
-            spatial_hash: spatial_hash,
-        }
-    }
-}
-
 impl Reaction {
     pub fn new(action: ActionArgs, delay: u64) -> Self {
         Reaction {
             action: action,
             delay: delay,
         }
-    }
-}
-
-impl RuleResolution {
-    pub fn new() -> Self {
-        RuleResolution {
-            reactions: Vec::new(),
-            accept: true,
-        }
-    }
-
-    pub fn reset(&mut self) {
-        self.reactions.clear();
-        self.accept = true;
-    }
-
-    pub fn reject(&mut self) {
-        if self.accept {
-            self.reactions.clear();
-            self.accept = false;
-        }
-    }
-
-    pub fn is_accept(&self) -> bool {
-        self.accept
-    }
-
-    pub fn is_reject(&self) -> bool {
-        !self.accept
-    }
-
-    pub fn add_reaction(&mut self, reaction: Reaction) {
-        self.reactions.push(reaction);
-    }
-
-    pub fn drain_reactions(&mut self) -> vec::Drain<Reaction> {
-        self.reactions.drain(..)
     }
 }

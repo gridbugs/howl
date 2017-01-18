@@ -51,8 +51,7 @@ pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub ecs: &'level mut EcsCtx,
     pub spatial_hash: &'level mut SpatialHashTable,
     pub behaviour_ctx: &'game BehaviourCtx<Renderer>,
-    pub rules: &'game Vec<Box<Rule>>,
-    pub rule_resolution: &'game mut RuleResolution,
+    pub rule_reactions: &'game mut Vec<Reaction>,
     pub ecs_action: &'game mut EcsAction,
     pub action_schedule: &'game mut Schedule<ActionArgs>,
     pub turn_schedule: &'game mut Schedule<EntityId>,
@@ -160,22 +159,30 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.entity_id == self.pc_id
     }
 
-    fn check_rules(&mut self) -> Result<()> {
-        self.rule_resolution.reset();
+    fn check_rules_wrapper(&mut self) -> Result<bool> {
+        match self.check_rules() {
+            Ok(()) => Ok(true),
+            Err(RuleError::Rejection) => Ok(false),
+            Err(RuleError::GameError(e)) => Err(e),
+        }
+    }
+
+    fn check_rules(&mut self) -> RuleResult {
+        self.rule_reactions.clear();
 
         let rule_env = RuleEnv {
             ecs: self.ecs,
             spatial_hash: self.spatial_hash,
         };
 
-        for rule in self.rules {
-            rule.check(rule_env, self.ecs_action, self.rule_resolution)?;
+        rules::open_door(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::close_door(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::moon_transform(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
 
-            if self.rule_resolution.is_reject() {
-                return Ok(())
-            }
-        }
-        Ok(())
+        RULE_ACCEPT
     }
 
     fn commit(&mut self) {
@@ -229,11 +236,11 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             // construct an action from the action args
             action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids)?;
 
-            self.check_rules()?;
+            let accept = self.check_rules_wrapper()?;
 
             let mut action_time = 0;
 
-            if self.rule_resolution.is_accept() {
+            if accept {
                 if first {
                     first = false;
                     if let Some(alternative_turn_time) = self.ecs_action.alternative_turn_time() {
@@ -249,7 +256,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 self.ecs_action.clear();
             }
 
-            for reaction in self.rule_resolution.drain_reactions() {
+            for reaction in self.rule_reactions.drain(..) {
                 self.action_schedule.insert(reaction.action, action_time + reaction.delay);
             }
         }

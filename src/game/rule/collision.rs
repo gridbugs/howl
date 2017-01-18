@@ -1,28 +1,28 @@
 use game::*;
 use ecs::*;
 
-pub struct Collision;
+pub fn collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-impl Rule for Collision {
-    fn check(&self, env: RuleEnv, action: &EcsAction, resolution: &mut RuleResolution) -> Result<()> {
+    for (entity_id, position) in action.position().insertion_copy_iter() {
 
-        for (entity_id, position) in action.position().insertion_copy_iter() {
-
-            if !env.spatial_hash.get(position).solid() {
-                continue;
-            }
-
-            let entity = env.ecs.post_action_entity(entity_id, action);
-
-            if entity.contains_collider() {
-                resolution.reject();
-            }
-            if entity.contains_destroy_on_collision() {
-                resolution.reject();
-                resolution.add_reaction(Reaction::new(ActionArgs::Destroy(entity_id), 0));
-            }
+        if !env.spatial_hash.get(position).solid() {
+            continue;
         }
 
-        Ok(())
+        let entity = env.ecs.post_action_entity(entity_id, action);
+
+        let mut reject = false;
+        if entity.contains_collider() {
+            reject = true;
+        }
+        if entity.contains_destroy_on_collision() {
+            reactions.push(Reaction::new(ActionArgs::Destroy(entity_id), 0));
+            reject = true;
+        }
+        if reject {
+            return RULE_REJECT;
+        }
     }
+
+    RULE_ACCEPT
 }
