@@ -83,6 +83,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_pc();
     entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_should_render();
+    entity.insert_message_log(MessageLog::new());
 
     entity
 }

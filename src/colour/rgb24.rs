@@ -1,3 +1,4 @@
+#[derive(Clone, Copy, Debug)]
 pub struct Rgb24 {
     red: u8,
     green: u8,

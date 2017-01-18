@@ -63,6 +63,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     pub fn run(&mut self) -> Result<()> {
         self.init_demo();
+        self.welcome_message();
         self.game_loop()
     }
 
@@ -114,6 +115,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let level = self.levels.level_mut(self.level_id);
         level.spatial_hash.update(ActionEnv::new(&level.ecs, self.action_id), action);
         level.ecs.commit(action);
+    }
+
+    fn welcome_message(&self) {
+        let ref ecs = self.levels.level(self.level_id).ecs;
+        ecs.message_log_borrow_mut(self.pc_id.unwrap()).unwrap().push(MessageType::Welcome);
     }
 
     fn init_demo(&mut self) {

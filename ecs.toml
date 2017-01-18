@@ -46,6 +46,10 @@ imports = [
     type = "isize"
     copy = true
 
+[component.message_log]
+    type = "MessageLog"
+    container = "RefCell"
+
 [component.behaviour_type]
     type = "BehaviourType"
     copy = true
