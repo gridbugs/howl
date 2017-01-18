@@ -19,6 +19,7 @@ mod args;
 mod frontend_types;
 mod rng;
 mod launcher;
+mod message;
 
 pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -40,6 +41,7 @@ pub use self::args::*;
 pub use self::frontend_types::*;
 pub use self::rng::*;
 pub use self::launcher::*;
+pub use self::message::*;
 
 pub mod data;
 pub mod prototypes;

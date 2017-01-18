@@ -28,6 +28,7 @@ mod behaviour;
 mod search;
 mod perlin;
 mod coord;
+mod colour;
 
 fn print_usage(program: &str, opts: getopts::Options) {
     let brief = format!("Usage: {} [options]", program);

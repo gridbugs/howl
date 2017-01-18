@@ -36,6 +36,7 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     width: usize,
     height: usize,
     rng: GameRng,
+    language: Box<Language>,
 }
 
 impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<Renderer, Input> {
@@ -58,6 +59,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             width: width,
             height: height,
             rng: GameRng::new(seed),
+            language: Box::new(languages::English),
         }
     }
 
