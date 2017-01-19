@@ -1,5 +1,7 @@
 use std::result;
 
+use colour::Rgb24;
+
 #[derive(Debug)]
 pub enum Error {
     // Indicates value for a field is too high
@@ -42,6 +44,10 @@ pub struct RgbColour {
 }
 pub const RGB_COLOUR_MAX_FIELD: u8 = 5;
 
+fn byte_to_colour_value(byte: u8) -> u8 {
+    ((byte as usize * RGB_COLOUR_MAX_FIELD as usize) / 255) as u8
+}
+
 impl RgbColour {
     fn new(red: u8, green: u8, blue: u8) -> Result<Self> {
         if red > RGB_COLOUR_MAX_FIELD || green > RGB_COLOUR_MAX_FIELD ||
@@ -53,6 +59,14 @@ impl RgbColour {
                 green: green,
                 blue: blue,
             })
+        }
+    }
+
+    fn new_from_rgb24(rgb24: Rgb24) -> Self {
+        RgbColour {
+            red: byte_to_colour_value(rgb24.red),
+            green: byte_to_colour_value(rgb24.green),
+            blue: byte_to_colour_value(rgb24.blue),
         }
     }
 }
@@ -87,6 +101,10 @@ impl AnsiColour {
 
     pub fn new_greyscale(value: u8) -> Result<Self> {
         GreyscaleColour::new(value).map(|colour| AnsiColour::Greyscale(colour))
+    }
+
+    pub fn new_from_rgb24(rgb24: Rgb24) -> Self {
+        AnsiColour::Rgb(RgbColour::new_from_rgb24(rgb24))
     }
 }
 

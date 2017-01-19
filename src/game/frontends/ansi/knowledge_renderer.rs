@@ -4,12 +4,17 @@ use game::*;
 use game::frontends::ansi::resolve_tile;
 use frontends::ansi::{self, ComplexTile, SimpleTile, AnsiColour, Style};
 use coord::Coord;
+use colour::Rgb24;
 
 const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 const AIM_LINE_COLOUR: ansi::AnsiColour = ansi::colours::YELLOW;
 
 const ANSI_GAME_WINDOW_X: usize = 1;
 const ANSI_GAME_WINDOW_Y: usize = 1;
+
+const MESSAGE_LOG_NUM_LINES: usize = 4;
+const MESSAGE_LOG_PADDING_TOP: usize = 1;
+const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 
 struct AnsiInfo {
     ch: char,
@@ -34,6 +39,8 @@ pub struct AnsiKnowledgeRenderer {
     buffer: TileBuffer,
     scroll: bool,
     scroll_position: Coord,
+    message_log_window: ansi::Window,
+    message_log: Vec<Message>,
 }
 
 pub enum AnsiKnowledgeRendererError {
@@ -63,11 +70,25 @@ impl AnsiKnowledgeRenderer {
             game_height,
             ansi::BufferType::Double);
 
+        let message_log_window = window_allocator.make_window(
+            ANSI_GAME_WINDOW_X as isize,
+            (ANSI_GAME_WINDOW_Y + game_height + MESSAGE_LOG_PADDING_TOP) as isize,
+            game_width,
+            MESSAGE_LOG_NUM_LINES,
+            ansi::BufferType::Double);
+
+        let mut message_log = Vec::new();
+        for _ in 0..MESSAGE_LOG_NUM_LINES {
+            message_log.push(Message::new());
+        }
+
         Ok(AnsiKnowledgeRenderer {
             window: window,
             buffer: TileBuffer::new(game_width, game_height),
             scroll: scroll,
             scroll_position: Coord::new(0, 0),
+            message_log_window: message_log_window,
+            message_log: message_log,
         })
     }
 
@@ -150,6 +171,43 @@ impl AnsiKnowledgeRenderer {
             }
         }
     }
+
+    fn draw_message_log_internal(&mut self) {
+
+        let mut cursor = Coord::new(0, 0);
+
+        for line in &self.message_log {
+            for part in line {
+                let (colour, string) = match part {
+                    &MessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
+                    &MessagePart::Colour(c, ref s) => (c, s),
+                };
+
+                let ansi_colour = ansi::AnsiColour::new_from_rgb24(colour);
+
+                for ch in string.chars() {
+                    if cursor.x >= self.message_log_window.width() as isize {
+                        break;
+                    }
+
+                    self.message_log_window.get_cell(cursor.x, cursor.y)
+                        .set(ch, ansi_colour, ansi::colours::BLACK, ansi::styles::NONE);
+
+                    cursor.x += 1;
+                }
+            }
+
+            while cursor.x < self.message_log_window.width() as isize {
+                self.message_log_window.get_cell(cursor.x, cursor.y)
+                    .set(' ', ansi::colours::BLACK, ansi::colours::BLACK, ansi::styles::NONE);
+
+                cursor.x += 1;
+            }
+
+            cursor.x = 0;
+            cursor.y += 1;
+        }
+    }
 }
 
 impl KnowledgeRenderer for AnsiKnowledgeRenderer {
@@ -179,11 +237,21 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
     fn draw(&mut self) {
         self.draw_internal();
         self.window.flush();
+        self.draw_message_log_internal();
+        self.message_log_window.flush();
     }
 
     fn draw_with_overlay(&mut self, overlay: &RenderOverlay) {
         self.draw_internal();
         self.draw_overlay_internal(overlay);
         self.window.flush();
+        self.draw_message_log_internal();
+        self.message_log_window.flush();
+    }
+
+    fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>) {
+        for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
+            language.translate_repeated(log_entry.message, log_entry.repeated, message);
+        }
     }
 }

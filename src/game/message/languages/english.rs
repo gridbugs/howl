@@ -4,16 +4,20 @@ use colour::*;
 pub struct English;
 
 impl Language for English {
-    fn translate(&self, message_type: MessageType, message: &mut Message) {
+    fn translate_repeated(&self, message_type: MessageType, repeated: usize, message: &mut Message) {
 
         message.clear();
 
         match message_type {
             MessageType::Welcome => {
-                message.push(MessagePart::Plain("Welcome to "));
-                message.push(MessagePart::Colour(colours::PURPLE, "HOWL"));
-                message.push(MessagePart::Plain("!"));
+                message.push(MessagePart::Plain("Welcome to ".to_string()));
+                message.push(MessagePart::Colour(colours::PURPLE, "HOWL".to_string()));
+                message.push(MessagePart::Plain("!".to_string()));
             }
+        }
+
+        if repeated > 1 {
+            message.push(MessagePart::Plain(format!("(x{})", repeated)));
         }
     }
 }

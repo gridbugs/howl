@@ -92,6 +92,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     pc_observer: &self.pc_observer,
                     entity_ids: &self.entity_ids,
                     rng: &self.rng,
+                    language: &self.language,
                 }.turn()?;
 
                 match resolution {
@@ -119,7 +120,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn welcome_message(&self) {
         let ref ecs = self.levels.level(self.level_id).ecs;
-        ecs.message_log_borrow_mut(self.pc_id.unwrap()).unwrap().push(MessageType::Welcome);
+        ecs.message_log_borrow_mut(self.pc_id.unwrap()).unwrap().add(MessageType::Welcome);
     }
 
     fn init_demo(&mut self) {

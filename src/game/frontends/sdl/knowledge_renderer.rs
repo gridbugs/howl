@@ -12,8 +12,14 @@ use game::*;
 use game::frontends::sdl::{Tileset, ExtraTileType};
 
 use coord::Coord;
+use colour::Rgb24;
 
 const RENDERING_FAILED_MSG: &'static str = "Rendering failed";
+const MESSAGE_LOG_NUM_LINES: usize = 4;
+const MESSAGE_LOG_LINE_HEIGHT_PX: usize = 16;
+const MESSAGE_LOG_HEIGHT_PX: usize = MESSAGE_LOG_LINE_HEIGHT_PX * MESSAGE_LOG_NUM_LINES;
+const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+const MESSAGE_LOG_PADDING_TOP_PX: usize = 16;
 
 struct SdlCellInfo {
     fg: Option<Rect>,
@@ -29,7 +35,13 @@ pub struct SdlKnowledgeRenderer<'a> {
     font: Font<'a>,
     width: usize,
     height: usize,
+    game_width_px: usize,
+    game_height_px: usize,
     tileset: Tileset,
+    message_log_position: Coord,
+    clear_colour: Color,
+    game_rect: Rect,
+    message_log: Vec<Message>,
 }
 
 #[derive(Debug)]
@@ -49,19 +61,24 @@ impl<'a> SdlKnowledgeRenderer<'a> {
                tileset: Tileset,
                font: Font<'a>) -> result::Result<Self, SdlKnowledgeRendererError> {
 
-        let width_px = (game_width * tileset.tile_width()) as u32;
-        let height_px = (game_height * tileset.tile_height()) as u32;
+        let game_width_px = (game_width * tileset.tile_width()) as usize;
+        let game_height_px = (game_height * tileset.tile_height()) as usize;
+        let width_px = game_width_px as u32;
+        let height_px = (game_height_px + MESSAGE_LOG_HEIGHT_PX + MESSAGE_LOG_PADDING_TOP_PX) as u32;
         let window = video.window(title, width_px, height_px)
             .build()
             .map_err(|_| SdlKnowledgeRendererError::WindowCreationFailure)?;
 
-        let mut renderer = window.renderer()
+        let renderer = window.renderer()
             .build()
             .map_err(|_| SdlKnowledgeRendererError::RendererInitialisationFailure)?;
 
-        renderer.set_draw_color(Color::RGB(0, 0, 0));
-
         let tile_texture = renderer.load_texture(&tile_path).map_err(|_| SdlKnowledgeRendererError::TileLoadFailure)?;
+
+        let mut message_log = Vec::new();
+        for _ in 0..MESSAGE_LOG_NUM_LINES {
+            message_log.push(Message::new());
+        }
 
         Ok(SdlKnowledgeRenderer {
             buffer: TileBuffer::new(game_width, game_height),
@@ -70,7 +87,13 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             font: font,
             width: game_width,
             height: game_height,
+            game_width_px: width_px as usize,
+            game_height_px: game_height_px,
             tileset: tileset,
+            clear_colour: Color::RGB(0, 0, 0),
+            game_rect: Rect::new(0, 0, game_width_px as u32, game_height_px as u32),
+            message_log: message_log,
+            message_log_position: Coord::new(0, (game_height_px + MESSAGE_LOG_PADDING_TOP_PX) as isize),
         })
     }
 
@@ -129,7 +152,8 @@ impl<'a> SdlKnowledgeRenderer<'a> {
     }
 
     fn clear_internal(&mut self) {
-        self.sdl_renderer.clear();
+        self.sdl_renderer.set_draw_color(self.clear_colour);
+        self.sdl_renderer.draw_rect(self.game_rect).expect("Failed to clear screen");
     }
 
     fn draw_internal(&mut self) {
@@ -173,6 +197,33 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             }
         }
     }
+
+    fn draw_message_log_internal(&mut self) {
+
+        let mut cursor = self.message_log_position;
+
+        for line in &self.message_log {
+            for part in line {
+                let (colour, string) = match part {
+                    &MessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
+                    &MessagePart::Colour(c, ref s) => (c, s),
+                };
+
+                let sdl_colour = rgb24_to_sdl_colour(colour);
+                let surface = self.font.render(string.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
+                let texture = self.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
+
+                // assume fixed-width, square font
+                let text_width = string.len() * MESSAGE_LOG_LINE_HEIGHT_PX;
+                let text_rect = Rect::new(cursor.x as i32, cursor.y as i32, text_width as u32,
+                                          MESSAGE_LOG_LINE_HEIGHT_PX as u32);
+                self.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
+                cursor.x += text_width as isize;
+            }
+            cursor.x = self.message_log_position.x;
+            cursor.y += MESSAGE_LOG_LINE_HEIGHT_PX as isize;
+        }
+    }
 }
 
 impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
@@ -196,6 +247,7 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     fn draw(&mut self) {
         self.clear_internal();
         self.draw_internal();
+        self.draw_message_log_internal();
         self.sdl_renderer.present();
     }
 
@@ -203,6 +255,17 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
         self.clear_internal();
         self.draw_internal();
         self.draw_overlay_internal(overlay);
+        self.draw_message_log_internal();
         self.sdl_renderer.present();
     }
+
+    fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>) {
+        for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
+            language.translate_repeated(log_entry.message, log_entry.repeated, message);
+        }
+    }
+}
+
+fn rgb24_to_sdl_colour(rgb24: Rgb24) -> Color {
+    Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
 }

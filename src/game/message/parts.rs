@@ -2,8 +2,8 @@ use colour::Rgb24;
 
 pub type Message = Vec<MessagePart>;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub enum MessagePart {
-    Plain(&'static str),
-    Colour(Rgb24, &'static str),
+    Plain(String),
+    Colour(Rgb24, String),
 }

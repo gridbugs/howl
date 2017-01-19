@@ -33,4 +33,6 @@ pub trait KnowledgeRenderer {
         self.update(knowledge, turn_id, position);
         self.draw_with_overlay(overlay);
     }
+
+    fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>);
 }

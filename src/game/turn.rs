@@ -2,6 +2,7 @@ use std::time::Duration;
 use std::thread;
 use std::cmp;
 use std::cell::RefCell;
+use std::ops::Deref;
 
 use game::*;
 use ecs::*;
@@ -58,6 +59,7 @@ pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub pc_observer: &'game Shadowcast,
     pub entity_ids: &'game EntityIdReserver,
     pub rng: &'game GameRng,
+    pub language: &'game Box<Language>,
 }
 
 impl<'game> Turn<'game> {
@@ -204,10 +206,13 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                                                                  self.spatial_hash.height());
         let position = entity.position().ok_or(Error::MissingComponent)?;
         let vision_distance = entity.vision_distance().ok_or(Error::MissingComponent)?;
+        let message_log = entity.message_log_borrow().ok_or(Error::MissingComponent)?;
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
 
         if self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env) {
-            self.renderer.borrow_mut().render(level_knowledge, *self.action_id, position);
+            let mut renderer = self.renderer.borrow_mut();
+            renderer.update_log(message_log.deref(), self.language);
+            renderer.render(level_knowledge, *self.action_id, position);
             Ok(true)
         } else {
             Ok(false)
