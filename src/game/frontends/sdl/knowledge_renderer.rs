@@ -4,9 +4,10 @@ use std::result;
 use sdl2::VideoSubsystem;
 use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
-use sdl2::image::LoadTexture;
-use sdl2::pixels::Color;
+use sdl2::image::{LoadTexture, LoadSurface};
+use sdl2::pixels::{Color, Palette, PixelFormatEnum};
 use sdl2::ttf::Font;
+use sdl2::surface::Surface;
 
 use game::*;
 use game::frontends::sdl::{Tileset, ExtraTileType};
@@ -32,6 +33,7 @@ pub struct SdlKnowledgeRenderer<'a> {
     buffer: TileBuffer,
     sdl_renderer: Renderer<'static>,
     tile_texture: Texture,
+    greyscale_tile_texture: Texture,
     font: Font<'a>,
     width: usize,
     height: usize,
@@ -52,6 +54,54 @@ pub enum SdlKnowledgeRendererError {
 }
 
 impl<'a> SdlKnowledgeRenderer<'a> {
+
+    fn create_greyscale_tile_texture(renderer: &Renderer, tile_path: &path::PathBuf) -> result::Result<Texture, String> {
+        let mut rgb332_colours = Vec::new();
+        for i in 0u32..256 {
+
+            let r = i >> 5;
+            let g = (i >> 2) & 7;
+            let b_small = i & 3;
+            let b = if b_small == 0 {
+                0
+            } else {
+                (b_small * 2) + 1
+            };
+
+            rgb332_colours.push(Color::RGB(r as u8 * 36, g as u8 * 36, b as u8 * 36));
+        }
+        let rgb332_palette = Palette::with_colors(&rgb332_colours)?;
+
+        let mut greyscale_colours = Vec::new();
+        for i in 0i32..256 {
+
+            let normalised = if i == 0 {
+                0
+            } else {
+                ((i - 127) / 4) + 127
+            };
+
+            let darkened = normalised / 2;
+
+            let r = darkened;
+            let g = darkened;
+            let b = darkened;
+
+            greyscale_colours.push(Color::RGB(r as u8, g as u8, b as u8));
+        }
+        let greyscale_palette = Palette::with_colors(&greyscale_colours)?;
+
+        let mut dummy_surface = Surface::new(1, 1, PixelFormatEnum::Index8)?;
+        dummy_surface.set_palette(&rgb332_palette)?;
+
+        let pixel_format = dummy_surface.pixel_format();
+
+        let tile_surface = Surface::from_file(&tile_path)?;
+        let mut greyscale_tile_surface = tile_surface.convert(&pixel_format)?;
+        greyscale_tile_surface.set_palette(&greyscale_palette)?;
+
+        renderer.create_texture_from_surface(greyscale_tile_surface).map_err(|e| format!("{}", e))
+    }
 
     pub fn new(video: &VideoSubsystem,
                title: &str,
@@ -74,6 +124,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             .map_err(|_| SdlKnowledgeRendererError::RendererInitialisationFailure)?;
 
         let tile_texture = renderer.load_texture(&tile_path).map_err(|_| SdlKnowledgeRendererError::TileLoadFailure)?;
+        let greyscale_tile_texture = Self::create_greyscale_tile_texture(&renderer, &tile_path).unwrap();
 
         let mut message_log = Vec::new();
         for _ in 0..MESSAGE_LOG_NUM_LINES {
@@ -84,6 +135,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             buffer: TileBuffer::new(game_width, game_height),
             sdl_renderer: renderer,
             tile_texture: tile_texture,
+            greyscale_tile_texture: greyscale_tile_texture,
             font: font,
             width: game_width,
             height: game_height,
@@ -165,17 +217,23 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             let rect = self.screen_rect(coord);
             let info = self.to_sdl_info(cell);
 
-            if !info.visible {
-                self.sdl_renderer.copy(&self.tile_texture, Some(blank), Some(rect)).expect(RENDERING_FAILED_MSG);
-                continue;
-            }
+            self.sdl_renderer.copy(&self.tile_texture, Some(blank), Some(rect)).expect(RENDERING_FAILED_MSG);
+
+            let texture = if info.visible {
+                &self.tile_texture
+            } else {
+                &self.greyscale_tile_texture
+            };
+
+
             if let Some(bg_rect) = info.bg {
-                self.sdl_renderer.copy(&self.tile_texture, Some(bg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+                self.sdl_renderer.copy(texture, Some(bg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
             if let Some(fg_rect) = info.fg {
-                self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+                self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
-            if info.moon {
+
+            if info.moon && info.visible{
                 self.sdl_renderer.copy(&self.tile_texture, Some(moon), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
         }
