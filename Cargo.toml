@@ -16,7 +16,7 @@ getopts = "0.2.14"
 toml = "0.2.1"
 
 [dependencies.sdl2]
-git = "https://github.com/stevebob/rust-sdl2.git"
+version = "0.28.0"
 optional = true
 default-features = false
 features = ["image", "ttf"]
