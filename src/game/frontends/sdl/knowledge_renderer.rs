@@ -1,5 +1,6 @@
 use std::path;
 use std::result;
+use std::cmp;
 
 use sdl2::VideoSubsystem;
 use sdl2::rect::Rect;
@@ -55,18 +56,24 @@ pub enum SdlKnowledgeRendererError {
 
 impl<'a> SdlKnowledgeRenderer<'a> {
 
+    fn index_to_rgb(index: u8) -> (u8, u8, u8) {
+        let r = index >> 5;
+        let g = (index >> 2) & 7;
+        let b_small = index & 3;
+        let b = if b_small == 0 {
+            0
+        } else {
+            (b_small * 2) + 1
+        };
+
+        (r, g, b)
+    }
+
     fn create_greyscale_tile_texture(renderer: &Renderer, tile_path: &path::PathBuf) -> result::Result<Texture, String> {
         let mut rgb332_colours = Vec::new();
         for i in 0u32..256 {
 
-            let r = i >> 5;
-            let g = (i >> 2) & 7;
-            let b_small = i & 3;
-            let b = if b_small == 0 {
-                0
-            } else {
-                (b_small * 2) + 1
-            };
+            let (r, g, b) = Self::index_to_rgb(i as u8);
 
             rgb332_colours.push(Color::RGB(r as u8 * 36, g as u8 * 36, b as u8 * 36));
         }
@@ -75,17 +82,19 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         let mut greyscale_colours = Vec::new();
         for i in 0i32..256 {
 
-            let normalised = if i == 0 {
+            let (r, g, b) = Self::index_to_rgb(i as u8);
+
+            let max = cmp::max(r, cmp::max(g, b));
+
+            let normalised = if max == 0 {
                 0
             } else {
-                ((i - 127) / 4) + 127
+                32 + 6 * max
             };
 
-            let darkened = normalised / 2;
-
-            let r = darkened;
-            let g = darkened;
-            let b = darkened;
+            let r = normalised;
+            let g = normalised;
+            let b = normalised;
 
             greyscale_colours.push(Color::RGB(r as u8, g as u8, b as u8));
         }
