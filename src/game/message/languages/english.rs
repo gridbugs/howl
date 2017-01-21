@@ -14,6 +14,12 @@ impl Language for English {
                 message.push(MessagePart::Colour(colours::PURPLE, "HOWL".to_string()));
                 message.push(MessagePart::Plain("!".to_string()));
             }
+            MessageType::PlayerOpenDoor => {
+                message.push(MessagePart::Plain("You open the door.".to_string()));
+            }
+            MessageType::PlayerCloseDoor => {
+                message.push(MessagePart::Plain("You close the door.".to_string()));
+            }
         }
 
         if repeated > 1 {

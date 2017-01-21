@@ -89,6 +89,10 @@ impl DrawableKnowledgeLevel {
         self.targets.sort_by(|a, b| a.squared_distance(position).cmp(&b.squared_distance(position)));
         self.targets.as_slice()
     }
+
+    pub fn can_see(&self, coord: Coord, action_env: ActionEnv) -> bool {
+        self.get_with_default(coord).last_updated == action_env.id
+    }
 }
 
 impl LevelKnowledge for DrawableKnowledgeLevel {

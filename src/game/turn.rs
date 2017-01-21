@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::ops::Deref;
 
 use game::*;
+use game::data::*;
 use ecs::*;
 use util::Schedule;
 
@@ -83,7 +84,7 @@ impl<'game> ActionEnv<'game> {
 impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
-        self.pc_render()?;
+        self.pc_render(None)?;
 
         let resolution = self.take_turn()?;
 
@@ -192,7 +193,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.ecs.commit(self.ecs_action);
     }
 
-    fn pc_render(&mut self) -> Result<bool> {
+    fn pc_render(&mut self, action_description: Option<&ActionDescription>) -> Result<bool> {
 
         let entity = self.ecs.entity(self.pc_id);
 
@@ -206,10 +207,21 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                                                                  self.spatial_hash.height());
         let position = entity.position().ok_or(Error::MissingComponent)?;
         let vision_distance = entity.vision_distance().ok_or(Error::MissingComponent)?;
-        let message_log = entity.message_log_borrow().ok_or(Error::MissingComponent)?;
+        let mut message_log = entity.message_log_borrow_mut().ok_or(Error::MissingComponent)?;
+
+
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
 
-        if self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env) {
+        let mut changed = self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env);
+
+        if let Some(action_description) = action_description {
+            if level_knowledge.can_see(action_description.coord, action_env) {
+                message_log.add(action_description.message);
+                changed = true;
+            }
+        }
+
+        if changed {
             let mut renderer = self.renderer.borrow_mut();
             renderer.update_log(message_log.deref(), self.language);
             renderer.render(level_knowledge, *self.action_id, position);
@@ -223,6 +235,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         let mut turn_time = self.ecs.turn_time(self.entity_id);
         let mut first = true;
+        let mut action_description = None;
 
         self.action_schedule.insert(action, 0);
 
@@ -230,7 +243,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
             // render the scene if time has passed
             if action_event.time_delta != 0 {
-                if self.pc_render()? {
+                if self.pc_render(action_description.as_ref())? {
                     // if the change in scene was visible, add a delay
                     thread::sleep(Duration::from_millis(action_event.time_delta));
                 }
@@ -253,6 +266,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                     }
                 }
                 action_time = self.ecs_action.action_time_ms().unwrap_or(0);
+                action_description = self.ecs_action.clear_action_description();
 
                 self.commit();
             } else {
@@ -268,6 +282,10 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         if first {
             return Ok(None);
+        }
+
+        if action_description.is_some() {
+            self.pc_render(action_description.as_ref())?;
         }
 
         Ok(turn_time.map(|t| cmp::max(t, MIN_TURN_TIME)))

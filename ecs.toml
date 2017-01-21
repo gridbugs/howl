@@ -103,3 +103,6 @@ imports = [
 
 [action_property.close]
     type = "Close"
+
+[action_property.action_description]
+    type = "ActionDescription"

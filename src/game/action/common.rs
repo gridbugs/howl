@@ -19,6 +19,11 @@ pub fn open_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
 
     action.insert_tile(door.id(), TileType::OpenDoor);
 
+    action.set_action_description(ActionDescription {
+        message: MessageType::PlayerOpenDoor,
+        coord: door.position().ok_or(Error::MissingComponent)?,
+    });
+
     Ok(())
 }
 
@@ -28,6 +33,11 @@ pub fn close_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
     action.insert_door_state(door.id(), DoorState::Closed);
 
     action.insert_tile(door.id(), TileType::ClosedDoor);
+
+    action.set_action_description(ActionDescription {
+        message: MessageType::PlayerCloseDoor,
+        coord: door.position().ok_or(Error::MissingComponent)?,
+    });
 
     Ok(())
 }
