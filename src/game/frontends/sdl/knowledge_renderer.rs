@@ -41,9 +41,10 @@ pub struct SdlKnowledgeRenderer<'a> {
     game_width_px: usize,
     game_height_px: usize,
     tileset: Tileset,
-    message_log_position: Coord,
     clear_colour: Color,
     game_rect: Rect,
+    message_log_position: Coord,
+    message_log_rect: Rect,
     message_log: Vec<Message>,
 }
 
@@ -140,6 +141,13 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             message_log.push(Message::new());
         }
 
+        let message_log_position = Coord::new(0, (game_height_px + MESSAGE_LOG_PADDING_TOP_PX) as isize);
+        let message_log_rect = Rect::new(message_log_position.x as i32,
+                                         message_log_position.y as i32,
+                                         width_px,
+                                         MESSAGE_LOG_HEIGHT_PX as u32);
+
+
         Ok(SdlKnowledgeRenderer {
             buffer: TileBuffer::new(game_width, game_height),
             sdl_renderer: renderer,
@@ -153,8 +161,9 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             tileset: tileset,
             clear_colour: Color::RGB(0, 0, 0),
             game_rect: Rect::new(0, 0, game_width_px as u32, game_height_px as u32),
+            message_log_position: message_log_position,
+            message_log_rect: message_log_rect,
             message_log: message_log,
-            message_log_position: Coord::new(0, (game_height_px + MESSAGE_LOG_PADDING_TOP_PX) as isize),
         })
     }
 
@@ -214,7 +223,12 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
     fn clear_internal(&mut self) {
         self.sdl_renderer.set_draw_color(self.clear_colour);
-        self.sdl_renderer.draw_rect(self.game_rect).expect("Failed to clear screen");
+        self.sdl_renderer.fill_rect(self.game_rect).expect("Failed to clear screen");
+    }
+
+    fn clear_message_log(&mut self) {
+        self.sdl_renderer.set_draw_color(self.clear_colour);
+        self.sdl_renderer.fill_rect(self.message_log_rect).expect("Failed to clear message_log");
     }
 
     fn draw_internal(&mut self) {
@@ -267,6 +281,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
     fn draw_message_log_internal(&mut self) {
 
+        self.clear_message_log();
         let mut cursor = self.message_log_position;
 
         for line in &self.message_log {
