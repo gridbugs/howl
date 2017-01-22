@@ -251,7 +251,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         }
     }
 
-    fn display_log(&mut self, _messages: &MessageLog, _offset: usize, _language: &Box<Language>) {
+    fn display_log(&mut self, _message_log: &MessageLog, _offset: usize, _language: &Box<Language>) {
         // TODO
     }
 
