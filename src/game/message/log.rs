@@ -2,6 +2,7 @@ use std::cmp;
 
 use game::*;
 
+#[derive(Debug)]
 pub struct MessageLogEntry {
     pub message: MessageType,
     pub repeated: usize,
@@ -25,6 +26,12 @@ impl MessageLog {
     pub fn tail(&self, count: usize) -> &[MessageLogEntry] {
         let mid = cmp::max(0, (self.len() as isize) - (count as isize)) as usize;
         &self.messages[mid..]
+    }
+
+    pub fn tail_with_offset(&self, count: usize, offset: usize) -> &[MessageLogEntry] {
+        let end = cmp::max(0, (self.len() as isize) - (offset as isize)) as usize;
+        let start = cmp::max(0, (end as isize) - (count as isize)) as usize;
+        &self.messages[start..end]
     }
 
     pub fn add(&mut self, message: MessageType) {

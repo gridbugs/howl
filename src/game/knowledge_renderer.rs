@@ -43,4 +43,8 @@ pub trait KnowledgeRenderer {
     }
 
     fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>);
+
+    fn display_log(&mut self, messages: &MessageLog, offset: usize, language: &Box<Language>);
+
+    fn display_log_num_lines(&self) -> usize;
 }

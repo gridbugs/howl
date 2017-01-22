@@ -23,6 +23,9 @@ const MESSAGE_LOG_HEIGHT_PX: usize = MESSAGE_LOG_LINE_HEIGHT_PX * MESSAGE_LOG_NU
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MESSAGE_LOG_PADDING_TOP_PX: usize = 16;
 
+const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+const SCROLL_BAR_WIDTH_PX: usize = 20;
+
 struct SdlCellInfo {
     fg: Option<Rect>,
     bg: Option<Rect>,
@@ -40,12 +43,16 @@ pub struct SdlKnowledgeRenderer<'a> {
     height: usize,
     game_width_px: usize,
     game_height_px: usize,
+    width_px: usize,
+    height_px: usize,
     tileset: Tileset,
     clear_colour: Color,
     game_rect: Rect,
+    screen_rect: Rect,
     message_log_position: Coord,
     message_log_rect: Rect,
     message_log: Vec<Message>,
+    display_log_num_lines: usize,
     scroll: bool,
     scroll_position: Coord,
 }
@@ -161,14 +168,18 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             height: game_height,
             game_width_px: width_px as usize,
             game_height_px: game_height_px,
+            width_px: width_px as usize,
+            height_px: height_px as usize,
             tileset: tileset,
             clear_colour: Color::RGB(0, 0, 0),
             game_rect: Rect::new(0, 0, game_width_px as u32, game_height_px as u32),
+            screen_rect: Rect::new(0, 0, width_px, height_px),
             message_log_position: message_log_position,
             message_log_rect: message_log_rect,
             message_log: message_log,
             scroll: scroll,
             scroll_position: Coord::new(0, 0),
+            display_log_num_lines: (height_px as usize) / MESSAGE_LOG_LINE_HEIGHT_PX,
         })
     }
 
@@ -226,7 +237,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         info
     }
 
-    fn clear_internal(&mut self) {
+    fn clear_game(&mut self) {
         self.sdl_renderer.set_draw_color(self.clear_colour);
         self.sdl_renderer.fill_rect(self.game_rect).expect("Failed to clear screen");
     }
@@ -234,6 +245,11 @@ impl<'a> SdlKnowledgeRenderer<'a> {
     fn clear_message_log(&mut self) {
         self.sdl_renderer.set_draw_color(self.clear_colour);
         self.sdl_renderer.fill_rect(self.message_log_rect).expect("Failed to clear message_log");
+    }
+
+    fn clear_screen(&mut self) {
+        self.sdl_renderer.set_draw_color(self.clear_colour);
+        self.sdl_renderer.fill_rect(self.screen_rect).expect("Failed to clear message_log");
     }
 
     fn draw_internal(&mut self) {
@@ -285,31 +301,47 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         }
     }
 
+    fn rgb24_to_sdl_colour(rgb24: Rgb24) -> Color {
+        Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
+    }
+
+    fn render_message_part(renderer: &mut Renderer, font: &Font, part: &MessagePart, mut cursor: Coord) -> Coord {
+        let (colour, string) = match part {
+            &MessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
+            &MessagePart::Colour(c, ref s) => (c, s),
+        };
+
+        let sdl_colour = Self::rgb24_to_sdl_colour(colour);
+        let surface = font.render(string.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
+        let texture = renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
+
+        // assume fixed-width, square font
+        let text_width = string.len() * MESSAGE_LOG_LINE_HEIGHT_PX;
+        let text_rect = Rect::new(cursor.x as i32, cursor.y as i32, text_width as u32,
+                                  MESSAGE_LOG_LINE_HEIGHT_PX as u32);
+        renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
+        cursor.x += text_width as isize;
+
+        cursor
+    }
+
+    fn render_message(renderer: &mut Renderer, font: &Font, reset_x: isize, message: &Message, mut cursor: Coord) -> Coord {
+        for part in message {
+            cursor = Self::render_message_part(renderer, font, part, cursor);
+        }
+        cursor.x = reset_x;
+        cursor.y += MESSAGE_LOG_LINE_HEIGHT_PX as isize;
+
+        cursor
+    }
+
     fn draw_message_log_internal(&mut self) {
 
         self.clear_message_log();
         let mut cursor = self.message_log_position;
 
         for line in &self.message_log {
-            for part in line {
-                let (colour, string) = match part {
-                    &MessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
-                    &MessagePart::Colour(c, ref s) => (c, s),
-                };
-
-                let sdl_colour = rgb24_to_sdl_colour(colour);
-                let surface = self.font.render(string.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
-                let texture = self.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
-
-                // assume fixed-width, square font
-                let text_width = string.len() * MESSAGE_LOG_LINE_HEIGHT_PX;
-                let text_rect = Rect::new(cursor.x as i32, cursor.y as i32, text_width as u32,
-                                          MESSAGE_LOG_LINE_HEIGHT_PX as u32);
-                self.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
-                cursor.x += text_width as isize;
-            }
-            cursor.x = self.message_log_position.x;
-            cursor.y += MESSAGE_LOG_LINE_HEIGHT_PX as isize;
+            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, self.message_log_position.x, line, cursor);
         }
     }
 }
@@ -338,14 +370,14 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     }
 
     fn draw(&mut self) {
-        self.clear_internal();
+        self.clear_game();
         self.draw_internal();
         self.draw_message_log_internal();
         self.sdl_renderer.present();
     }
 
     fn draw_with_overlay(&mut self, overlay: &RenderOverlay) {
-        self.clear_internal();
+        self.clear_game();
         self.draw_internal();
         self.draw_overlay_internal(overlay);
         self.draw_message_log_internal();
@@ -357,8 +389,45 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
     }
-}
 
-fn rgb24_to_sdl_colour(rgb24: Rgb24) -> Color {
-    Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
+    fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
+        self.clear_screen();
+
+        let scroll_bar_rect = {
+            let num_messages = message_log.len();
+            let num_lines = self.display_log_num_lines();
+            if num_messages > num_lines {
+                let scroll_bar_height_px = (self.height_px * num_lines) / num_messages;
+                let remaining_px = self.height_px - scroll_bar_height_px;
+                let max_offset = num_messages - num_lines;
+                let scroll_bar_top_px = remaining_px - ((offset * remaining_px) / max_offset);
+                let scroll_bar_left_px = self.width_px - SCROLL_BAR_WIDTH_PX;
+                Some(Rect::new(scroll_bar_left_px as i32, scroll_bar_top_px as i32,
+                               SCROLL_BAR_WIDTH_PX as u32, scroll_bar_height_px as u32))
+            } else {
+                None
+            }
+        };
+
+        let mut cursor = Coord::new(0, 0);
+        let mut message = Message::new();
+
+        let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
+
+        for log_entry in messages {
+            language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
+            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, self.message_log_position.x, &message, cursor);
+        }
+
+        if let Some(scroll_bar_rect) = scroll_bar_rect {
+            self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
+            self.sdl_renderer.fill_rect(scroll_bar_rect).expect("Failed to draw scroll bar");
+        }
+
+        self.sdl_renderer.present();
+    }
+
+    fn display_log_num_lines(&self) -> usize {
+        self.display_log_num_lines
+    }
 }

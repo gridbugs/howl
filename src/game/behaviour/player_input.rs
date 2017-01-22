@@ -1,3 +1,6 @@
+use std::ops::Deref;
+use std::cmp;
+
 use game::*;
 use behaviour::LeafResolution;
 use direction::Direction;
@@ -87,6 +90,45 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     None
 }
 
+fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+
+    let mut renderer = input.renderer.borrow_mut();
+    let message_log = input.entity.message_log_borrow().unwrap();
+
+    let mut offset = 0;
+    let num_lines = renderer.display_log_num_lines();
+    let num_messages = message_log.len();
+    let max_offset = if num_messages > num_lines {
+        num_messages - num_lines
+    } else {
+        0
+    };
+
+    loop {
+        renderer.display_log(message_log.deref(), offset, input.language);
+
+        if let Some(event) = input_source.next_input() {
+            if let Some(control) = map.control(event) {
+                match control {
+                    Control::Quit |
+                        Control::DisplayMessageLog => break,
+                    Control::Direction(Direction::North) => {
+                        offset = cmp::min(max_offset, offset + 1);
+                    }
+                    Control::Direction(Direction::South) => {
+                        if offset > 0 {
+                            offset -= 1;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    renderer.draw();
+}
+
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         input.entity.control_map().and_then(|map| {
@@ -109,6 +151,10 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                     Control::Quit => Some(MetaAction::External(External::Quit)),
                     Control::NextTarget => None,
                     Control::PrevTarget => None,
+                    Control::DisplayMessageLog => {
+                        display_message_log(input, input_source, map);
+                        None
+                    }
                 }
             })
         })

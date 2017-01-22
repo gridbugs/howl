@@ -250,4 +250,13 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
     }
+
+    fn display_log(&mut self, _messages: &MessageLog, _offset: usize, _language: &Box<Language>) {
+        // TODO
+    }
+
+    fn display_log_num_lines(&self) -> usize {
+        // TODO
+        0
+    }
 }

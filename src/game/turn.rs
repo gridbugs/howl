@@ -305,6 +305,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             action_env: ActionEnv::new(self.ecs, *self.action_id),
             renderer: self.renderer,
             rng: self.rng,
+            language: self.language,
         };
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
     }

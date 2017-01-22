@@ -15,6 +15,7 @@ pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub action_env: ActionEnv<'a>,
     pub renderer: &'a RefCell<R>,
     pub rng: &'a GameRng,
+    pub language: &'a Box<Language>,
 }
 
 impl<'a, R: KnowledgeRenderer> Clone for BehaviourInput<'a, R> {
@@ -26,6 +27,7 @@ impl<'a, R: KnowledgeRenderer> Clone for BehaviourInput<'a, R> {
             action_env: self.action_env,
             renderer: self.renderer,
             rng: self.rng,
+            language: self.language,
         }
     }
 }
