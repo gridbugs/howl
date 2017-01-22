@@ -51,7 +51,8 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         GAME_HEIGHT,
         tile_path,
         tileset,
-        font) {
+        font,
+        true) {
         Ok(r) => r,
         Err(SdlKnowledgeRendererError::WindowCreationFailure) => return Err("Failed to create window".to_string()),
         Err(SdlKnowledgeRendererError::RendererInitialisationFailure) => return Err("Failed to initialise renderer".to_string()),

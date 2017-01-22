@@ -155,10 +155,6 @@ impl AnsiKnowledgeRenderer {
         }
     }
 
-    fn world_to_screen(&self, coord: Coord) -> Coord {
-        coord - self.scroll_position
-    }
-
     fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
         if let Some(ref aim_line) = overlay.aim_line {
             for coord in aim_line.iter() {
@@ -226,9 +222,9 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
     fn update(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
         let scroll_position = if self.scroll {
-            Some(position)
+            self.centre_offset(position)
         } else {
-            None
+            Coord::new(0, 0)
         };
 
         self.scroll_position = self.buffer.update(knowledge, turn_id, scroll_position);

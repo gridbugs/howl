@@ -44,13 +44,7 @@ impl TileBuffer {
     }
 
     pub fn update(&mut self, knowledge: &DrawableKnowledgeLevel,
-                  turn_id: u64, scroll_position: Option<Coord>) -> Coord {
-
-        let offset = if let Some(position) = scroll_position {
-            position - Coord::new(self.grid.width() as isize / 2, self.grid.height() as isize / 2)
-        } else {
-            Coord::new(0, 0)
-        };
+                  turn_id: u64, offset: Coord) -> Coord {
 
         for (coord, mut cell) in izip!(self.grid.coord_iter(), self.grid.iter_mut()) {
             let world_coord = coord + offset;

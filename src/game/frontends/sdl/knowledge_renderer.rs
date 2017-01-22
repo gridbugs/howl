@@ -46,6 +46,8 @@ pub struct SdlKnowledgeRenderer<'a> {
     message_log_position: Coord,
     message_log_rect: Rect,
     message_log: Vec<Message>,
+    scroll: bool,
+    scroll_position: Coord,
 }
 
 #[derive(Debug)]
@@ -119,7 +121,8 @@ impl<'a> SdlKnowledgeRenderer<'a> {
                game_height: usize,
                tile_path: path::PathBuf,
                tileset: Tileset,
-               font: Font<'a>) -> result::Result<Self, SdlKnowledgeRendererError> {
+               font: Font<'a>,
+               scroll: bool) -> result::Result<Self, SdlKnowledgeRendererError> {
 
         let game_width_px = (game_width * tileset.tile_width()) as usize;
         let game_height_px = (game_height * tileset.tile_height()) as usize;
@@ -164,6 +167,8 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             message_log_position: message_log_position,
             message_log_rect: message_log_rect,
             message_log: message_log,
+            scroll: scroll,
+            scroll_position: Coord::new(0, 0),
         })
     }
 
@@ -266,8 +271,9 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         let aim_line_bg = *self.tileset.resolve_extra(ExtraTileType::AimLine);
         if let Some(ref aim_line) = overlay.aim_line {
             for coord in aim_line.iter() {
-                if let Some(cell) = self.buffer.get(coord) {
-                    let rect = self.screen_rect(coord);
+                let screen_coord = self.world_to_screen(coord);
+                if let Some(cell) = self.buffer.get(screen_coord) {
+                    let rect = self.screen_rect(screen_coord);
                     let info = self.to_sdl_info(cell);
 
                     self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect(RENDERING_FAILED_MSG);
@@ -318,12 +324,17 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     }
 
     fn world_offset(&self) -> Coord {
-        Coord::new(0, 0)
+        self.scroll_position
     }
 
-    fn update(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, _position: Coord) {
-        // TODO handle scrolling
-        self.buffer.update(knowledge, turn_id, None);
+    fn update(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
+        let scroll_position = if self.scroll {
+            self.centre_offset(position)
+        } else {
+            Coord::new(0, 0)
+        };
+
+        self.scroll_position = self.buffer.update(knowledge, turn_id, scroll_position);
     }
 
     fn draw(&mut self) {

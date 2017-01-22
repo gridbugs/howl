@@ -8,6 +8,14 @@ pub trait KnowledgeRenderer {
 
     fn world_offset(&self) -> Coord;
 
+    fn world_to_screen(&self, coord: Coord) -> Coord {
+        coord - self.world_offset()
+    }
+
+    fn centre_offset(&self, centre: Coord) -> Coord {
+        centre - Coord::new(self.width() as isize / 2, self.height() as isize / 2)
+    }
+
     fn world_limit(&self) -> Coord {
         self.world_offset() + Coord::new(self.width() as isize - 1, self.height() as isize - 1)
     }
