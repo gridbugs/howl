@@ -24,7 +24,7 @@ const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 
 const MESSAGE_LOG_PADDING_TOP_PX: usize = 16;
 
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
-const SCROLL_BAR_WIDTH_PX: usize = 20;
+const SCROLL_BAR_WIDTH_PX: usize = 16;
 
 struct SdlCellInfo {
     fg: Option<Rect>,
