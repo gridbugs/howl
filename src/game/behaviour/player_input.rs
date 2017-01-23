@@ -51,10 +51,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
 
     loop {
 
-        let overlay = RenderOverlay {
-            aim_line: Some(StraightLine::new(start, end)),
-        };
-
+        let overlay = RenderOverlay::aim_line(StraightLine::new(start, end));
         renderer.draw_with_overlay(&overlay);
 
         if let Some(event) = input_source.next_input() {
@@ -129,6 +126,49 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
     renderer.draw();
 }
 
+fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+
+
+    let mut knowledge = input.entity.drawable_knowledge_borrow_mut().unwrap();
+    let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
+                                                             input.spatial_hash.width(),
+                                                             input.spatial_hash.height());
+
+    let mut renderer = input.renderer.borrow_mut();
+    let mut message_log = input.entity.message_log_borrow_mut().unwrap();
+    let position = input.entity.position().unwrap();
+
+    let mut cursor = position;
+
+    loop {
+
+        let cell = level_knowledge.get_with_default(cursor);
+        let message = MessageType::YouSee(cell.name());
+        message_log.add_temporary(message);
+        renderer.update_log(message_log.deref(), input.language);
+
+        let overlay = RenderOverlay::examine_cursor(cursor);
+        renderer.draw_with_overlay(&overlay);
+
+        if let Some(event) = input_source.next_input() {
+            if let Some(control) = map.control(event) {
+                match control {
+                    Control::Quit |
+                        Control::Examine => break,
+                    Control::Direction(direction) => {
+                        cursor += direction.vector();
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    message_log.add_temporary(MessageType::Empty);
+    renderer.update_log(message_log.deref(), input.language);
+    renderer.draw();
+}
+
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         input.entity.control_map().and_then(|map| {
@@ -153,6 +193,10 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                     Control::PrevTarget => None,
                     Control::DisplayMessageLog => {
                         display_message_log(input, input_source, map);
+                        None
+                    }
+                    Control::Examine => {
+                        examine(input, input_source, map);
                         None
                     }
                 }

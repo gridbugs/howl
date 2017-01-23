@@ -178,6 +178,13 @@ impl AnsiKnowledgeRenderer {
                     self.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
                 }
             }
+        } else if let Some(examine_cursor) = overlay.examine_cursor {
+            let screen_coord = self.world_to_screen(examine_cursor);
+            if let Some(cell) = self.buffer.get(screen_coord) {
+                let mut info = Self::to_ansi_info(cell);
+                info.bg = AIM_LINE_COLOUR;
+                self.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
+            }
         }
     }
 

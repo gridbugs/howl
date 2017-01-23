@@ -10,12 +10,14 @@ pub struct MessageLogEntry {
 
 pub struct MessageLog {
     messages: Vec<MessageLogEntry>,
+    last_temporary: bool,
 }
 
 impl MessageLog {
     pub fn new() -> Self {
         MessageLog {
             messages: Vec::new(),
+            last_temporary: false,
         }
     }
 
@@ -35,12 +37,33 @@ impl MessageLog {
     }
 
     pub fn add(&mut self, message: MessageType) {
+
+        if self.last_temporary {
+            self.messages.pop();
+        }
+
+        self.last_temporary = false;
+
         if let Some(ref mut entry) = self.messages.last_mut() {
             if message == entry.message {
                 entry.repeated += 1;
                 return;
             }
         }
+
+        self.messages.push(MessageLogEntry {
+            message: message,
+            repeated: 1,
+        });
+    }
+
+    pub fn add_temporary(&mut self, message: MessageType) {
+
+        if self.last_temporary {
+            self.messages.pop();
+        }
+
+        self.last_temporary = true;
 
         self.messages.push(MessageLogEntry {
             message: message,

@@ -50,6 +50,10 @@ imports = [
     type = "MessageLog"
     container = "RefCell"
 
+[component.name]
+    type = "NameMessageType"
+    copy = true
+
 [component.behaviour_type]
     type = "BehaviourType"
     copy = true

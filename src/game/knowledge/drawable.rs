@@ -9,6 +9,7 @@ pub struct DrawableKnowledgeCell {
     last_updated: u64,
     foreground: BestMap<isize, TileType>,
     background: BestMap<isize, TileType>,
+    name: BestMap<isize, NameMessageType>,
     moon: bool,
 }
 
@@ -18,6 +19,7 @@ impl DrawableKnowledgeCell {
             last_updated: 0,
             foreground: BestMap::new(),
             background: BestMap::new(),
+            name: BestMap::new(),
             moon: false,
         }
     }
@@ -34,6 +36,10 @@ impl DrawableKnowledgeCell {
         self.moon
     }
 
+    pub fn name(&self) -> Option<NameMessageType> {
+        self.name.value()
+    }
+
     pub fn last_updated(&self) -> u64 {
         self.last_updated
     }
@@ -47,6 +53,8 @@ impl DrawableKnowledgeCell {
             self.moon = world_cell.moon();
             self.foreground.clear();
             self.background.clear();
+            self.name.clear();
+
             for entity in action_env.ecs.entity_iter(world_cell.entity_id_iter()) {
                 entity.tile_depth().map(|depth| {
                     entity.tile().map(|tile| {
@@ -54,6 +62,9 @@ impl DrawableKnowledgeCell {
                         if tile.opaque_bg() {
                             self.background.insert(depth, tile);
                         }
+                    });
+                    entity.name().map(|name| {
+                        self.name.insert(depth, name);
                     });
                 });
             }
@@ -92,6 +103,14 @@ impl DrawableKnowledgeLevel {
 
     pub fn can_see(&self, coord: Coord, action_env: ActionEnv) -> bool {
         self.get_with_default(coord).last_updated == action_env.id
+    }
+
+    pub fn width(&self) -> usize {
+        self.grid.width()
+    }
+
+    pub fn height(&self) -> usize {
+        self.grid.height()
     }
 }
 

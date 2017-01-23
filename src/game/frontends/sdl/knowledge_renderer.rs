@@ -298,6 +298,17 @@ impl<'a> SdlKnowledgeRenderer<'a> {
                     }
                 }
             }
+        } else if let Some(examine_cursor) = overlay.examine_cursor {
+            let screen_coord = self.world_to_screen(examine_cursor);
+            if let Some(cell) = self.buffer.get(screen_coord) {
+                let rect = self.screen_rect(screen_coord);
+                let info = self.to_sdl_info(cell);
+
+                self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect(RENDERING_FAILED_MSG);
+                if let Some(fg_rect) = info.fg {
+                    self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+                }
+            }
         }
     }
 

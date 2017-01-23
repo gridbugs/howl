@@ -36,6 +36,7 @@ pub fn tree(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> 
     entity.insert_solid();
 
     entity.insert_tile(TileType::Tree);
+    entity.insert_name(NameMessageType::Tree);
 
     entity.insert_tile_depth(1);
     entity.insert_shadow_entity(shadow_id);
@@ -84,6 +85,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_should_render();
     entity.insert_message_log(MessageLog::new());
+    entity.insert_name(NameMessageType::Player);
 
     entity
 }

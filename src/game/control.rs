@@ -12,6 +12,7 @@ pub enum Control {
     PrevTarget,
     Wait,
     DisplayMessageLog,
+    Examine,
     Quit,
 }
 
@@ -33,6 +34,7 @@ impl ControlMap {
         map.insert(InputEvent::Char('n'), Control::NextTarget);
         map.insert(InputEvent::Char('m'), Control::PrevTarget);
         map.insert(InputEvent::Char('t'), Control::DisplayMessageLog);
+        map.insert(InputEvent::Char('x'), Control::Examine);
 
         map.insert(InputEvent::Char('.'), Control::Wait);
 
