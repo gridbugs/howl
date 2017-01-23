@@ -16,6 +16,8 @@ const MESSAGE_LOG_NUM_LINES: usize = 4;
 const MESSAGE_LOG_PADDING_TOP: usize = 1;
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 
+const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+
 struct AnsiInfo {
     ch: char,
     fg: AnsiColour,
@@ -35,12 +37,16 @@ impl Default for AnsiInfo {
 }
 
 pub struct AnsiKnowledgeRenderer {
+    window_allocator: Box<ansi::WindowAllocator>,
     window: ansi::Window,
     buffer: TileBuffer,
     scroll: bool,
     scroll_position: Coord,
     message_log_window: ansi::Window,
     message_log: Vec<Message>,
+    total_width: usize,
+    total_height: usize,
+    top_left: Coord,
 }
 
 pub enum AnsiKnowledgeRendererError {
@@ -51,7 +57,7 @@ pub enum AnsiKnowledgeRendererError {
 }
 
 impl AnsiKnowledgeRenderer {
-    pub fn new(window_allocator: &ansi::WindowAllocator,
+    pub fn new(window_allocator: Box<ansi::WindowAllocator>,
                game_width: usize,
                game_height: usize,
                scroll: bool) -> result::Result<Self, AnsiKnowledgeRendererError> {
@@ -82,13 +88,20 @@ impl AnsiKnowledgeRenderer {
             message_log.push(Message::new());
         }
 
+        window_allocator.fill(ansi::colours::BLACK);
+        window_allocator.flush();
+
         Ok(AnsiKnowledgeRenderer {
+            window_allocator: window_allocator,
             window: window,
             buffer: TileBuffer::new(game_width, game_height),
             scroll: scroll,
             scroll_position: Coord::new(0, 0),
             message_log_window: message_log_window,
             message_log: message_log,
+            total_width: game_width,
+            total_height: game_height + MESSAGE_LOG_PADDING_TOP + MESSAGE_LOG_NUM_LINES,
+            top_left: Coord::new(ANSI_GAME_WINDOW_X as isize, ANSI_GAME_WINDOW_Y as isize),
         })
     }
 
@@ -168,40 +181,64 @@ impl AnsiKnowledgeRenderer {
         }
     }
 
+    fn render_message_part(window: &mut ansi::Window, part: &MessagePart, mut cursor: Coord) -> Coord {
+        let (colour, string) = match part {
+            &MessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
+            &MessagePart::Colour(c, ref s) => (c, s),
+        };
+
+        let ansi_colour = ansi::AnsiColour::new_from_rgb24(colour);
+
+        for ch in string.chars() {
+            if cursor.x >= window.width() as isize {
+                break;
+            }
+
+            window.get_cell(cursor.x, cursor.y).set(ch, ansi_colour, ansi::colours::DARK_GREY, ansi::styles::NONE);
+
+            cursor.x += 1;
+        }
+
+        cursor
+    }
+
+    fn render_message(window: &mut ansi::Window, message: &Message, mut cursor: Coord) -> Coord {
+        for part in message {
+            cursor = Self::render_message_part(window, part, cursor);
+        }
+
+        while cursor.x < window.width() as isize {
+            window.get_cell(cursor.x, cursor.y).set(' ', ansi::colours::DARK_GREY, ansi::colours::DARK_GREY, ansi::styles::NONE);
+
+            cursor.x += 1;
+        }
+
+        cursor.x = 0;
+        cursor.y += 1;
+
+        cursor
+    }
+
     fn draw_message_log_internal(&mut self) {
 
         let mut cursor = Coord::new(0, 0);
 
         for line in &self.message_log {
-            for part in line {
-                let (colour, string) = match part {
-                    &MessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
-                    &MessagePart::Colour(c, ref s) => (c, s),
-                };
+            cursor = Self::render_message(&mut self.message_log_window, line, cursor);
+       }
+    }
 
-                let ansi_colour = ansi::AnsiColour::new_from_rgb24(colour);
+    fn scroll_bar(&self, num_messages: usize, offset: usize) -> Option<(Coord, usize)> {
+        let num_lines = self.display_log_num_lines();
+        if num_messages > num_lines {
+            let scroll_bar_height = (self.total_height * num_lines) / num_messages;
+            let remaining = self.total_height - scroll_bar_height;
+            let max_offset = num_messages - num_lines;
+            let scroll_bar_top = remaining - ((offset * remaining) / max_offset);
 
-                for ch in string.chars() {
-                    if cursor.x >= self.message_log_window.width() as isize {
-                        break;
-                    }
-
-                    self.message_log_window.get_cell(cursor.x, cursor.y)
-                        .set(ch, ansi_colour, ansi::colours::BLACK, ansi::styles::NONE);
-
-                    cursor.x += 1;
-                }
-            }
-
-            while cursor.x < self.message_log_window.width() as isize {
-                self.message_log_window.get_cell(cursor.x, cursor.y)
-                    .set(' ', ansi::colours::BLACK, ansi::colours::BLACK, ansi::styles::NONE);
-
-                cursor.x += 1;
-            }
-
-            cursor.x = 0;
-            cursor.y += 1;
+            Some((Coord::new(self.total_width as isize - 1, scroll_bar_top as isize), scroll_bar_height))
+        } else {
+            None
         }
     }
 }
@@ -251,12 +288,38 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         }
     }
 
-    fn display_log(&mut self, _message_log: &MessageLog, _offset: usize, _language: &Box<Language>) {
-        // TODO
+    fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
+
+        let mut window = self.window_allocator.make_window(self.top_left.x, self.top_left.y,
+                                                                  self.total_width, self.total_height,
+                                                                  ansi::BufferType::Double);
+        let mut cursor = Coord::new(0, 0);
+        let mut message = Message::new();
+        let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
+        for log_entry in messages {
+            language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
+            cursor = Self::render_message(&mut window, &message, cursor);
+        }
+
+        message.clear();
+        while cursor.y < self.display_log_num_lines() as isize {
+            cursor = Self::render_message(&mut window, &message, cursor);
+        }
+
+        if let Some((position, size)) = self.scroll_bar(message_log.len(), offset) {
+            let scroll_bar_colour = ansi::AnsiColour::new_from_rgb24(SCROLL_BAR_COLOUR);
+            for i in 0..(size as isize) {
+                let coord = position + Coord::new(0, i);
+                window.get_cell(coord.x, coord.y).set(' ', scroll_bar_colour, scroll_bar_colour, ansi::styles::NONE);
+            }
+        }
+
+        window.flush();
+        self.window_allocator.fill(ansi::colours::BLACK);
+        window.delete();
     }
 
     fn display_log_num_lines(&self) -> usize {
-        // TODO
-        0
+        self.total_height
     }
 }

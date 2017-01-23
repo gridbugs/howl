@@ -102,6 +102,13 @@ impl Window {
         }
     }
 
+    pub fn delete(&mut self) {
+        unsafe {
+            let mut manager = &mut (*self.manager);
+            manager.free_window(self.id);
+        }
+    }
+
     pub fn get_cell(&mut self, x: isize, y: isize) -> &mut WindowCell {
         self.data.get_cell(x, y)
     }
@@ -216,6 +223,18 @@ impl WindowAllocator {
             (*self.manager.get()).height()
         }
     }
+
+    pub fn fill(&self, colour: AnsiColour) {
+        unsafe {
+            (*self.manager.get()).fill(colour);
+        }
+    }
+
+    pub fn flush(&self) {
+        unsafe {
+            (*self.manager.get()).flush();
+        }
+    }
 }
 
 fn rustty_style(style: Style) -> rustty::Attr {
@@ -247,6 +266,31 @@ impl WindowManager {
         })
     }
 
+    fn fill(&mut self, colour: AnsiColour) {
+        for j in 0..self.terminal.rows() {
+            for i in 0..self.terminal.cols() {
+                let cell = &mut self.terminal[(i, j)];
+                cell.set_ch(' ');
+                cell.set_bg(rustty::Color::Byte(u8::from(colour)));
+            }
+        }
+    }
+
+    fn clear_top_window(top_window_map: &mut StaticGrid<Option<u64>>) {
+        for cell in top_window_map.iter_mut() {
+            *cell = None;
+        }
+    }
+
+    fn update_top_window(top_window_map: &mut StaticGrid<Option<u64>>, id: u64, window: &WindowData) {
+        let (x, y) = window.coord;
+        for j in 0..(window.grid.height() as isize) {
+            for i in 0..(window.grid.width() as isize) {
+               *top_window_map.get_checked_mut(Coord::new(i + x, j + y)) = Some(id);
+            }
+        }
+    }
+
     fn allocate_window(&mut self, x: isize, y: isize, width: usize, height: usize) -> u64 {
         let id = self.id_reserver.reserve();
 
@@ -264,6 +308,30 @@ impl WindowManager {
         }
 
         id
+    }
+
+    fn get_order_idx(&self, id: u64) -> Option<usize> {
+        for i in 0..self.order.len() {
+            if self.order[i] == id {
+                return Some(i);
+            }
+        }
+
+        None
+    }
+
+    fn free_window(&mut self, id: u64) {
+        self.windows.remove(&id);
+
+        if let Some(idx) = self.get_order_idx(id) {
+            self.order.remove(idx);
+        }
+
+        Self::clear_top_window(&mut self.top_window_map);
+
+        for id in &self.order {
+            Self::update_top_window(&mut self.top_window_map, *id, self.windows.get(id).unwrap());
+        }
     }
 
     fn is_top_window(&self, id: u64) -> bool {

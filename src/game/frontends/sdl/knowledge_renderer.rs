@@ -344,6 +344,21 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             cursor = Self::render_message(&mut self.sdl_renderer, &self.font, self.message_log_position.x, line, cursor);
         }
     }
+
+    fn scroll_bar_rect(&self, num_messages: usize, offset: usize) -> Option<Rect> {
+        let num_lines = self.display_log_num_lines();
+        if num_messages > num_lines {
+            let scroll_bar_height_px = (self.height_px * num_lines) / num_messages;
+            let remaining_px = self.height_px - scroll_bar_height_px;
+            let max_offset = num_messages - num_lines;
+            let scroll_bar_top_px = remaining_px - ((offset * remaining_px) / max_offset);
+            let scroll_bar_left_px = self.width_px - SCROLL_BAR_WIDTH_PX;
+            Some(Rect::new(scroll_bar_left_px as i32, scroll_bar_top_px as i32,
+                           SCROLL_BAR_WIDTH_PX as u32, scroll_bar_height_px as u32))
+        } else {
+            None
+        }
+    }
 }
 
 impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
@@ -393,21 +408,7 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
         self.clear_screen();
 
-        let scroll_bar_rect = {
-            let num_messages = message_log.len();
-            let num_lines = self.display_log_num_lines();
-            if num_messages > num_lines {
-                let scroll_bar_height_px = (self.height_px * num_lines) / num_messages;
-                let remaining_px = self.height_px - scroll_bar_height_px;
-                let max_offset = num_messages - num_lines;
-                let scroll_bar_top_px = remaining_px - ((offset * remaining_px) / max_offset);
-                let scroll_bar_left_px = self.width_px - SCROLL_BAR_WIDTH_PX;
-                Some(Rect::new(scroll_bar_left_px as i32, scroll_bar_top_px as i32,
-                               SCROLL_BAR_WIDTH_PX as u32, scroll_bar_height_px as u32))
-            } else {
-                None
-            }
-        };
+        let scroll_bar_rect = self.scroll_bar_rect(message_log.len(), offset);
 
         let mut cursor = Coord::new(0, 0);
         let mut message = Message::new();

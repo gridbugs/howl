@@ -37,7 +37,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     let input_source = window_allocator.make_input_source();
 
-    let renderer = match frontends::ansi::AnsiKnowledgeRenderer::new(&window_allocator, GAME_WIDTH, GAME_HEIGHT, true) {
+    let renderer = match frontends::ansi::AnsiKnowledgeRenderer::new(window_allocator, GAME_WIDTH, GAME_HEIGHT, true) {
         Ok(r) => r,
         Err(frontends::ansi::AnsiKnowledgeRendererError::TerminalTooSmall { min_width, min_height }) => {
             return Err(format!("Terminal too small. Must be at least {}x{}.", min_width, min_height));

@@ -41,6 +41,10 @@ impl WindowBuffer {
         }
     }
 
+    pub fn delete(&mut self) {
+        self.window.delete();
+    }
+
     pub fn draw_borders(&mut self) {
         self.window.get_cell(0, 0).set_ch('+');
         self.window.get_cell(self.width as isize - 1, 0).set_ch('+');
