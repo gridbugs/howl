@@ -4,13 +4,24 @@ use colour::*;
 pub struct English;
 
 impl English {
-    fn translate_you_see(&self, name: NameMessageType, message: &mut Message) {
+    fn translate_you_see(&self, name: YouSeeMessageType, message: &mut Message) {
         match name {
-            NameMessageType::Player => {
+            YouSeeMessageType::Player => {
                 message.push(MessagePart::Plain("Yourself".to_string()));
             }
-            NameMessageType::Tree => {
+            YouSeeMessageType::Tree => {
                 message.push(MessagePart::Plain("A tree".to_string()));
+            }
+        }
+    }
+
+    fn translate_action(&self, action: ActionMessageType, message: &mut Message) {
+        match action {
+            ActionMessageType::PlayerOpenDoor => {
+                message.push(MessagePart::Plain("You open the door.".to_string()));
+            }
+            ActionMessageType::PlayerCloseDoor => {
+                message.push(MessagePart::Plain("You close the door.".to_string()));
             }
         }
     }
@@ -28,11 +39,8 @@ impl Language for English {
                 message.push(MessagePart::Colour(colours::PURPLE, "HOWL".to_string()));
                 message.push(MessagePart::Plain("!".to_string()));
             }
-            MessageType::PlayerOpenDoor => {
-                message.push(MessagePart::Plain("You open the door.".to_string()));
-            }
-            MessageType::PlayerCloseDoor => {
-                message.push(MessagePart::Plain("You close the door.".to_string()));
+            MessageType::Action(action) => {
+                self.translate_action(action, message);
             }
             MessageType::YouSee(name) => {
                 message.push(MessagePart::Plain("You see: ".to_string()));

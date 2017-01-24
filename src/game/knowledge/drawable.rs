@@ -9,7 +9,7 @@ pub struct DrawableKnowledgeCell {
     last_updated: u64,
     foreground: BestMap<isize, TileType>,
     background: BestMap<isize, TileType>,
-    name: BestMap<isize, NameMessageType>,
+    you_see: BestMap<isize, YouSeeMessageType>,
     moon: bool,
 }
 
@@ -19,7 +19,7 @@ impl DrawableKnowledgeCell {
             last_updated: 0,
             foreground: BestMap::new(),
             background: BestMap::new(),
-            name: BestMap::new(),
+            you_see: BestMap::new(),
             moon: false,
         }
     }
@@ -36,8 +36,8 @@ impl DrawableKnowledgeCell {
         self.moon
     }
 
-    pub fn name(&self) -> Option<NameMessageType> {
-        self.name.value()
+    pub fn you_see(&self) -> Option<YouSeeMessageType> {
+        self.you_see.value()
     }
 
     pub fn last_updated(&self) -> u64 {
@@ -53,7 +53,7 @@ impl DrawableKnowledgeCell {
             self.moon = world_cell.moon();
             self.foreground.clear();
             self.background.clear();
-            self.name.clear();
+            self.you_see.clear();
 
             for entity in action_env.ecs.entity_iter(world_cell.entity_id_iter()) {
                 entity.tile_depth().map(|depth| {
@@ -63,8 +63,8 @@ impl DrawableKnowledgeCell {
                             self.background.insert(depth, tile);
                         }
                     });
-                    entity.name().map(|name| {
-                        self.name.insert(depth, name);
+                    entity.you_see().map(|you_see| {
+                        self.you_see.insert(depth, you_see);
                     });
                 });
             }

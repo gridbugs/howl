@@ -216,7 +216,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         if let Some(action_description) = action_description {
             if level_knowledge.can_see(action_description.coord, action_env) {
-                message_log.add(action_description.message);
+                message_log.add(MessageType::Action(action_description.message));
                 changed = true;
             }
         }

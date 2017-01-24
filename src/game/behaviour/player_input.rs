@@ -143,7 +143,7 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
     loop {
 
         let cell = level_knowledge.get_with_default(cursor);
-        let message = MessageType::YouSee(cell.name());
+        let message = MessageType::YouSee(cell.you_see());
         message_log.add_temporary(message);
         renderer.update_log(message_log.deref(), input.language);
 

@@ -1,18 +1,19 @@
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum MessageType {
-    // general
     Welcome,
     Empty,
-
-    // actions
-    PlayerOpenDoor,
-    PlayerCloseDoor,
-
-    YouSee(Option<NameMessageType>),
+    Action(ActionMessageType),
+    YouSee(Option<YouSeeMessageType>),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum NameMessageType {
+pub enum YouSeeMessageType {
     Player,
     Tree,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ActionMessageType {
+    PlayerOpenDoor,
+    PlayerCloseDoor,
 }
