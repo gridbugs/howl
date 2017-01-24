@@ -1,12 +1,14 @@
 use std::path;
 use std::result;
 use std::cmp;
+use std::slice;
+use std::mem;
 
 use sdl2::VideoSubsystem;
 use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
 use sdl2::image::{LoadTexture, LoadSurface};
-use sdl2::pixels::{Color, Palette, PixelFormatEnum};
+use sdl2::pixels::Color;
 use sdl2::ttf::Font;
 use sdl2::surface::Surface;
 
@@ -66,60 +68,34 @@ pub enum SdlKnowledgeRendererError {
 
 impl<'a> SdlKnowledgeRenderer<'a> {
 
-    fn index_to_rgb(index: u8) -> (u8, u8, u8) {
-        let r = index >> 5;
-        let g = (index >> 2) & 7;
-        let b_small = index & 3;
-        let b = if b_small == 0 {
-            0
-        } else {
-            (b_small * 2) + 1
+    fn create_greyscale_tile_texture(renderer: &Renderer, tile_path: &path::PathBuf) -> result::Result<Texture, String> {
+        let tile_surface = Surface::from_file(&tile_path)?;
+
+        let size = (tile_surface.width() * tile_surface.height()) as usize;
+
+        let pixels = unsafe {
+            let pixels_ptr = (&mut *tile_surface.raw()).pixels as *mut u32;
+            slice::from_raw_parts_mut(pixels_ptr, size)
         };
 
-        (r, g, b)
-    }
+        for pixel in pixels.iter_mut() {
 
-    fn create_greyscale_tile_texture(renderer: &Renderer, tile_path: &path::PathBuf) -> result::Result<Texture, String> {
-        let mut rgb332_colours = Vec::new();
-        for i in 0u32..256 {
+            const R: usize = 0;
+            const G: usize = 1;
+            const B: usize = 2;
 
-            let (r, g, b) = Self::index_to_rgb(i as u8);
+            let mut arr = unsafe { mem::transmute::<u32, [u8; 4]>(*pixel) };
+            let max = cmp::max(arr[R], cmp::max(arr[G], arr[B])) as u32;
+            let darkened = ((max * 1) / 3) as u8;
 
-            rgb332_colours.push(Color::RGB(r as u8 * 36, g as u8 * 36, b as u8 * 36));
+            arr[R] = darkened;
+            arr[G] = darkened;
+            arr[B] = darkened;
+
+            *pixel = unsafe { mem::transmute::<[u8; 4], u32>(arr) };
         }
-        let rgb332_palette = Palette::with_colors(&rgb332_colours)?;
 
-        let mut greyscale_colours = Vec::new();
-        for i in 0i32..256 {
-
-            let (r, g, b) = Self::index_to_rgb(i as u8);
-
-            let max = cmp::max(r, cmp::max(g, b));
-
-            let normalised = if max == 0 {
-                0
-            } else {
-                32 + 6 * max
-            };
-
-            let r = normalised;
-            let g = normalised;
-            let b = normalised;
-
-            greyscale_colours.push(Color::RGB(r as u8, g as u8, b as u8));
-        }
-        let greyscale_palette = Palette::with_colors(&greyscale_colours)?;
-
-        let mut dummy_surface = Surface::new(1, 1, PixelFormatEnum::Index8)?;
-        dummy_surface.set_palette(&rgb332_palette)?;
-
-        let pixel_format = dummy_surface.pixel_format();
-
-        let tile_surface = Surface::from_file(&tile_path)?;
-        let mut greyscale_tile_surface = tile_surface.convert(&pixel_format)?;
-        greyscale_tile_surface.set_palette(&greyscale_palette)?;
-
-        renderer.create_texture_from_surface(greyscale_tile_surface).map_err(|e| format!("{}", e))
+        renderer.create_texture_from_surface(tile_surface).map_err(|e| format!("{}", e))
     }
 
     pub fn new(video: &VideoSubsystem,
