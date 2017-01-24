@@ -270,7 +270,12 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
                     self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect(RENDERING_FAILED_MSG);
                     if let Some(fg_rect) = info.fg {
-                        self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+                        let texture = if info.visible {
+                            &self.tile_texture
+                        } else {
+                            &self.greyscale_tile_texture
+                        };
+                        self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
                     }
                 }
             }
@@ -282,7 +287,12 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
                 self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect(RENDERING_FAILED_MSG);
                 if let Some(fg_rect) = info.fg {
-                    self.sdl_renderer.copy(&self.tile_texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+                    let texture = if info.visible {
+                        &self.tile_texture
+                    } else {
+                        &self.greyscale_tile_texture
+                    };
+                    self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
                 }
             }
         }
