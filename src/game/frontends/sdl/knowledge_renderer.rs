@@ -21,9 +21,9 @@ use colour::Rgb24;
 const RENDERING_FAILED_MSG: &'static str = "Rendering failed";
 const MESSAGE_LOG_NUM_LINES: usize = 4;
 const MESSAGE_LOG_LINE_HEIGHT_PX: usize = 16;
-const MESSAGE_LOG_HEIGHT_PX: usize = MESSAGE_LOG_LINE_HEIGHT_PX * MESSAGE_LOG_NUM_LINES;
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
-const MESSAGE_LOG_PADDING_TOP_PX: usize = 16;
+const MESSAGE_LOG_PADDING_PX: usize = 4;
+const MESSAGE_LOG_HEIGHT_PX: usize = (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX) * MESSAGE_LOG_NUM_LINES;
 
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const SCROLL_BAR_WIDTH_PX: usize = 16;
@@ -55,6 +55,7 @@ pub struct SdlKnowledgeRenderer<'a> {
     message_log_rect: Rect,
     message_log: Vec<Message>,
     display_log_num_lines: usize,
+    display_log_num_cols: usize,
     scroll: bool,
     scroll_position: Coord,
 }
@@ -110,7 +111,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         let game_width_px = (game_width * tileset.tile_width()) as usize;
         let game_height_px = (game_height * tileset.tile_height()) as usize;
         let width_px = game_width_px as u32;
-        let height_px = (game_height_px + MESSAGE_LOG_HEIGHT_PX + MESSAGE_LOG_PADDING_TOP_PX) as u32;
+        let height_px = (game_height_px + MESSAGE_LOG_HEIGHT_PX) as u32;
         let window = video.window(title, width_px, height_px)
             .build()
             .map_err(|_| SdlKnowledgeRendererError::WindowCreationFailure)?;
@@ -127,7 +128,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             message_log.push(Message::new());
         }
 
-        let message_log_position = Coord::new(0, (game_height_px + MESSAGE_LOG_PADDING_TOP_PX) as isize);
+        let message_log_position = Coord::new(0, game_height_px as isize);
         let message_log_rect = Rect::new(message_log_position.x as i32,
                                          message_log_position.y as i32,
                                          width_px,
@@ -155,7 +156,8 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             message_log: message_log,
             scroll: scroll,
             scroll_position: Coord::new(0, 0),
-            display_log_num_lines: (height_px as usize) / MESSAGE_LOG_LINE_HEIGHT_PX,
+            display_log_num_lines: (height_px as usize) / (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX),
+            display_log_num_cols: (width_px as usize - MESSAGE_LOG_PADDING_PX * 2) / MESSAGE_LOG_LINE_HEIGHT_PX, // square fonts only
         })
     }
 
@@ -302,14 +304,15 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
     }
 
-    fn render_message_part(renderer: &mut Renderer, font: &Font, part: &MessagePart, mut cursor: Coord) -> Coord {
+    fn render_message_part(renderer: &mut Renderer, font: &Font, part: &MessagePart, cursor: Coord) -> Coord {
+        match part.as_text() {
+            Some(text_part) => Self::render_text_message_part(renderer, font, text_part, cursor),
+            None => cursor,
+        }
+    }
 
-        let text_part = match part.as_text() {
-            Some(text_part) => text_part,
-            None => return cursor,
-        };
-
-        let (colour, string) = match *text_part {
+    fn render_text_message_part(renderer: &mut Renderer, font: &Font, part: &TextMessagePart, mut cursor: Coord) -> Coord {
+        let (colour, string) = match *part {
             TextMessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
             TextMessagePart::Colour(c, ref s) => (c, s),
         };
@@ -328,23 +331,36 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         cursor
     }
 
-    fn render_message(renderer: &mut Renderer, font: &Font, reset_x: isize, message: &Message, mut cursor: Coord) -> Coord {
+    fn render_message(renderer: &mut Renderer, font: &Font, message: &Message, cursor: Coord) -> Coord {
+        let mut tmp_cursor = cursor;
         for part in message {
-            cursor = Self::render_message_part(renderer, font, part, cursor);
+            tmp_cursor = Self::render_message_part(renderer, font, part, tmp_cursor);
         }
-        cursor.x = reset_x;
-        cursor.y += MESSAGE_LOG_LINE_HEIGHT_PX as isize;
+        tmp_cursor.x = cursor.x;
+        tmp_cursor.y += MESSAGE_LOG_LINE_HEIGHT_PX as isize;
 
-        cursor
+        tmp_cursor
+    }
+
+    fn render_text_message(renderer: &mut Renderer, font: &Font, message: &TextMessage, cursor: Coord) -> Coord {
+        let mut tmp_cursor = cursor;
+        for part in message {
+            tmp_cursor = Self::render_text_message_part(renderer, font, part, tmp_cursor);
+        }
+        tmp_cursor.x = cursor.x;
+        tmp_cursor.y += MESSAGE_LOG_LINE_HEIGHT_PX as isize;
+
+        tmp_cursor
     }
 
     fn draw_message_log_internal(&mut self) {
 
         self.clear_message_log();
-        let mut cursor = self.message_log_position;
+        let mut cursor = self.message_log_position + Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
 
         for line in &self.message_log {
-            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, self.message_log_position.x, line, cursor);
+            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, line, cursor);
+            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
         }
     }
 
@@ -413,14 +429,15 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
 
         let scroll_bar_rect = self.scroll_bar_rect(message_log.len(), offset);
 
-        let mut cursor = Coord::new(0, 0);
+        let mut cursor = Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
         let mut message = Message::new();
 
         let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
 
         for log_entry in messages {
             language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
-            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, self.message_log_position.x, &message, cursor);
+            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, &message, cursor);
+            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
         }
 
         if let Some(scroll_bar_rect) = scroll_bar_rect {
@@ -433,5 +450,23 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
 
     fn display_log_num_lines(&self) -> usize {
         self.display_log_num_lines
+    }
+
+    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>) {
+
+        let mut message = Message::new();
+        let mut wrapped = Vec::new();
+
+        language.translate(message_type, &mut message);
+        wrap_message(&message, self.display_log_num_cols, &mut wrapped);
+
+        let mut cursor = Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
+
+        for line in wrapped.iter() {
+            cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, line, cursor);
+            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
+        }
+
+        self.sdl_renderer.present();
     }
 }

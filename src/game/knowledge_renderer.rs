@@ -47,4 +47,6 @@ pub trait KnowledgeRenderer {
     fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>);
 
     fn display_log_num_lines(&self) -> usize;
+
+    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>);
 }

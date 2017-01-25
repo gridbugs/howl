@@ -34,6 +34,7 @@ impl Language for English {
 
         match message_type {
             MessageType::Empty => {},
+            MessageType::Intro => intro_message(message),
             MessageType::Welcome => {
                 message.push(MessagePart::plain("Welcome to "));
                 message.push(MessagePart::colour(colours::PURPLE, "HOWL"));
@@ -54,4 +55,13 @@ impl Language for English {
             message.push(MessagePart::Text(TextMessagePart::Plain(format!("(x{})", repeated))));
         }
     }
+}
+
+fn intro_message(message: &mut Message) {
+    message.push(MessagePart::plain("Everything beneath the moonlight appears different. "));
+    message.push(MessagePart::plain("An arcane tome is rumored to be hidden somewhere in the forest. "));
+    message.push(MessagePart::plain("Perhaps the answers lie within."));
+    message.push(MessagePart::Newline);
+    message.push(MessagePart::Newline);
+    message.push(MessagePart::plain("Press a key to begin..."));
 }

@@ -188,14 +188,15 @@ impl AnsiKnowledgeRenderer {
         }
     }
 
-    fn render_message_part(window: &mut ansi::Window, part: &MessagePart, mut cursor: Coord) -> Coord {
+    fn render_message_part(window: &mut ansi::Window, part: &MessagePart, cursor: Coord) -> Coord {
+        match part.as_text() {
+            Some(text_part) => Self::render_text_message_part(window, text_part, cursor),
+            None => cursor,
+        }
+    }
 
-        let text_part = match part.as_text() {
-            Some(text_part) => text_part,
-            None => return cursor,
-        };
-
-        let (colour, string) = match *text_part {
+    fn render_text_message_part(window: &mut ansi::Window, part: &TextMessagePart, mut cursor: Coord) -> Coord {
+        let (colour, string) = match *part {
             TextMessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
             TextMessagePart::Colour(c, ref s) => (c, s),
         };
@@ -213,6 +214,17 @@ impl AnsiKnowledgeRenderer {
         }
 
         cursor
+
+    }
+
+    fn clear_to_line_end(window: &mut ansi::Window, mut cursor: Coord) -> Coord {
+        while cursor.x < window.width() as isize {
+            window.get_cell(cursor.x, cursor.y).set(' ', ansi::colours::DARK_GREY, ansi::colours::DARK_GREY, ansi::styles::NONE);
+
+            cursor.x += 1;
+        }
+
+        cursor
     }
 
     fn render_message(window: &mut ansi::Window, message: &Message, mut cursor: Coord) -> Coord {
@@ -220,11 +232,20 @@ impl AnsiKnowledgeRenderer {
             cursor = Self::render_message_part(window, part, cursor);
         }
 
-        while cursor.x < window.width() as isize {
-            window.get_cell(cursor.x, cursor.y).set(' ', ansi::colours::DARK_GREY, ansi::colours::DARK_GREY, ansi::styles::NONE);
+        cursor = Self::clear_to_line_end(window, cursor);
 
-            cursor.x += 1;
+        cursor.x = 0;
+        cursor.y += 1;
+
+        cursor
+    }
+
+    fn render_text_message(window: &mut ansi::Window, message: &TextMessage, mut cursor: Coord) -> Coord {
+        for part in message {
+            cursor = Self::render_text_message_part(window, part, cursor);
         }
+
+        cursor = Self::clear_to_line_end(window, cursor);
 
         cursor.x = 0;
         cursor.y += 1;
@@ -253,6 +274,12 @@ impl AnsiKnowledgeRenderer {
         } else {
             None
         }
+    }
+
+    fn create_fullscreen_window(&self) -> ansi::Window {
+        self.window_allocator.make_window(self.top_left.x, self.top_left.y,
+                                          self.total_width, self.total_height,
+                                          ansi::BufferType::Double)
     }
 }
 
@@ -303,9 +330,8 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
     fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
 
-        let mut window = self.window_allocator.make_window(self.top_left.x, self.top_left.y,
-                                                                  self.total_width, self.total_height,
-                                                                  ansi::BufferType::Double);
+        let mut window = self.create_fullscreen_window();
+
         let mut cursor = Coord::new(0, 0);
         let mut message = Message::new();
         let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
@@ -334,5 +360,31 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
     fn display_log_num_lines(&self) -> usize {
         self.total_height
+    }
+
+    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>) {
+
+        let mut window = self.create_fullscreen_window();
+
+        let mut message = Message::new();
+        let mut wrapped = Vec::new();
+
+        language.translate(message_type, &mut message);
+        wrap_message(&message, self.total_width, &mut wrapped);
+
+        let mut cursor = Coord::new(0, 0);
+
+        for line in wrapped.iter() {
+            cursor = Self::render_text_message(&mut window, line, cursor);
+        }
+
+        message.clear();
+        while cursor.y < self.display_log_num_lines() as isize {
+            cursor = Self::render_message(&mut window, &message, cursor);
+        }
+
+        window.flush();
+        self.window_allocator.fill(ansi::colours::BLACK);
+        window.delete();
     }
 }

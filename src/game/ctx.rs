@@ -63,6 +63,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     pub fn run(&mut self) -> Result<()> {
         self.init_demo();
+        self.intro_message();
         self.welcome_message();
         self.game_loop()
     }
@@ -121,6 +122,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn welcome_message(&self) {
         let ref ecs = self.levels.level(self.level_id).ecs;
         ecs.message_log_borrow_mut(self.pc_id.unwrap()).unwrap().add(MessageType::Welcome);
+    }
+
+    fn intro_message(&mut self) {
+        self.renderer.borrow_mut().display_message_fullscreen(MessageType::Intro, &self.language);
+        self.input_source.next_input();
     }
 
     fn init_demo(&mut self) {
