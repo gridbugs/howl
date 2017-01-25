@@ -303,9 +303,15 @@ impl<'a> SdlKnowledgeRenderer<'a> {
     }
 
     fn render_message_part(renderer: &mut Renderer, font: &Font, part: &MessagePart, mut cursor: Coord) -> Coord {
-        let (colour, string) = match part {
-            &MessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
-            &MessagePart::Colour(c, ref s) => (c, s),
+
+        let text_part = match part.as_text() {
+            Some(text_part) => text_part,
+            None => return cursor,
+        };
+
+        let (colour, string) = match *text_part {
+            TextMessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
+            TextMessagePart::Colour(c, ref s) => (c, s),
         };
 
         let sdl_colour = Self::rgb24_to_sdl_colour(colour);

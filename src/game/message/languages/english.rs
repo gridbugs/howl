@@ -7,10 +7,10 @@ impl English {
     fn translate_you_see(&self, name: YouSeeMessageType, message: &mut Message) {
         match name {
             YouSeeMessageType::Player => {
-                message.push(MessagePart::Plain("Yourself".to_string()));
+                message.push(MessagePart::plain("Yourself"));
             }
             YouSeeMessageType::Tree => {
-                message.push(MessagePart::Plain("A tree".to_string()));
+                message.push(MessagePart::plain("A tree"));
             }
         }
     }
@@ -18,10 +18,10 @@ impl English {
     fn translate_action(&self, action: ActionMessageType, message: &mut Message) {
         match action {
             ActionMessageType::PlayerOpenDoor => {
-                message.push(MessagePart::Plain("You open the door.".to_string()));
+                message.push(MessagePart::plain("You open the door."));
             }
             ActionMessageType::PlayerCloseDoor => {
-                message.push(MessagePart::Plain("You close the door.".to_string()));
+                message.push(MessagePart::plain("You close the door."));
             }
         }
     }
@@ -35,15 +35,15 @@ impl Language for English {
         match message_type {
             MessageType::Empty => {},
             MessageType::Welcome => {
-                message.push(MessagePart::Plain("Welcome to ".to_string()));
-                message.push(MessagePart::Colour(colours::PURPLE, "HOWL".to_string()));
-                message.push(MessagePart::Plain("!".to_string()));
+                message.push(MessagePart::plain("Welcome to "));
+                message.push(MessagePart::colour(colours::PURPLE, "HOWL"));
+                message.push(MessagePart::plain("!"));
             }
             MessageType::Action(action) => {
                 self.translate_action(action, message);
             }
             MessageType::YouSee(name) => {
-                message.push(MessagePart::Plain("You see: ".to_string()));
+                message.push(MessagePart::plain("You see: "));
                 if let Some(name) = name {
                     self.translate_you_see(name, message);
                 }
@@ -51,7 +51,7 @@ impl Language for English {
         }
 
         if repeated > 1 {
-            message.push(MessagePart::Plain(format!("(x{})", repeated)));
+            message.push(MessagePart::Text(TextMessagePart::Plain(format!("(x{})", repeated))));
         }
     }
 }
