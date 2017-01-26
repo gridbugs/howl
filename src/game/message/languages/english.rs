@@ -7,7 +7,7 @@ impl English {
     fn translate_you_see(&self, name: YouSeeMessageType, message: &mut Message) {
         match name {
             YouSeeMessageType::Player => {
-                message.push(MessagePart::plain("Yourself"));
+                message.push(MessagePart::plain("Myself"));
             }
             YouSeeMessageType::Tree => {
                 message.push(MessagePart::plain("A tree"));
@@ -18,10 +18,18 @@ impl English {
     fn translate_action(&self, action: ActionMessageType, message: &mut Message) {
         match action {
             ActionMessageType::PlayerOpenDoor => {
-                message.push(MessagePart::plain("You open the door."));
+                message.push(MessagePart::plain("I open the door."));
             }
             ActionMessageType::PlayerCloseDoor => {
-                message.push(MessagePart::plain("You close the door."));
+                message.push(MessagePart::plain("I close the door."));
+            }
+        }
+    }
+
+    fn translate_description(&self, description: DescriptionMessageType, message: &mut Message) {
+        match description {
+            DescriptionMessageType::Player => {
+                message.push(MessagePart::plain("I entered the forest in search of an ancient tome."));
             }
         }
     }
@@ -44,19 +52,28 @@ impl Language for English {
                 self.translate_action(action, message);
             }
             MessageType::YouSee(name) => {
-                message.push(MessagePart::plain("You see: "));
+                message.push(MessagePart::plain("I see: "));
                 if let Some(name) = name {
                     self.translate_you_see(name, message);
                 }
             }
             MessageType::YouRemember(name) => {
-                message.push(MessagePart::plain("You remember: "));
+                message.push(MessagePart::plain("I remember: "));
                 if let Some(name) = name {
                     self.translate_you_see(name, message);
                 }
             }
             MessageType::Unseen => {
-                message.push(MessagePart::plain("You haven't seen this location."));
+                message.push(MessagePart::plain("I haven't seen this location."));
+            }
+            MessageType::Description(description) => {
+                self.translate_description(description, message);
+            }
+            MessageType::YouSeeDescription(you_see) => {
+                self.translate_you_see(you_see, message);
+            }
+            MessageType::NoDescription => {
+                message.push(MessagePart::plain("I see nothing of interest."));
             }
         }
 

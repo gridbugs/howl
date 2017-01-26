@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use game::InputEvent;
 use direction::Direction;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Control {
     Direction(Direction),
     Close,
@@ -13,6 +13,7 @@ pub enum Control {
     Wait,
     DisplayMessageLog,
     Examine,
+    Return,
     Quit,
 }
 
@@ -40,6 +41,7 @@ impl ControlMap {
 
         map.insert(InputEvent::Char('q'), Control::Quit);
         map.insert(InputEvent::Quit, Control::Quit);
+        map.insert(InputEvent::Return, Control::Return);
 
         ControlMap {
             map: map,

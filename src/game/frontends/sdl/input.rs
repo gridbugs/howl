@@ -27,6 +27,7 @@ impl InputSource for SdlInputSource {
             match event {
                 Event::Quit { .. } => return Some(InputEvent::Quit),
                 Event::KeyDown { keycode: Some(keycode), .. } => {
+
                     return match keycode {
                         Keycode::Up => Some(InputEvent::Up),
                         Keycode::Down => Some(InputEvent::Down),
@@ -61,6 +62,7 @@ impl InputSource for SdlInputSource {
                         Keycode::Space => Some(InputEvent::Char(' ')),
                         Keycode::Period => Some(InputEvent::Char('.')),
                         Keycode::Escape => Some(InputEvent::Escape),
+                        Keycode::Return => Some(InputEvent::Return),
                         _ => None,
                     };
                 },

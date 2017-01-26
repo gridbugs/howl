@@ -7,6 +7,9 @@ pub enum MessageType {
     YouSee(Option<YouSeeMessageType>),
     YouRemember(Option<YouSeeMessageType>),
     Unseen,
+    Description(DescriptionMessageType),
+    YouSeeDescription(YouSeeMessageType),
+    NoDescription,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -19,4 +22,9 @@ pub enum YouSeeMessageType {
 pub enum ActionMessageType {
     PlayerOpenDoor,
     PlayerCloseDoor,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum DescriptionMessageType {
+    Player,
 }

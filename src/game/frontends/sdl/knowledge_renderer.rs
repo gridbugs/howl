@@ -453,6 +453,7 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     }
 
     fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>) {
+        self.clear_screen();
 
         let mut message = Message::new();
         let mut wrapped = Vec::new();

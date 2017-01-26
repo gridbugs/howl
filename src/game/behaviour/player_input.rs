@@ -139,20 +139,26 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
     let position = input.entity.position().unwrap();
 
     let mut cursor = position;
+    let mut alternative_message = false;
 
     loop {
 
         let cell = level_knowledge.get_with_default(cursor);
-        let message = if cell.last_updated() == input.action_env.id {
-            MessageType::YouSee(cell.you_see())
-        } else if cell.last_updated() == 0 {
-            MessageType::Unseen
-        } else {
-            MessageType::YouRemember(cell.you_see())
-        };
 
-        message_log.add_temporary(message);
-        renderer.update_log(message_log.deref(), input.language);
+        if alternative_message {
+            alternative_message = false;
+        } else {
+            let message = if cell.last_updated() == input.action_env.id {
+                MessageType::YouSee(cell.you_see())
+            } else if cell.last_updated() == 0 {
+                MessageType::Unseen
+            } else {
+                MessageType::YouRemember(cell.you_see())
+            };
+
+            message_log.add_temporary(message);
+            renderer.update_log(message_log.deref(), input.language);
+        }
 
         let overlay = RenderOverlay::examine_cursor(cursor);
         renderer.draw_with_overlay(&overlay);
@@ -164,6 +170,21 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
                         Control::Examine => break,
                     Control::Direction(direction) => {
                         cursor += direction.vector();
+                    }
+                    Control::Return => {
+                        let message = if let Some(description) = cell.description() {
+                            MessageType::Description(description)
+                        } else if let Some(you_see) = cell.you_see() {
+                            MessageType::YouSeeDescription(you_see)
+                        } else {
+                            message_log.add_temporary(MessageType::NoDescription);
+                            renderer.update_log(message_log.deref(), input.language);
+                            alternative_message = true;
+                            continue;
+                        };
+
+                        renderer.display_message_fullscreen(message, input.language);
+                        input_source.next_input();
                     }
                     _ => {}
                 }
@@ -196,8 +217,6 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         Some(MetaAction::ActionArgs(ActionArgs::Null))
                     }
                     Control::Quit => Some(MetaAction::External(External::Quit)),
-                    Control::NextTarget => None,
-                    Control::PrevTarget => None,
                     Control::DisplayMessageLog => {
                         display_message_log(input, input_source, map);
                         None
@@ -206,6 +225,7 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         examine(input, input_source, map);
                         None
                     }
+                    _ => None,
                 }
             })
         })

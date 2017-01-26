@@ -54,6 +54,10 @@ imports = [
     type = "YouSeeMessageType"
     copy = true
 
+[component.description]
+    type = "DescriptionMessageType"
+    copy = true
+
 [component.behaviour_type]
     type = "BehaviourType"
     copy = true
