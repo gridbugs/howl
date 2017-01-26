@@ -49,6 +49,15 @@ impl Language for English {
                     self.translate_you_see(name, message);
                 }
             }
+            MessageType::YouRemember(name) => {
+                message.push(MessagePart::plain("You remember: "));
+                if let Some(name) = name {
+                    self.translate_you_see(name, message);
+                }
+            }
+            MessageType::Unseen => {
+                message.push(MessagePart::plain("You haven't seen this location."));
+            }
         }
 
         if repeated > 1 {

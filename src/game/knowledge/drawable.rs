@@ -105,6 +105,10 @@ impl DrawableKnowledgeLevel {
         self.get_with_default(coord).last_updated == action_env.id
     }
 
+    pub fn can_remember(&self, coord: Coord) -> bool {
+        self.get_with_default(coord).last_updated == 0
+    }
+
     pub fn width(&self) -> usize {
         self.grid.width()
     }

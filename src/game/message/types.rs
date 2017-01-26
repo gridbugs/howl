@@ -5,6 +5,8 @@ pub enum MessageType {
     Empty,
     Action(ActionMessageType),
     YouSee(Option<YouSeeMessageType>),
+    YouRemember(Option<YouSeeMessageType>),
+    Unseen,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
