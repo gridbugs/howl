@@ -1,4 +1,5 @@
 use std::result;
+use std::cmp;
 
 use game::*;
 use game::frontends::ansi::resolve_tile;
@@ -262,13 +263,18 @@ impl AnsiKnowledgeRenderer {
        }
     }
 
-    fn scroll_bar(&self, num_messages: usize, offset: usize) -> Option<(Coord, usize)> {
+    fn scroll_bar(&self, num_messages: usize, offset: usize, from_top: bool) -> Option<(Coord, usize)> {
         let num_lines = self.display_log_num_lines();
         if num_messages > num_lines {
             let scroll_bar_height = (self.total_height * num_lines) / num_messages;
             let remaining = self.total_height - scroll_bar_height;
             let max_offset = num_messages - num_lines;
-            let scroll_bar_top = remaining - ((offset * remaining) / max_offset);
+            let scroll_position = (offset * remaining) / max_offset;
+            let scroll_bar_top = if from_top {
+                scroll_position
+            } else {
+                remaining - scroll_position
+            };
 
             Some((Coord::new(self.total_width as isize - 1, scroll_bar_top as isize), scroll_bar_height))
         } else {
@@ -324,6 +330,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
     fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>) {
         for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
+            message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
     }
@@ -336,6 +343,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         let mut message = Message::new();
         let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
         for log_entry in messages {
+            message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
             cursor = Self::render_message(&mut window, &message, cursor);
         }
@@ -345,7 +353,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
             cursor = Self::render_message(&mut window, &message, cursor);
         }
 
-        if let Some((position, size)) = self.scroll_bar(message_log.len(), offset) {
+        if let Some((position, size)) = self.scroll_bar(message_log.len(), offset, false) {
             let scroll_bar_colour = ansi::AnsiColour::new_from_rgb24(SCROLL_BAR_COLOUR);
             for i in 0..(size as isize) {
                 let coord = position + Coord::new(0, i);
@@ -362,29 +370,36 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         self.total_height
     }
 
-    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>) {
+    fn wrap_message_to_fit(&self, message: &Message, wrapped: &mut Vec<TextMessage>) {
+        wrap_message(&message, self.total_width - 1, wrapped);
+    }
 
+    fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
         let mut window = self.create_fullscreen_window();
 
-        let mut message = Message::new();
-        let mut wrapped = Vec::new();
-
-        language.translate(message_type, &mut message);
-        wrap_message(&message, self.total_width, &mut wrapped);
-
         let mut cursor = Coord::new(0, 0);
+        let end_idx = cmp::min(wrapped.len(), offset + self.total_height);
 
-        for line in wrapped.iter() {
+        for line in &wrapped[offset..end_idx] {
             cursor = Self::render_text_message(&mut window, line, cursor);
         }
 
-        message.clear();
+        let message = Message::new();
         while cursor.y < self.display_log_num_lines() as isize {
             cursor = Self::render_message(&mut window, &message, cursor);
+        }
+
+        if let Some((position, size)) = self.scroll_bar(wrapped.len(), offset, true) {
+            let scroll_bar_colour = ansi::AnsiColour::new_from_rgb24(SCROLL_BAR_COLOUR);
+            for i in 0..(size as isize) {
+                let coord = position + Coord::new(0, i);
+                window.get_cell(coord.x, coord.y).set(' ', scroll_bar_colour, scroll_bar_colour, ansi::styles::NONE);
+            }
         }
 
         window.flush();
         self.window_allocator.fill(ansi::colours::BLACK);
         window.delete();
+
     }
 }

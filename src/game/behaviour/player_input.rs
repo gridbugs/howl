@@ -1,4 +1,5 @@
 use std::ops::Deref;
+use std::ops::DerefMut;
 use std::cmp;
 
 use game::*;
@@ -171,7 +172,7 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
                     Control::Direction(direction) => {
                         cursor += direction.vector();
                     }
-                    Control::Return => {
+                    Control::Select => {
                         let message = if let Some(description) = cell.description() {
                             MessageType::Description(description)
                         } else if let Some(you_see) = cell.you_see() {
@@ -197,9 +198,16 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
     renderer.draw();
 }
 
+fn display_help<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+    let mut message = Message::new();
+    input.language.translate_controls(map, &mut message);
+    display_message_scrolling(input.renderer.borrow_mut().deref_mut(), &mut input_source, &message, true);
+}
+
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
-        input.entity.control_map().and_then(|map| {
+        input.entity.control_map_borrow().and_then(|map_ref| {
+            let map = map_ref.deref();
             map.control(event).and_then(|control| {
                 match control {
                     Control::Direction(d) => Some(MetaAction::ActionArgs(ActionArgs::Walk(input.entity.id(), d))),
@@ -209,6 +217,7 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                     Control::Fire => {
                         aim(input, map, input_source).map(|coord| {
                             let delta = coord - input.entity.position().unwrap();
+
 
                             MetaAction::ActionArgs(ActionArgs::FireBullet(input.entity.id(), delta))
                         })
@@ -225,10 +234,13 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         examine(input, input_source, map);
                         None
                     }
+                    Control::Help => {
+                        display_help(input, input_source, map);
+                        None
+                    }
                     _ => None,
                 }
             })
         })
     })
 }
-

@@ -41,6 +41,7 @@ imports = [
 
 [component.control_map]
     type = "ControlMap"
+    container = "RefCell"
 
 [component.tile_depth]
     type = "isize"

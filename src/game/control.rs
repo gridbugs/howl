@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::collections::{hash_map, HashMap};
 
 use game::InputEvent;
 use direction::Direction;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Control {
     Direction(Direction),
     Close,
@@ -13,9 +13,12 @@ pub enum Control {
     Wait,
     DisplayMessageLog,
     Examine,
-    Return,
+    Select,
     Quit,
+    Help,
 }
+
+pub type ControlMapIter<'a> = hash_map::Iter<'a, InputEvent, Control>;
 
 pub struct ControlMap {
     map: HashMap<InputEvent, Control>,
@@ -40,8 +43,9 @@ impl ControlMap {
         map.insert(InputEvent::Char('.'), Control::Wait);
 
         map.insert(InputEvent::Char('q'), Control::Quit);
+        map.insert(InputEvent::Char('?'), Control::Help);
         map.insert(InputEvent::Quit, Control::Quit);
-        map.insert(InputEvent::Return, Control::Return);
+        map.insert(InputEvent::Return, Control::Select);
 
         ControlMap {
             map: map,
@@ -50,5 +54,9 @@ impl ControlMap {
 
     pub fn control(&self, event: InputEvent) -> Option<Control> {
         self.map.get(&event).map(|r| *r)
+    }
+
+    pub fn iter(&self) -> ControlMapIter {
+        self.map.iter()
     }
 }

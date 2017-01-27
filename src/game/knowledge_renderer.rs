@@ -48,5 +48,19 @@ pub trait KnowledgeRenderer {
 
     fn display_log_num_lines(&self) -> usize;
 
-    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>);
+    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>) {
+        let mut message = Message::new();
+        language.translate(message_type, &mut message);
+        self.display_translated_message_fullscreen(&message, 0);
+    }
+
+    fn wrap_message_to_fit(&self, message: &Message, wrapped: &mut Vec<TextMessage>);
+
+    fn display_translated_message_fullscreen(&mut self, message: &Message, offset: usize) {
+        let mut wrapped = Vec::new();
+        self.wrap_message_to_fit(message, &mut wrapped);
+        self.display_wrapped_message_fullscreen(&wrapped, offset);
+    }
+
+    fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize);
 }

@@ -1,6 +1,6 @@
 use math::{Vector2, Vector2Index};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Direction {
     North,
     NorthEast,

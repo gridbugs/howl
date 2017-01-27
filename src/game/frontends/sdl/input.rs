@@ -1,6 +1,6 @@
 use sdl2::Sdl;
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{self, Keycode};
 
 use game::*;
 
@@ -26,8 +26,7 @@ impl InputSource for SdlInputSource {
 
             match event {
                 Event::Quit { .. } => return Some(InputEvent::Quit),
-                Event::KeyDown { keycode: Some(keycode), .. } => {
-
+                Event::KeyDown { keycode: Some(keycode), keymod, .. } => {
                     return match keycode {
                         Keycode::Up => Some(InputEvent::Up),
                         Keycode::Down => Some(InputEvent::Down),
@@ -63,6 +62,13 @@ impl InputSource for SdlInputSource {
                         Keycode::Period => Some(InputEvent::Char('.')),
                         Keycode::Escape => Some(InputEvent::Escape),
                         Keycode::Return => Some(InputEvent::Return),
+                        Keycode::Slash => {
+                            if keymod.contains(keyboard::LSHIFTMOD) {
+                                Some(InputEvent::Char('?'))
+                            } else {
+                                None
+                            }
+                        }
                         _ => None,
                     };
                 },

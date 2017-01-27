@@ -1,4 +1,6 @@
 use std::cell::RefCell;
+use std::ops::Deref;
+use std::ops::DerefMut;
 
 use game::*;
 use game::data::*;
@@ -125,8 +127,21 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn intro_message(&mut self) {
-        self.renderer.borrow_mut().display_message_fullscreen(MessageType::Intro, &self.language);
-        self.input_source.next_input();
+        let ref ecs = self.levels.level(self.level_id).ecs;
+        let pc = ecs.entity(self.pc_id.unwrap());
+        let control_map_ref = pc.control_map_borrow().unwrap();
+        let mut message = Message::new();
+
+        self.language.translate(MessageType::Intro, &mut message);
+        message.push(MessagePart::Newline);
+        message.push(MessagePart::Newline);
+        self.language.translate(MessageType::PressAnyKey, &mut message);
+        message.push(MessagePart::Newline);
+        message.push(MessagePart::Newline);
+        message.push(MessagePart::Newline);
+        self.language.translate_controls(control_map_ref.deref(), &mut message);
+
+        display_message_scrolling(self.renderer.borrow_mut().deref_mut(), &mut self.input_source, &message, true);
     }
 
     fn init_demo(&mut self) {

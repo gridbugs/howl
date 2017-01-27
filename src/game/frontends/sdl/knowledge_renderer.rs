@@ -364,13 +364,18 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         }
     }
 
-    fn scroll_bar_rect(&self, num_messages: usize, offset: usize) -> Option<Rect> {
+    fn scroll_bar_rect(&self, num_messages: usize, offset: usize, from_top: bool) -> Option<Rect> {
         let num_lines = self.display_log_num_lines();
         if num_messages > num_lines {
             let scroll_bar_height_px = (self.height_px * num_lines) / num_messages;
             let remaining_px = self.height_px - scroll_bar_height_px;
             let max_offset = num_messages - num_lines;
-            let scroll_bar_top_px = remaining_px - ((offset * remaining_px) / max_offset);
+            let scroll_px = (offset * remaining_px) / max_offset;
+            let scroll_bar_top_px = if from_top {
+                scroll_px
+            } else {
+                remaining_px - scroll_px
+            };
             let scroll_bar_left_px = self.width_px - SCROLL_BAR_WIDTH_PX;
             Some(Rect::new(scroll_bar_left_px as i32, scroll_bar_top_px as i32,
                            SCROLL_BAR_WIDTH_PX as u32, scroll_bar_height_px as u32))
@@ -420,6 +425,7 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
 
     fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>) {
         for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
+            message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
     }
@@ -427,20 +433,19 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
         self.clear_screen();
 
-        let scroll_bar_rect = self.scroll_bar_rect(message_log.len(), offset);
-
         let mut cursor = Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
         let mut message = Message::new();
 
         let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
 
         for log_entry in messages {
+            message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
             cursor = Self::render_message(&mut self.sdl_renderer, &self.font, &message, cursor);
             cursor.y += MESSAGE_LOG_PADDING_PX as isize;
         }
 
-        if let Some(scroll_bar_rect) = scroll_bar_rect {
+        if let Some(scroll_bar_rect) = self.scroll_bar_rect(message_log.len(), offset, false) {
             self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
             self.sdl_renderer.fill_rect(scroll_bar_rect).expect("Failed to draw scroll bar");
         }
@@ -452,22 +457,27 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
         self.display_log_num_lines
     }
 
-    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>) {
+    fn wrap_message_to_fit(&self, message: &Message, wrapped: &mut Vec<TextMessage>) {
+        wrap_message(&message, self.display_log_num_cols - 1, wrapped);
+    }
+
+    fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
         self.clear_screen();
-
-        let mut message = Message::new();
-        let mut wrapped = Vec::new();
-
-        language.translate(message_type, &mut message);
-        wrap_message(&message, self.display_log_num_cols, &mut wrapped);
-
         let mut cursor = Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
 
-        for line in wrapped.iter() {
+        let end_idx = cmp::min(wrapped.len(), offset + self.display_log_num_lines);
+
+        for line in &wrapped[offset..end_idx] {
             cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, line, cursor);
             cursor.y += MESSAGE_LOG_PADDING_PX as isize;
         }
 
+        if let Some(scroll_bar) = self.scroll_bar_rect(wrapped.len(), offset, true) {
+            self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
+            self.sdl_renderer.fill_rect(scroll_bar).expect("Failed to draw scroll bar");
+        }
+
         self.sdl_renderer.present();
+
     }
 }

@@ -1,8 +1,9 @@
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum MessageType {
+    Empty,
     Welcome,
     Intro,
-    Empty,
+    PressAnyKey,
     Action(ActionMessageType),
     YouSee(Option<YouSeeMessageType>),
     YouRemember(Option<YouSeeMessageType>),

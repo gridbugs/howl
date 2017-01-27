@@ -96,6 +96,7 @@ pub fn wrap_message(message: &Message, width: usize, wrapped: &mut Vec<TextMessa
 
     let mut x = 0;
     let mut current_message = TextMessage::new();
+    let mut prev_newline = true;
 
     for part in message.iter() {
 
@@ -103,12 +104,19 @@ pub fn wrap_message(message: &Message, width: usize, wrapped: &mut Vec<TextMessa
             MessagePart::Text(ref text_part) => text_part,
             MessagePart::Newline => {
 
-                wrapped.push(mem::replace(&mut current_message, TextMessage::new()));
-                x = 0;
+                if x != 0 || prev_newline {
+                    // don't insert an empty line if we just wrapped onto a new line
+                    wrapped.push(mem::replace(&mut current_message, TextMessage::new()));
+                    x = 0;
+                }
+
+                prev_newline = true;
 
                 continue;
             }
         };
+
+        prev_newline = false;
 
         let mut next_x = x + text_part.len();
         current_message.push(text_part.clone());
