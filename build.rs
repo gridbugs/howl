@@ -4,9 +4,19 @@ use std::path;
 
 extern crate genecs;
 extern crate copy_dir;
+extern crate tomson;
+extern crate handlebars;
+extern crate rustc_serialize;
+
+mod gensh;
 
 fn main() {
-    genecs::generate_ecs("ecs.toml", format!("src{}ecs{}generated.rs", path::MAIN_SEPARATOR, path::MAIN_SEPARATOR));
+    gensh::generate_spatial_hash("sh.toml", format!("src{}spatial_hash{}generated.rs",
+                                                    path::MAIN_SEPARATOR,
+                                                    path::MAIN_SEPARATOR));
+    genecs::generate_ecs("ecs.toml", format!("src{}ecs{}generated.rs",
+                                             path::MAIN_SEPARATOR,
+                                             path::MAIN_SEPARATOR));
     copy_resources("resources");
 }
 

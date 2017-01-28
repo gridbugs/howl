@@ -2,6 +2,7 @@ use std::result;
 
 use game::*;
 use ecs::*;
+use spatial_hash::*;
 
 pub type RuleResult = result::Result<(), RuleError>;
 

@@ -2,6 +2,7 @@ use std::cell::RefCell;
 
 use game::*;
 use ecs::*;
+use spatial_hash::*;
 use behaviour::{State, NodeIndex, Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
 
 

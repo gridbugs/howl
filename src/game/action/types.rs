@@ -1,6 +1,7 @@
 use ecs::*;
 use game::*;
 use game::data::*;
+use spatial_hash::*;
 use direction::Direction;
 use coord::Coord;
 

@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use game::*;
+use spatial_hash::*;
 use coord::Coord;
 use util::TwoDimensionalCons;
 

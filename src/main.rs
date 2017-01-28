@@ -29,6 +29,7 @@ mod search;
 mod perlin;
 mod coord;
 mod colour;
+mod spatial_hash;
 
 fn print_usage(program: &str, opts: getopts::Options) {
     let brief = format!("Usage: {} [options]", program);

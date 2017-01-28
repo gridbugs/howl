@@ -7,8 +7,8 @@ use math::{Vector2, Vector2Index};
 use coord::Coord;
 use direction::{Direction, CardinalDirection, OrdinalDirection, SubDirection};
 
-use game::{SpatialHashTable, LevelKnowledge, ActionEnv};
-
+use game::*;
+use spatial_hash::*;
 
 // Different types of rounding functions
 enum RoundType {

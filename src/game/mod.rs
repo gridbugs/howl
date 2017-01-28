@@ -1,5 +1,5 @@
 /// Module collecting all policy specific to this game
-mod spatial_hash;
+//mod spatial_hash;
 mod knowledge;
 mod behaviour;
 mod action;
@@ -22,7 +22,7 @@ mod launcher;
 mod message;
 mod scroll;
 
-pub use self::spatial_hash::*;
+//pub use self::spatial_hash::*;
 pub use self::knowledge::*;
 pub use self::behaviour::*;
 pub use self::action::*;

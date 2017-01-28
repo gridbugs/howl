@@ -1,0 +1,27 @@
+position = "position"
+
+[field.opacity]
+    type = "sum_f64"
+
+[field.solid]
+    type = "count_bool"
+
+[field.pc]
+    type = "count_bool"
+
+[field.moon]
+    type = "count_bool"
+
+[field.enemy]
+    type = "count_bool"
+
+[field.door]
+    type = "any"
+    component = "door_state"
+    component_has_type = true
+
+[field.outside]
+    type = "any"
+
+[field.transform_on_moon_change]
+    type = "set"

@@ -1,5 +1,5 @@
-use game::SpatialHashTable;
-use ecs::{EcsCtx, EntityId};
+use ecs::*;
+use spatial_hash::*;
 use util::Schedule;
 
 pub struct Level {

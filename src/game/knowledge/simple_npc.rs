@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use game::*;
+use spatial_hash::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
 use coord::Coord;
 use search::TraverseCost;

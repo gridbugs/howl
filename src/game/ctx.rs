@@ -117,7 +117,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn commit(&mut self, action: &mut EcsAction) {
         let level = self.levels.level_mut(self.level_id);
-        level.spatial_hash.update(ActionEnv::new(&level.ecs, self.action_id), action);
+        level.spatial_hash.update(&level.ecs, action, self.action_id);
         level.ecs.commit(action);
     }
 

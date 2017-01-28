@@ -7,6 +7,7 @@ use std::ops::Deref;
 use game::*;
 use game::data::*;
 use ecs::*;
+use spatial_hash::*;
 use util::Schedule;
 
 const FAILED_ACTION_DELAY: u64 = 16;
@@ -189,7 +190,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
     }
 
     fn commit(&mut self) {
-        self.spatial_hash.update(ActionEnv::new(self.ecs, *self.action_id), self.ecs_action);
+        self.spatial_hash.update(self.ecs, self.ecs_action, *self.action_id);
         self.ecs.commit(self.ecs_action);
     }
 

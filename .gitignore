@@ -3,5 +3,6 @@ Cargo.lock
 target
 *.bk
 
-# Generated ecs source file
+# Generated source files
 src/ecs/generated.rs
+src/spatial_hash/generated.rs
