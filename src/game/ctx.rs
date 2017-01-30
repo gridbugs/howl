@@ -3,10 +3,9 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 
 use game::*;
-use game::data::*;
 use ecs::*;
+use spatial_hash::*;
 use util::{LeakyReserver, Schedule};
-use coord::Coord;
 
 pub struct EntityIdReserver(RefCell<LeakyReserver<EntityId>>);
 
@@ -111,16 +110,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    fn new_id(&self) -> EntityId {
-        self.entity_ids.new_id()
-    }
-
-    fn commit(&mut self, action: &mut EcsAction) {
-        let level = self.levels.level_mut(self.level_id);
-        level.spatial_hash.update(&level.ecs, action, self.action_id);
-        level.ecs.commit(action);
-    }
-
     fn welcome_message(&self) {
         let ref ecs = self.levels.level(self.level_id).ecs;
         ecs.message_log_borrow_mut(self.pc_id.unwrap()).unwrap().add(MessageType::Welcome);
@@ -145,99 +134,30 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn init_demo(&mut self) {
-        let strings = demo_level_str();
 
-        let mut level = Level::new(self.width, self.height);
+        let mut schedule = TurnSchedule::new();
+        let mut action = EcsAction::new();
 
-        let mut g = EcsAction::new();
+        let md = TerrainType::Demo.generate(&self.entity_ids, &self.rng, &mut schedule, &mut action);
 
-        let mut y = 0;
-        for line in &strings {
-            let mut x = 0;
-            for ch in line.chars() {
-                let coord = Coord::new(x, y);
-                match ch {
-                    '#' => {
-                        prototypes::wall(g.entity_mut(self.new_id()), coord);
-                        prototypes::floor(g.entity_mut(self.new_id()), coord);
-                    }
-                    '&' => {
-                        prototypes::tree(&mut g, &self.entity_ids, coord);
+        let mut sh = SpatialHashTable::new(md.width, md.height);
+        let mut ecs = EcsCtx::new();
 
-                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
-                    }
-                    '.' => {
-                        prototypes::floor(g.entity_mut(self.new_id()), coord);
-                    }
-                    ',' => {
-                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
-                    }
-                    '+' => {
-                        prototypes::door(g.entity_mut(self.new_id()), coord, DoorState::Closed);
-                        prototypes::floor(g.entity_mut(self.new_id()), coord);
-                    }
-                    '@' => {
-                        let id = self.new_id();
-                        self.pc_id = Some(id);
-                        prototypes::pc(g.entity_mut(id), coord);
-                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
+        sh.update(&ecs, &action, self.action_id);
+        self.action_id += 1;
 
-                        let ticket = level.turn_schedule.insert(id, PC_TURN_OFFSET);
-                        g.insert_schedule_ticket(id, ticket);
-                    }
-                    't' => {
-                        prototypes::outside_floor(g.entity_mut(self.new_id()), coord);
-                        let id = prototypes::terror_pillar(&mut g, &self.entity_ids, coord);
+        ecs.commit(&mut action);
 
-                        let ticket = level.turn_schedule.insert(id, NPC_TURN_OFFSET);
-                        g.insert_schedule_ticket(id, ticket);
-                    }
-                    _ => panic!(),
-                }
-                x += 1;
-            }
-            y += 1;
+        let level = Level {
+            ecs: ecs,
+            spatial_hash: sh,
+            turn_schedule: schedule,
+        };
+
+        self.level_id = self.levels.add_level(level);
+
+        if md.pc.is_some() {
+            self.pc_id = md.pc;
         }
-
-        {
-            let cloud_id = self.new_id();
-            prototypes::clouds(g.entity_mut(cloud_id), self.width, self.height, self.rng.gen_usize());
-            let ticket = level.turn_schedule.insert(cloud_id, ENV_TURN_OFFSET);
-            self.levels.add_level(level);
-            g.insert_schedule_ticket(cloud_id, ticket);
-        }
-
-        self.commit(&mut g);
     }
 }
-
-fn demo_level_str() -> Vec<&'static str> {
-    vec!["&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
-         "&,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,&",
-         "&,,############################,,,,,,&",
-         "&,,#.........#................#,,&,,,&",
-         "&,,#.........#................#,,,&,,&",
-         "&,,#..........................#,,&,,,&",
-         "&&,#.........#................#,,,,,,&",
-         "&,&#.........##########+#######,,,,,,&",
-         "&,,#.........#,,,,,,,,,,,,,,,,,,,,,,,&",
-         "&&,#.........#,t,,,,,,,&,,,,,,,&,&,&,&",
-         "&,,#.........#,,,,t&,,,,,,,,&,,,,,,,,&",
-         "&,,#.........+,,,,,,&,,,,,,,,,,,,,,,,&",
-         "&&,#.........#,,,,,&,,,,,,,,,&,,,,,,,&",
-         "&,,#.........#,,,,,,,,,,&,,&,,,&,&,,,&",
-         "&,&#.........#,,,,@,,,,&,,,,,,,,,,,,,&",
-         "&,,###########,t,,,,,&,,,,,,,&,&,,,,,&",
-         "&,,&,,,,,,,,,,,,,,,,,&,,,,&,,,,,,,,,,&",
-         "&,&,,,,,,,,,,,,&,,,,,,,,,,,,,,,,,,,,,&",
-         "&,,,&,,,,,,,,,,,,,,,,&,,,,,#########,&",
-         "&,&,,,&,,,,,&,,&,,,,&,,,,,,#.......#,&",
-         "&,,,,,&,,,,,,,,,&,,,,&,,,,,#.......#,&",
-         "&,,,,,,,,,&,,,,,,,,,,,,,&,,........#,&",
-         "&,&,&,,,,&&,,,&,&,,,,,,,&,,#.......#,&",
-         "&,,,,,,,,,,,,,,,,,,,&,,,,,,#.......#,&",
-         "&,,,&,,,,,,,&,,,,,,,,,,,,,,#########,&",
-         "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"]
-}
-
-

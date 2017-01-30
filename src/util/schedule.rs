@@ -86,6 +86,10 @@ impl<T> Schedule<T> {
         }
     }
 
+    pub fn sequence_no(&self) -> u64 {
+        self.seq
+    }
+
     pub fn insert(&mut self, value: T, rel_time: u64) -> ScheduleTicket {
         let seq = self.seq;
         let abs_time = self.abs_time + rel_time;

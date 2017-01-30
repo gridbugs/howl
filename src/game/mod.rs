@@ -21,6 +21,8 @@ mod rng;
 mod launcher;
 mod message;
 mod scroll;
+mod terrain;
+mod turn_schedule;
 
 //pub use self::spatial_hash::*;
 pub use self::knowledge::*;
@@ -44,6 +46,8 @@ pub use self::rng::*;
 pub use self::launcher::*;
 pub use self::message::*;
 pub use self::scroll::*;
+pub use self::terrain::*;
+pub use self::turn_schedule::*;
 
 pub mod data;
 pub mod prototypes;
