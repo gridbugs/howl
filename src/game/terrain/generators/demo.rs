@@ -1,20 +1,27 @@
 use ecs::*;
 use game::*;
 use game::terrain::util;
+use coord::Coord;
+
+const START_COORD: Coord = Coord { x: 18, y: 14 };
 
 pub fn demo<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                   rng: &GameRng,
                                   schedule: &mut S,
                                   g: &mut EcsAction) -> TerrainMetadata {
 
-    let metadata = util::terrain_from_strings(&level_str(), ids, schedule, g);
+    let (width, height) = util::terrain_from_strings(&level_str(), ids, schedule, g);
 
     let cloud_id = ids.new_id();
-    prototypes::clouds(g.entity_mut(cloud_id), metadata.width, metadata.height, rng.gen_usize());
+    prototypes::clouds(g.entity_mut(cloud_id), width, height, rng.gen_usize());
     let ticket = schedule.schedule_turn(cloud_id, ENV_TURN_OFFSET);
     g.insert_schedule_ticket(cloud_id, ticket);
 
-    metadata
+    TerrainMetadata {
+        width: width,
+        height: height,
+        start_coord: Some(START_COORD),
+    }
 }
 
 fn level_str() -> Vec<&'static str> {
@@ -32,7 +39,7 @@ fn level_str() -> Vec<&'static str> {
          "&,,#.........+,,,,,,&,,,,,,,,,,,,,,,,&",
          "&&,#.........#,,,,,&,,,,,,,,,&,,,,,,,&",
          "&,,#.........#,,,,,,,,,,&,,&,,,&,&,,,&",
-         "&,&#.........#,,,,@,,,,&,,,,,,,,,,,,,&",
+         "&,&#.........#,,,,,,,,,&,,,,,,,,,,,,,&",
          "&,,###########,t,,,,,&,,,,,,,&,&,,,,,&",
          "&,,&,,,,,,,,,,,,,,,,,&,,,,&,,,,,,,,,,&",
          "&,&,,,,,,,,,,,,&,,,,,,,,,,,,,,,,,,,,,&",

@@ -1,11 +1,12 @@
 use ecs::*;
 use game::*;
+use coord::Coord;
 
 #[derive(Clone, Copy, Debug)]
 pub struct TerrainMetadata {
     pub width: usize,
     pub height: usize,
-    pub pc: Option<EntityId>,
+    pub start_coord: Option<Coord>,
 }
 
 #[derive(Clone, Copy, Debug)]

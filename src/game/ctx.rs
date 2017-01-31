@@ -4,8 +4,8 @@ use std::ops::DerefMut;
 
 use game::*;
 use ecs::*;
-use spatial_hash::*;
 use util::{LeakyReserver, Schedule};
+use coord::Coord;
 
 pub struct EntityIdReserver(RefCell<LeakyReserver<EntityId>>);
 
@@ -27,7 +27,7 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     turn_id: u64,
     action_id: u64,
     level_id: LevelId,
-    pc_id: Option<EntityId>,
+    pc_id: EntityId,
     pc_observer: Shadowcast,
     behaviour_ctx: BehaviourCtx<Renderer>,
     rule_reactions: Vec<Reaction>,
@@ -41,15 +41,17 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
 
 impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<Renderer, Input> {
     pub fn new(renderer: Renderer, input_source: Input, seed: usize, width: usize, height: usize) -> Self {
+        let entity_ids = EntityIdReserver::new();
+        let pc_id = entity_ids.new_id();
         GameCtx {
             levels: LevelTable::new(),
             renderer: RefCell::new(renderer),
             input_source: input_source.clone(),
-            entity_ids: EntityIdReserver::new(),
+            entity_ids: entity_ids,
             turn_id: 0,
             action_id: 0,
             level_id: 0,
-            pc_id: None,
+            pc_id: pc_id,
             pc_observer: Shadowcast::new(),
             behaviour_ctx: BehaviourCtx::new(input_source),
             rule_reactions: Vec::new(),
@@ -82,7 +84,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     action_id: &mut self.action_id,
                     level_id: self.level_id,
                     entity_id: turn_event.event,
-                    pc_id: self.pc_id.unwrap(),
+                    pc_id: self.pc_id,
                     renderer: &self.renderer,
                     ecs: &mut level.ecs,
                     spatial_hash: &mut level.spatial_hash,
@@ -112,12 +114,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn welcome_message(&self) {
         let ref ecs = self.levels.level(self.level_id).ecs;
-        ecs.message_log_borrow_mut(self.pc_id.unwrap()).unwrap().add(MessageType::Welcome);
+        ecs.message_log_borrow_mut(self.pc_id).unwrap().add(MessageType::Welcome);
     }
 
     fn intro_message(&mut self) {
         let ref ecs = self.levels.level(self.level_id).ecs;
-        let pc = ecs.entity(self.pc_id.unwrap());
+        let pc = ecs.entity(self.pc_id);
         let control_map_ref = pc.control_map_borrow().unwrap();
         let mut message = Message::new();
 
@@ -135,29 +137,18 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn init_demo(&mut self) {
 
-        let mut schedule = TurnSchedule::new();
         let mut action = EcsAction::new();
+        prototypes::pc(action.entity_mut(self.pc_id), Coord::new(0, 0));
 
-        let md = TerrainType::Demo.generate(&self.entity_ids, &self.rng, &mut schedule, &mut action);
+        let level = Level::new_with_pc(TerrainType::Demo,
+                                       self.pc_id,
+                                       &mut action,
+                                       &self.entity_ids,
+                                       &self.rng,
+                                       self.action_id);
 
-        let mut sh = SpatialHashTable::new(md.width, md.height);
-        let mut ecs = EcsCtx::new();
-
-        sh.update(&ecs, &action, self.action_id);
         self.action_id += 1;
 
-        ecs.commit(&mut action);
-
-        let level = Level {
-            ecs: ecs,
-            spatial_hash: sh,
-            turn_schedule: schedule,
-        };
-
         self.level_id = self.levels.add_level(level);
-
-        if md.pc.is_some() {
-            self.pc_id = md.pc;
-        }
     }
 }
