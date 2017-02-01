@@ -6,7 +6,7 @@ use coord::Coord;
 pub struct TerrainMetadata {
     pub width: usize,
     pub height: usize,
-    pub start_coord: Option<Coord>,
+    pub start_coord: Coord,
 }
 
 #[derive(Clone, Copy, Debug)]

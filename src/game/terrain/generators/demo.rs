@@ -20,7 +20,7 @@ pub fn demo<S: TurnScheduleQueue>(ids: &EntityIdReserver,
     TerrainMetadata {
         width: width,
         height: height,
-        start_coord: Some(START_COORD),
+        start_coord: START_COORD,
     }
 }
 

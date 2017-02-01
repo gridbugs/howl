@@ -23,8 +23,7 @@ impl Level {
         let mut sh = SpatialHashTable::new(md.width, md.height);
         let mut ecs = EcsCtx::new();
 
-        let start_coord = md.start_coord.expect("Expected start coordinate");
-        action.insert_position(pc_id, start_coord);
+        action.insert_position(pc_id, md.start_coord);
 
         let pc_ticket = schedule.insert(pc_id, NPC_TURN_OFFSET);
         action.insert_schedule_ticket(pc_id, pc_ticket);
