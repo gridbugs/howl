@@ -3,7 +3,7 @@ tile_height = 16
 tile_padding = 1
 
 [extra]
-Blank = { x = 7, y = 0 }
+Blank = { x = 16, y = 0 }
 Moon = { x = 13, y = 0 }
 AimLine = { x = 14, y = 0 }
 

@@ -1,6 +1,8 @@
 use game::*;
 use frontends::ansi;
 
+const COMMON_BG: ansi::AnsiColour = ansi::colours::BLACK;
+
 pub fn resolve_tile(tile_type: TileType) -> ansi::ComplexTile {
     match tile_type {
         TileType::Wall => ansi::ComplexTile::Wall {
@@ -18,10 +20,10 @@ pub fn resolve_tile(tile_type: TileType) -> ansi::ComplexTile {
         TileType::DeadTree => ansi::foreground('£', ansi::colours::YELLOW,
                                                ansi::styles::BOLD),
         TileType::Floor => ansi::full('.', ansi::colours::WHITE,
-                                      ansi::colours::DARK_GREY,
+                                      COMMON_BG,
                                       ansi::styles::NONE),
         TileType::Ground => ansi::full('.', ansi::colours::WHITE,
-                                       ansi::colours::DARK_GREY,
+                                       COMMON_BG,
                                        ansi::styles::NONE),
         TileType::OpenDoor => ansi::full('-', ansi::colours::WHITE,
                                          ansi::colours::DARK_GREY,

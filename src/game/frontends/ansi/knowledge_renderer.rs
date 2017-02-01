@@ -18,6 +18,11 @@ const MESSAGE_LOG_PADDING_TOP: usize = 1;
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+const UNSEEN_BG: Rgb24 = Rgb24 { red: 0, green: 0, blue: 0 };
+const UNSEEN_FG: Rgb24 = Rgb24 { red: 0x80, green: 0x80, blue: 0x80 };
+
+const TEXT_BG: AnsiColour = AnsiColour::Rgb(ansi::RgbColour { red: 0, green: 0, blue: 0 });
+const CLEAR_COLOUR: AnsiColour = ansi::colours::BLACK;
 
 struct AnsiInfo {
     ch: char,
@@ -89,7 +94,7 @@ impl AnsiKnowledgeRenderer {
             message_log.push(Message::new());
         }
 
-        window_allocator.fill(ansi::colours::BLACK);
+        window_allocator.fill(CLEAR_COLOUR);
         window_allocator.flush();
 
         Ok(AnsiKnowledgeRenderer {
@@ -155,8 +160,8 @@ impl AnsiKnowledgeRenderer {
         }
 
         if !cell.visible {
-            info.fg = ansi::colours::BLACK;
-            info.bg = ansi::colours::DARK_GREY;
+            info.fg = ansi::AnsiColour::new_from_rgb24(UNSEEN_FG);
+            info.bg = ansi::AnsiColour::new_from_rgb24(UNSEEN_BG);
         }
 
         info
@@ -209,7 +214,7 @@ impl AnsiKnowledgeRenderer {
                 break;
             }
 
-            window.get_cell(cursor.x, cursor.y).set(ch, ansi_colour, ansi::colours::DARK_GREY, ansi::styles::NONE);
+            window.get_cell(cursor.x, cursor.y).set(ch, ansi_colour, TEXT_BG, ansi::styles::NONE);
 
             cursor.x += 1;
         }
@@ -220,7 +225,7 @@ impl AnsiKnowledgeRenderer {
 
     fn clear_to_line_end(window: &mut ansi::Window, mut cursor: Coord) -> Coord {
         while cursor.x < window.width() as isize {
-            window.get_cell(cursor.x, cursor.y).set(' ', ansi::colours::DARK_GREY, ansi::colours::DARK_GREY, ansi::styles::NONE);
+            window.get_cell(cursor.x, cursor.y).set(' ', TEXT_BG, TEXT_BG, ansi::styles::NONE);
 
             cursor.x += 1;
         }
@@ -362,7 +367,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         }
 
         window.flush();
-        self.window_allocator.fill(ansi::colours::BLACK);
+        self.window_allocator.fill(CLEAR_COLOUR);
         window.delete();
     }
 
@@ -398,7 +403,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         }
 
         window.flush();
-        self.window_allocator.fill(ansi::colours::BLACK);
+        self.window_allocator.fill(CLEAR_COLOUR);
         window.delete();
 
     }

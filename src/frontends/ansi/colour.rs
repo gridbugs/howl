@@ -38,9 +38,9 @@ pub enum BrightColour {
 // convenience. The maximum value for each field is 5.
 #[derive(Clone, Copy, Debug)]
 pub struct RgbColour {
-    red: u8,
-    green: u8,
-    blue: u8,
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
 }
 pub const RGB_COLOUR_MAX_FIELD: u8 = 5;
 
