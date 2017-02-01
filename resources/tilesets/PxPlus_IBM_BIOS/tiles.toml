@@ -45,3 +45,5 @@ foreground = { x = 11, y = 0 }
 [tiles.Bullet]
 foreground = { x = 12, y = 0 }
 
+[tiles.Book]
+foreground = { x = 15, y = 0 }

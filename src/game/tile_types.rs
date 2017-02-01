@@ -11,6 +11,7 @@ pub enum TileType {
     Player,
     TerrorPillar,
     TerrorFly,
+    Book,
 }
 
 impl TileType {
@@ -45,6 +46,7 @@ impl TileType {
             "Player" => TileType::Player,
             "TerrorPillar" => TileType::TerrorPillar,
             "TerrorFly" => TileType::TerrorFly,
+            "Book" => TileType::Book,
             _ => return None,
         };
 

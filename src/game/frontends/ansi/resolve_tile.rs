@@ -37,5 +37,7 @@ pub fn resolve_tile(tile_type: TileType) -> ansi::ComplexTile {
                                                    ansi::styles::BOLD),
         TileType::TerrorFly => ansi::foreground('T', ansi::colours::GREEN,
                                                 ansi::styles::BOLD),
+        TileType::Book => ansi::foreground('=', ansi::colours::BRIGHT_MAGENTA,
+                                                ansi::styles::BOLD),
     }
 }

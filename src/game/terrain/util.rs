@@ -31,6 +31,10 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                 ',' => {
                     prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
                 }
+                '=' => {
+                    prototypes::book(g.entity_mut(ids.new_id()), coord);
+                    prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
+                }
                 '+' => {
                     prototypes::door(g.entity_mut(ids.new_id()), coord, DoorState::Closed);
                     prototypes::floor(g.entity_mut(ids.new_id()), coord);
