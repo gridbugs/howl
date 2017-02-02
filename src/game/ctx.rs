@@ -3,6 +3,7 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 
 use game::*;
+use game::data::*;
 use ecs::*;
 use util::{LeakyReserver, Schedule};
 use coord::Coord;
@@ -76,38 +77,45 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             self.turn_id += 1;
 
-            let level = self.levels.level_mut(self.level_id);
-            if let Some(turn_event) = level.turn_schedule.next() {
+            let resolution = {
+                let level = self.levels.level_mut(self.level_id);
+                if let Some(turn_event) = level.turn_schedule.next() {
 
-                let resolution = TurnEnv {
-                    turn_id: self.turn_id,
-                    action_id: &mut self.action_id,
-                    level_id: self.level_id,
-                    entity_id: turn_event.event,
-                    pc_id: self.pc_id,
-                    renderer: &self.renderer,
-                    ecs: &mut level.ecs,
-                    spatial_hash: &mut level.spatial_hash,
-                    behaviour_ctx: &self.behaviour_ctx,
-                    rule_reactions: &mut self.rule_reactions,
-                    ecs_action: &mut self.ecs_action,
-                    action_schedule: &mut self.action_schedule,
-                    turn_schedule: &mut level.turn_schedule,
-                    pc_observer: &self.pc_observer,
-                    entity_ids: &self.entity_ids,
-                    rng: &self.rng,
-                    language: &self.language,
-                }.turn()?;
+                    TurnEnv {
+                        turn_id: self.turn_id,
+                        action_id: &mut self.action_id,
+                        level_id: self.level_id,
+                        entity_id: turn_event.event,
+                        pc_id: self.pc_id,
+                        renderer: &self.renderer,
+                        ecs: &mut level.ecs,
+                        spatial_hash: &mut level.spatial_hash,
+                        behaviour_ctx: &self.behaviour_ctx,
+                        rule_reactions: &mut self.rule_reactions,
+                        ecs_action: &mut self.ecs_action,
+                        action_schedule: &mut self.action_schedule,
+                        turn_schedule: &mut level.turn_schedule,
+                        pc_observer: &self.pc_observer,
+                        entity_ids: &self.entity_ids,
+                        rng: &self.rng,
+                        language: &self.language,
+                    }.turn()?
 
-                match resolution {
-                    TurnResolution::Quit => return Ok(()),
-                    TurnResolution::Schedule(entity_id, delay) => {
-                        let ticket = level.turn_schedule.insert(entity_id, delay);
-                        level.ecs.insert_schedule_ticket(turn_event.event, ticket);
-                    }
+                } else {
+                    return Err(Error::ScheduleEmpty);
                 }
-            } else {
-                return Err(Error::ScheduleEmpty);
+            };
+
+            match resolution {
+                TurnResolution::Quit => return Ok(()),
+                TurnResolution::Schedule(entity_id, delay) => {
+                    let level = self.levels.level_mut(self.level_id);
+                    let ticket = level.turn_schedule.insert(entity_id, delay);
+                    level.ecs.insert_schedule_ticket(entity_id, ticket);
+                }
+                TurnResolution::LevelSwitch(level_switch) => {
+                    self.switch_level(level_switch);
+                }
             }
         }
     }
@@ -150,5 +158,29 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         self.action_id += 1;
 
         self.level_id = self.levels.add_level(level);
+    }
+
+    fn switch_level(&mut self, level_switch: LevelSwitch) {
+
+        let mut pc_insert = EcsAction::new();
+        let mut pc_remove = EcsAction::new();
+
+        {
+            let current_level = self.levels.level_mut(self.level_id);
+            pc_remove.remove_entity_by_id(self.pc_id, &current_level.ecs);
+            current_level.commit_into(&mut pc_remove, &mut pc_insert, self.action_id);
+        }
+
+        self.action_id += 1;
+
+        let new_level = Level::new_with_pc(level_switch.terrain_type,
+                                           self.pc_id,
+                                           &mut pc_insert,
+                                           &self.entity_ids,
+                                           &self.rng,
+                                           self.action_id);
+        self.action_id += 1;
+
+        self.level_id = self.levels.add_level(new_level);
     }
 }

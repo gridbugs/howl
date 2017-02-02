@@ -38,4 +38,14 @@ impl Level {
             turn_schedule: schedule,
         }
     }
+
+    pub fn commit(&mut self, action: &mut EcsAction, action_id: u64) {
+        self.spatial_hash.update(&self.ecs, action, action_id);
+        self.ecs.commit(action);
+    }
+
+    pub fn commit_into(&mut self, from: &mut EcsAction, to: &mut EcsAction, action_id: u64) {
+        self.spatial_hash.update(&self.ecs, from, action_id);
+        self.ecs.commit_into(from, to);
+    }
 }

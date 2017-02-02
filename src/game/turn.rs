@@ -33,6 +33,7 @@ pub struct Turn<'game> {
 pub enum TurnResolution {
     Quit,
     Schedule(EntityId, u64),
+    LevelSwitch(LevelSwitch),
 }
 
 impl TurnResolution {
@@ -42,6 +43,11 @@ impl TurnResolution {
             _ => true,
         }
     }
+}
+
+enum CommitResolution {
+    Reschedule(u64),
+    LevelSwitch(LevelSwitch),
 }
 
 pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
@@ -143,9 +149,16 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             match self.get_meta_action()? {
                 MetaAction::External(External::Quit) => return Ok(TurnResolution::Quit),
                 MetaAction::ActionArgs(action_args) => {
-                    if let Some(delay) = self.try_commit_action(action_args)? {
+                    if let Some(resolution) = self.try_commit_action(action_args)? {
                         self.declare_action_return(true)?;
-                        return Ok(TurnResolution::Schedule(self.entity_id, delay));
+                        match resolution {
+                            CommitResolution::Reschedule(delay) => {
+                                return Ok(TurnResolution::Schedule(self.entity_id, delay));
+                            }
+                            CommitResolution::LevelSwitch(level_switch) => {
+                                return Ok(TurnResolution::LevelSwitch(level_switch));
+                            }
+                        }
                     } else {
                         self.declare_action_return(false)?;
                         if self.is_pc_turn() {
@@ -233,11 +246,12 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
     }
 
-    fn try_commit_action(&mut self, action: ActionArgs) -> Result<Option<u64>> {
+    fn try_commit_action(&mut self, action: ActionArgs) -> Result<Option<CommitResolution>> {
 
         let mut turn_time = self.ecs.turn_time(self.entity_id);
         let mut first = true;
         let mut action_description = None;
+        let mut level_switch = None;
 
         self.action_schedule.insert(action, 0);
 
@@ -270,6 +284,10 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 action_time = self.ecs_action.action_time_ms().unwrap_or(0);
                 action_description = self.ecs_action.clear_action_description();
 
+                if let Some(level_switch_action) = self.ecs_action.level_switch_action() {
+                    level_switch = Some(level_switch_action);
+                }
+
                 self.commit();
             } else {
                 // Committing the action clears its data.
@@ -290,7 +308,11 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             self.pc_render(action_description.as_ref())?;
         }
 
-        Ok(turn_time.map(|t| cmp::max(t, MIN_TURN_TIME)))
+        if let Some(level_switch) = level_switch {
+            return Ok(Some(CommitResolution::LevelSwitch(level_switch)));
+        }
+
+        Ok(turn_time.map(|t| CommitResolution::Reschedule(cmp::max(t, MIN_TURN_TIME))))
     }
 
     fn get_meta_action(&self) -> Result<MetaAction> {
