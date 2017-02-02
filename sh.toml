@@ -20,7 +20,7 @@ position = "position"
     component = "door_state"
     component_has_type = true
 
-[field.level_switch]
+[field.level_switch_trigger]
     type = "any"
     component_has_type = true
 

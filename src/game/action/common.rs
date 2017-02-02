@@ -105,3 +105,10 @@ pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, sp
 
     Ok(())
 }
+
+pub fn level_switch(action: &mut EcsAction, level_switch: LevelSwitch) -> Result<()> {
+
+    action.set_level_switch_action(level_switch);
+
+    Ok(())
+}

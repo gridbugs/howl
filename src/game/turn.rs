@@ -185,6 +185,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         rules::moon_transform(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::level_switch_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
 
         RULE_ACCEPT
     }

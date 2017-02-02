@@ -29,6 +29,7 @@ pub enum ActionArgs {
     MoveClouds(EntityId),
     TransformTerrorPillarTerrorFly(EntityId),
     TransformTree(EntityId),
+    LevelSwitch(LevelSwitch),
 }
 
 impl ActionArgs {
@@ -64,6 +65,9 @@ impl ActionArgs {
             }
             ActionArgs::TransformTree(entity_id) => {
                 actions::transform_tree(action, ecs.entity(entity_id))?;
+            }
+            ActionArgs::LevelSwitch(level_switch) => {
+                actions::level_switch(action, level_switch)?;
             }
         }
         Ok(())
