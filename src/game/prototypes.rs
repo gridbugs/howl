@@ -175,11 +175,12 @@ pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize, see
     entity
 }
 
-pub fn book<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn book<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: LevelSwitch) -> E {
 
     entity.insert_position(position);
     entity.insert_tile(TileType::Book);
     entity.insert_tile_depth(1);
+    entity.insert_level_switch(level_switch);
 
     entity
 }

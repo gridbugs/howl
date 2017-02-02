@@ -11,7 +11,8 @@ pub struct TerrainMetadata {
 
 #[derive(Clone, Copy, Debug)]
 pub enum TerrainType {
-    Demo,
+    DemoA,
+    DemoB,
 }
 
 impl TerrainType {
@@ -21,7 +22,8 @@ impl TerrainType {
                                           schedule: &mut S,
                                           action: &mut EcsAction) -> TerrainMetadata {
         match self {
-            TerrainType::Demo => generators::demo(ids, rng, schedule, action),
+            TerrainType::DemoA => generators::demo_a(ids, rng, schedule, action),
+            TerrainType::DemoB => generators::demo_b(ids, rng, schedule, action),
         }
     }
 }

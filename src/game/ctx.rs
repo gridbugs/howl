@@ -140,7 +140,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let mut action = EcsAction::new();
         prototypes::pc(action.entity_mut(self.pc_id), Coord::new(0, 0));
 
-        let level = Level::new_with_pc(TerrainType::Demo,
+        let level = Level::new_with_pc(TerrainType::DemoA,
                                        self.pc_id,
                                        &mut action,
                                        &self.entity_ids,

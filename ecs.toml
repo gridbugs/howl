@@ -102,6 +102,9 @@ imports = [
 [component.schedule_ticket]
     type = "ScheduleTicket"
 
+[component.level_switch]
+    type = "LevelSwitch"
+
 [action_property.alternative_turn_time]
     type = "u64"
     copy = true

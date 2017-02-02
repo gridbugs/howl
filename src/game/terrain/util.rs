@@ -4,6 +4,7 @@ use game::data::*;
 use coord::Coord;
 
 pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
+                                                  level_switch: Option<LevelSwitch>,
                                                   ids: &EntityIdReserver,
                                                   schedule: &mut S,
                                                   g: &mut EcsAction) -> (usize, usize) {
@@ -32,8 +33,10 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
                 }
                 '=' => {
-                    prototypes::book(g.entity_mut(ids.new_id()), coord);
-                    prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
+                    if let Some(level_switch) = level_switch {
+                        prototypes::book(g.entity_mut(ids.new_id()), coord, level_switch);
+                        prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
+                    }
                 }
                 '+' => {
                     prototypes::door(g.entity_mut(ids.new_id()), coord, DoorState::Closed);
@@ -54,4 +57,16 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
     }
 
     (width, height)
+}
+
+pub fn generate_clouds<S: TurnScheduleQueue>(width: usize,
+                                             height: usize,
+                                             ids: &EntityIdReserver,
+                                             rng: &GameRng,
+                                             schedule: &mut S,
+                                             g: &mut EcsAction) {
+    let cloud_id = ids.new_id();
+    prototypes::clouds(g.entity_mut(cloud_id), width, height, rng.gen_usize());
+    let ticket = schedule.schedule_turn(cloud_id, ENV_TURN_OFFSET);
+    g.insert_schedule_ticket(cloud_id, ticket);
 }
