@@ -301,7 +301,7 @@ impl SpatialHashTable {
         for entity_id in action.{{ component_name }}_negative_iter(ecs) {
             let entity = ecs.post_action_entity(entity_id, action);
             if let Some(position) = entity.position() {
-                if entity.contains_{{ component_name }}() {
+                if entity.current_contains_{{ component_name }}() {
                     let cell = self.get_mut(position);
                     cell.{{ struct_field_name }} -= 1;
                     cell.last_updated = action_id;
@@ -323,7 +323,7 @@ impl SpatialHashTable {
         for entity_id in action.{{ component_name }}_negative_iter(ecs) {
             let entity = ecs.post_action_entity(entity_id, action);
             if let Some(position) = entity.position() {
-                if let Some(value) = entity.{{ component_name }}() {
+                if let Some(value) = entity.current_{{ component_name }}() {
                     let cell = self.get_mut(position);
                     cell.{{ struct_field_name }} -= value;
                     cell.last_updated = action_id;
