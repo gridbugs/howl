@@ -299,7 +299,7 @@ impl SpatialHashTable {
         }
 
         for entity_id in action.{{ component_name }}_negative_iter(ecs) {
-            let entity = ecs.entity(entity_id);
+            let entity = ecs.post_action_entity(entity_id, action);
             if let Some(position) = entity.position() {
                 if entity.contains_{{ component_name }}() {
                     let cell = self.get_mut(position);
@@ -321,7 +321,7 @@ impl SpatialHashTable {
             }
         }
         for entity_id in action.{{ component_name }}_negative_iter(ecs) {
-            let entity = ecs.entity(entity_id);
+            let entity = ecs.post_action_entity(entity_id, action);
             if let Some(position) = entity.position() {
                 if let Some(value) = entity.{{ component_name }}() {
                     let cell = self.get_mut(position);
@@ -351,9 +351,13 @@ impl SpatialHashTable {
             }
         }
         for entity_id in action.{{ component_name }}_negative_iter(ecs) {
-            let entity = ecs.entity(entity_id);
+            let entity = ecs.post_action_entity(entity_id, action);
             if let Some(position) = entity.position() {
-                if entity.contains_{{ component_name }}() {
+        {{#if component_has_type}}
+                if entity.current_{{ component_name }}().is_some() {
+        {{else}}
+                if entity.current_contains_{{ component_name }}() {
+        {{/if}}
                     let cell = self.get_mut(position);
                     cell.{{ struct_field_name }}.remove(entity_id);
                     cell.last_updated = action_id;
