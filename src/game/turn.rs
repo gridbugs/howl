@@ -63,7 +63,7 @@ pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub rule_reactions: &'game mut Vec<Reaction>,
     pub ecs_action: &'game mut EcsAction,
     pub action_schedule: &'game mut Schedule<ActionArgs>,
-    pub turn_schedule: &'game mut Schedule<EntityId>,
+    pub turn_schedule: &'game mut TurnSchedule,
     pub pc_observer: &'game Shadowcast,
     pub entity_ids: &'game EntityIdReserver,
     pub rng: &'game GameRng,
@@ -201,6 +201,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::level_switch_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
 
         RULE_ACCEPT
     }
@@ -288,6 +289,10 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
                 if let Some(level_switch_action) = self.ecs_action.level_switch_action() {
                     level_switch = Some(level_switch_action);
+                }
+
+                if let Some(sequence_no) = self.ecs_action.schedule_invalidate() {
+                    self.turn_schedule.invalidate(sequence_no);
                 }
 
                 self.commit();

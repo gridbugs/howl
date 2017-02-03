@@ -137,3 +137,7 @@ imports = [
 [action_property.projectile_collision]
     type = "ProjectileCollision"
     copy = true
+
+[action_property.schedule_invalidate]
+    type = "u64"
+    copy = true

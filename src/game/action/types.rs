@@ -32,6 +32,7 @@ pub enum ActionArgs {
     LevelSwitch(LevelSwitch),
     ProjectileCollision(ProjectileCollision),
     Damage(EntityId, usize),
+    Die(EntityId),
 }
 
 impl ActionArgs {
@@ -76,6 +77,9 @@ impl ActionArgs {
             }
             ActionArgs::Damage(entity_id, amount) => {
                 actions::damage(action, ecs.entity(entity_id), amount)?;
+            }
+            ActionArgs::Die(entity_id) => {
+                actions::die(action, ecs.entity(entity_id))?;
             }
         }
         Ok(())

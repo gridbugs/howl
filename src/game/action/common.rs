@@ -130,3 +130,13 @@ pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) -> Re
 
     Ok(())
 }
+
+pub fn die(action: &mut EcsAction, entity: EntityRef) -> Result<()> {
+
+    let ticket = entity.schedule_ticket().ok_or(Error::MissingComponent)?;
+    action.set_schedule_invalidate(ticket.sequence_no);
+
+    action.remove_entity(entity);
+
+    Ok(())
+}
