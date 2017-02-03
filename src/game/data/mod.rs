@@ -7,6 +7,7 @@ mod realtime_velocity;
 mod action_description;
 mod level_switch;
 mod projectile_collision;
+mod hit_points;
 
 pub use self::door_state::*;
 pub use self::close::*;
@@ -17,3 +18,4 @@ pub use self::realtime_velocity::*;
 pub use self::action_description::*;
 pub use self::level_switch::*;
 pub use self::projectile_collision::*;
+pub use self::hit_points::*;

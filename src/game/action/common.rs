@@ -119,3 +119,14 @@ pub fn projectile_collision(action: &mut EcsAction, projectile_collision: Projec
 
     Ok(())
 }
+
+pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) -> Result<()> {
+
+    let mut hit_points = to_damage.hit_points().ok_or(Error::MissingComponent)?;
+
+    hit_points.dec(amount);
+
+    action.insert_hit_points(to_damage.id(), hit_points);
+
+    Ok(())
+}

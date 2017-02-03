@@ -18,6 +18,14 @@ imports = [
 [component.projectile]
 [component.projectile_collider]
 
+[component.projectile_damage]
+    type = "usize"
+    copy = true
+
+[component.hit_points]
+    type = "HitPoints"
+    copy = true
+
 [component.realtime_velocity]
     type = "RealtimeVelocity"
 

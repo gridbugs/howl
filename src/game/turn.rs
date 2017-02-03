@@ -194,6 +194,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         rules::open_door(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
+        rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::close_door(rule_env, self.ecs_action, self.rule_reactions)?;
         rules::moon_transform(rule_env, self.ecs_action, self.rule_reactions)?;

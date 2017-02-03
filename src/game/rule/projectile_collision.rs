@@ -2,7 +2,7 @@ use game::*;
 use game::data::*;
 use ecs::*;
 
-pub fn projectile_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
+pub fn projectile_collision_trigger(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
     for (projectile_id, position) in action.position().insertion_copy_iter() {
 
@@ -22,6 +22,19 @@ pub fn projectile_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Ve
             }
         }
 
+    }
+
+    RULE_ACCEPT
+}
+
+pub fn projectile_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
+
+    if let Some(ProjectileCollision { projectile, collider }) = action.projectile_collision() {
+        if let Some(damage) = env.ecs.projectile_damage(projectile) {
+            if env.ecs.contains_hit_points(collider) {
+                reactions.push(Reaction::new(ActionArgs::Damage(collider, damage), 0));
+            }
+        }
     }
 
     RULE_ACCEPT

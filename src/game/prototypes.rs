@@ -124,6 +124,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_transform_on_moon_change();
     entity.insert_enemy();
     entity.insert_projectile_collider();
+    entity.insert_hit_points(HitPoints::new(2));
 
     entity.id()
 }
@@ -152,6 +153,7 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
     entity.insert_realtime_velocity(velocity);
     entity.insert_destroy_on_collision();
     entity.insert_projectile();
+    entity.insert_projectile_damage(1);
 
     entity.insert_tile(TileType::Bullet);
 

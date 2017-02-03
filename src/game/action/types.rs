@@ -31,6 +31,7 @@ pub enum ActionArgs {
     TransformTree(EntityId),
     LevelSwitch(LevelSwitch),
     ProjectileCollision(ProjectileCollision),
+    Damage(EntityId, usize),
 }
 
 impl ActionArgs {
@@ -72,6 +73,9 @@ impl ActionArgs {
             }
             ActionArgs::ProjectileCollision(projectile_collision) => {
                 actions::projectile_collision(action, projectile_collision)?;
+            }
+            ActionArgs::Damage(entity_id, amount) => {
+                actions::damage(action, ecs.entity(entity_id), amount)?;
             }
         }
         Ok(())
