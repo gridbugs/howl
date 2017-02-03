@@ -9,6 +9,7 @@ mod realtime_velocity;
 mod level_switch_trigger;
 mod projectile_collision;
 mod death;
+mod enemy_collision;
 
 pub mod rules {
     pub use super::collision::*;
@@ -19,4 +20,5 @@ pub mod rules {
     pub use super::level_switch_trigger::*;
     pub use super::projectile_collision::*;
     pub use super::death::*;
+    pub use super::enemy_collision::*;
 }
