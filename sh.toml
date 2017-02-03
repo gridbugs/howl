@@ -29,3 +29,6 @@ position = "position"
 
 [field.transform_on_moon_change]
     type = "set"
+
+[field.projectile_collider]
+    type = "any"

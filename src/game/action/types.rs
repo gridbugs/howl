@@ -30,6 +30,7 @@ pub enum ActionArgs {
     TransformTerrorPillarTerrorFly(EntityId),
     TransformTree(EntityId),
     LevelSwitch(LevelSwitch),
+    ProjectileCollision(ProjectileCollision),
 }
 
 impl ActionArgs {
@@ -68,6 +69,9 @@ impl ActionArgs {
             }
             ActionArgs::LevelSwitch(level_switch) => {
                 actions::level_switch(action, level_switch)?;
+            }
+            ActionArgs::ProjectileCollision(projectile_collision) => {
+                actions::projectile_collision(action, projectile_collision)?;
             }
         }
         Ok(())

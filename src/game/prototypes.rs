@@ -87,6 +87,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_message_log(MessageLog::new());
     entity.insert_you_see(YouSeeMessageType::Player);
     entity.insert_description(DescriptionMessageType::Player);
+    entity.insert_projectile_collider();
 
     entity
 }
@@ -122,6 +123,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_transformation_state(TransformationState::Real);
     entity.insert_transform_on_moon_change();
     entity.insert_enemy();
+    entity.insert_projectile_collider();
 
     entity.id()
 }
@@ -149,6 +151,7 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
     entity.insert_position(position);
     entity.insert_realtime_velocity(velocity);
     entity.insert_destroy_on_collision();
+    entity.insert_projectile();
 
     entity.insert_tile(TileType::Bullet);
 

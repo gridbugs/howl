@@ -15,6 +15,8 @@ imports = [
 [component.transform_on_moon_change]
 [component.should_render]
 [component.enemy]
+[component.projectile]
+[component.projectile_collider]
 
 [component.realtime_velocity]
     type = "RealtimeVelocity"
@@ -122,4 +124,8 @@ imports = [
 
 [action_property.level_switch_action]
     type = "LevelSwitch"
+    copy = true
+
+[action_property.projectile_collision]
+    type = "ProjectileCollision"
     copy = true
