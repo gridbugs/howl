@@ -2,19 +2,29 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::fs::File;
+use std::collections::HashSet;
 
 use tomson::Toml;
 use handlebars::Handlebars;
-use rustc_serialize::json::Json;
+use rustc_serialize::json::{self, Json};
 
 fn generate_code(mut toml: String) -> String {
     // turn the toml string into json for compatibility with handlebars
     let mut json = Toml::as_json(&mut toml).unwrap();
 
+    let mut void_fields = HashSet::new();
+
     for (id, field) in json.as_object_mut().unwrap().get_mut("field").unwrap().as_object_mut().unwrap().iter_mut() {
         let field_obj = field.as_object_mut().unwrap();
         let field_type = field_obj.get("type").unwrap().as_string().unwrap().to_string();
+
         let field_name = id.clone();
+
+        if field_type == "void" {
+            void_fields.insert(field_name);
+            continue;
+        }
+
         let component_name = if let Some(component_json) = field_obj.get("component") {
             component_json.as_string().unwrap().to_string()
         } else {
@@ -86,6 +96,16 @@ fn generate_code(mut toml: String) -> String {
                 field_obj.insert("is_set_type".to_string(), Json::Boolean(true));
             }
             other => panic!("unknown field type {}", other),
+        }
+    }
+
+    {
+        let mut json_obj = json.as_object_mut().unwrap();
+        json_obj.insert("void".to_string(), Json::Object(json::Object::new()));
+        for field in void_fields.iter() {
+            let void_json = json_obj.get_mut("field").unwrap().as_object_mut().unwrap().remove(field).unwrap();
+            let void_obj = void_json.into_object().unwrap();
+            json_obj.get_mut("void").unwrap().as_object_mut().unwrap().insert(field.to_string(), Json::Object(void_obj));
         }
     }
 
@@ -282,6 +302,9 @@ impl SpatialHashTable {
 {{#each field}}
         self.update_{{ struct_field_name }}(ecs, action, action_id);
 {{/each}}
+{{#each void}}
+        self.update_{{ @key }}(ecs, action, action_id);
+{{/each}}
     }
 
 {{#each field}}
@@ -365,6 +388,28 @@ impl SpatialHashTable {
             }
         }
     {{/if}}
+    }
+{{/each}}
+{{#each void}}
+    fn update_{{ @key }}(&mut self, ecs: &EcsCtx, action: &EcsAction, action_id: u64) {
+    {{#if component_has_type}}
+        for (entity_id, _) in action.{{ @key }}_positive_iter(ecs) {
+    {{else}}
+        for entity_id in action.{{ @key }}_positive_iter(ecs) {
+    {{/if}}
+
+            let entity = ecs.post_action_entity(entity_id, action);
+            if let Some(position) = entity.position() {
+                self.get_mut(position).last_updated = action_id;
+            }
+        }
+
+        for entity_id in action.{{ @key }}_negative_iter(ecs) {
+            let entity = ecs.post_action_entity(entity_id, action);
+            if let Some(position) = entity.position() {
+                self.get_mut(position).last_updated = action_id;
+            }
+        }
     }
 {{/each}}
 }
