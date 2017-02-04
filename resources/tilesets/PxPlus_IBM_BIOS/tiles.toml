@@ -1,6 +1,6 @@
 tile_width = 16
 tile_height = 16
-tile_padding = 1
+tile_padding = 0
 
 [extra]
 Blank = { x = 16, y = 0 }
