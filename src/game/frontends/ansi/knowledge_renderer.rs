@@ -9,6 +9,7 @@ use colour::Rgb24;
 
 const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 const AIM_LINE_COLOUR: ansi::AnsiColour = ansi::colours::YELLOW;
+const WOUND_OVERLAY_COLOUR: ansi::AnsiColour =  ansi::colours::RED;
 
 const ANSI_GAME_WINDOW_X: usize = 1;
 const ANSI_GAME_WINDOW_Y: usize = 1;
@@ -157,6 +158,14 @@ impl AnsiKnowledgeRenderer {
 
         if cell.moon {
             info.bg = MOON_COLOUR;
+        }
+
+        if let Some(health_overlay) = cell.health_overlay {
+            match health_overlay {
+                HealthOverlay::Wounded => {
+                    info.bg = WOUND_OVERLAY_COLOUR;
+                }
+            }
         }
 
         if !cell.visible {

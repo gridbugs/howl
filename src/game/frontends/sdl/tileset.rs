@@ -19,6 +19,7 @@ pub enum ExtraTileType {
     Blank,
     Moon,
     AimLine,
+    Wounded,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -200,6 +201,7 @@ impl Tileset {
         extra.insert(ExtraTileType::Blank, extra_rect(&extra_table, "Blank",  tile_width, tile_height, tile_padding)?);
         extra.insert(ExtraTileType::Moon, extra_rect(&extra_table, "Moon",  tile_width, tile_height, tile_padding)?);
         extra.insert(ExtraTileType::AimLine, extra_rect(&extra_table, "AimLine",  tile_width, tile_height, tile_padding)?);
+        extra.insert(ExtraTileType::Wounded, extra_rect(&extra_table, "Wounded",  tile_width, tile_height, tile_padding)?);
 
         Ok(Tileset {
             tiles: tile_map,

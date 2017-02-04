@@ -1,4 +1,5 @@
 use game::*;
+use game::data::*;
 use spatial_hash::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
 use util::{BestMap, TwoDimensionalCons};
@@ -13,6 +14,7 @@ pub struct DrawableKnowledgeCell {
     you_see: BestMap<isize, YouSeeMessageType>,
     description: BestMap<isize, DescriptionMessageType>,
     moon: bool,
+    health_overlay: BestMap<isize, HealthOverlay>,
 }
 
 impl DrawableKnowledgeCell {
@@ -24,6 +26,7 @@ impl DrawableKnowledgeCell {
             you_see: BestMap::new(),
             description: BestMap::new(),
             moon: false,
+            health_overlay: BestMap::new(),
         }
     }
 
@@ -47,6 +50,10 @@ impl DrawableKnowledgeCell {
         self.description.value()
     }
 
+    pub fn health_overlay(&self) -> Option<HealthOverlay> {
+        self.health_overlay.value()
+    }
+
     pub fn last_updated(&self) -> u64 {
         self.last_updated
     }
@@ -62,6 +69,7 @@ impl DrawableKnowledgeCell {
             self.background.clear();
             self.you_see.clear();
             self.description.clear();
+            self.health_overlay.clear();
 
             for entity in action_env.ecs.entity_iter(world_cell.entity_id_iter()) {
                 entity.tile_depth().map(|depth| {
@@ -76,6 +84,14 @@ impl DrawableKnowledgeCell {
                     });
                     entity.description().map(|description| {
                         self.description.insert(depth, description);
+                    });
+                    entity.hit_points().map(|hit_points| {
+                        match hit_points.status() {
+                            HealthStatus::Wounded => {
+                                self.health_overlay.insert(depth, HealthOverlay::Wounded);
+                            }
+                            _ => (),
+                        }
                     });
                 });
             }
@@ -174,6 +190,7 @@ pub struct CellDrawInfo {
     pub visible: bool,
     pub moon: bool,
     pub front: bool,
+    pub health_overlay: Option<HealthOverlay>,
 }
 
 impl Default for CellDrawInfo {
@@ -184,6 +201,12 @@ impl Default for CellDrawInfo {
             visible: false,
             moon: false,
             front: false,
+            health_overlay: None,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HealthOverlay {
+    Wounded,
 }

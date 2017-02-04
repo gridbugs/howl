@@ -54,6 +54,7 @@ impl TileBuffer {
             cell.moon = knowledge_cell.moon();
             cell.visible = knowledge_cell.last_updated() == turn_id;
             cell.front = Self::is_front(world_coord, knowledge);
+            cell.health_overlay = knowledge_cell.health_overlay();
         }
 
         offset

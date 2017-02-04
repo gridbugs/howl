@@ -33,6 +33,7 @@ struct SdlCellInfo {
     bg: Option<Rect>,
     moon: bool,
     visible: bool,
+    health_overlay: Option<HealthOverlay>,
 }
 
 pub struct SdlKnowledgeRenderer<'a> {
@@ -195,6 +196,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             visible: cell.visible,
             fg: None,
             bg: None,
+            health_overlay: cell.health_overlay,
         };
 
         if let Some(bg_type) = cell.background {
@@ -234,6 +236,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
         let blank = *self.tileset.resolve_extra(ExtraTileType::Blank);
         let moon = *self.tileset.resolve_extra(ExtraTileType::Moon);
+        let wounded = *self.tileset.resolve_extra(ExtraTileType::Wounded);
 
         for (coord, cell) in izip!(self.buffer.coord_iter(), self.buffer.iter()) {
             let rect = self.screen_rect(coord);
@@ -247,15 +250,23 @@ impl<'a> SdlKnowledgeRenderer<'a> {
                 &self.greyscale_tile_texture
             };
 
-
             if let Some(bg_rect) = info.bg {
                 self.sdl_renderer.copy(texture, Some(bg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
+
+            if let Some(health_overlay) = info.health_overlay {
+                match health_overlay {
+                    HealthOverlay::Wounded => {
+                        self.sdl_renderer.copy(&self.tile_texture, Some(wounded), Some(rect)).expect(RENDERING_FAILED_MSG);
+                    }
+                }
+            }
+
             if let Some(fg_rect) = info.fg {
                 self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
 
-            if info.moon && info.visible{
+            if info.moon && info.visible {
                 self.sdl_renderer.copy(&self.tile_texture, Some(moon), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
         }

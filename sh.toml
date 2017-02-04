@@ -30,3 +30,7 @@
 
 [field.projectile_collider]
     type = "any"
+
+[field.hit_points]
+    type = "void"
+    component_has_type = true
