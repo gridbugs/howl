@@ -339,15 +339,15 @@ impl SpatialHashTable {
         {{/if}}
             let entity = ecs.post_action_entity(entity_id, action);
             if let Some(position) = entity.position() {
+                let cell = self.get_mut(position);
         {{#if component_has_type}}
                 if entity.current_{{ component_name }}().is_none() {
         {{else}}
                 if !entity.current_contains_{{ component_name }}() {
         {{/if}}
-                    let cell = self.get_mut(position);
                     cell.{{ struct_field_name }}.insert(entity_id);
-                    cell.last_updated = action_id;
                 }
+                cell.last_updated = action_id;
             }
         }
         for entity_id in action.{{ component_name }}_negative_iter(ecs) {
