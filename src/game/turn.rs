@@ -176,33 +176,35 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.entity_id == self.pc_id
     }
 
-    fn check_rules_wrapper(&mut self) -> Result<bool> {
+    fn check_rules_wrapper(&mut self) -> Result<RuleResolution> {
         match self.check_rules() {
-            Ok(()) => Ok(true),
-            Err(RuleError::Rejection) => Ok(false),
+            Ok(()) => Ok(RuleResolution::Accept),
+            Err(RuleError::Resolution(resolution)) => Ok(resolution),
             Err(RuleError::GameError(e)) => Err(e),
         }
     }
 
     fn check_rules(&mut self) -> RuleResult {
-        self.rule_reactions.clear();
 
         let rule_env = RuleEnv {
             ecs: self.ecs,
             spatial_hash: self.spatial_hash,
         };
 
-        rules::open_door(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::close_door(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::moon_transform(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::level_switch_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
-        rules::enemy_collision(rule_env, self.ecs_action, self.rule_reactions)?;
+        if self.ecs_action.contains_no_commit() {
+            rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
+        } else {
+            rules::open_door(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::close_door(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::moon_transform(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::enemy_collision(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::level_switch_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
+        }
 
         RULE_ACCEPT
     }
@@ -274,33 +276,49 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             // construct an action from the action args
             action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids)?;
 
-            let accept = self.check_rules_wrapper()?;
-
             let mut action_time = 0;
+            self.rule_reactions.clear();
 
-            if accept {
-                if first {
-                    first = false;
-                    if let Some(alternative_turn_time) = self.ecs_action.alternative_turn_time() {
-                        turn_time = Some(alternative_turn_time);
+            loop {
+                match self.check_rules_wrapper()? {
+                    RuleResolution::Accept => {
+
+                        if self.ecs_action.contains_no_commit() {
+                            self.ecs_action.clear();
+                            break;
+                        }
+
+                        if first {
+                            first = false;
+                            if let Some(alternative_turn_time) = self.ecs_action.alternative_turn_time() {
+                                turn_time = Some(alternative_turn_time);
+                            }
+                        }
+                        action_time = self.ecs_action.action_time_ms().unwrap_or(0);
+                        action_description = self.ecs_action.clear_action_description();
+
+                        if let Some(level_switch_action) = self.ecs_action.level_switch_action() {
+                            level_switch = Some(level_switch_action);
+                        }
+
+                        if let Some(sequence_no) = self.ecs_action.schedule_invalidate() {
+                            self.turn_schedule.invalidate(sequence_no);
+                        }
+
+                        self.commit();
+                        break;
+                    }
+                    RuleResolution::Reject => {
+                        // Committing the action clears its data.
+                        // It must be cleared explicitly if the action is rejected.
+                        self.ecs_action.clear();
+                        break;
+                    }
+                    RuleResolution::Consume(action_args) => {
+                        // modify the current action with the new action args and retry
+                        action_args.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids)?;
                     }
                 }
-                action_time = self.ecs_action.action_time_ms().unwrap_or(0);
-                action_description = self.ecs_action.clear_action_description();
-
-                if let Some(level_switch_action) = self.ecs_action.level_switch_action() {
-                    level_switch = Some(level_switch_action);
-                }
-
-                if let Some(sequence_no) = self.ecs_action.schedule_invalidate() {
-                    self.turn_schedule.invalidate(sequence_no);
-                }
-
-                self.commit();
-            } else {
-                // Committing the action clears its data.
-                // It must be cleared explicitly if the action is rejected.
-                self.ecs_action.clear();
             }
 
             for reaction in self.rule_reactions.drain(..) {

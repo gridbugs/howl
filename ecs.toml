@@ -141,3 +141,5 @@ imports = [
 [action_property.schedule_invalidate]
     type = "u64"
     copy = true
+
+[action_property.no_commit]

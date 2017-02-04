@@ -8,20 +8,20 @@ pub fn projectile_collision_trigger(env: RuleEnv, action: &EcsAction, reactions:
 
         if let Some(collider_id) = env.spatial_hash.get(position).any_projectile_collider() {
 
-            if env.ecs.contains_projectile(projectile_id) {
+            let projectile = env.ecs.post_action_entity(projectile_id, action);
 
-                reactions.push(Reaction::new(ActionArgs::ProjectileCollision(
-                            ProjectileCollision::new(projectile_id, collider_id)), 0));
+            if projectile.contains_projectile() {
 
-                if env.ecs.contains_destroy_on_collision(projectile_id) {
+                if projectile.contains_destroy_on_collision() {
                     // must happen after processing the collision
                     reactions.push(Reaction::new(ActionArgs::Destroy(projectile_id), 1));
                 }
 
-                return RULE_REJECT;
+                let collision_action = ActionArgs::ProjectileCollision(ProjectileCollision::new(projectile_id, collider_id));
+
+                return rule_consume(collision_action);
             }
         }
-
     }
 
     RULE_ACCEPT
@@ -29,10 +29,13 @@ pub fn projectile_collision_trigger(env: RuleEnv, action: &EcsAction, reactions:
 
 pub fn projectile_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    if let Some(ProjectileCollision { projectile, collider }) = action.projectile_collision() {
-        if let Some(damage) = env.ecs.projectile_damage(projectile) {
-            if env.ecs.contains_hit_points(collider) {
-                reactions.push(Reaction::new(ActionArgs::Damage(collider, damage), 0));
+    if let Some(ProjectileCollision { projectile_id, collider_id }) = action.projectile_collision() {
+
+        let projectile = env.ecs.post_action_entity(projectile_id, action);
+
+        if let Some(damage) = projectile.projectile_damage() {
+            if env.ecs.contains_hit_points(collider_id) {
+                reactions.push(Reaction::new(ActionArgs::Damage(collider_id, damage), 0));
             }
         }
     }

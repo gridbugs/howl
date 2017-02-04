@@ -6,8 +6,14 @@ use spatial_hash::*;
 
 pub type RuleResult = result::Result<(), RuleError>;
 
+pub enum RuleResolution {
+    Accept,
+    Reject,
+    Consume(ActionArgs),
+}
+
 pub enum RuleError {
-    Rejection,
+    Resolution(RuleResolution),
     GameError(Error),
 }
 
@@ -18,7 +24,11 @@ impl From<Error> for RuleError {
 }
 
 pub const RULE_ACCEPT: RuleResult = Ok(());
-pub const RULE_REJECT: RuleResult = Err(RuleError::Rejection);
+pub const RULE_REJECT: RuleResult = Err(RuleError::Resolution(RuleResolution::Reject));
+
+pub fn rule_consume(action_args: ActionArgs) -> RuleResult {
+    Err(RuleError::Resolution(RuleResolution::Consume(action_args)))
+}
 
 pub struct Reaction {
     pub action: ActionArgs,

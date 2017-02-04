@@ -116,6 +116,7 @@ pub fn level_switch(action: &mut EcsAction, level_switch: LevelSwitch) -> Result
 pub fn projectile_collision(action: &mut EcsAction, projectile_collision: ProjectileCollision) -> Result<()> {
 
     action.set_projectile_collision(projectile_collision);
+    action.set_no_commit();
 
     Ok(())
 }
