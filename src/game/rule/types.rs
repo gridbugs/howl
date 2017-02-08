@@ -4,7 +4,7 @@ use game::*;
 use ecs::*;
 use spatial_hash::*;
 
-pub type RuleResult = result::Result<(), RuleError>;
+pub type RuleResult = result::Result<RuleResolution, RuleResolution>;
 
 pub enum RuleResolution {
     Accept,
@@ -12,22 +12,11 @@ pub enum RuleResolution {
     Consume(ActionArgs),
 }
 
-pub enum RuleError {
-    Resolution(RuleResolution),
-    GameError(Error),
-}
-
-impl From<Error> for RuleError {
-    fn from(e: Error) -> Self {
-        RuleError::GameError(e)
-    }
-}
-
-pub const RULE_ACCEPT: RuleResult = Ok(());
-pub const RULE_REJECT: RuleResult = Err(RuleError::Resolution(RuleResolution::Reject));
+pub const RULE_ACCEPT: RuleResult = Ok(RuleResolution::Accept);
+pub const RULE_REJECT: RuleResult = Err(RuleResolution::Reject);
 
 pub fn rule_consume(action_args: ActionArgs) -> RuleResult {
-    Err(RuleError::Resolution(RuleResolution::Consume(action_args)))
+    Err(RuleResolution::Consume(action_args))
 }
 
 pub struct Reaction {

@@ -91,7 +91,7 @@ impl<'game> ActionEnv<'game> {
 impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
-        self.pc_render(None)?;
+        self.pc_render(None);
 
         let resolution = self.take_turn()?;
 
@@ -176,11 +176,10 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.entity_id == self.pc_id
     }
 
-    fn check_rules_wrapper(&mut self) -> Result<RuleResolution> {
+    fn check_rules_wrapper(&mut self) -> RuleResolution {
         match self.check_rules() {
-            Ok(()) => Ok(RuleResolution::Accept),
-            Err(RuleError::Resolution(resolution)) => Ok(resolution),
-            Err(RuleError::GameError(e)) => Err(e),
+            Ok(res) => res,
+            Err(res) => res,
         }
     }
 
@@ -215,21 +214,23 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.ecs.commit(self.ecs_action);
     }
 
-    fn pc_render(&mut self, action_description: Option<&ActionDescription>) -> Result<bool> {
+    fn pc_render(&mut self, action_description: Option<&ActionDescription>) -> bool {
 
         let entity = self.ecs.entity(self.pc_id);
 
         if !self.ecs.contains_should_render(self.entity_id) {
-            return Ok(false);
+            return false;
         }
 
-        let mut knowledge = entity.drawable_knowledge_borrow_mut().ok_or(Error::MissingComponent)?;
+        let mut knowledge = entity.drawable_knowledge_borrow_mut()
+            .expect("PC missing drawable_knowledge");
+
         let level_knowledge = knowledge.level_mut_or_insert_size(self.level_id,
                                                                  self.spatial_hash.width(),
                                                                  self.spatial_hash.height());
-        let position = entity.position().ok_or(Error::MissingComponent)?;
-        let vision_distance = entity.vision_distance().ok_or(Error::MissingComponent)?;
-        let mut message_log = entity.message_log_borrow_mut().ok_or(Error::MissingComponent)?;
+        let position = entity.position().expect("PC missing position");
+        let vision_distance = entity.vision_distance().expect("PC missing vision_distance");
+        let mut message_log = entity.message_log_borrow_mut().expect("PC missing message_log");
 
 
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
@@ -247,10 +248,9 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             let mut renderer = self.renderer.borrow_mut();
             renderer.update_log(message_log.deref(), self.language);
             renderer.render(level_knowledge, *self.action_id, position);
-            Ok(true)
-        } else {
-            Ok(false)
         }
+
+        changed
     }
 
     fn try_commit_action(&mut self, action: ActionArgs) -> Result<Option<CommitResolution>> {
@@ -266,7 +266,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
             // render the scene if time has passed
             if action_event.time_delta != 0 {
-                if self.pc_render(action_description.as_ref())? {
+                if self.pc_render(action_description.as_ref()) {
                     // if the change in scene was visible, add a delay
                     thread::sleep(Duration::from_millis(action_event.time_delta));
                 }
@@ -275,13 +275,13 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             *self.action_id += 1;
 
             // construct an action from the action args
-            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids)?;
+            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids);
 
             let mut action_time = 0;
             self.rule_reactions.clear();
 
             loop {
-                match self.check_rules_wrapper()? {
+                match self.check_rules_wrapper() {
                     RuleResolution::Accept => {
 
                         if self.ecs_action.contains_no_commit() {
@@ -317,7 +317,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                     }
                     RuleResolution::Consume(action_args) => {
                         // modify the current action with the new action args and retry
-                        action_args.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids)?;
+                        action_args.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids);
                     }
                 }
             }
@@ -332,7 +332,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
 
         if action_description.is_some() {
-            self.pc_render(action_description.as_ref())?;
+            self.pc_render(action_description.as_ref());
         }
 
         if let Some(level_switch) = level_switch {
@@ -344,9 +344,9 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
     fn get_meta_action(&self) -> Result<MetaAction> {
         let entity = self.ecs.entity(self.entity_id);
-        let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
+        let mut behaviour_state = entity.behaviour_state_borrow_mut().expect("Entity missing behaviour_state");
         if !behaviour_state.is_initialised() {
-            let behaviour_type = entity.behaviour_type().ok_or(Error::MissingComponent)?;
+            let behaviour_type = entity.behaviour_type().expect("Entity missing behaviour_type");
             behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
         }
         let input = BehaviourInput {
@@ -363,7 +363,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
     fn declare_action_return(&self, value: bool) -> Result<()> {
         let entity = self.ecs.entity(self.entity_id);
-        let mut behaviour_state = entity.behaviour_state_borrow_mut().ok_or(Error::MissingComponent)?;
+        let mut behaviour_state = entity.behaviour_state_borrow_mut().expect("Entity missing behaviour_state");
         behaviour_state.declare_return(value)?;
         Ok(())
     }

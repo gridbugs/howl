@@ -11,7 +11,10 @@ pub fn level_switch_trigger(env: RuleEnv, action: &EcsAction, reactions: &mut Ve
         }
 
         if let Some(trigger_id) = env.spatial_hash.get(position).any_level_switch_trigger() {
-            let level_switch = env.ecs.level_switch_trigger(trigger_id).ok_or(Error::MissingComponent)?;
+
+            let level_switch = env.ecs.level_switch_trigger(trigger_id)
+                .expect("Entity missing level_switch_trigger");
+
             reactions.push(Reaction::new(ActionArgs::LevelSwitch(level_switch), 0));
             break;
         }

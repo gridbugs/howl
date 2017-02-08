@@ -36,52 +36,51 @@ pub enum ActionArgs {
 }
 
 impl ActionArgs {
-    pub fn to_action(self, action: &mut EcsAction, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver) -> Result<()> {
+    pub fn to_action(self, action: &mut EcsAction, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver) {
         match self {
             ActionArgs::Null => (),
             ActionArgs::Walk(entity_id, direction) => {
-                actions::walk(action, ecs.entity(entity_id), direction)?;
+                actions::walk(action, ecs.entity(entity_id), direction);
             }
             ActionArgs::OpenDoor(entity_id) => {
-                actions::open_door(action, ecs.entity(entity_id))?;
+                actions::open_door(action, ecs.entity(entity_id));
             }
             ActionArgs::CloseDoor(entity_id) => {
-                actions::close_door(action, ecs.entity(entity_id))?;
+                actions::close_door(action, ecs.entity(entity_id));
             }
             ActionArgs::Close(entity_id, direction) => {
-                actions::close(action, entity_id, direction)?;
+                actions::close(action, entity_id, direction);
             }
             ActionArgs::FireBullet(entity_id, delta) => {
-                actions::fire_bullet(action, ecs.entity(entity_id), delta, entity_ids)?;
+                actions::fire_bullet(action, ecs.entity(entity_id), delta, entity_ids);
             }
             ActionArgs::RealtimeVelocityMove(entity_id, velocity) => {
-                actions::realtime_velocity_move(action, ecs.entity(entity_id), velocity)?;
+                actions::realtime_velocity_move(action, ecs.entity(entity_id), velocity);
             }
             ActionArgs::Destroy(entity_id) => {
-                actions::destroy(action, ecs.entity(entity_id))?;
+                actions::destroy(action, ecs.entity(entity_id));
             }
             ActionArgs::MoveClouds(entity_id) => {
-                actions::move_clouds(action, entity_id, ecs, spatial_hash)?;
+                actions::move_clouds(action, entity_id, ecs, spatial_hash);
             }
             ActionArgs::TransformTerrorPillarTerrorFly(entity_id) => {
-                actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id))?;
+                actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id));
             }
             ActionArgs::TransformTree(entity_id) => {
-                actions::transform_tree(action, ecs.entity(entity_id))?;
+                actions::transform_tree(action, ecs.entity(entity_id));
             }
             ActionArgs::LevelSwitch(level_switch) => {
-                actions::level_switch(action, level_switch)?;
+                actions::level_switch(action, level_switch);
             }
             ActionArgs::ProjectileCollision(projectile_collision) => {
-                actions::projectile_collision(action, projectile_collision)?;
+                actions::projectile_collision(action, projectile_collision);
             }
             ActionArgs::Damage(entity_id, amount) => {
-                actions::damage(action, ecs.entity(entity_id), amount)?;
+                actions::damage(action, ecs.entity(entity_id), amount);
             }
             ActionArgs::Die(entity_id) => {
-                actions::die(action, ecs.entity(entity_id))?;
+                actions::die(action, ecs.entity(entity_id));
             }
         }
-        Ok(())
     }
 }

@@ -5,15 +5,13 @@ use spatial_hash::*;
 use direction::Direction;
 use coord::Coord;
 
-pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) -> Result<()> {
-    let current_position = entity.position().ok_or(Error::MissingComponent)?;
+pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
+    let current_position = entity.position().expect("Entity missing position");
     let new_position = current_position + direction.vector();
     action.insert_position(entity.id(), new_position);
-
-    Ok(())
 }
 
-pub fn open_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
+pub fn open_door(action: &mut EcsAction, door: EntityRef) {
     action.remove_solid(door.id());
     action.insert_opacity(door.id(), 0.0);
     action.insert_door_state(door.id(), DoorState::Open);
@@ -22,13 +20,11 @@ pub fn open_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
 
     action.set_action_description(ActionDescription {
         message: ActionMessageType::PlayerOpenDoor,
-        coord: door.position().ok_or(Error::MissingComponent)?,
+        coord: door.position().expect("Entity missing position"),
     });
-
-    Ok(())
 }
 
-pub fn close_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
+pub fn close_door(action: &mut EcsAction, door: EntityRef) {
     action.insert_solid(door.id());
     action.insert_opacity(door.id(), 1.0);
     action.insert_door_state(door.id(), DoorState::Closed);
@@ -37,37 +33,32 @@ pub fn close_door(action: &mut EcsAction, door: EntityRef) -> Result<()> {
 
     action.set_action_description(ActionDescription {
         message: ActionMessageType::PlayerCloseDoor,
-        coord: door.position().ok_or(Error::MissingComponent)?,
+        coord: door.position().expect("Entity missing position"),
     });
-
-    Ok(())
 }
 
-pub fn close(action: &mut EcsAction, entity_id: EntityId, direction: Direction) -> Result<()> {
+pub fn close(action: &mut EcsAction, entity_id: EntityId, direction: Direction) {
     action.set_close(Close::new(entity_id, direction));
-    Ok(())
 }
 
 pub fn fire_bullet(action: &mut EcsAction,
                    entity: EntityRef,
                    delta: Coord,
-                   ids: &EntityIdReserver) -> Result<()> {
+                   ids: &EntityIdReserver) {
 
     const SPEED_CELLS_PER_SEC: f64 = 40.0;
 
     let mut velocity = RealtimeVelocity::new(delta, SPEED_CELLS_PER_SEC);
-    let firer_position = entity.position().ok_or(Error::MissingComponent)?;
+    let firer_position = entity.position().expect("Entity missing position");
     let bullet_position = firer_position + velocity.step_in_place();
 
     prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity);
-
-    Ok(())
 }
 
-pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity) -> Result<()> {
+pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity) {
 
-    let current_position = entity.position().ok_or(Error::MissingComponent)?;
-    let current_velocity = entity.realtime_velocity().ok_or(Error::MissingComponent)?;
+    let current_position = entity.position().expect("Entity missing position");
+    let current_velocity = entity.realtime_velocity().expect("Entity missing realtime_velocity");
 
     let (new_velocity, offset) = current_velocity.step();
 
@@ -75,69 +66,54 @@ pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocit
     action.insert_position(entity.id(), current_position + offset);
 
     action.set_action_time_ms(velocity.ms_per_cell());
-
-    Ok(())
 }
 
-pub fn destroy(action: &mut EcsAction, entity: EntityRef) -> Result<()> {
-
+pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
     action.remove_entity(entity);
-
-    Ok(())
 }
 
-pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable) -> Result<()> {
+pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable) {
 
-    let mut cloud_state = ecs.cloud_state_borrow_mut(entity_id).ok_or(Error::MissingComponent)?;
+    let mut cloud_state = ecs.cloud_state_borrow_mut(entity_id)
+        .expect("Entity missing cloud_state");
 
     cloud_state.progress(1.0);
 
     for (coord, cell) in izip!(spatial_hash.coord_iter(), spatial_hash.cell_iter()) {
         let moon = !cloud_state.is_cloud(coord);
         if cell.outside() && cell.moon() != moon {
+            let outside = cell.any_outside().expect("Expected outside entity");
             if moon {
-                action.insert_moon(cell.any_outside().ok_or(Error::MissingComponent)?);
+                action.insert_moon(outside);
             } else {
-                action.remove_moon(cell.any_outside().ok_or(Error::MissingComponent)?);
+                action.remove_moon(outside);
             }
         }
     }
-
-    Ok(())
 }
 
-pub fn level_switch(action: &mut EcsAction, level_switch: LevelSwitch) -> Result<()> {
-
+pub fn level_switch(action: &mut EcsAction, level_switch: LevelSwitch) {
     action.set_level_switch_action(level_switch);
-
-    Ok(())
 }
 
-pub fn projectile_collision(action: &mut EcsAction, projectile_collision: ProjectileCollision) -> Result<()> {
-
+pub fn projectile_collision(action: &mut EcsAction, projectile_collision: ProjectileCollision) {
     action.set_projectile_collision(projectile_collision);
     action.set_no_commit();
-
-    Ok(())
 }
 
-pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) -> Result<()> {
+pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) {
 
-    let mut hit_points = to_damage.hit_points().ok_or(Error::MissingComponent)?;
+    let mut hit_points = to_damage.hit_points().expect("Entity missing hit_points");
 
     hit_points.dec(amount);
 
     action.insert_hit_points(to_damage.id(), hit_points);
-
-    Ok(())
 }
 
-pub fn die(action: &mut EcsAction, entity: EntityRef) -> Result<()> {
+pub fn die(action: &mut EcsAction, entity: EntityRef) {
 
-    let ticket = entity.schedule_ticket().ok_or(Error::MissingComponent)?;
+    let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
     action.set_schedule_invalidate(ticket.sequence_no);
 
     action.remove_entity(entity);
-
-    Ok(())
 }

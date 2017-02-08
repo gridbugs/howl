@@ -5,7 +5,7 @@ pub fn close_door(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction
 
     if let Some(close) = action.close() {
         let entity = env.ecs.entity(close.entity_id);
-        let position = entity.position().ok_or(Error::MissingComponent)?;
+        let position = entity.position().expect("Entity missing position");
         let target_position = position + close.direction.vector();
 
         if let Some(door_id) = env.spatial_hash.get(target_position).any_door() {
