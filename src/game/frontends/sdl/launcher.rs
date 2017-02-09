@@ -37,6 +37,16 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         Err(e) => return Err(format!("Couldn't parse tileset: {:?}", e).to_string()),
     };
 
+    let (hud_spec, hud_path) = match parse_hud_spec(&args.resource_path) {
+        Some(value) => value,
+        None => return Err("Couldn't find hud".to_string()),
+    };
+
+    let hud = match frontends::sdl::Hud::new(hud_spec) {
+        Ok(hud) => hud,
+        Err(e) => return Err(format!("Couldn't parse hud: {:?}", e).to_string()),
+    };
+
     let video = sdl.video().map_err(|_| "Failed to connect to video subsystem")?;
     sdl2::image::init(INIT_PNG).map_err(|_| "Failed to connect to image subsystem")?;
 
@@ -51,12 +61,15 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         GAME_HEIGHT,
         tile_path,
         tileset,
+        hud_path,
+        hud,
         font,
         true) {
         Ok(r) => r,
         Err(SdlKnowledgeRendererError::WindowCreationFailure) => return Err("Failed to create window".to_string()),
         Err(SdlKnowledgeRendererError::RendererInitialisationFailure) => return Err("Failed to initialise renderer".to_string()),
         Err(SdlKnowledgeRendererError::TileLoadFailure) => return Err("Failed to load tiles".to_string()),
+        Err(SdlKnowledgeRendererError::HudLoadFailure) => return Err("Failed to load hud".to_string()),
     };
 
     let input = frontends::sdl::SdlInputSource::new(sdl.clone());
@@ -84,6 +97,21 @@ fn parse_tileset_spec(resource_path: &path::PathBuf) -> Option<(toml::Table, pat
         }
     }).ok().and_then(|mut parser| parser.parse()).map(|value| {
         (value, tileset_base_path.join("tiles.png"))
+    })
+}
+
+fn parse_hud_spec(resource_path: &path::PathBuf) -> Option<(toml::Table, path::PathBuf)> {
+    let hud_base_path = resource_path.join("hud");
+    let hud_spec_path = hud_base_path.join("hud.toml");
+    let mut toml_str = String::new();
+
+    fs::File::open(hud_spec_path).and_then(|mut file| {
+        match file.read_to_string(&mut toml_str) {
+            Ok(_) => Ok(toml::Parser::new(toml_str.as_ref())),
+            Err(e) => Err(e),
+        }
+    }).ok().and_then(|mut parser| parser.parse()).map(|value| {
+        (value, hud_base_path.join("hud.png"))
     })
 }
 

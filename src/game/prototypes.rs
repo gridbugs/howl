@@ -88,6 +88,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_you_see(YouSeeMessageType::Player);
     entity.insert_description(DescriptionMessageType::Player);
     entity.insert_projectile_collider();
+    entity.insert_hit_points(HitPoints::new(3));
 
     entity
 }

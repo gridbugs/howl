@@ -1,0 +1,6 @@
+symbol_width = 16
+symbol_height = 16
+
+[symbols.Health]
+x = 0
+y = 0

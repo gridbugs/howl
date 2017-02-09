@@ -1,6 +1,7 @@
 use std::result;
 use std::cmp;
 
+use ecs::*;
 use game::*;
 use game::frontends::ansi::resolve_tile;
 use frontends::ansi::{self, ComplexTile, SimpleTile, AnsiColour, Style};
@@ -17,6 +18,10 @@ const ANSI_GAME_WINDOW_Y: usize = 1;
 const MESSAGE_LOG_NUM_LINES: usize = 4;
 const MESSAGE_LOG_PADDING_TOP: usize = 1;
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+
+const HUD_PADDING_TOP: usize = 0;
+const HUD_TOTAL_HEIGHT: usize = HUD_PADDING_TOP + 1;
+const HUD_TEXT_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const UNSEEN_BG: Rgb24 = Rgb24 { red: 0, green: 0, blue: 0 };
@@ -54,6 +59,7 @@ pub struct AnsiKnowledgeRenderer {
     total_width: usize,
     total_height: usize,
     top_left: Coord,
+    hud_window: ansi::Window,
 }
 
 pub enum AnsiKnowledgeRendererError {
@@ -85,7 +91,7 @@ impl AnsiKnowledgeRenderer {
 
         let message_log_window = window_allocator.make_window(
             ANSI_GAME_WINDOW_X as isize,
-            (ANSI_GAME_WINDOW_Y + game_height + MESSAGE_LOG_PADDING_TOP) as isize,
+            (ANSI_GAME_WINDOW_Y + game_height + HUD_TOTAL_HEIGHT + MESSAGE_LOG_PADDING_TOP) as isize,
             game_width,
             MESSAGE_LOG_NUM_LINES,
             ansi::BufferType::Double);
@@ -94,6 +100,13 @@ impl AnsiKnowledgeRenderer {
         for _ in 0..MESSAGE_LOG_NUM_LINES {
             message_log.push(Message::new());
         }
+
+        let hud_window = window_allocator.make_window(
+            ANSI_GAME_WINDOW_X as isize,
+            (ANSI_GAME_WINDOW_Y + game_height + HUD_PADDING_TOP) as isize,
+            game_width,
+            1,
+            ansi::BufferType::Double);
 
         window_allocator.fill(CLEAR_COLOUR);
         window_allocator.flush();
@@ -109,6 +122,7 @@ impl AnsiKnowledgeRenderer {
             total_width: game_width,
             total_height: game_height + MESSAGE_LOG_PADDING_TOP + MESSAGE_LOG_NUM_LINES,
             top_left: Coord::new(ANSI_GAME_WINDOW_X as isize, ANSI_GAME_WINDOW_Y as isize),
+            hud_window: hud_window,
         })
     }
 
@@ -415,5 +429,31 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         self.window_allocator.fill(CLEAR_COLOUR);
         window.delete();
 
+    }
+
+    fn update_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
+
+        let ansi_colour = ansi::AnsiColour::new_from_rgb24(HUD_TEXT_COLOUR);
+        let mut cursor = 0;
+
+        let hit_points = entity.hit_points().expect("Entity missing hit_points");
+
+        let health_text = format!(" ❤ {}/{}", hit_points.current(), hit_points.max());
+
+        for ch in health_text.chars() {
+            if cursor >= self.hud_window.width() as isize {
+                break;
+            }
+
+            self.hud_window.get_cell(cursor, 0).set(ch, ansi_colour, TEXT_BG, ansi::styles::NONE);
+            cursor += 1;
+        }
+
+        while cursor < self.hud_window.width() as isize {
+            self.hud_window.get_cell(cursor, 0).set(' ', TEXT_BG, TEXT_BG, ansi::styles::NONE);
+            cursor += 1;
+        }
+
+        self.hud_window.flush();
     }
 }

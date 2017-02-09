@@ -12,8 +12,9 @@ use sdl2::pixels::Color;
 use sdl2::ttf::Font;
 use sdl2::surface::Surface;
 
+use ecs::*;
 use game::*;
-use game::frontends::sdl::{Tileset, ExtraTileType};
+use game::frontends::sdl::{Tileset, ExtraTileType, Hud};
 
 use coord::Coord;
 use colour::Rgb24;
@@ -24,6 +25,11 @@ const MESSAGE_LOG_LINE_HEIGHT_PX: usize = 16;
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MESSAGE_LOG_PADDING_PX: usize = 4;
 const MESSAGE_LOG_HEIGHT_PX: usize = (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX) * MESSAGE_LOG_NUM_LINES;
+
+const HUD_TOP_PADDING_PX: usize = 4;
+const HUD_HEIGHT_PX: usize = 16;
+const HUD_TOTAL_HEIGHT_PX: usize = HUD_TOP_PADDING_PX + HUD_HEIGHT_PX;
+const HUD_TEXT_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const SCROLL_BAR_WIDTH_PX: usize = 16;
@@ -59,6 +65,10 @@ pub struct SdlKnowledgeRenderer<'a> {
     display_log_num_cols: usize,
     scroll: bool,
     scroll_position: Coord,
+    hud_position: Coord,
+    hud_texture: Texture,
+    hud: Hud,
+    hud_rect: Rect,
 }
 
 #[derive(Debug)]
@@ -66,6 +76,7 @@ pub enum SdlKnowledgeRendererError {
     WindowCreationFailure,
     RendererInitialisationFailure,
     TileLoadFailure,
+    HudLoadFailure,
 }
 
 impl<'a> SdlKnowledgeRenderer<'a> {
@@ -106,13 +117,15 @@ impl<'a> SdlKnowledgeRenderer<'a> {
                game_height: usize,
                tile_path: path::PathBuf,
                tileset: Tileset,
+               hud_path: path::PathBuf,
+               hud: Hud,
                font: Font<'a>,
                scroll: bool) -> result::Result<Self, SdlKnowledgeRendererError> {
 
         let game_width_px = (game_width * tileset.tile_width()) as usize;
         let game_height_px = (game_height * tileset.tile_height()) as usize;
         let width_px = game_width_px as u32;
-        let height_px = (game_height_px + MESSAGE_LOG_HEIGHT_PX) as u32;
+        let height_px = (game_height_px + MESSAGE_LOG_HEIGHT_PX + HUD_TOTAL_HEIGHT_PX) as u32;
         let window = video.window(title, width_px, height_px)
             .build()
             .map_err(|_| SdlKnowledgeRendererError::WindowCreationFailure)?;
@@ -122,6 +135,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             .map_err(|_| SdlKnowledgeRendererError::RendererInitialisationFailure)?;
 
         let tile_texture = renderer.load_texture(&tile_path).map_err(|_| SdlKnowledgeRendererError::TileLoadFailure)?;
+        let hud_texture = renderer.load_texture(&hud_path).map_err(|_| SdlKnowledgeRendererError::HudLoadFailure)?;
         let greyscale_tile_texture = Self::create_greyscale_tile_texture(&renderer, &tile_path).unwrap();
 
         let mut message_log = Vec::new();
@@ -129,12 +143,13 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             message_log.push(Message::new());
         }
 
-        let message_log_position = Coord::new(0, game_height_px as isize);
+        let message_log_position = Coord::new(0, (game_height_px + HUD_TOTAL_HEIGHT_PX) as isize);
         let message_log_rect = Rect::new(message_log_position.x as i32,
                                          message_log_position.y as i32,
                                          width_px,
                                          MESSAGE_LOG_HEIGHT_PX as u32);
 
+        let hud_position = Coord::new(0, game_height_px as isize);
 
         Ok(SdlKnowledgeRenderer {
             buffer: TileBuffer::new(game_width, game_height),
@@ -159,6 +174,10 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             scroll_position: Coord::new(0, 0),
             display_log_num_lines: (height_px as usize) / (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX),
             display_log_num_cols: (width_px as usize - MESSAGE_LOG_PADDING_PX * 2) / MESSAGE_LOG_LINE_HEIGHT_PX, // square fonts only
+            hud_position: hud_position,
+            hud_texture: hud_texture,
+            hud: hud,
+            hud_rect: Rect::new(hud_position.x as i32, hud_position.y as i32, width_px, HUD_TOTAL_HEIGHT_PX as u32),
         })
     }
 
@@ -219,7 +238,12 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
     fn clear_game(&mut self) {
         self.sdl_renderer.set_draw_color(self.clear_colour);
-        self.sdl_renderer.fill_rect(self.game_rect).expect("Failed to clear screen");
+        self.sdl_renderer.fill_rect(self.game_rect).expect("Failed to clear game");
+    }
+
+    fn clear_hud(&mut self) {
+        self.sdl_renderer.set_draw_color(self.clear_colour);
+        self.sdl_renderer.fill_rect(self.hud_rect).expect("Failed to clear hud");
     }
 
     fn clear_message_log(&mut self) {
@@ -229,7 +253,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
     fn clear_screen(&mut self) {
         self.sdl_renderer.set_draw_color(self.clear_colour);
-        self.sdl_renderer.fill_rect(self.screen_rect).expect("Failed to clear message_log");
+        self.sdl_renderer.fill_rect(self.screen_rect).expect("Failed to clear screen");
     }
 
     fn draw_internal(&mut self) {
@@ -365,7 +389,6 @@ impl<'a> SdlKnowledgeRenderer<'a> {
     }
 
     fn draw_message_log_internal(&mut self) {
-
         self.clear_message_log();
         let mut cursor = self.message_log_position + Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
 
@@ -490,5 +513,34 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
 
         self.sdl_renderer.present();
 
+    }
+
+    fn update_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
+        self.clear_hud();
+        let sdl_colour = Self::rgb24_to_sdl_colour(HUD_TEXT_COLOUR);
+        let mut cursor = HUD_TOP_PADDING_PX;
+
+        let health_rect = Rect::new((self.hud_position.x + cursor as isize) as i32,
+                                    (self.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+                                    HUD_HEIGHT_PX as u32,
+                                    HUD_HEIGHT_PX as u32);
+
+        self.sdl_renderer.copy(&self.hud_texture, Some(self.hud.health), Some(health_rect)).expect("Failed to render symbol");
+
+        cursor += HUD_HEIGHT_PX + HUD_TOP_PADDING_PX;
+
+        let hit_points = entity.hit_points().expect("Entity missing hit_points");
+
+        let health_text = format!("{}/{}", hit_points.current(), hit_points.max());
+        let surface = self.font.render(health_text.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
+        let texture = self.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
+
+        let text_width = health_text.len() * HUD_HEIGHT_PX;
+        let text_rect = Rect::new((self.hud_position.x + cursor as isize) as i32,
+                                  (self.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+                                  text_width as u32,
+                                  HUD_HEIGHT_PX as u32);
+
+        self.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
     }
 }

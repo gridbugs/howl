@@ -247,6 +247,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         if changed {
             let mut renderer = self.renderer.borrow_mut();
             renderer.update_log(message_log.deref(), self.language);
+            renderer.update_hud(entity, self.language);
             renderer.render(level_knowledge, *self.action_id, position);
         }
 
