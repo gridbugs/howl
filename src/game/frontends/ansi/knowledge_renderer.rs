@@ -121,7 +121,7 @@ impl AnsiKnowledgeRenderer {
             message_log_window: message_log_window,
             message_log: message_log,
             total_width: game_width,
-            total_height: game_height + MESSAGE_LOG_PADDING_TOP + MESSAGE_LOG_NUM_LINES,
+            total_height: game_height + HUD_TOTAL_HEIGHT + MESSAGE_LOG_PADDING_TOP + MESSAGE_LOG_NUM_LINES,
             top_left: Coord::new(ANSI_GAME_WINDOW_X as isize, ANSI_GAME_WINDOW_Y as isize),
             hud_window: hud_window,
         })
