@@ -14,6 +14,7 @@ use sdl2::surface::Surface;
 
 use ecs::*;
 use game::*;
+use game::data::*;
 use game::frontends::sdl::{Tileset, ExtraTileType, Hud};
 
 use coord::Coord;
@@ -39,7 +40,7 @@ struct SdlCellInfo {
     bg: Option<Rect>,
     moon: bool,
     visible: bool,
-    health_overlay: Option<HealthOverlay>,
+    health_overlay: Option<HitPoints>,
 }
 
 pub struct SdlKnowledgeRenderer<'a> {
@@ -279,10 +280,8 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             }
 
             if let Some(health_overlay) = info.health_overlay {
-                match health_overlay {
-                    HealthOverlay::Wounded => {
-                        self.sdl_renderer.copy(&self.tile_texture, Some(wounded), Some(rect)).expect(RENDERING_FAILED_MSG);
-                    }
+                if health_overlay.status() != HealthStatus::Healthy {
+                    self.sdl_renderer.copy(&self.tile_texture, Some(wounded), Some(rect)).expect(RENDERING_FAILED_MSG);
                 }
             }
 

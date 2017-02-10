@@ -3,6 +3,7 @@ use std::cmp;
 
 use ecs::*;
 use game::*;
+use game::data::*;
 use game::frontends::ansi::resolve_tile;
 use frontends::ansi::{self, ComplexTile, SimpleTile, AnsiColour, Style};
 use coord::Coord;
@@ -175,10 +176,8 @@ impl AnsiKnowledgeRenderer {
         }
 
         if let Some(health_overlay) = cell.health_overlay {
-            match health_overlay {
-                HealthOverlay::Wounded => {
-                    info.bg = WOUND_OVERLAY_COLOUR;
-                }
+            if health_overlay.status() != HealthStatus::Healthy {
+                info.bg = WOUND_OVERLAY_COLOUR;
             }
         }
 

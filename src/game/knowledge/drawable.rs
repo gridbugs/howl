@@ -14,7 +14,7 @@ pub struct DrawableKnowledgeCell {
     you_see: BestMap<isize, YouSeeMessageType>,
     description: BestMap<isize, DescriptionMessageType>,
     moon: bool,
-    health_overlay: BestMap<isize, HealthOverlay>,
+    health_overlay: BestMap<isize, HitPoints>,
 }
 
 impl DrawableKnowledgeCell {
@@ -50,7 +50,7 @@ impl DrawableKnowledgeCell {
         self.description.value()
     }
 
-    pub fn health_overlay(&self) -> Option<HealthOverlay> {
+    pub fn health_overlay(&self) -> Option<HitPoints> {
         self.health_overlay.value()
     }
 
@@ -86,12 +86,7 @@ impl DrawableKnowledgeCell {
                         self.description.insert(depth, description);
                     });
                     entity.hit_points().map(|hit_points| {
-                        match hit_points.status() {
-                            HealthStatus::Wounded => {
-                                self.health_overlay.insert(depth, HealthOverlay::Wounded);
-                            }
-                            _ => (),
-                        }
+                        self.health_overlay.insert(depth, hit_points);
                     });
                 });
             }
@@ -190,7 +185,7 @@ pub struct CellDrawInfo {
     pub visible: bool,
     pub moon: bool,
     pub front: bool,
-    pub health_overlay: Option<HealthOverlay>,
+    pub health_overlay: Option<HitPoints>,
 }
 
 impl Default for CellDrawInfo {
@@ -204,9 +199,4 @@ impl Default for CellDrawInfo {
             health_overlay: None,
         }
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum HealthOverlay {
-    Wounded,
 }

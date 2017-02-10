@@ -1,5 +1,6 @@
 use std::cmp;
 
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum HealthStatus {
     Healthy,
     Wounded,
