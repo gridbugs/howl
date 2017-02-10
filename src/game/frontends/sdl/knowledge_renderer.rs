@@ -6,7 +6,7 @@ use std::mem;
 
 use sdl2::VideoSubsystem;
 use sdl2::rect::Rect;
-use sdl2::render::{Renderer, Texture};
+use sdl2::render::{Renderer, Texture, BlendMode};
 use sdl2::image::{LoadTexture, LoadSurface};
 use sdl2::pixels::Color;
 use sdl2::ttf::Font;
@@ -18,7 +18,7 @@ use game::data::*;
 use game::frontends::sdl::{Tileset, ExtraTileType, Hud};
 
 use coord::Coord;
-use colour::Rgb24;
+use colour::{Rgb24, Rgba32};
 
 const RENDERING_FAILED_MSG: &'static str = "Rendering failed";
 const MESSAGE_LOG_NUM_LINES: usize = 4;
@@ -34,6 +34,10 @@ const HUD_TEXT_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const SCROLL_BAR_WIDTH_PX: usize = 16;
+
+const HEALTH_BAR_GREEN: Rgba32 = Rgba32 { red: 0, green: 255, blue: 0, alpha: 255 };
+const HEALTH_BAR_RED: Rgba32 = Rgba32 { red: 255, green: 0, blue: 0, alpha: 255 };
+const HEALTH_BAR_HEIGHT_PX: usize = 2;
 
 struct SdlCellInfo {
     fg: Option<Rect>,
@@ -51,6 +55,8 @@ pub struct SdlKnowledgeRenderer<'a> {
     font: Font<'a>,
     width: usize,
     height: usize,
+    tile_width_px: usize,
+    tile_height_px: usize,
     game_width_px: usize,
     game_height_px: usize,
     width_px: usize,
@@ -131,9 +137,11 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             .build()
             .map_err(|_| SdlKnowledgeRendererError::WindowCreationFailure)?;
 
-        let renderer = window.renderer()
+        let mut renderer = window.renderer()
             .build()
             .map_err(|_| SdlKnowledgeRendererError::RendererInitialisationFailure)?;
+
+        renderer.set_blend_mode(BlendMode::Blend);
 
         let tile_texture = renderer.load_texture(&tile_path).map_err(|_| SdlKnowledgeRendererError::TileLoadFailure)?;
         let hud_texture = renderer.load_texture(&hud_path).map_err(|_| SdlKnowledgeRendererError::HudLoadFailure)?;
@@ -160,6 +168,8 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             font: font,
             width: game_width,
             height: game_height,
+            tile_width_px: tileset.tile_width(),
+            tile_height_px: tileset.tile_height(),
             game_width_px: width_px as usize,
             game_height_px: game_height_px,
             width_px: width_px as usize,
@@ -261,7 +271,6 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
         let blank = *self.tileset.resolve_extra(ExtraTileType::Blank);
         let moon = *self.tileset.resolve_extra(ExtraTileType::Moon);
-        let wounded = *self.tileset.resolve_extra(ExtraTileType::Wounded);
 
         for (coord, cell) in izip!(self.buffer.coord_iter(), self.buffer.iter()) {
             let rect = self.screen_rect(coord);
@@ -279,14 +288,36 @@ impl<'a> SdlKnowledgeRenderer<'a> {
                 self.sdl_renderer.copy(texture, Some(bg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
             }
 
-            if let Some(health_overlay) = info.health_overlay {
-                if health_overlay.status() != HealthStatus::Healthy {
-                    self.sdl_renderer.copy(&self.tile_texture, Some(wounded), Some(rect)).expect(RENDERING_FAILED_MSG);
-                }
-            }
 
             if let Some(fg_rect) = info.fg {
                 self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+            }
+
+            if let Some(health_overlay) = info.health_overlay {
+                if !health_overlay.is_full() {
+                    let red = Self::rgba32_to_sdl_colour(HEALTH_BAR_RED);
+                    let green = Self::rgba32_to_sdl_colour(HEALTH_BAR_GREEN);
+
+                    let health_bar_green_px = if health_overlay.umax() == 0 {
+                        0
+                    } else {
+                        (self.tile_width_px * health_overlay.ucurrent()) / health_overlay.umax()
+                    };
+
+                    let health_bar_green_rect = Rect::new(rect.x(),
+                                                          rect.y() + (self.tile_height_px - HEALTH_BAR_HEIGHT_PX) as i32,
+                                                          health_bar_green_px as u32,
+                                                          HEALTH_BAR_HEIGHT_PX as u32);
+                    let health_bar_red_rect = Rect::new(rect.x() + health_bar_green_px as i32,
+                                                        health_bar_green_rect.y(),
+                                                        (self.tile_width_px - health_bar_green_px) as u32,
+                                                        HEALTH_BAR_HEIGHT_PX as u32);
+
+                    self.sdl_renderer.set_draw_color(red);
+                    self.sdl_renderer.fill_rect(health_bar_red_rect).expect("Failed to draw health bar red rect");
+                    self.sdl_renderer.set_draw_color(green);
+                    self.sdl_renderer.fill_rect(health_bar_green_rect).expect("Failed to draw health bar green rect");
+                }
             }
 
             if info.moon && info.visible {
@@ -336,6 +367,10 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
     fn rgb24_to_sdl_colour(rgb24: Rgb24) -> Color {
         Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
+    }
+
+    fn rgba32_to_sdl_colour(rgba32: Rgba32) -> Color {
+        Color::RGBA(rgba32.red, rgba32.green, rgba32.blue, rgba32.alpha)
     }
 
     fn render_message_part(renderer: &mut Renderer, font: &Font, part: &MessagePart, cursor: Coord) -> Coord {

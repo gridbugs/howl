@@ -21,12 +21,27 @@ impl HitPoints {
         }
     }
 
+    pub fn new_with(max: isize, current: isize) -> Self {
+        HitPoints {
+            max: max,
+            current: cmp::min(current, max),
+        }
+    }
+
     pub fn current(&self) -> isize {
         self.current
     }
 
     pub fn max(&self) -> isize {
         self.max
+    }
+
+    pub fn ucurrent(&self) -> usize {
+        cmp::max(self.current, 0) as usize
+    }
+
+    pub fn umax(&self) -> usize {
+        cmp::max(self.max, 0) as usize
     }
 
     pub fn dec(&mut self, amount: usize) {
@@ -39,6 +54,10 @@ impl HitPoints {
 
     pub fn is_positive(&self) -> bool {
         self.current > 0
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.current >= self.max
     }
 
     pub fn status(&self) -> HealthStatus {
