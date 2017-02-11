@@ -124,6 +124,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
         }
     }
 
+    renderer.update_hud(input.entity, input.language);
     renderer.draw();
 }
 
@@ -162,6 +163,7 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
         }
 
         let overlay = RenderOverlay::examine_cursor(cursor);
+        renderer.update_hud(input.entity, input.language);
         renderer.draw_with_overlay(&overlay);
 
         if let Some(event) = input_source.next_input() {
@@ -195,6 +197,7 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
 
     message_log.add_temporary(MessageType::Empty);
     renderer.update_log(message_log.deref(), input.language);
+    renderer.update_hud(input.entity, input.language);
     renderer.draw();
 }
 
