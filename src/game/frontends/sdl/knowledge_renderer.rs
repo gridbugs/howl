@@ -39,6 +39,9 @@ const HEALTH_BAR_GREEN: Rgba32 = Rgba32 { red: 0, green: 255, blue: 0, alpha: 25
 const HEALTH_BAR_RED: Rgba32 = Rgba32 { red: 255, green: 0, blue: 0, alpha: 255 };
 const HEALTH_BAR_HEIGHT_PX: usize = 2;
 
+const MENU_SELECTED_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+const MENU_DESELECTED_COLOUR: Rgb24 = Rgb24 { red: 127, green: 127, blue: 127 };
+
 struct SdlCellInfo {
     fg: Option<Rect>,
     bg: Option<Rect>,
@@ -375,14 +378,14 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
     fn render_message_part(renderer: &mut Renderer, font: &Font, part: &MessagePart, cursor: Coord) -> Coord {
         match part.as_text() {
-            Some(text_part) => Self::render_text_message_part(renderer, font, text_part, cursor),
+            Some(text_part) => Self::render_text_message_part(renderer, font, MESSAGE_LOG_PLAIN_COLOUR, text_part, cursor),
             None => cursor,
         }
     }
 
-    fn render_text_message_part(renderer: &mut Renderer, font: &Font, part: &TextMessagePart, mut cursor: Coord) -> Coord {
+    fn render_text_message_part(renderer: &mut Renderer, font: &Font, plain_colour: Rgb24, part: &TextMessagePart, mut cursor: Coord) -> Coord {
         let (colour, string) = match *part {
-            TextMessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
+            TextMessagePart::Plain(ref s) => (plain_colour, s),
             TextMessagePart::Colour(c, ref s) => (c, s),
         };
 
@@ -411,10 +414,10 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         tmp_cursor
     }
 
-    fn render_text_message(renderer: &mut Renderer, font: &Font, message: &TextMessage, cursor: Coord) -> Coord {
+    fn render_text_message(renderer: &mut Renderer, font: &Font, plain_colour: Rgb24, message: &TextMessage, cursor: Coord) -> Coord {
         let mut tmp_cursor = cursor;
         for part in message {
-            tmp_cursor = Self::render_text_message_part(renderer, font, part, tmp_cursor);
+            tmp_cursor = Self::render_text_message_part(renderer, font, plain_colour, part, tmp_cursor);
         }
         tmp_cursor.x = cursor.x;
         tmp_cursor.y += MESSAGE_LOG_LINE_HEIGHT_PX as isize;
@@ -450,6 +453,28 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         } else {
             None
         }
+    }
+
+    fn fullscreen_initial_cursor(&self) -> Coord {
+        Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize)
+    }
+
+    fn display_wrapped_message_fullscreen_internal(&mut self, wrapped: &Vec<TextMessage>, offset: usize) -> Coord {
+        let mut cursor = self.fullscreen_initial_cursor();
+
+        let end_idx = cmp::min(wrapped.len(), offset + self.display_log_num_lines);
+
+        for line in &wrapped[offset..end_idx] {
+            cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, MESSAGE_LOG_PLAIN_COLOUR, line, cursor);
+            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
+        }
+
+        if let Some(scroll_bar) = self.scroll_bar_rect(wrapped.len(), offset, true) {
+            self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
+            self.sdl_renderer.fill_rect(scroll_bar).expect("Failed to draw scroll bar");
+        }
+
+        cursor
     }
 }
 
@@ -531,22 +556,8 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
 
     fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
         self.clear_screen();
-        let mut cursor = Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
-
-        let end_idx = cmp::min(wrapped.len(), offset + self.display_log_num_lines);
-
-        for line in &wrapped[offset..end_idx] {
-            cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, line, cursor);
-            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
-        }
-
-        if let Some(scroll_bar) = self.scroll_bar_rect(wrapped.len(), offset, true) {
-            self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
-            self.sdl_renderer.fill_rect(scroll_bar).expect("Failed to draw scroll bar");
-        }
-
+        self.display_wrapped_message_fullscreen_internal(wrapped, offset);
         self.sdl_renderer.present();
-
     }
 
     fn update_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
@@ -576,5 +587,46 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
                                   HUD_HEIGHT_PX as u32);
 
         self.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
+    }
+
+    fn display_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
+
+        let mut message = Message::new();
+        let mut wrapped = Vec::new();
+
+        self.clear_screen();
+
+        let mut cursor = if let Some(message_type) = prelude {
+            language.translate(message_type, &mut message);
+
+            self.wrap_message_to_fit(&message, &mut wrapped);
+
+            let mut cursor = self.display_wrapped_message_fullscreen_internal(&wrapped, 0);
+
+            cursor.y += (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX) as isize;
+
+            cursor
+        } else {
+            self.fullscreen_initial_cursor()
+        };
+
+        for (item_state, item) in state.iter(menu) {
+            message.clear();
+            language.translate(MessageType::Menu(item.message()), &mut message);
+
+            wrapped.clear();
+            self.wrap_message_to_fit(&message, &mut wrapped);
+
+            let colour = if item_state == MenuItemState::Selected {
+                MENU_SELECTED_COLOUR
+            } else {
+                MENU_DESELECTED_COLOUR
+            };
+
+            cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, colour, &wrapped[0], cursor);
+            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
+        }
+
+        self.sdl_renderer.present();
     }
 }

@@ -66,10 +66,31 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     pub fn run(&mut self) -> Result<()> {
-        self.init_demo();
-        self.intro_message();
-        self.welcome_message();
-        self.game_loop()
+
+        loop {
+
+            let item = menu_operation::run(
+                self.renderer.borrow_mut().deref_mut(),
+                &mut self.input_source,
+                Some(MessageType::Title),
+                &self.language,
+                vec![
+                    MenuItem::simple(MenuMessageType::NewGame),
+                    MenuItem::simple(MenuMessageType::Quit),
+                ]);
+
+            match item {
+                MenuMessageType::Quit => {
+                    return Ok(());
+                }
+                MenuMessageType::NewGame => {}
+            }
+
+            self.init_demo();
+            self.intro_message();
+            self.welcome_message();
+            self.game_loop()?;
+        }
     }
 
     fn game_loop(&mut self) -> Result<()> {

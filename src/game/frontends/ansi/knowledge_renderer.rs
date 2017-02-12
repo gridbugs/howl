@@ -31,6 +31,9 @@ const UNSEEN_FG: Rgb24 = Rgb24 { red: 0x80, green: 0x80, blue: 0x80 };
 const TEXT_BG: AnsiColour = AnsiColour::Rgb(ansi::RgbColour { red: 0, green: 0, blue: 0 });
 const CLEAR_COLOUR: AnsiColour = ansi::colours::BLACK;
 
+const MENU_SELECTED_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+const MENU_DESELECTED_COLOUR: Rgb24 = Rgb24 { red: 127, green: 127, blue: 127 };
+
 struct AnsiInfo {
     ch: char,
     fg: AnsiColour,
@@ -218,14 +221,14 @@ impl AnsiKnowledgeRenderer {
 
     fn render_message_part(window: &mut ansi::Window, part: &MessagePart, cursor: Coord) -> Coord {
         match part.as_text() {
-            Some(text_part) => Self::render_text_message_part(window, text_part, cursor),
+            Some(text_part) => Self::render_text_message_part(window, text_part, MESSAGE_LOG_PLAIN_COLOUR, cursor),
             None => cursor,
         }
     }
 
-    fn render_text_message_part(window: &mut ansi::Window, part: &TextMessagePart, mut cursor: Coord) -> Coord {
+    fn render_text_message_part(window: &mut ansi::Window, part: &TextMessagePart, plain_colour: Rgb24, mut cursor: Coord) -> Coord {
         let (colour, string) = match *part {
-            TextMessagePart::Plain(ref s) => (MESSAGE_LOG_PLAIN_COLOUR, s),
+            TextMessagePart::Plain(ref s) => (plain_colour, s),
             TextMessagePart::Colour(c, ref s) => (c, s),
         };
 
@@ -235,6 +238,9 @@ impl AnsiKnowledgeRenderer {
             if cursor.x >= window.width() as isize {
                 break;
             }
+
+            assert!(cursor.x < window.width() as isize && cursor.y < window.height() as isize,
+                "Cursor {:?} out of bounds ({}x{})", cursor, window.width(), window.height());
 
             window.get_cell(cursor.x, cursor.y).set(ch, ansi_colour, TEXT_BG, ansi::styles::NONE);
 
@@ -268,9 +274,9 @@ impl AnsiKnowledgeRenderer {
         cursor
     }
 
-    fn render_text_message(window: &mut ansi::Window, message: &TextMessage, mut cursor: Coord) -> Coord {
+    fn render_text_message(window: &mut ansi::Window, message: &TextMessage, plain_colour: Rgb24, mut cursor: Coord) -> Coord {
         for part in message {
-            cursor = Self::render_text_message_part(window, part, cursor);
+            cursor = Self::render_text_message_part(window, part, plain_colour, cursor);
         }
 
         cursor = Self::clear_to_line_end(window, cursor);
@@ -313,6 +319,42 @@ impl AnsiKnowledgeRenderer {
         self.window_allocator.make_window(self.top_left.x, self.top_left.y,
                                           self.total_width, self.total_height,
                                           ansi::BufferType::Double)
+    }
+
+    fn display_wrapped_message_fullscreen_internal(&mut self,
+                                                   window: &mut ansi::Window,
+                                                   wrapped: &Vec<TextMessage>,
+                                                   offset: usize) -> Coord {
+
+        let mut cursor = Coord::new(0, 0);
+        let end_idx = cmp::min(wrapped.len(), offset + self.total_height);
+
+        for line in &wrapped[offset..end_idx] {
+            cursor = Self::render_text_message(window, line, MESSAGE_LOG_PLAIN_COLOUR, cursor);
+        }
+
+        let ret = cursor;
+
+        let message = Message::new();
+        while cursor.y < self.display_log_num_lines() as isize {
+            cursor = Self::render_message(window, &message, cursor);
+        }
+
+        if let Some((position, size)) = self.scroll_bar(wrapped.len(), offset, true) {
+            let scroll_bar_colour = ansi::AnsiColour::new_from_rgb24(SCROLL_BAR_COLOUR);
+            for i in 0..(size as isize) {
+                let coord = position + Coord::new(0, i);
+                window.get_cell(coord.x, coord.y).set(' ', scroll_bar_colour, scroll_bar_colour, ansi::styles::NONE);
+            }
+        }
+
+        ret
+    }
+
+    fn delete_window(&mut self, mut window: ansi::Window) {
+        window.flush();
+        self.window_allocator.fill(CLEAR_COLOUR);
+        window.delete();
     }
 }
 
@@ -402,32 +444,12 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
     }
 
     fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
+
         let mut window = self.create_fullscreen_window();
 
-        let mut cursor = Coord::new(0, 0);
-        let end_idx = cmp::min(wrapped.len(), offset + self.total_height);
+        self.display_wrapped_message_fullscreen_internal(&mut window, wrapped, offset);
 
-        for line in &wrapped[offset..end_idx] {
-            cursor = Self::render_text_message(&mut window, line, cursor);
-        }
-
-        let message = Message::new();
-        while cursor.y < self.display_log_num_lines() as isize {
-            cursor = Self::render_message(&mut window, &message, cursor);
-        }
-
-        if let Some((position, size)) = self.scroll_bar(wrapped.len(), offset, true) {
-            let scroll_bar_colour = ansi::AnsiColour::new_from_rgb24(SCROLL_BAR_COLOUR);
-            for i in 0..(size as isize) {
-                let coord = position + Coord::new(0, i);
-                window.get_cell(coord.x, coord.y).set(' ', scroll_bar_colour, scroll_bar_colour, ansi::styles::NONE);
-            }
-        }
-
-        window.flush();
-        self.window_allocator.fill(CLEAR_COLOUR);
-        window.delete();
-
+        self.delete_window(window);
     }
 
     fn update_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
@@ -454,5 +476,50 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         }
 
         self.hud_window.flush();
+    }
+
+    fn display_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
+
+        let mut window = self.create_fullscreen_window();
+        let mut message = Message::new();
+        let mut wrapped = Vec::new();
+
+        let mut cursor = if let Some(message_type) = prelude {
+            language.translate(message_type, &mut message);
+
+            self.wrap_message_to_fit(&message, &mut wrapped);
+
+            let mut cursor = self.display_wrapped_message_fullscreen_internal(&mut window, &wrapped, 0);
+            cursor.y += 1;
+
+            assert!(cursor.x < window.width() as isize && cursor.y < window.height() as isize,
+                "Cursor {:?} out of bounds ({}x{})", cursor, window.width(), window.height());
+
+            cursor
+        } else {
+            Coord::new(0, 0)
+        };
+
+        for (item_state, item) in state.iter(menu) {
+            message.clear();
+            language.translate(MessageType::Menu(item.message()), &mut message);
+
+            wrapped.clear();
+            self.wrap_message_to_fit(&message, &mut wrapped);
+
+            let colour = if item_state == MenuItemState::Selected {
+                MENU_SELECTED_COLOUR
+            } else {
+                MENU_DESELECTED_COLOUR
+            };
+
+            assert!(cursor.x < window.width() as isize && cursor.y < window.height() as isize,
+                "Cursor {:?} out of bounds ({}x{})", cursor, window.width(), window.height());
+
+            assert!(wrapped.len() > 0, "{:?} {:?}", message, wrapped);
+            cursor = Self::render_text_message(&mut window, &wrapped[0], colour, cursor);
+        }
+
+        self.delete_window(window);
     }
 }

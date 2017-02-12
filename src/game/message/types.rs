@@ -3,6 +3,7 @@ pub enum MessageType {
     Empty,
     Welcome,
     Intro,
+    Title,
     PressAnyKey,
     Action(ActionMessageType),
     YouSee(Option<YouSeeMessageType>),
@@ -11,6 +12,7 @@ pub enum MessageType {
     Description(DescriptionMessageType),
     YouSeeDescription(YouSeeMessageType),
     NoDescription,
+    Menu(MenuMessageType),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -28,4 +30,10 @@ pub enum ActionMessageType {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum DescriptionMessageType {
     Player,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MenuMessageType {
+    NewGame,
+    Quit,
 }

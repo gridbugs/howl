@@ -1,5 +1,4 @@
 /// Module collecting all policy specific to this game
-//mod spatial_hash;
 mod knowledge;
 mod behaviour;
 mod action;
@@ -23,8 +22,8 @@ mod message;
 mod scroll;
 mod terrain;
 mod turn_schedule;
+mod menu;
 
-//pub use self::spatial_hash::*;
 pub use self::knowledge::*;
 pub use self::behaviour::*;
 pub use self::action::*;
@@ -48,6 +47,7 @@ pub use self::message::*;
 pub use self::scroll::*;
 pub use self::terrain::*;
 pub use self::turn_schedule::*;
+pub use self::menu::*;
 
 pub mod data;
 pub mod prototypes;

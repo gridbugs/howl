@@ -37,6 +37,17 @@ impl English {
         }
     }
 
+    fn translate_menu(&self, menu_message: MenuMessageType, message: &mut Message) {
+        match menu_message {
+            MenuMessageType::NewGame => {
+                message.push(MessagePart::plain("New Game"));
+            }
+            MenuMessageType::Quit => {
+                message.push(MessagePart::plain("Quit"));
+            }
+        }
+    }
+
     fn translate_input_event(&self, input_event: InputEvent) -> Option<MessagePart> {
         let message_part = match input_event {
             InputEvent::Char(ch) => MessagePart::Text(TextMessagePart::Plain(format!("{}", ch))),
@@ -96,6 +107,7 @@ impl Language for English {
         match message_type {
             MessageType::Empty => {},
             MessageType::Intro => self.translate_intro(message),
+            MessageType::Title => message.push(MessagePart::colour(colours::PURPLE, "HOWL")),
             MessageType::PressAnyKey => message.push(MessagePart::plain("Press any key...")),
             MessageType::Welcome => {
                 message.push(MessagePart::plain("Welcome to "));
@@ -128,6 +140,9 @@ impl Language for English {
             }
             MessageType::NoDescription => {
                 message.push(MessagePart::plain("I see nothing of interest."));
+            }
+            MessageType::Menu(menu_message) => {
+                self.translate_menu(menu_message, message);
             }
         }
 

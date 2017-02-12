@@ -66,4 +66,6 @@ pub trait KnowledgeRenderer {
     fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize);
 
     fn update_hud(&mut self, entity: EntityRef, language: &Box<Language>);
+
+    fn display_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>);
 }
