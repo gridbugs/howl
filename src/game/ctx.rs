@@ -241,27 +241,27 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn switch_level(&mut self, level_switch: LevelSwitch, game_state: &mut GameState) {
-        let GlobalIds { pc_id, ref mut level_id } = game_state.ids.expect("Unitialised game state");
+        let ids = game_state.ids.as_mut().expect("Unitialised game state");
 
         let mut pc_insert = EcsAction::new();
         let mut pc_remove = EcsAction::new();
 
         {
-            let current_level = game_state.levels.level_mut(*level_id);
-            pc_remove.remove_entity_by_id(pc_id, &current_level.ecs);
+            let current_level = game_state.levels.level_mut(ids.level_id);
+            pc_remove.remove_entity_by_id(ids.pc_id, &current_level.ecs);
             current_level.commit_into(&mut pc_remove, &mut pc_insert, self.action_id);
         }
 
         self.action_id += 1;
 
         let new_level = Level::new_with_pc(level_switch.terrain_type,
-                                           pc_id,
+                                           ids.pc_id,
                                            &mut pc_insert,
                                            &self.entity_ids,
                                            &self.rng,
                                            self.action_id);
         self.action_id += 1;
 
-         *level_id = game_state.levels.add_level(new_level);
+        ids.level_id = game_state.levels.add_level(new_level);
     }
 }
