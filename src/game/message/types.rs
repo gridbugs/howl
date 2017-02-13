@@ -36,4 +36,5 @@ pub enum DescriptionMessageType {
 pub enum MenuMessageType {
     NewGame,
     Quit,
+    Continue,
 }

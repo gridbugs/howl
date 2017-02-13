@@ -45,6 +45,9 @@ impl English {
             MenuMessageType::Quit => {
                 message.push(MessagePart::plain("Quit"));
             }
+            MenuMessageType::Continue => {
+                message.push(MessagePart::plain("Continue"));
+            }
         }
     }
 

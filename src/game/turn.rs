@@ -31,7 +31,7 @@ pub struct Turn<'game> {
 }
 
 pub enum TurnResolution {
-    Quit,
+    Quit(EntityId),
     Schedule(EntityId, u64),
     LevelSwitch(LevelSwitch),
 }
@@ -39,7 +39,7 @@ pub enum TurnResolution {
 impl TurnResolution {
     pub fn game_continues(&self) -> bool {
         match *self {
-            TurnResolution::Quit => false,
+            TurnResolution::Quit(_) => false,
             _ => true,
         }
     }
@@ -91,7 +91,7 @@ impl<'game> ActionEnv<'game> {
 impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer> {
     pub fn turn(&mut self) -> Result<TurnResolution> {
 
-        self.pc_render(None);
+        self.pc_render(None, true);
 
         let resolution = self.take_turn()?;
 
@@ -147,7 +147,10 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
     fn take_turn(&mut self) -> Result<TurnResolution> {
         loop {
             match self.get_meta_action()? {
-                MetaAction::External(External::Quit) => return Ok(TurnResolution::Quit),
+                MetaAction::External(External::Quit) => {
+                    self.declare_action_return(true)?;
+                    return Ok(TurnResolution::Quit(self.entity_id));
+                }
                 MetaAction::ActionArgs(action_args) => {
                     if let Some(resolution) = self.try_commit_action(action_args)? {
                         self.declare_action_return(true)?;
@@ -214,7 +217,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.ecs.commit(self.ecs_action);
     }
 
-    fn pc_render(&mut self, action_description: Option<&ActionDescription>) -> bool {
+    fn pc_render(&mut self, action_description: Option<&ActionDescription>, force: bool) -> bool {
 
         let entity = self.ecs.entity(self.pc_id);
 
@@ -244,7 +247,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             }
         }
 
-        if changed {
+        if changed || force {
             let mut renderer = self.renderer.borrow_mut();
             renderer.update_log(message_log.deref(), self.language);
             renderer.update_hud(entity, self.language);
@@ -267,7 +270,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
             // render the scene if time has passed
             if action_event.time_delta != 0 {
-                if self.pc_render(action_description.as_ref()) {
+                if self.pc_render(action_description.as_ref(), false) {
                     // if the change in scene was visible, add a delay
                     thread::sleep(Duration::from_millis(action_event.time_delta));
                 }
@@ -333,7 +336,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
 
         if action_description.is_some() {
-            self.pc_render(action_description.as_ref());
+            self.pc_render(action_description.as_ref(), false);
         }
 
         if let Some(level_switch) = level_switch {
