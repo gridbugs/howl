@@ -9,7 +9,9 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 
 elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 
-    brew update
-    brew install wget
+    if ! which wget; then
+        brew update
+        brew install wget
+    fi
 
 fi
