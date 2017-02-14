@@ -114,8 +114,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let mut current_game_state = save_file::load(args.user_path.as_path());
 
-        save_file::delete(args.user_path.as_path());
-
         loop {
 
             let control_map = ControlMap::default(); // TODO load this from a file
