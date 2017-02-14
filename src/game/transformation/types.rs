@@ -1,13 +1,13 @@
 use ecs::*;
 use game::*;
 
-#[derive(Clone, Copy, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum TransformationType {
     TerrorPillarTerrorFly,
     Tree,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TransformationState {
     Real,
     Other,

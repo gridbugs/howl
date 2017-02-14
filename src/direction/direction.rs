@@ -1,6 +1,6 @@
 use math::{Vector2, Vector2Index};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, RustcEncodable, RustcDecodable)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Direction {
     North,
     NorthEast,

@@ -7,6 +7,10 @@ extern crate num;
 extern crate getopts;
 extern crate toml;
 extern crate rustc_serialize;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate bincode;
 
 #[cfg(all(unix, feature = "rustty"))]
 extern crate rustty;

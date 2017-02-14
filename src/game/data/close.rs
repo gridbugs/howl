@@ -1,7 +1,7 @@
 use ecs::*;
 use direction::Direction;
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct Close {
     pub entity_id: EntityId,
     pub direction: Direction,

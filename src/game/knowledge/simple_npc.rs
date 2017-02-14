@@ -9,7 +9,7 @@ use util::TwoDimensionalCons;
 
 pub type SimpleNpcKnowledge = GameKnowledge<SimpleNpcKnowledgeLevel>;
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SimpleNpcKnowledgeCell {
     last_updated: u64,
     solid: bool,
@@ -54,7 +54,7 @@ impl TraverseCost for SimpleNpcKnowledgeCell {
     }
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SimpleNpcKnowledgeLevel {
     grid: StaticGrid<SimpleNpcKnowledgeCell>,
     targets: HashSet<Coord>,

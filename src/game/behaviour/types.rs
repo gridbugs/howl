@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum BehaviourType {
     Null,
     PlayerInput,

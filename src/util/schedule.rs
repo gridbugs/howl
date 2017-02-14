@@ -1,7 +1,7 @@
 use std::collections::{BinaryHeap, HashSet};
 use std::cmp::Ordering;
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 struct ScheduleEntry<T> {
     value: T,
     abs_time: u64,
@@ -64,7 +64,7 @@ impl<T> ScheduleEvent<T> {
     }
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct ScheduleTicket {
     pub sequence_no: u64,
     pub absolute_time: u64,
@@ -77,7 +77,7 @@ pub struct Schedule<T> {
     seq: u64,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SerializableSchedule<T> {
     entries: Vec<ScheduleEntry<T>>,
     invalid: HashSet<u64>,

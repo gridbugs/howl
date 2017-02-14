@@ -1,6 +1,6 @@
 const MS_PER_S: f64 = 1000.0;
 
-#[derive(Clone, Copy, Debug, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct RealtimeSpeed {
     cells_per_ms: f64,
 }

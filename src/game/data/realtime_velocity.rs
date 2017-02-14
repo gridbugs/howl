@@ -1,7 +1,7 @@
 use game::data::*;
 use coord::{InfiniteLineState, Coord};
 
-#[derive(Clone, Copy, Debug, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct RealtimeVelocity {
     line_state: InfiniteLineState,
     speed: RealtimeSpeed,

@@ -5,13 +5,13 @@ use grid::{Grid, StaticGrid, IterGrid};
 use math::{Dot, Vector2, Vector3};
 use coord::Coord;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, RustcEncodable, RustcDecodable)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PerlinWrapType {
     Repeat,
     Regenerate,
 }
 
-#[derive(Clone, Copy, Debug, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 struct PerlinVector(Vector3<f64>);
 
 impl PerlinVector {
@@ -22,7 +22,7 @@ impl PerlinVector {
     }
 }
 
-#[derive(Debug, Clone, RustcEncodable, RustcDecodable)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PerlinSlice {
     grid: StaticGrid<PerlinVector>,
     z: f64,
@@ -36,7 +36,7 @@ impl PerlinSlice {
     }
 }
 
-#[derive(Clone, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct PerlinGrid {
     slices: Vec<PerlinSlice>,
     grid_width: usize,

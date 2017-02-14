@@ -9,7 +9,7 @@ pub struct Level {
     pub turn_schedule: TurnSchedule,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SerializableLevel {
     ecs: SerializableEcsCtx,
     spatial_hash: SpatialHashTable,

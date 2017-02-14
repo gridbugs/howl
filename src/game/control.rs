@@ -3,7 +3,7 @@ use std::collections::{hash_map, HashMap};
 use game::InputEvent;
 use direction::Direction;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, RustcEncodable, RustcDecodable)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Control {
     Direction(Direction),
     Close,
@@ -20,7 +20,7 @@ pub enum Control {
 
 pub type ControlMapIter<'a> = hash_map::Iter<'a, InputEvent, Control>;
 
-#[derive(Clone, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ControlMap {
     map: HashMap<InputEvent, Control>,
 }

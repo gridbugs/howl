@@ -3,7 +3,7 @@ use perlin::*;
 use math::Vector2;
 use coord::Coord;
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct CloudState {
     perlin: PerlinGrid,
     zoom: f64,

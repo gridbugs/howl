@@ -9,7 +9,7 @@ pub struct TerrainMetadata {
     pub start_coord: Coord,
 }
 
-#[derive(Clone, Copy, Debug, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum TerrainType {
     DemoA,
     DemoB,

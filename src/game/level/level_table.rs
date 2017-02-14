@@ -7,7 +7,7 @@ pub struct LevelTable {
     levels: Vec<Level>,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SerializableLevelTable {
     levels: Vec<SerializableLevel>,
 }

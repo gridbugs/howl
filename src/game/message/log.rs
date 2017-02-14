@@ -2,13 +2,13 @@ use std::cmp;
 
 use game::*;
 
-#[derive(Debug, RustcEncodable, RustcDecodable)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MessageLogEntry {
     pub message: MessageType,
     pub repeated: usize,
 }
 
-#[derive(Debug, RustcEncodable, RustcDecodable)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MessageLog {
     messages: Vec<MessageLogEntry>,
     last_temporary: bool,

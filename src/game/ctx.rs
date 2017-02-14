@@ -43,7 +43,7 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     language: Box<Language>,
 }
 
-#[derive(Clone, Copy, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct GlobalIds {
     pc_id: EntityId,
     level_id: LevelId,
@@ -63,7 +63,7 @@ impl GameState {
     }
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SerializableGameState {
     levels: SerializableLevelTable,
     ids: Option<GlobalIds>,
@@ -146,8 +146,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     return Ok(());
                 }
                 MainMenuSelection::SaveAndQuit => {
-                    let mut game_state = current_game_state.take().expect("Missing game state");
-                    Self::uninstall_control_map(&mut game_state);
+                    let game_state = current_game_state.take().expect("Missing game state");
                     save_file::save(args.user_path.as_path(), game_state);
                     return Ok(());
                 }
@@ -176,13 +175,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let level = game_state.levels.level_mut(level_id);
         level.ecs.insert_control_map(pc_id, control_map);
-    }
-
-    fn uninstall_control_map(game_state: &mut GameState) {
-        let GlobalIds { pc_id, level_id } = game_state.ids.expect("Uninitialised game state");
-
-        let level = game_state.levels.level_mut(level_id);
-        level.ecs.remove_control_map(pc_id);
     }
 
     fn game_loop(&mut self, game_state: &mut GameState) -> Result<()> {

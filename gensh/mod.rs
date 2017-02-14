@@ -144,7 +144,7 @@ use util::AnySet;
 pub type SpatialHashCellIter<'a> = <StaticGrid<SpatialHashCell> as IterGrid<'a>>::Iter;
 pub type SpatialHashCoordIter = <StaticGrid<SpatialHashCell> as CoordIterGrid>::CoordIter;
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SpatialHashCell {
 
 {{#each field}}
@@ -205,7 +205,7 @@ impl Default for SpatialHashCell {
     }
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Serialize, Deserialize)]
 pub struct SpatialHashTable {
     grid: StaticGrid<SpatialHashCell>,
     empty: SpatialHashCell,
