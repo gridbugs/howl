@@ -48,6 +48,9 @@ impl English {
             MenuMessageType::Continue => {
                 message.push(MessagePart::plain("Continue"));
             }
+            MenuMessageType::SaveAndQuit => {
+                message.push(MessagePart::plain("Save and Quit"));
+            }
         }
     }
 

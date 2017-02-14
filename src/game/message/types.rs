@@ -35,6 +35,7 @@ pub enum DescriptionMessageType {
 #[derive(Clone, Copy, PartialEq, Eq, Debug, RustcEncodable, RustcDecodable)]
 pub enum MenuMessageType {
     NewGame,
-    Quit,
     Continue,
+    Quit,
+    SaveAndQuit,
 }

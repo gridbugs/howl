@@ -22,7 +22,8 @@ impl EntityIdReserver {
 enum MainMenuSelection {
     NewGame,
     Quit,
-    Continue(GameState),
+    Continue,
+    SaveAndQuit,
 }
 
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
@@ -42,13 +43,13 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     language: Box<Language>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, RustcEncodable, RustcDecodable)]
 pub struct GlobalIds {
     pc_id: EntityId,
     level_id: LevelId,
 }
 
-struct GameState {
+pub struct GameState {
     levels: LevelTable,
     ids: Option<GlobalIds>,
 }
@@ -58,6 +59,32 @@ impl GameState {
         GameState {
             levels: LevelTable::new(),
             ids: None,
+        }
+    }
+}
+
+#[derive(RustcEncodable, RustcDecodable)]
+pub struct SerializableGameState {
+    levels: SerializableLevelTable,
+    ids: Option<GlobalIds>,
+}
+
+impl From<GameState> for SerializableGameState {
+    fn from(game_state: GameState) -> Self {
+        let GameState { levels, ids } = game_state;
+        SerializableGameState {
+            levels: SerializableLevelTable::from(levels),
+            ids: ids,
+        }
+    }
+}
+
+impl From<SerializableGameState> for GameState {
+    fn from(game_state: SerializableGameState) -> Self {
+        let SerializableGameState { levels, ids } = game_state;
+        GameState {
+            levels: LevelTable::from(levels),
+            ids: ids,
         }
     }
 }
@@ -83,9 +110,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    pub fn run(&mut self, _args: Arguments) -> Result<()> {
+    pub fn run(&mut self, args: Arguments) -> Result<()> {
 
-        let mut current_game_state = None;
+        let mut current_game_state = save_file::load(args.user_path.as_path());
+
+        save_file::delete(args.user_path.as_path());
 
         loop {
 
@@ -93,12 +122,17 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             let mut menu = Menu::new();
 
-            if let Some(game_state) = current_game_state.take() {
-                menu.push(MenuItem::new(MenuMessageType::Continue, MainMenuSelection::Continue(game_state)));
+            if current_game_state.is_some() {
+                menu.push(MenuItem::new(MenuMessageType::Continue, MainMenuSelection::Continue));
             }
 
             menu.push(MenuItem::new(MenuMessageType::NewGame, MainMenuSelection::NewGame));
-            menu.push(MenuItem::new(MenuMessageType::Quit, MainMenuSelection::Quit));
+
+            if current_game_state.is_some() {
+                menu.push(MenuItem::new(MenuMessageType::SaveAndQuit, MainMenuSelection::SaveAndQuit));
+            } else {
+                menu.push(MenuItem::new(MenuMessageType::Quit, MainMenuSelection::Quit));
+            }
 
             let item = menu_operation::run(
                 self.renderer.borrow_mut().deref_mut(),
@@ -111,6 +145,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 MainMenuSelection::Quit => {
                     return Ok(());
                 }
+                MainMenuSelection::SaveAndQuit => {
+                    let mut game_state = current_game_state.take().expect("Missing game state");
+                    Self::uninstall_control_map(&mut game_state);
+                    save_file::save(args.user_path.as_path(), game_state);
+                    return Ok(());
+                }
                 MainMenuSelection::NewGame => {
                     let mut game_state = GameState::new();
 
@@ -120,7 +160,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
                     game_state
                 }
-                MainMenuSelection::Continue(game_state) => game_state,
+                MainMenuSelection::Continue => current_game_state.take().expect("Missing game state"),
             };
 
             Self::install_control_map(&mut game_state, control_map);
@@ -136,6 +176,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let level = game_state.levels.level_mut(level_id);
         level.ecs.insert_control_map(pc_id, control_map);
+    }
+
+    fn uninstall_control_map(game_state: &mut GameState) {
+        let GlobalIds { pc_id, level_id } = game_state.ids.expect("Uninitialised game state");
+
+        let level = game_state.levels.level_mut(level_id);
+        level.ecs.remove_control_map(pc_id);
     }
 
     fn game_loop(&mut self, game_state: &mut GameState) -> Result<()> {
