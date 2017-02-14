@@ -23,6 +23,7 @@ mod scroll;
 mod terrain;
 mod turn_schedule;
 mod menu;
+mod config;
 
 pub use self::knowledge::*;
 pub use self::behaviour::*;
@@ -48,6 +49,7 @@ pub use self::scroll::*;
 pub use self::terrain::*;
 pub use self::turn_schedule::*;
 pub use self::menu::*;
+pub use self::config::*;
 
 pub mod data;
 pub mod prototypes;

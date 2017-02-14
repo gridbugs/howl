@@ -46,7 +46,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     let mut game = GameCtx::new(renderer, input_source, args.rng_seed, GAME_WIDTH, GAME_HEIGHT);
 
-    game.run()?;
+    game.run(args)?;
 
     Ok(())
 }

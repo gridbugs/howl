@@ -47,7 +47,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         Err(e) => return Err(format!("Couldn't parse hud: {:?}", e).to_string()),
     };
 
-    let scale = 1;
+    let scale = args.config.graphics.scale;
 
     let video = sdl.video().map_err(|_| "Failed to connect to video subsystem")?;
     sdl2::image::init(INIT_PNG).map_err(|_| "Failed to connect to image subsystem")?;
@@ -83,7 +83,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
                                 GAME_WIDTH,
                                 GAME_HEIGHT);
 
-    game.run()?;
+    game.run(args)?;
 
     Ok(())
 }

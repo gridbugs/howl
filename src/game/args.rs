@@ -7,6 +7,7 @@ use rand::{Rng, StdRng};
 use game::*;
 
 const RESOURCE_DIR: &'static str = "resources";
+const USER_DIR: &'static str = "user";
 
 pub fn make_options() -> getopts::Options {
 
@@ -28,6 +29,8 @@ pub struct Arguments {
     pub frontend: Frontend,
     pub rng_seed: usize,
     pub resource_path: path::PathBuf,
+    pub user_path: path::PathBuf,
+    pub config: GameConfig,
 }
 
 impl Arguments {
@@ -68,6 +71,12 @@ impl Arguments {
             args.resource_path = path;
         }
 
+        if let Some(path) = user_dir_path() {
+            args.user_path = path;
+        }
+
+        args.config = GameConfig::from_user_dir(args.user_path.as_path());
+
         Ok(args)
     }
 }
@@ -80,6 +89,17 @@ fn resource_dir_path() -> Option<path::PathBuf> {
         }
 
         Some(path.join(RESOURCE_DIR))
+    })
+}
+
+fn user_dir_path() -> Option<path::PathBuf> {
+    env::current_exe().ok().and_then(|mut path| {
+        // get directory containing exe
+        if !path.pop() {
+            return None;
+        }
+
+        Some(path.join(USER_DIR))
     })
 }
 
@@ -100,6 +120,8 @@ impl Default for Arguments {
             frontend: Frontend::Sdl,
             rng_seed: 0,
             resource_path: path::PathBuf::new(),
+            user_path: path::PathBuf::new(),
+            config: GameConfig::default(),
         }
     }
 }

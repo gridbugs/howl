@@ -7,6 +7,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 APP_NAME=howl
 SUFFIX=$TRAVIS_BRANCH
 RESOURCES=resources
+USER=user
 UPLOADS=uploads
 
 DEPS_BUILD=`pwd`/deps_build

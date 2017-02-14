@@ -18,6 +18,7 @@ fn main() {
                                              path::MAIN_SEPARATOR,
                                              path::MAIN_SEPARATOR));
     copy_resources("resources");
+    copy_resources("user");
 }
 
 fn target_dir_names() -> Result<Vec<String>, env::VarError> {

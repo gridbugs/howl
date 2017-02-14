@@ -43,6 +43,7 @@ build_script:
     copy %BIN_PATH%\%NAME%.exe tmp\%FULL_NAME%\%NAME%.exe
 
     xcopy %BIN_PATH%\resources tmp\%FULL_NAME%\resources /s/h/e/k/f/c/i
+    xcopy %BIN_PATH%\user tmp\%FULL_NAME%\user /s/h/e/k/f/c/i
 
     copy sdl\SDL2-2.0.5\lib\x64\*.dll               tmp\%FULL_NAME% &
     copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll   tmp\%FULL_NAME% &

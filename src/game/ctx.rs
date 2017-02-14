@@ -83,7 +83,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    pub fn run(&mut self) -> Result<()> {
+    pub fn run(&mut self, _args: Arguments) -> Result<()> {
 
         let mut current_game_state = None;
 
