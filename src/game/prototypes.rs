@@ -80,7 +80,6 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_drawable_knowledge(DrawableKnowledge::new());
     entity.insert_vision_distance(16);
     entity.insert_door_opener();
-    entity.insert_control_map(ControlMap::new_default());
     entity.insert_pc();
     entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_should_render();

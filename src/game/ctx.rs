@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::ops::Deref;
 use std::ops::DerefMut;
 
 use game::*;
@@ -90,6 +89,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         loop {
 
+            let control_map = ControlMap::default(); // TODO load this from a file
+
             let mut menu = Menu::new();
 
             if let Some(game_state) = current_game_state.take() {
@@ -114,7 +115,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     let mut game_state = GameState::new();
 
                     self.init_demo(&mut game_state);
-                    self.intro_message(&game_state);
+                    self.intro_message(&control_map);
                     self.welcome_message(&game_state);
 
                     game_state
@@ -122,10 +123,19 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 MainMenuSelection::Continue(game_state) => game_state,
             };
 
+            Self::install_control_map(&mut game_state, control_map);
+
             self.game_loop(&mut game_state)?;
 
             current_game_state = Some(game_state);
         }
+    }
+
+    fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
+        let GlobalIds { pc_id, level_id } = game_state.ids.expect("Uninitialised game state");
+
+        let level = game_state.levels.level_mut(level_id);
+        level.ecs.insert_control_map(pc_id, control_map);
     }
 
     fn game_loop(&mut self, game_state: &mut GameState) -> Result<()> {
@@ -190,12 +200,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         ecs.message_log_borrow_mut(pc_id).unwrap().add(MessageType::Welcome);
     }
 
-    fn intro_message(&mut self, game_state: &GameState) {
-        let GlobalIds { pc_id, level_id } = game_state.ids.expect("Unitialised game state");
+    fn intro_message(&mut self, control_map: &ControlMap) {
 
-        let ref ecs = game_state.levels.level(level_id).ecs;
-        let pc = ecs.entity(pc_id);
-        let control_map_ref = pc.control_map_borrow().unwrap();
         let mut message = Message::new();
 
         self.language.translate(MessageType::Intro, &mut message);
@@ -205,7 +211,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         message.push(MessagePart::Newline);
         message.push(MessagePart::Newline);
         message.push(MessagePart::Newline);
-        self.language.translate_controls(control_map_ref.deref(), &mut message);
+        self.language.translate_controls(control_map, &mut message);
 
         display_message_scrolling(self.renderer.borrow_mut().deref_mut(), &mut self.input_source, &message, true);
     }

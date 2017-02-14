@@ -20,12 +20,23 @@ pub enum Control {
 
 pub type ControlMapIter<'a> = hash_map::Iter<'a, InputEvent, Control>;
 
+#[derive(Clone)]
 pub struct ControlMap {
     map: HashMap<InputEvent, Control>,
 }
 
 impl ControlMap {
-    pub fn new_default() -> Self {
+    pub fn control(&self, event: InputEvent) -> Option<Control> {
+        self.map.get(&event).map(|r| *r)
+    }
+
+    pub fn iter(&self) -> ControlMapIter {
+        self.map.iter()
+    }
+}
+
+impl Default for ControlMap {
+    fn default() -> Self {
         let mut map = HashMap::new();
 
         map.insert(InputEvent::Up, Control::Direction(Direction::North));
@@ -50,13 +61,5 @@ impl ControlMap {
         ControlMap {
             map: map,
         }
-    }
-
-    pub fn control(&self, event: InputEvent) -> Option<Control> {
-        self.map.get(&event).map(|r| *r)
-    }
-
-    pub fn iter(&self) -> ControlMapIter {
-        self.map.iter()
     }
 }
