@@ -53,10 +53,10 @@ impl Default for ControlMap {
 
         map.insert(InputEvent::Char('.'), Control::Wait);
 
-        map.insert(InputEvent::Char('q'), Control::Quit);
         map.insert(InputEvent::Char('?'), Control::Help);
         map.insert(InputEvent::Quit, Control::Quit);
         map.insert(InputEvent::Return, Control::Select);
+        map.insert(InputEvent::Escape, Control::Quit);
 
         ControlMap {
             map: map,
