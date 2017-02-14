@@ -1,3 +1,4 @@
+use rand::{StdRng, SeedableRng};
 use perlin::*;
 
 const ZOOM: usize = 10;
@@ -8,7 +9,8 @@ const HEIGHT: usize = 4;
 
 #[test]
 fn demo() {
-    let perlin = PerlinGrid::new(WIDTH, HEIGHT, PerlinWrapType::Regenerate).unwrap();
+    let mut rng = StdRng::from_seed(&[0]);
+    let perlin = PerlinGrid::new(WIDTH, HEIGHT, PerlinWrapType::Regenerate, &mut rng);
 
     for i in 0..(ZOOM * HEIGHT) {
         for j in 0..(ZOOM * WIDTH) {
