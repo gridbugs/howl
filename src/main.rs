@@ -6,6 +6,7 @@ extern crate rand;
 extern crate num;
 extern crate getopts;
 extern crate toml;
+extern crate rustc_serialize;
 
 #[cfg(all(unix, feature = "rustty"))]
 extern crate rustty;

@@ -1,3 +1,4 @@
+use rand::Rng;
 use ecs::*;
 use game::*;
 use game::data::*;
@@ -36,7 +37,7 @@ pub enum ActionArgs {
 }
 
 impl ActionArgs {
-    pub fn to_action(self, action: &mut EcsAction, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver) {
+    pub fn to_action<R: Rng>(self, action: &mut EcsAction, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver, r: &mut R) {
         match self {
             ActionArgs::Null => (),
             ActionArgs::Walk(entity_id, direction) => {
@@ -61,7 +62,7 @@ impl ActionArgs {
                 actions::destroy(action, ecs.entity(entity_id));
             }
             ActionArgs::MoveClouds(entity_id) => {
-                actions::move_clouds(action, entity_id, ecs, spatial_hash);
+                actions::move_clouds(action, entity_id, ecs, spatial_hash, r);
             }
             ActionArgs::TransformTerrorPillarTerrorFly(entity_id) => {
                 actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id));

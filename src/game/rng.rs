@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use rand::{StdRng, SeedableRng, Rng, Rand};
 
 pub struct GameRng {
@@ -36,5 +36,9 @@ impl GameRng {
         }
 
         return max;
+    }
+
+    pub fn inner_mut(&self) -> RefMut<StdRng> {
+        self.rng.borrow_mut()
     }
 }

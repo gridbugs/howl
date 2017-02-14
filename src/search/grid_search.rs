@@ -205,11 +205,13 @@ impl GridSearchCfg {
     }
 }
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct GridPathNode {
     pub coord: Coord,
     pub direction_to: Direction,
 }
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct GridPath {
     start: Coord,
     nodes: VecDeque<GridPathNode>,

@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, RustcEncodable, RustcDecodable)]
 pub struct BestMap<K: Ord + Copy, V: Copy> {
     key: Option<K>,
     value: Option<V>,

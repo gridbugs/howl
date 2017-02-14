@@ -7,7 +7,7 @@ pub enum HealthStatus {
     Dead,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, RustcEncodable, RustcDecodable)]
 pub struct HitPoints {
     current: isize,
     max: isize,

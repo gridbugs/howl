@@ -14,6 +14,7 @@ num = "0.1.36"
 itertools = "0.5.6"
 getopts = "0.2.14"
 toml = "0.2.1"
+rustc-serialize = "0.3.19"
 
 [dependencies.sdl2]
 version = "0.28.0"
@@ -29,4 +30,4 @@ copy_dir = "0.1.2"
 handlebars = "0.22.0"
 tomson = "0.1.1"
 rustc-serialize = "0.3.19"
-genecs = { git = "https://github.com/stevebob/genecs.git", rev = "2537efec" }
+genecs = { git = "https://github.com/stevebob/genecs.git", rev = "af0b454" }

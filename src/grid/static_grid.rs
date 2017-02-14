@@ -6,7 +6,7 @@ use coord::Coord;
 
 use grid::{Grid, DefaultGrid, CopyGrid, IterGrid, RowGrid, CoordCell, CoordIterGrid};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, RustcEncodable, RustcDecodable)]
 pub struct StaticGrid<T> {
     pub width: usize,
     pub height: usize,

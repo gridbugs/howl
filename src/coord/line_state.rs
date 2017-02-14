@@ -1,7 +1,7 @@
 use math::Vector2Index;
 use coord::Coord;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, RustcEncodable, RustcDecodable)]
 struct Octant {
     major_sign: isize,
     minor_sign: isize,
@@ -27,7 +27,7 @@ fn choose_octant(delta: Coord) -> Octant {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, RustcEncodable, RustcDecodable)]
 pub struct InfiniteLineState {
     octant: Octant,
     major_delta_abs: usize,

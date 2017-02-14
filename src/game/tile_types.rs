@@ -1,4 +1,4 @@
-#[derive(Hash, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Hash, Clone, Copy, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub enum TileType {
     Wall,
     Tree,

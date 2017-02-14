@@ -4,7 +4,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
 
 use math::Dot;
 
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, RustcEncodable, RustcDecodable)]
 pub struct Vector3<T> {
     pub x: T,
     pub y: T,

@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use ecs::*;
 use game::*;
 use game::data::*;
@@ -66,7 +67,7 @@ pub fn generate_clouds<S: TurnScheduleQueue>(width: usize,
                                              schedule: &mut S,
                                              g: &mut EcsAction) {
     let cloud_id = ids.new_id();
-    prototypes::clouds(g.entity_mut(cloud_id), width, height, rng.gen_usize());
+    prototypes::clouds(g.entity_mut(cloud_id), width, height, rng.inner_mut().deref_mut());
     let ticket = schedule.schedule_turn(cloud_id, ENV_TURN_OFFSET);
     g.insert_schedule_ticket(cloud_id, ticket);
 }

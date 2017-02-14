@@ -12,6 +12,7 @@ pub trait LevelKnowledge {
     fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool;
 }
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct GameKnowledge<K: LevelKnowledge> {
     levels: BTreeMap<LevelId, K>,
 }

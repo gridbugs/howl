@@ -1,3 +1,4 @@
+use rand::Rng;
 use math::Vector2;
 use coord::Coord;
 
@@ -162,7 +163,7 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
     entity
 }
 
-pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize, seed: usize) -> E {
+pub fn clouds<E: EntityPopulate, R: Rng>(mut entity: E, width: usize, height: usize, r: &mut R) -> E {
 
     const PERLIN_ZOOM: f64 = 0.05;
     const PERLIN_MIN: f64 = -0.1;
@@ -170,9 +171,9 @@ pub fn clouds<E: EntityPopulate>(mut entity: E, width: usize, height: usize, see
     const SCROLL_RATE: Vector2<f64> = Vector2 { x: 0.05, y: 0.02 };
     const MUTATE_RATE: f64 = 0.01;
 
-    entity.insert_cloud_state(CloudState::new(seed, width, height, PERLIN_ZOOM,
+    entity.insert_cloud_state(CloudState::new(width, height, PERLIN_ZOOM,
                                               PERLIN_MIN, PERLIN_MAX,
-                                              SCROLL_RATE, MUTATE_RATE));
+                                              SCROLL_RATE, MUTATE_RATE, r));
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::Clouds);
     entity.insert_turn_time(TURN_DURATION_BASE);

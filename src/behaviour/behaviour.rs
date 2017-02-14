@@ -67,20 +67,20 @@ pub enum CollectionNode {
     All(Vec<NodeIndex>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 struct ArrayTraverse {
     index: usize,
     length: usize,
     value: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 enum CollectionState {
     Forever,
     All(ArrayTraverse),
 }
 
-#[derive(Clone)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 enum StackFrame {
     Leaf {
         index: NodeIndex,
@@ -106,7 +106,7 @@ pub struct Graph<Leaf, Switch> {
     nodes: Vec<Node<Leaf, Switch>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct State {
     stack: Vec<StackFrame>,
     yielding: bool,

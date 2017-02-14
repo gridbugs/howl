@@ -1,44 +1,42 @@
 use std::fmt;
-use std::io;
-
-use rand::{Rng, StdRng, SeedableRng};
+use rand::Rng;
 
 use grid::{Grid, StaticGrid, IterGrid};
 use math::{Dot, Vector2, Vector3};
 use coord::Coord;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub enum PerlinWrapType {
     Repeat,
     Regenerate,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, RustcEncodable, RustcDecodable)]
 struct PerlinVector(Vector3<f64>);
 
 impl PerlinVector {
-    fn new(rng: &mut StdRng) -> Self {
+    fn new<R: Rng>(r: &mut R) -> Self {
         // random number from 0 to 15
-        let index = rng.gen::<usize>() & GRADIENT_MASK;
+        let index = r.gen::<usize>() & GRADIENT_MASK;
         PerlinVector(GRADIENTS[index].normalize())
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, RustcEncodable, RustcDecodable)]
 struct PerlinSlice {
     grid: StaticGrid<PerlinVector>,
     z: f64,
 }
 
 impl PerlinSlice {
-    fn reset(&mut self, rng: &mut StdRng) {
+    fn reset<R: Rng>(&mut self, r: &mut R) {
         for cell in self.grid.iter_mut() {
-            *cell = PerlinVector::new(rng);
+            *cell = PerlinVector::new(r);
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct PerlinGrid {
     slices: Vec<PerlinSlice>,
     grid_width: usize,
@@ -50,7 +48,6 @@ pub struct PerlinGrid {
     minor_offset: Vector2<f64>,
     major_offset: Vector2<usize>,
     wrap_type: PerlinWrapType,
-    rng: StdRng,
 }
 
 const NUM_CORNERS: usize = 8;
@@ -62,25 +59,7 @@ pub fn ease_curve(x: f64) -> f64 {
 }
 
 impl PerlinGrid {
-    pub fn new(width: usize, height: usize, wrap_type: PerlinWrapType) -> io::Result<Self> {
-        let rng = try!(StdRng::new());
-        Ok(PerlinGrid::new_with_rng(width, height, wrap_type, rng))
-    }
-
-    pub fn new_from_seed(width: usize,
-                         height: usize,
-                         wrap_type: PerlinWrapType,
-                         seed: usize)
-                         -> Self {
-        let rng = StdRng::from_seed(&[seed]);
-        PerlinGrid::new_with_rng(width, height, wrap_type, rng)
-    }
-
-    fn new_with_rng(width: usize,
-                    height: usize,
-                    wrap_type: PerlinWrapType,
-                    mut rng: StdRng)
-                    -> PerlinGrid {
+    pub fn new<R: Rng>(width: usize, height: usize, wrap_type: PerlinWrapType, r: &mut R) -> PerlinGrid {
         let grid_width = width + 2;
         let grid_height = height + 2;
         PerlinGrid {
@@ -90,7 +69,7 @@ impl PerlinGrid {
                     v.push(PerlinSlice {
                         grid: StaticGrid::new_call(grid_width,
                                                    grid_height,
-                                                   |_, _| PerlinVector::new(&mut rng)),
+                                                   |_, _| PerlinVector::new(r)),
                         z: i as f64,
                     });
                 }
@@ -105,12 +84,11 @@ impl PerlinGrid {
             minor_offset: Vector2::new(0.0, 0.0),
             major_offset: Vector2::new(0, 0),
             wrap_type: wrap_type,
-            rng: rng,
         }
     }
 
-    fn make_vector(&mut self) -> PerlinVector {
-        PerlinVector::new(&mut self.rng)
+    fn make_vector<R: Rng>(&mut self, r: &mut R) -> PerlinVector {
+        PerlinVector::new(r)
     }
 
     fn swap_slices(&mut self) {
@@ -120,25 +98,25 @@ impl PerlinGrid {
         }
     }
 
-    pub fn mutate(&mut self, value: f64) {
+    pub fn mutate<R: Rng>(&mut self, r: &mut R, value: f64) {
         self.z += value;
         if self.z > 1.0 && self.z <= 2.0 {
             self.z -= 1.0;
-            self.slices[0].reset(&mut self.rng);
+            self.slices[0].reset(r);
             self.swap_slices();
         } else if self.z < 0.0 && self.z >= -1.0 {
             self.z += 1.0;
-            self.slices[1].reset(&mut self.rng);
+            self.slices[1].reset(r);
             self.swap_slices();
         } else if self.z > 2.0 || self.z < -1.0 {
             self.z = 0.0;
             for slice in self.slices.iter_mut() {
-                slice.reset(&mut self.rng);
+                slice.reset(r);
             }
         }
     }
 
-    pub fn scroll(&mut self, x: f64, y: f64) {
+    pub fn scroll<R: Rng>(&mut self, r: &mut R, x: f64, y: f64) {
         self.minor_offset.x += x;
         self.minor_offset.y += y;
 
@@ -155,7 +133,7 @@ impl PerlinGrid {
                             let coord = Coord::new(x, j as isize);
                             unsafe {
                                 for z in 0..NUM_SLICES {
-                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector();
+                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector(r);
                                 }
                             }
                         }
@@ -167,7 +145,7 @@ impl PerlinGrid {
                             let coord = Coord::new(x, j as isize);
                             unsafe {
                                 for z in 0..NUM_SLICES {
-                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector();
+                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector(r);
                                 }
                             }
                         }
@@ -187,7 +165,7 @@ impl PerlinGrid {
                             let coord = Coord::new(j as isize, y);
                             unsafe {
                                 for z in 0..NUM_SLICES {
-                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector();
+                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector(r);
                                 }
                             }
                         }
@@ -199,7 +177,7 @@ impl PerlinGrid {
                             let coord = Coord::new(j as isize, y);
                             unsafe {
                                 for z in 0..NUM_SLICES {
-                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector();
+                                    *self.slices[z].grid.get_unchecked_mut(coord) = self.make_vector(r);
                                 }
                             }
                         }

@@ -1,6 +1,6 @@
 use game::*;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, RustcEncodable, RustcDecodable)]
 pub struct LevelSwitch {
     pub terrain_type: TerrainType,
 }

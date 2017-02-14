@@ -7,13 +7,13 @@ use rand::{self, Rng};
 
 use math::Dot;
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Hash, Eq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Hash, Eq, RustcEncodable, RustcDecodable)]
 pub struct Vector2<T> {
     pub x: T,
     pub y: T,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, RustcEncodable, RustcDecodable)]
 pub enum Vector2Index {
     X,
     Y,

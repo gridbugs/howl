@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub enum DoorState {
     Open,
     Closed,

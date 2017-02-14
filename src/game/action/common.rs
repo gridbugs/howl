@@ -1,3 +1,4 @@
+use rand::Rng;
 use ecs::*;
 use game::*;
 use game::data::*;
@@ -72,12 +73,12 @@ pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
     action.remove_entity(entity);
 }
 
-pub fn move_clouds(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable) {
+pub fn move_clouds<R: Rng>(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, r: &mut R) {
 
     let mut cloud_state = ecs.cloud_state_borrow_mut(entity_id)
         .expect("Entity missing cloud_state");
 
-    cloud_state.progress(1.0);
+    cloud_state.progress(r, 1.0);
 
     for (coord, cell) in izip!(spatial_hash.coord_iter(), spatial_hash.cell_iter()) {
         let moon = !cloud_state.is_cloud(coord);

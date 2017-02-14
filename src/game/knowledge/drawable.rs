@@ -7,6 +7,7 @@ use coord::Coord;
 
 pub type DrawableKnowledge = GameKnowledge<DrawableKnowledgeLevel>;
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct DrawableKnowledgeCell {
     last_updated: u64,
     foreground: BestMap<isize, TileType>,
@@ -106,6 +107,7 @@ impl Default for DrawableKnowledgeCell {
     }
 }
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct DrawableKnowledgeLevel {
     grid: StaticGrid<DrawableKnowledgeCell>,
     default: DrawableKnowledgeCell,

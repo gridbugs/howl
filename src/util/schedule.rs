@@ -63,6 +63,7 @@ impl<T> ScheduleEvent<T> {
     }
 }
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct ScheduleTicket {
     pub sequence_no: u64,
     pub absolute_time: u64,

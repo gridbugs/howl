@@ -1,7 +1,9 @@
+use rand::Rng;
 use perlin::*;
 use math::Vector2;
 use coord::Coord;
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct CloudState {
     perlin: PerlinGrid,
     zoom: f64,
@@ -14,20 +16,20 @@ pub struct CloudState {
 }
 
 impl CloudState {
-    pub fn new(seed: usize,
-               width: usize,
-               height: usize,
-               zoom: f64,
-               min: f64,
-               max: f64,
-               scroll_rate: Vector2<f64>,
-               mutate_rate: f64) -> Self {
+    pub fn new<R: Rng>(width: usize,
+                       height: usize,
+                       zoom: f64,
+                       min: f64,
+                       max: f64,
+                       scroll_rate: Vector2<f64>,
+                       mutate_rate: f64,
+                       r: &mut R) -> Self {
 
         let zoomed_width = ((width as f64) * zoom).ceil() as usize;
         let zoomed_height = ((height as f64) * zoom).ceil() as usize;
 
         CloudState {
-            perlin: PerlinGrid::new_from_seed(zoomed_width, zoomed_height, PerlinWrapType::Regenerate, seed),
+            perlin: PerlinGrid::new(zoomed_width, zoomed_height, PerlinWrapType::Regenerate, r),
             zoom: zoom,
             min: min,
             max: max,
@@ -38,12 +40,12 @@ impl CloudState {
         }
     }
 
-    pub fn progress(&mut self, scale: f64) {
+    pub fn progress<R: Rng>(&mut self, r: &mut R, scale: f64) {
         let scroll = self.scroll_rate * scale;
         let mutate = self.mutate_rate * scale;
 
-        self.perlin.scroll(scroll.x, scroll.y);
-        self.perlin.mutate(mutate);
+        self.perlin.scroll(r, scroll.x, scroll.y);
+        self.perlin.mutate(r, mutate);
     }
 
     fn noise(&self, x: f64, y: f64) -> Option<f64> {

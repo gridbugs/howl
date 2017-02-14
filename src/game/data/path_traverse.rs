@@ -1,6 +1,7 @@
 use search::GridPath;
 use direction::Direction;
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct PathTraverse {
     path: GridPath,
     index: usize,
