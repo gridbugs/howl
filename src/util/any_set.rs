@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::hash::Hash;
 
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct AnySet<T: Copy + Hash + Eq> {
     inner: HashSet<T>,
     any: Option<T>,

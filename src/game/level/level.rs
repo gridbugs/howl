@@ -1,11 +1,41 @@
 use game::*;
 use ecs::*;
 use spatial_hash::*;
+use util::*;
 
 pub struct Level {
     pub ecs: EcsCtx,
     pub spatial_hash: SpatialHashTable,
     pub turn_schedule: TurnSchedule,
+}
+
+#[derive(RustcEncodable, RustcDecodable)]
+pub struct SerialzableLevel {
+    ecs: SerializableEcsCtx,
+    spatial_hash: SpatialHashTable,
+    turn_schedule: SerializableSchedule<EntityId>,
+}
+
+impl From<Level> for SerialzableLevel {
+    fn from(level: Level) -> Self {
+        let Level { ecs, spatial_hash, turn_schedule } = level;
+        SerialzableLevel {
+            ecs: SerializableEcsCtx::from(ecs),
+            spatial_hash: spatial_hash,
+            turn_schedule: SerializableSchedule::from(turn_schedule),
+        }
+    }
+}
+
+impl From<SerialzableLevel> for Level {
+    fn from(level: SerialzableLevel) -> Self {
+        let SerialzableLevel { ecs, spatial_hash, turn_schedule } = level;
+        Level {
+            ecs: EcsCtx::from(ecs),
+            spatial_hash: spatial_hash,
+            turn_schedule: TurnSchedule::from(turn_schedule),
+        }
+    }
 }
 
 impl Level {

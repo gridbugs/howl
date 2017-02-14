@@ -1,6 +1,7 @@
 use std::collections::{BinaryHeap, HashSet};
 use std::cmp::Ordering;
 
+#[derive(RustcEncodable, RustcDecodable)]
 struct ScheduleEntry<T> {
     value: T,
     abs_time: u64,
@@ -74,7 +75,50 @@ pub struct Schedule<T> {
     invalid: HashSet<u64>,
     abs_time: u64,
     seq: u64,
+}
 
+#[derive(RustcEncodable, RustcDecodable)]
+pub struct SerializableSchedule<T> {
+    entries: Vec<ScheduleEntry<T>>,
+    invalid: HashSet<u64>,
+    abs_time: u64,
+    seq: u64,
+}
+
+impl<T> From<Schedule<T>> for SerializableSchedule<T> {
+    fn from(schedule: Schedule<T>) -> Self {
+        let Schedule {
+            heap,
+            invalid,
+            abs_time,
+            seq,
+        } = schedule;
+
+        SerializableSchedule {
+            entries: heap.into_vec(),
+            invalid: invalid,
+            abs_time: abs_time,
+            seq: seq,
+        }
+    }
+}
+
+impl<T> From<SerializableSchedule<T>> for Schedule<T> {
+    fn from(schedule: SerializableSchedule<T>) -> Self {
+        let SerializableSchedule {
+            entries,
+            invalid,
+            abs_time,
+            seq,
+        } = schedule;
+
+        Schedule {
+            heap: BinaryHeap::from(entries),
+            invalid: invalid,
+            abs_time: abs_time,
+            seq: seq,
+        }
+    }
 }
 
 impl<T> Schedule<T> {
