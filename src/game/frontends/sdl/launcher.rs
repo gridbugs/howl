@@ -47,12 +47,14 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         Err(e) => return Err(format!("Couldn't parse hud: {:?}", e).to_string()),
     };
 
+    let scale = 1;
+
     let video = sdl.video().map_err(|_| "Failed to connect to video subsystem")?;
     sdl2::image::init(INIT_PNG).map_err(|_| "Failed to connect to image subsystem")?;
 
     let ttf = sdl2::ttf::init().map_err(|_| "Failed to connect to ttf subsystem")?;
     let font_path = get_font_path(&args.resource_path);
-    let font = ttf.load_font(&font_path, FONT_SIZE).map_err(|_| format!("Failed to load font {:?}", &font_path))?;
+    let font = ttf.load_font(&font_path, FONT_SIZE * scale as u16).map_err(|_| format!("Failed to load font {:?}", &font_path))?;
 
     let renderer = match frontends::sdl::SdlKnowledgeRenderer::new(
         &video,
@@ -64,7 +66,8 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         hud_path,
         hud,
         font,
-        true) {
+        true,
+        scale) {
         Ok(r) => r,
         Err(SdlKnowledgeRendererError::WindowCreationFailure) => return Err("Failed to create window".to_string()),
         Err(SdlKnowledgeRendererError::RendererInitialisationFailure) => return Err("Failed to initialise renderer".to_string()),
