@@ -1,9 +1,45 @@
-use game::Level;
+use std::iter::IntoIterator;
+use game::*;
 
 pub type LevelId = usize;
 
 pub struct LevelTable {
     levels: Vec<Level>,
+}
+
+#[derive(RustcEncodable, RustcDecodable)]
+pub struct SerializableLevelTable {
+    levels: Vec<SerializableLevel>,
+}
+
+impl From<LevelTable> for SerializableLevelTable {
+    fn from(orig_levels: LevelTable) -> Self {
+
+        let mut serializable_levels = Vec::new();
+
+        for level in orig_levels.levels.into_iter() {
+            serializable_levels.push(SerializableLevel::from(level));
+        }
+
+        SerializableLevelTable {
+            levels: serializable_levels,
+        }
+    }
+}
+
+impl From<SerializableLevelTable> for LevelTable {
+    fn from(orig_levels: SerializableLevelTable) -> Self {
+
+        let mut levels = Vec::new();
+
+        for serialiable_level in orig_levels.levels.into_iter() {
+            levels.push(Level::from(serialiable_level));
+        }
+
+        LevelTable {
+            levels: levels,
+        }
+    }
 }
 
 impl LevelTable {

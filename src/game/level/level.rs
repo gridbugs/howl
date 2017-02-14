@@ -10,16 +10,16 @@ pub struct Level {
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
-pub struct SerialzableLevel {
+pub struct SerializableLevel {
     ecs: SerializableEcsCtx,
     spatial_hash: SpatialHashTable,
     turn_schedule: SerializableSchedule<EntityId>,
 }
 
-impl From<Level> for SerialzableLevel {
+impl From<Level> for SerializableLevel {
     fn from(level: Level) -> Self {
         let Level { ecs, spatial_hash, turn_schedule } = level;
-        SerialzableLevel {
+        SerializableLevel {
             ecs: SerializableEcsCtx::from(ecs),
             spatial_hash: spatial_hash,
             turn_schedule: SerializableSchedule::from(turn_schedule),
@@ -27,9 +27,9 @@ impl From<Level> for SerialzableLevel {
     }
 }
 
-impl From<SerialzableLevel> for Level {
-    fn from(level: SerialzableLevel) -> Self {
-        let SerialzableLevel { ecs, spatial_hash, turn_schedule } = level;
+impl From<SerializableLevel> for Level {
+    fn from(level: SerializableLevel) -> Self {
+        let SerializableLevel { ecs, spatial_hash, turn_schedule } = level;
         Level {
             ecs: EcsCtx::from(ecs),
             spatial_hash: spatial_hash,
