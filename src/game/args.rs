@@ -75,7 +75,7 @@ impl Arguments {
             args.user_path = path;
         }
 
-        args.config = GameConfig::from_user_dir(args.user_path.as_path());
+        args.config = GameConfig::from_file(args.user_path.join(user_files::CONFIG)).unwrap_or_default();
 
         Ok(args)
     }

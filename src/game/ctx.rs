@@ -116,7 +116,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         loop {
 
-            let control_map = control_spec::from_user_dir(&args.user_path).unwrap_or_default();
+            let control_map = control_spec::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
 
             let mut menu = Menu::new();
 

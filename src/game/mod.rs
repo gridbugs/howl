@@ -56,3 +56,5 @@ pub mod prototypes;
 pub mod frontends;
 pub mod save_file;
 pub mod control_spec;
+pub mod game_file;
+pub mod user_files;

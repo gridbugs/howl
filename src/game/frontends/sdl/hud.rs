@@ -17,7 +17,7 @@ pub struct Hud {
 
 impl Hud {
 
-    fn get_rect(symbol_table: &toml::Table, name: &str, width: i32, height: i32) -> HudResult<Rect> {
+    fn get_rect(symbol_table: &toml::value::Table, name: &str, width: i32, height: i32) -> HudResult<Rect> {
         let symbol = symbol_table.get(name).ok_or(HudError::SymbolNotFound)?
             .as_table().ok_or(HudError::InvalidSpec)?;
 
@@ -29,7 +29,7 @@ impl Hud {
         Ok(Rect::new(x * width, y * height, width as u32, height as u32))
     }
 
-    pub fn new(table: toml::Table) -> HudResult<Self> {
+    pub fn new(table: toml::value::Table) -> HudResult<Self> {
         let symbol_width = table.get("symbol_width").ok_or(HudError::InvalidSpec)?
             .as_integer().ok_or(HudError::InvalidSpec)? as i32;
         let symbol_height = table.get("symbol_height").ok_or(HudError::InvalidSpec)?

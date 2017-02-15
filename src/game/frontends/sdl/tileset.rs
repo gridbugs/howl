@@ -57,7 +57,7 @@ fn rect_from_toml_value(value: &toml::Value, width: i32, height: i32, padding: i
     value.as_table().and_then(|table| rect_from_toml(table, width, height, padding))
 }
 
-fn rect_from_toml(table: &toml::Table, width: i32, height: i32, padding: i32) -> Option<Rect> {
+fn rect_from_toml(table: &toml::value::Table, width: i32, height: i32, padding: i32) -> Option<Rect> {
     let x = match table.get("x").and_then(|x| x.as_integer()) {
         Some(x) => x as i32,
         None => return None,
@@ -70,7 +70,7 @@ fn rect_from_toml(table: &toml::Table, width: i32, height: i32, padding: i32) ->
     Some(new_rect(x, y, width, height, padding))
 }
 
-fn extra_rect(table: &toml::Table, name: &str, width: i32, height: i32, padding: i32) -> TilesetResult<Rect> {
+fn extra_rect(table: &toml::value::Table, name: &str, width: i32, height: i32, padding: i32) -> TilesetResult<Rect> {
     let sub_table = table.get(name).ok_or(TilesetError::TileNotFound)?
         .as_table().ok_or(TilesetError::InvalidSpec)?;
     let x = sub_table.get("x").ok_or(TilesetError::InvalidSpec)?.
@@ -87,7 +87,7 @@ impl SimpleTile {
         value.as_table().and_then(|table| Self::from_toml(table, width, height, padding))
     }
 
-    fn from_toml(table: &toml::Table, width: i32, height: i32, padding: i32) -> Option<Self> {
+    fn from_toml(table: &toml::value::Table, width: i32, height: i32, padding: i32) -> Option<Self> {
         if table.contains_key("foreground") && table.contains_key("background") {
             let fg = match table.get("foreground").and_then(|fg| rect_from_toml_value(fg, width, height, padding)) {
                 Some(fg) => fg,
@@ -132,7 +132,7 @@ pub enum ComplexTile {
 }
 
 impl ComplexTile {
-    fn from_toml(table: &toml::Table, width: i32, height: i32, padding: i32) -> Option<Self> {
+    fn from_toml(table: &toml::value::Table, width: i32, height: i32, padding: i32) -> Option<Self> {
         if table.contains_key("front") && table.contains_key("back") {
             let maybe_front = table.get("front").and_then(|front_table| {
                 SimpleTile::from_toml_value(front_table, width, height, padding)
@@ -171,7 +171,7 @@ pub struct Tileset {
 }
 
 impl Tileset {
-    pub fn new(table: toml::Table) -> TilesetResult<Self> {
+    pub fn new(table: toml::value::Table) -> TilesetResult<Self> {
 
         let tile_width = table.get("tile_width").ok_or(TilesetError::InvalidSpec)?
             .as_integer().ok_or(TilesetError::InvalidSpec)? as i32;

@@ -1,20 +1,9 @@
-use std::result;
 use std::path;
-use std::fs;
-use std::io::Read;
 use toml;
 use game::*;
 use direction::*;
 
 const CONTROL_FILE: &'static str = "controls.toml";
-
-pub enum ControlSpecError {
-    MissingFile,
-    InvalidFile,
-    InvalidFormat,
-}
-
-pub type ControlSpecResult<T> = result::Result<T, ControlSpecError>;
 
 fn parse_control(name: &str) -> Option<Control> {
 
@@ -55,7 +44,7 @@ fn parse_input_event(string: &str) -> Option<InputEvent> {
     None
 }
 
-fn from_toml(table: &toml::Table) -> Option<ControlMap> {
+fn from_toml(table: toml::value::Table) -> Option<ControlMap> {
     table.get("controls")
         .and_then(|t| t.as_table())
         .map(|controls| {
@@ -73,15 +62,6 @@ fn from_toml(table: &toml::Table) -> Option<ControlMap> {
         })
 }
 
-pub fn from_file<P: AsRef<path::Path>>(path: P) -> ControlSpecResult<ControlMap> {
-    let mut file = fs::File::open(path).map_err(|_| ControlSpecError::MissingFile)?;
-    let mut toml_str = String::new();
-    file.read_to_string(&mut toml_str).map_err(|_| ControlSpecError::InvalidFile)?;
-    let toml = toml::Parser::new(toml_str.as_ref()).parse().ok_or(ControlSpecError::InvalidFormat)?;
-
-    from_toml(&toml).ok_or(ControlSpecError::InvalidFormat)
-}
-
-pub fn from_user_dir<P: AsRef<path::Path>>(path: P) -> ControlSpecResult<ControlMap> {
-    from_file(path.as_ref().join(CONTROL_FILE))
+pub fn from_file<P: AsRef<path::Path>>(path: P) -> Option<ControlMap> {
+    game_file::read_toml(path).ok().and_then(from_toml)
 }

@@ -1,5 +1,4 @@
-use std::io::{self, Read};
-use std::fs;
+use std::io;
 use std::path;
 
 use sdl2;
@@ -88,36 +87,20 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
     Ok(())
 }
 
-fn parse_tileset_spec(resource_path: &path::PathBuf) -> Option<(toml::Table, path::PathBuf)> {
-    let tileset_base_path = resource_path.join("tilesets").join(TILESET_NAME);
-    let tileset_spec_path = tileset_base_path.join("tiles.toml");
-    let mut toml_str = String::new();
-
-    fs::File::open(tileset_spec_path).and_then(|mut file| {
-        match file.read_to_string(&mut toml_str) {
-            Ok(_) => Ok(toml::Parser::new(toml_str.as_ref())),
-            Err(e) => Err(e),
-        }
-    }).ok().and_then(|mut parser| parser.parse()).map(|value| {
-        (value, tileset_base_path.join("tiles.png"))
+fn parse_tileset_spec<P: AsRef<path::Path>>(resource_path: P) -> Option<(toml::value::Table, path::PathBuf)> {
+    let base_path = resource_path.as_ref().join("tilesets").join(TILESET_NAME);
+    game_file::read_toml(base_path.join("tiles.toml")).ok().map(|t| {
+        (t, base_path.join("tiles.png"))
     })
 }
 
-fn parse_hud_spec(resource_path: &path::PathBuf) -> Option<(toml::Table, path::PathBuf)> {
-    let hud_base_path = resource_path.join("hud");
-    let hud_spec_path = hud_base_path.join("hud.toml");
-    let mut toml_str = String::new();
-
-    fs::File::open(hud_spec_path).and_then(|mut file| {
-        match file.read_to_string(&mut toml_str) {
-            Ok(_) => Ok(toml::Parser::new(toml_str.as_ref())),
-            Err(e) => Err(e),
-        }
-    }).ok().and_then(|mut parser| parser.parse()).map(|value| {
-        (value, hud_base_path.join("hud.png"))
+fn parse_hud_spec<P: AsRef<path::Path>>(resource_path: P) -> Option<(toml::value::Table, path::PathBuf)> {
+    let base_path = resource_path.as_ref().join("hud");
+    game_file::read_toml(base_path.join("hud.toml")).ok().map(|t| {
+        (t, base_path.join("hud.png"))
     })
 }
 
-fn get_font_path(resource_path: &path::PathBuf) -> path::PathBuf {
-    resource_path.join("fonts").join(format!("{}.ttf", FONT_NAME))
+fn get_font_path<P: AsRef<path::Path>>(resource_path: P) -> path::PathBuf {
+    resource_path.as_ref().join("fonts").join(format!("{}.ttf", FONT_NAME))
 }
