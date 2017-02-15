@@ -1,0 +1,21 @@
+[controls]
+
+# Movement
+North = "Up"
+South = "Down"
+East = "Right"
+West = "Left"
+
+# Interaction
+Close = "c"
+Examine = "x"
+Wait = "."
+
+# Combat
+Fire = "f"
+NextTarget = "n"
+PrevTarget = "m"
+
+# UI
+DisplayMessageLog = "t"
+Help = "?"

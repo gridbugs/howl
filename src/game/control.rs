@@ -33,27 +33,14 @@ impl ControlMap {
     pub fn iter(&self) -> ControlMapIter {
         self.map.iter()
     }
-}
 
-impl Default for ControlMap {
-    fn default() -> Self {
+    pub fn insert(&mut self, input: InputEvent, control: Control) {
+        self.map.insert(input, control);
+    }
+
+    pub fn bare() -> Self {
         let mut map = HashMap::new();
 
-        map.insert(InputEvent::Up, Control::Direction(Direction::North));
-        map.insert(InputEvent::Down, Control::Direction(Direction::South));
-        map.insert(InputEvent::Left, Control::Direction(Direction::West));
-        map.insert(InputEvent::Right, Control::Direction(Direction::East));
-
-        map.insert(InputEvent::Char('c'), Control::Close);
-        map.insert(InputEvent::Char('f'), Control::Fire);
-        map.insert(InputEvent::Char('n'), Control::NextTarget);
-        map.insert(InputEvent::Char('m'), Control::PrevTarget);
-        map.insert(InputEvent::Char('t'), Control::DisplayMessageLog);
-        map.insert(InputEvent::Char('x'), Control::Examine);
-
-        map.insert(InputEvent::Char('.'), Control::Wait);
-
-        map.insert(InputEvent::Char('?'), Control::Help);
         map.insert(InputEvent::Quit, Control::Quit);
         map.insert(InputEvent::Return, Control::Select);
         map.insert(InputEvent::Escape, Control::Quit);
@@ -61,5 +48,31 @@ impl Default for ControlMap {
         ControlMap {
             map: map,
         }
+    }
+
+    pub fn add_defaults(&mut self) {
+        self.insert(InputEvent::Up, Control::Direction(Direction::North));
+        self.insert(InputEvent::Down, Control::Direction(Direction::South));
+        self.insert(InputEvent::Left, Control::Direction(Direction::West));
+        self.insert(InputEvent::Right, Control::Direction(Direction::East));
+
+        self.insert(InputEvent::Char('c'), Control::Close);
+        self.insert(InputEvent::Char('x'), Control::Examine);
+        self.insert(InputEvent::Char('.'), Control::Wait);
+
+        self.insert(InputEvent::Char('f'), Control::Fire);
+        self.insert(InputEvent::Char('n'), Control::NextTarget);
+        self.insert(InputEvent::Char('m'), Control::PrevTarget);
+
+        self.insert(InputEvent::Char('t'), Control::DisplayMessageLog);
+        self.insert(InputEvent::Char('?'), Control::Help);
+    }
+}
+
+impl Default for ControlMap {
+    fn default() -> Self {
+        let mut map = ControlMap::bare();
+        map.add_defaults();
+        map
     }
 }
