@@ -9,17 +9,17 @@ default = ["sdl2", "rustty"]
 use_sdl2_mac_framework = ["sdl2/use_mac_framework"]
 
 [dependencies]
-rand = "0.3.14"
-num = "0.1.36"
-itertools = "0.5.6"
-getopts = "0.2.14"
-toml = "0.2.1"
-serde = "0.9.7"
-serde_derive = "0.9.7"
+rand = "0.3"
+num = "0.1"
+itertools = "0.5"
+getopts = "0.2"
+toml = "0.2"
+serde = "0.9"
+serde_derive = "0.9"
 bincode = "1.0.0-alpha2"
 
 [dependencies.sdl2]
-version = "0.28.0"
+version = "0.28"
 optional = true
 default-features = false
 features = ["image", "ttf"]
@@ -28,8 +28,8 @@ features = ["image", "ttf"]
 rustty = { git = "https://github.com/stevebob/rustty.git", optional = true }
 
 [build-dependencies]
-copy_dir = "0.1.2"
-handlebars = "0.22.0"
-tomson = "0.1.1"
-rustc-serialize = "0.3.19"
+copy_dir = "0.1"
+handlebars = "0.22"
+tomson = "0.1"
+rustc-serialize = "0.3"
 genecs = { git = "https://github.com/stevebob/genecs.git", rev = "f307bba" }
