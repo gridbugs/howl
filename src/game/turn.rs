@@ -90,7 +90,7 @@ impl<'game> ActionEnv<'game> {
 }
 
 impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer> {
-    pub fn turn(&mut self) -> Result<TurnResolution> {
+    pub fn turn(&mut self) -> GameResult<TurnResolution> {
 
         self.pc_render(None, true);
 
@@ -110,7 +110,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
     }
 
-    fn process_transformation(&mut self) -> Result<Option<u64>> {
+    fn process_transformation(&mut self) -> GameResult<Option<u64>> {
         if let Some(transformation) = self.get_transformation() {
             let action_args = transformation.to_action_args(self.entity_id);
             self.try_commit_action(action_args)?;
@@ -145,7 +145,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         None
     }
 
-    fn take_turn(&mut self) -> Result<TurnResolution> {
+    fn take_turn(&mut self) -> GameResult<TurnResolution> {
         loop {
             match self.get_meta_action()? {
                 MetaAction::External(External::Quit) => {
@@ -258,7 +258,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         changed
     }
 
-    fn try_commit_action(&mut self, action: ActionArgs) -> Result<Option<CommitResolution>> {
+    fn try_commit_action(&mut self, action: ActionArgs) -> GameResult<Option<CommitResolution>> {
 
         let mut turn_time = self.ecs.turn_time(self.entity_id);
         let mut first = true;
@@ -347,7 +347,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         Ok(turn_time.map(|t| CommitResolution::Reschedule(cmp::max(t, MIN_TURN_TIME))))
     }
 
-    fn get_meta_action(&self) -> Result<MetaAction> {
+    fn get_meta_action(&self) -> GameResult<MetaAction> {
         let entity = self.ecs.entity(self.entity_id);
         let mut behaviour_state = entity.behaviour_state_borrow_mut().expect("Entity missing behaviour_state");
         if !behaviour_state.is_initialised() {
@@ -366,7 +366,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
     }
 
-    fn declare_action_return(&self, value: bool) -> Result<()> {
+    fn declare_action_return(&self, value: bool) -> GameResult<()> {
         let entity = self.ecs.entity(self.entity_id);
         let mut behaviour_state = entity.behaviour_state_borrow_mut().expect("Entity missing behaviour_state");
         behaviour_state.declare_return(value)?;

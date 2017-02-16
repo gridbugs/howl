@@ -1,24 +1,24 @@
 use std::result;
 use behaviour;
 
-pub type Result<T> = result::Result<T, Error>;
+pub type GameResult<T> = result::Result<T, GameError>;
 
 #[derive(Debug)]
-pub enum Error {
+pub enum GameError {
     ScheduleEmpty,
     BehaviourError(behaviour::Error),
 }
 
-impl From<behaviour::Error> for Error {
+impl From<behaviour::Error> for GameError {
     fn from(e: behaviour::Error) -> Self {
-        Error::BehaviourError(e)
+        GameError::BehaviourError(e)
     }
 }
 
 pub type ExternalResult<T> = result::Result<T, String>;
 
-impl From<Error> for String {
-    fn from(e: Error) -> Self {
+impl From<GameError> for String {
+    fn from(e: GameError) -> Self {
         format!("{:?}", e)
     }
 }

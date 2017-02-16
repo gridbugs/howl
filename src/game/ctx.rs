@@ -110,7 +110,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    pub fn run(&mut self, args: Arguments) -> Result<()> {
+    pub fn run(&mut self, args: Arguments) -> GameResult<()> {
 
         let mut current_game_state = save_file::load(args.user_path.as_path());
 
@@ -175,7 +175,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         level.ecs.insert_control_map(pc_id, control_map);
     }
 
-    fn game_loop(&mut self, game_state: &mut GameState) -> Result<()> {
+    fn game_loop(&mut self, game_state: &mut GameState) -> GameResult<()> {
         loop {
 
             let GlobalIds { pc_id, level_id } = game_state.ids.expect("Uninitialised game state");
@@ -207,7 +207,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     }.turn()?
 
                 } else {
-                    return Err(Error::ScheduleEmpty);
+                    return Err(GameError::ScheduleEmpty);
                 }
             };
 
