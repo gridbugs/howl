@@ -281,7 +281,7 @@ impl<Leaf, Switch> Graph<Leaf, Switch> {
     }
 
     fn create_stack_frame(&self, index: NodeIndex) -> Result<StackFrame> {
-        match try!(self.node(index)) {
+        match self.node(index)? {
             &Node::Leaf(_) => {
                 Ok(StackFrame::Leaf {
                     index: index,
@@ -313,22 +313,22 @@ impl<Leaf, Switch> Graph<Leaf, Switch> {
                 if let Some(value) = value {
                     Ok(Resolution::Return(value))
                 } else {
-                    let node = try!(self.node(index));
-                    let f = try!(node.leaf_fn());
+                    let node = self.node(index)?;
+                    let f = node.leaf_fn()?;
                     Ok(f.call(knowledge).to_resolution())
                 }
             }
             &mut StackFrame::Collection { index, ref mut state } => {
-                let node = try!(self.node(index));
-                let collection_node = try!(node.collection_node());
-                if let Some(child_index) = try!(collection_node.next_index(state)) {
+                let node = self.node(index)?;
+                let collection_node = node.collection_node()?;
+                if let Some(child_index) = collection_node.next_index(state)? {
                     Ok(Resolution::Call(child_index))
                 } else {
                     Ok(Resolution::Return(state.return_value()))
                 }
             }
             &mut StackFrame::Switch { index, ref mut child, value } => {
-                let switch_fn = try!(try!(self.node(index)).switch_fn());
+                let switch_fn = self.node(index)?.switch_fn()?;
                 Ok(if let Some(value) = value {
                     match switch_fn.return_to(value) {
                         SwitchReturn::Return(return_value) => Resolution::Return(return_value),
@@ -364,7 +364,7 @@ impl State {
             return Err(Error::StackNotEmpty);
         }
 
-        let frame = try!(graph.create_stack_frame(index));
+        let frame = graph.create_stack_frame(index)?;
         self.stack.push(frame);
 
         Ok(())
@@ -386,7 +386,7 @@ impl State {
     {
         match resolution {
             Resolution::Call(index) => {
-                stack.push(try!(graph.create_stack_frame(index)));
+                stack.push(graph.create_stack_frame(index)?);
             }
             Resolution::Return(value) => {
                 if stack.pop().is_none() {
@@ -394,7 +394,7 @@ impl State {
                 }
 
                 if let Some(frame) = stack.last_mut() {
-                    try!(frame.handle_return(value));
+                    frame.handle_return(value)?;
                 }
             }
             Resolution::Yield(action) => return Ok(Some(action)),
@@ -414,7 +414,7 @@ impl State {
         for frame in stack {
             if let &mut StackFrame::Switch { index, ref mut child, .. } = frame {
                 if let Some(current) = child.as_mut() {
-                    let switch = try!(try!(graph.node(index)).switch_fn());
+                    let switch = graph.node(index)?.switch_fn()?;
                     let resolution = switch.call(knowledge);
                     match resolution {
                         SwitchResolution::Select(child_index) => {
@@ -450,19 +450,19 @@ impl State {
             return Err(Error::Yielding);
         }
 
-        if let Some(truncate) = try!(Self::resolve_switches(&mut self.stack, graph, knowledge)) {
-            let frame = try!(graph.create_stack_frame(truncate.index));
+        if let Some(truncate) = Self::resolve_switches(&mut self.stack, graph, knowledge)? {
+            let frame = graph.create_stack_frame(truncate.index)?;
             self.stack.truncate(truncate.len);
             self.stack.push(frame);
         }
 
         loop {
             let resolution = {
-                let frame = try!(self.current_frame());
-                try!(graph.resolve_frame(frame, knowledge))
+                let frame = self.current_frame()?;
+                graph.resolve_frame(frame, knowledge)?
             };
 
-            if let Some(action) = try!(Self::apply_resolution(&mut self.stack, graph, resolution)) {
+            if let Some(action) = Self::apply_resolution(&mut self.stack, graph, resolution)? {
                 self.yielding = true;
                 return Ok(action);
             }
