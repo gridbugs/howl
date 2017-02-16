@@ -44,7 +44,7 @@ struct AnsiInfo {
 impl Default for AnsiInfo {
     fn default() -> Self {
         AnsiInfo {
-            bg: ansi::colours::DARK_GREY,
+            bg: AnsiColour::Rgb(ansi::RgbColour { red: 0, green: 0, blue: 0 }),
             fg: ansi::colours::DARK_GREY,
             ch: ' ',
             style: ansi::styles::NONE,
