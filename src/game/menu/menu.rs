@@ -15,7 +15,7 @@ pub mod menu_operation {
         let mut state = MenuState::new();
 
         loop {
-            renderer.display_menu(prelude, &menu, &state, language);
+            renderer.publish_fullscreen_menu(prelude, &menu, &state, language);
 
             if let Some(event) = input.next_input() {
                 match event {

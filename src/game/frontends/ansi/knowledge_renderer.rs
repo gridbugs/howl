@@ -56,7 +56,6 @@ pub struct AnsiKnowledgeRenderer {
     window_allocator: Box<ansi::WindowAllocator>,
     window: ansi::Window,
     buffer: TileBuffer,
-    scroll: bool,
     scroll_position: Coord,
     message_log_window: ansi::Window,
     message_log: Vec<Message>,
@@ -76,8 +75,7 @@ pub enum AnsiKnowledgeRendererError {
 impl AnsiKnowledgeRenderer {
     pub fn new(window_allocator: Box<ansi::WindowAllocator>,
                game_width: usize,
-               game_height: usize,
-               scroll: bool) -> result::Result<Self, AnsiKnowledgeRendererError> {
+               game_height: usize) -> result::Result<Self, AnsiKnowledgeRendererError> {
 
         if window_allocator.width() <= game_width || window_allocator.height() <= game_height {
             return Err(AnsiKnowledgeRendererError::TerminalTooSmall {
@@ -119,7 +117,6 @@ impl AnsiKnowledgeRenderer {
             window_allocator: window_allocator,
             window: window,
             buffer: TileBuffer::new(game_width, game_height),
-            scroll: scroll,
             scroll_position: Coord::new(0, 0),
             message_log_window: message_log_window,
             message_log: message_log,
@@ -297,7 +294,7 @@ impl AnsiKnowledgeRenderer {
     }
 
     fn scroll_bar(&self, num_messages: usize, offset: usize, from_top: bool) -> Option<(Coord, usize)> {
-        let num_lines = self.display_log_num_lines();
+        let num_lines = self.fullscreen_log_num_rows();
         if num_messages > num_lines {
             let scroll_bar_height = (self.total_height * num_lines) / num_messages;
             let remaining = self.total_height - scroll_bar_height;
@@ -336,7 +333,7 @@ impl AnsiKnowledgeRenderer {
         let ret = cursor;
 
         let message = Message::new();
-        while cursor.y < self.display_log_num_lines() as isize {
+        while cursor.y < self.fullscreen_log_num_rows() as isize {
             cursor = Self::render_message(window, &message, cursor);
         }
 
@@ -372,45 +369,41 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         self.scroll_position
     }
 
-    fn update(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
-        let scroll_position = if self.scroll {
-            self.centre_offset(position)
-        } else {
-            Coord::new(0, 0)
-        };
-
-        self.scroll_position = self.buffer.update(knowledge, turn_id, scroll_position);
+    fn update_game_window_buffer(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
+        self.scroll_position = self.centre_offset(position);
+        self.buffer.update(knowledge, turn_id, self.scroll_position);
     }
 
-    fn draw(&mut self) {
+    fn draw_game_window(&mut self) {
         self.draw_internal();
         self.window.flush();
-        self.draw_message_log_internal();
-        self.message_log_window.flush();
     }
 
-    fn draw_with_overlay(&mut self, overlay: &RenderOverlay) {
+    fn draw_game_window_with_overlay(&mut self, overlay: &RenderOverlay) {
         self.draw_internal();
         self.draw_overlay_internal(overlay);
         self.window.flush();
+    }
+
+    fn draw_log(&mut self) {
         self.draw_message_log_internal();
         self.message_log_window.flush();
     }
 
-    fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>) {
+    fn update_log_buffer(&mut self, messages: &MessageLog, language: &Box<Language>) {
         for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
             message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
     }
 
-    fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
+    fn fullscreen_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
 
         let mut window = self.create_fullscreen_window();
 
         let mut cursor = Coord::new(0, 0);
         let mut message = Message::new();
-        let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
+        let messages = message_log.tail_with_offset(self.fullscreen_log_num_rows(), offset);
         for log_entry in messages {
             message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
@@ -418,7 +411,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         }
 
         message.clear();
-        while cursor.y < self.display_log_num_lines() as isize {
+        while cursor.y < self.fullscreen_log_num_rows() as isize {
             cursor = Self::render_message(&mut window, &message, cursor);
         }
 
@@ -430,20 +423,18 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
             }
         }
 
-        window.flush();
-        self.window_allocator.fill(CLEAR_COLOUR);
-        window.delete();
+        self.delete_window(window);
     }
 
-    fn display_log_num_lines(&self) -> usize {
+    fn fullscreen_log_num_rows(&self) -> usize {
         self.total_height
     }
 
-    fn wrap_message_to_fit(&self, message: &Message, wrapped: &mut Vec<TextMessage>) {
-        wrap_message(&message, self.total_width - 1, wrapped);
+    fn fullscreen_log_num_cols(&self) -> usize {
+        self.total_width - 1
     }
 
-    fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
+    fn fullscreen_wrapped_translated_message(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
 
         let mut window = self.create_fullscreen_window();
 
@@ -452,7 +443,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         self.delete_window(window);
     }
 
-    fn update_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
+    fn draw_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
 
         let ansi_colour = ansi::AnsiColour::new_from_rgb24(HUD_TEXT_COLOUR);
         let mut cursor = 0;
@@ -478,7 +469,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         self.hud_window.flush();
     }
 
-    fn display_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
+    fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
 
         let mut window = self.create_fullscreen_window();
         let mut message = Message::new();
@@ -487,7 +478,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         let mut cursor = if let Some(message_type) = prelude {
             language.translate(message_type, &mut message);
 
-            self.wrap_message_to_fit(&message, &mut wrapped);
+            self.fullscreen_wrap(&message, &mut wrapped);
 
             let mut cursor = self.display_wrapped_message_fullscreen_internal(&mut window, &wrapped, 0);
             cursor.y += 1;
@@ -505,7 +496,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
             language.translate(MessageType::Menu(item.message()), &mut message);
 
             wrapped.clear();
-            self.wrap_message_to_fit(&message, &mut wrapped);
+            self.fullscreen_wrap(&message, &mut wrapped);
 
             let colour = if item_state == MenuItemState::Selected {
                 MENU_SELECTED_COLOUR
@@ -522,4 +513,10 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
         self.delete_window(window);
     }
+
+    fn log_num_lines(&self) -> usize {
+        MESSAGE_LOG_NUM_LINES
+    }
+
+    fn publish(&mut self) {}
 }

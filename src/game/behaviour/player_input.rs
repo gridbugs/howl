@@ -53,7 +53,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     loop {
 
         let overlay = RenderOverlay::aim_line(StraightLine::new(start, end));
-        renderer.draw_with_overlay(&overlay);
+        renderer.publish_game_window_with_overlay(&overlay);
 
         if let Some(event) = input_source.next_input() {
             if let Some(control) = map.control(event) {
@@ -73,7 +73,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
                         end = targets[target_idx];
                     }
                 } else if control == Control::Fire {
-                    renderer.draw();
+                    renderer.publish_game_window();
                     return Some(end);
                 } else {
                     break;
@@ -84,7 +84,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
         }
     }
 
-    renderer.draw();
+    renderer.publish_game_window();
     None
 }
 
@@ -94,7 +94,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
     let message_log = input.entity.message_log_borrow().unwrap();
 
     let mut offset = 0;
-    let num_lines = renderer.display_log_num_lines();
+    let num_lines = renderer.fullscreen_log_num_rows();
     let num_messages = message_log.len();
     let max_offset = if num_messages > num_lines {
         num_messages - num_lines
@@ -103,7 +103,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
     };
 
     loop {
-        renderer.display_log(message_log.deref(), offset, input.language);
+        renderer.publish_fullscreen_log(message_log.deref(), offset, input.language);
 
         if let Some(event) = input_source.next_input() {
             if let Some(control) = map.control(event) {
@@ -124,8 +124,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
         }
     }
 
-    renderer.update_hud(input.entity, input.language);
-    renderer.draw();
+    renderer.publish_all_windows(input.entity, input.language);
 }
 
 fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
@@ -159,12 +158,11 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
             };
 
             message_log.add_temporary(message);
-            renderer.update_log(message_log.deref(), input.language);
+            renderer.update_log_buffer(message_log.deref(), input.language);
         }
 
         let overlay = RenderOverlay::examine_cursor(cursor);
-        renderer.update_hud(input.entity, input.language);
-        renderer.draw_with_overlay(&overlay);
+        renderer.publish_all_windows_with_overlay(input.entity, input.language, &overlay);
 
         if let Some(event) = input_source.next_input() {
             if let Some(control) = map.control(event) {
@@ -181,12 +179,12 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
                             MessageType::YouSeeDescription(you_see)
                         } else {
                             message_log.add_temporary(MessageType::NoDescription);
-                            renderer.update_log(message_log.deref(), input.language);
+                            renderer.update_log_buffer(message_log.deref(), input.language);
                             alternative_message = true;
                             continue;
                         };
 
-                        renderer.display_message_fullscreen(message, input.language);
+                        renderer.publish_fullscreen_message(message, input.language);
                         input_source.next_input();
                     }
                     _ => {}
@@ -196,15 +194,17 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
     }
 
     message_log.add_temporary(MessageType::Empty);
-    renderer.update_log(message_log.deref(), input.language);
-    renderer.update_hud(input.entity, input.language);
-    renderer.draw();
+    renderer.update_log_buffer(message_log.deref(), input.language);
+    renderer.draw_hud(input.entity, input.language);
+    renderer.draw_game_window();
 }
 
 fn display_help<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+    let mut renderer = input.renderer.borrow_mut();
     let mut message = Message::new();
     input.language.translate_controls(map, &mut message);
-    display_message_scrolling(input.renderer.borrow_mut().deref_mut(), &mut input_source, &message, true);
+    display_message_scrolling(renderer.deref_mut(), &mut input_source, &message, true);
+    renderer.publish_all_windows(input.entity, input.language);
 }
 
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {

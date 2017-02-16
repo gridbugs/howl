@@ -73,7 +73,6 @@ pub struct SdlKnowledgeRenderer<'a> {
     message_log: Vec<Message>,
     display_log_num_lines: usize,
     display_log_num_cols: usize,
-    scroll: bool,
     scroll_position: Coord,
     hud_position: Coord,
     hud_texture: Texture,
@@ -131,7 +130,6 @@ impl<'a> SdlKnowledgeRenderer<'a> {
                hud_path: path::PathBuf,
                hud: Hud,
                font: Font<'a>,
-               scroll: bool,
                scale: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
 
         let game_width_px = (game_width * tileset.tile_width()) as usize * scale;
@@ -186,7 +184,6 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             message_log_position: message_log_position,
             message_log_rect: message_log_rect,
             message_log: message_log,
-            scroll: scroll,
             scroll_position: Coord::new(0, 0),
             display_log_num_lines: ((height_px as usize) / (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX)) / scale,
             display_log_num_cols: ((width_px as usize - MESSAGE_LOG_PADDING_PX * 2) / MESSAGE_LOG_LINE_HEIGHT_PX) / scale, // square fonts only
@@ -447,7 +444,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
     }
 
     fn scroll_bar_rect(&self, num_messages: usize, offset: usize, from_top: bool) -> Option<Rect> {
-        let num_lines = self.display_log_num_lines();
+        let num_lines = self.fullscreen_log_num_rows();
         if num_messages > num_lines {
             let scroll_bar_height_px = (self.height_px * num_lines) / num_messages;
             let remaining_px = self.height_px - scroll_bar_height_px;
@@ -473,7 +470,7 @@ impl<'a> SdlKnowledgeRenderer<'a> {
     fn display_wrapped_message_fullscreen_internal(&mut self, wrapped: &Vec<TextMessage>, offset: usize) -> Coord {
         let mut cursor = self.fullscreen_initial_cursor();
 
-        let end_idx = cmp::min(wrapped.len(), offset + self.display_log_num_lines);
+        let end_idx = cmp::min(wrapped.len(), offset + self.fullscreen_log_num_rows());
 
         for line in &wrapped[offset..end_idx] {
             cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, self.scale, MESSAGE_LOG_PLAIN_COLOUR, line, cursor);
@@ -502,45 +499,39 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
         self.scroll_position
     }
 
-    fn update(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
-        let scroll_position = if self.scroll {
-            self.centre_offset(position)
-        } else {
-            Coord::new(0, 0)
-        };
-
-        self.scroll_position = self.buffer.update(knowledge, turn_id, scroll_position);
+    fn update_game_window_buffer(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, player_position: Coord) {
+        self.scroll_position = self.centre_offset(player_position);
+        self.buffer.update(knowledge, turn_id, self.scroll_position);
     }
 
-    fn draw(&mut self) {
+    fn draw_game_window(&mut self) {
         self.clear_game();
         self.draw_internal();
-        self.draw_message_log_internal();
-        self.sdl_renderer.present();
     }
 
-    fn draw_with_overlay(&mut self, overlay: &RenderOverlay) {
-        self.clear_game();
-        self.draw_internal();
+    fn draw_game_window_with_overlay(&mut self, overlay: &RenderOverlay) {
+        self.draw_game_window();
         self.draw_overlay_internal(overlay);
-        self.draw_message_log_internal();
-        self.sdl_renderer.present();
     }
 
-    fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>) {
+    fn draw_log(&mut self) {
+        self.draw_message_log_internal();
+    }
+
+    fn update_log_buffer(&mut self, messages: &MessageLog, language: &Box<Language>) {
         for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
             message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
     }
 
-    fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
+    fn fullscreen_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
         self.clear_screen();
 
         let mut cursor = Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
         let mut message = Message::new();
 
-        let messages = message_log.tail_with_offset(self.display_log_num_lines(), offset);
+        let messages = message_log.tail_with_offset(self.fullscreen_log_num_rows(), offset);
 
         for log_entry in messages {
             message.clear();
@@ -553,25 +544,22 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
             self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
             self.sdl_renderer.fill_rect(scroll_bar_rect).expect("Failed to draw scroll bar");
         }
-
-        self.sdl_renderer.present();
     }
 
-    fn display_log_num_lines(&self) -> usize {
+    fn fullscreen_log_num_rows(&self) -> usize {
         self.display_log_num_lines
     }
 
-    fn wrap_message_to_fit(&self, message: &Message, wrapped: &mut Vec<TextMessage>) {
-        wrap_message(&message, self.display_log_num_cols - 1, wrapped);
+    fn fullscreen_log_num_cols(&self) -> usize {
+        self.display_log_num_cols - 1
     }
 
-    fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
+    fn fullscreen_wrapped_translated_message(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
         self.clear_screen();
         self.display_wrapped_message_fullscreen_internal(wrapped, offset);
-        self.sdl_renderer.present();
     }
 
-    fn update_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
+    fn draw_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
         self.clear_hud();
         let sdl_colour = Self::rgb24_to_sdl_colour(HUD_TEXT_COLOUR);
         let mut cursor = HUD_TOP_PADDING_PX;
@@ -600,7 +588,7 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
         self.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
     }
 
-    fn display_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
+    fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
 
         let mut message = Message::new();
         let mut wrapped = Vec::new();
@@ -610,7 +598,7 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
         let mut cursor = if let Some(message_type) = prelude {
             language.translate(message_type, &mut message);
 
-            self.wrap_message_to_fit(&message, &mut wrapped);
+            self.fullscreen_wrap(&message, &mut wrapped);
 
             let mut cursor = self.display_wrapped_message_fullscreen_internal(&wrapped, 0);
 
@@ -626,7 +614,7 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
             language.translate(MessageType::Menu(item.message()), &mut message);
 
             wrapped.clear();
-            self.wrap_message_to_fit(&message, &mut wrapped);
+            self.fullscreen_wrap(&message, &mut wrapped);
 
             let colour = if item_state == MenuItemState::Selected {
                 MENU_SELECTED_COLOUR
@@ -637,7 +625,13 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
             cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, self.scale, colour, &wrapped[0], cursor);
             cursor.y += self.text_padding() as isize;
         }
+    }
 
+    fn publish(&mut self) {
         self.sdl_renderer.present();
+    }
+
+    fn log_num_lines(&self) -> usize {
+        MESSAGE_LOG_NUM_LINES
     }
 }

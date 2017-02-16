@@ -65,7 +65,6 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         hud_path,
         hud,
         font,
-        true,
         scale) {
         Ok(r) => r,
         Err(SdlKnowledgeRendererError::WindowCreationFailure) => return Err("Failed to create window".to_string()),

@@ -9,16 +9,16 @@ pub fn display_message_scrolling<R: KnowledgeRenderer, I: InputSource>(renderer:
     let mut offset = 0;
 
     let mut wrapped = Vec::new();
-    renderer.wrap_message_to_fit(message, &mut wrapped);
+    renderer.fullscreen_wrap(message, &mut wrapped);
 
-    let max_offset = if wrapped.len() > renderer.display_log_num_lines() {
-        wrapped.len() - renderer.display_log_num_lines()
+    let max_offset = if wrapped.len() > renderer.fullscreen_log_num_rows() {
+        wrapped.len() - renderer.fullscreen_log_num_rows()
     } else {
         0
     };
 
     loop {
-        renderer.display_translated_message_fullscreen(message, offset);
+        renderer.publish_fullscreen_translated_message(message, offset);
 
         if let Some(event) = input_source.next_input() {
             match event {
@@ -47,6 +47,4 @@ pub fn display_message_scrolling<R: KnowledgeRenderer, I: InputSource>(renderer:
             break;
         }
     }
-
-    renderer.draw();
 }

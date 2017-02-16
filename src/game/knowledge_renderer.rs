@@ -4,68 +4,169 @@ use coord::Coord;
 
 pub trait KnowledgeRenderer {
 
+    /// Width of game window in cells
     fn width(&self) -> usize;
+
+    /// Height of game window in cells
     fn height(&self) -> usize;
 
+    /// Coordinate of top-left corner cell rendered in game window in world-space
     fn world_offset(&self) -> Coord;
 
+    /// Given a coordinate in world-space, converts it into a coordinate in screen-space
     fn world_to_screen(&self, coord: Coord) -> Coord {
         coord - self.world_offset()
     }
 
+    /// Offset required to make given coordinate in world-space appear in the centre of
+    /// the game window
     fn centre_offset(&self, centre: Coord) -> Coord {
         centre - Coord::new(self.width() as isize / 2, self.height() as isize / 2)
     }
 
+    /// Highest coordinate in world-space that appears in the game window
     fn world_limit(&self) -> Coord {
         self.world_offset() + Coord::new(self.width() as isize - 1, self.height() as isize - 1)
     }
 
+    /// Returns true iff the given coordinate in world-space corresponds to a cell in
+    /// the game window
     fn contains_world_coord(&self, coord: Coord) -> bool {
         coord >= self.world_offset() && coord < self.world_limit()
     }
 
-    fn update(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord);
+    /// Update the contents of internal buffer of the contents of the game window.
+    /// Does not update the display.
+    fn update_game_window_buffer(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord);
 
-    fn draw(&mut self);
+    /// Returns the number of lines of the log that will be displayed at a time
+    fn log_num_lines(&self) -> usize;
 
-    fn draw_with_overlay(&mut self, overlay: &RenderOverlay);
+    /// Updates the contents of internal message log with the last `self.log_num_lines()`
+    /// lines of the message log, translating into the given language.
+    fn update_log_buffer(&mut self, messages: &MessageLog, language: &Box<Language>);
+
+    /// Push the currently drawn content to the physical display
+    fn publish(&mut self);
+
+    /// Updates the game window with the contents of the internal buffer
+    fn draw_game_window(&mut self);
+
+    /// Updates the log with the contents of the internal message log
+    fn draw_log(&mut self);
+
+    /// Updates the hud based on a specified entity
+    fn draw_hud(&mut self, entity: EntityRef, language: &Box<Language>);
+
+    /// Updates the game window with the contents of the internal buffer
+    /// drawing a specified overlay over the top
+    fn draw_game_window_with_overlay(&mut self, overlay: &RenderOverlay);
+
+    /// Display a fullscreen view of message log
+    fn fullscreen_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>);
+
+    /// Number of lines in fullscreen message log view
+    fn fullscreen_log_num_rows(&self) -> usize;
+
+    /// Number of characters that fit in a single line of the fullscreen message log
+    fn fullscreen_log_num_cols(&self) -> usize;
 
     fn render(&mut self, knowledge: &DrawableKnowledgeLevel,
               turn_id: u64, position: Coord) {
-        self.update(knowledge, turn_id, position);
-        self.draw();
+        self.update_game_window_buffer(knowledge, turn_id, position);
+        self.draw_game_window();
     }
 
     fn render_with_overlay(&mut self, knowledge: &DrawableKnowledgeLevel,
                            turn_id: u64, position: Coord, overlay: &RenderOverlay) {
-        self.update(knowledge, turn_id, position);
-        self.draw_with_overlay(overlay);
+        self.update_game_window_buffer(knowledge, turn_id, position);
+        self.draw_game_window_with_overlay(overlay);
     }
 
-    fn update_log(&mut self, messages: &MessageLog, language: &Box<Language>);
-
-    fn display_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>);
-
-    fn display_log_num_lines(&self) -> usize;
-
-    fn display_message_fullscreen(&mut self, message_type: MessageType, language: &Box<Language>) {
+    /// Displays a message in fullscreen
+    fn fullscreen_message(&mut self, message_type: MessageType, language: &Box<Language>) {
         let mut message = Message::new();
         language.translate(message_type, &mut message);
-        self.display_translated_message_fullscreen(&message, 0);
+        self.fullscreen_translated_message(&message, 0);
     }
 
-    fn wrap_message_to_fit(&self, message: &Message, wrapped: &mut Vec<TextMessage>);
+    /// Wraps a message to fit in fullscreen
+    fn fullscreen_wrap(&self, message: &Message, wrapped: &mut Vec<TextMessage>) {
+        wrap_message(&message, self.fullscreen_log_num_cols(), wrapped);
+    }
 
-    fn display_translated_message_fullscreen(&mut self, message: &Message, offset: usize) {
+    /// Displays a translated message in fullscreen
+    fn fullscreen_translated_message(&mut self, message: &Message, offset: usize) {
         let mut wrapped = Vec::new();
-        self.wrap_message_to_fit(message, &mut wrapped);
-        self.display_wrapped_message_fullscreen(&wrapped, offset);
+        self.fullscreen_wrap(message, &mut wrapped);
+        self.fullscreen_wrapped_translated_message(&wrapped, offset);
     }
 
-    fn display_wrapped_message_fullscreen(&mut self, wrapped: &Vec<TextMessage>, offset: usize);
+    /// Displays a wrapped, translated message in fullscreen
+    fn fullscreen_wrapped_translated_message(&mut self, wrapped: &Vec<TextMessage>, offset: usize);
 
-    fn update_hud(&mut self, entity: EntityRef, language: &Box<Language>);
+    /// Display a fullscreen menu
+    fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>);
 
-    fn display_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>);
+    fn publish_game_window(&mut self) {
+        self.draw_game_window();
+        self.publish();
+    }
+
+    fn publish_game_window_with_overlay(&mut self, overlay: &RenderOverlay) {
+        self.draw_game_window_with_overlay(overlay);
+        self.publish();
+    }
+
+    fn publish_all_windows(&mut self, entity: EntityRef, language: &Box<Language>) {
+        self.draw_game_window();
+        self.draw_log();
+        self.draw_hud(entity, language);
+        self.publish();
+    }
+
+    fn publish_all_windows_with_overlay(&mut self, entity: EntityRef, language: &Box<Language>, overlay: &RenderOverlay) {
+        self.draw_game_window_with_overlay(overlay);
+        self.draw_log();
+        self.draw_hud(entity, language);
+        self.publish();
+    }
+
+    fn update_and_publish_all_windows(&mut self,
+                                      turn_id: u64,
+                                      knowledge: &DrawableKnowledgeLevel,
+                                      position: Coord,
+                                      messages: &MessageLog,
+                                      entity: EntityRef,
+                                      language: &Box<Language>) {
+
+        self.update_log_buffer(messages, language);
+        self.update_game_window_buffer(knowledge, turn_id, position);
+
+        self.draw_game_window();
+        self.draw_log();
+        self.draw_hud(entity, language);
+
+        self.publish();
+    }
+
+    fn publish_fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
+        self.fullscreen_menu(prelude, menu, state, language);
+        self.publish();
+    }
+
+    fn publish_fullscreen_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
+        self.fullscreen_log(message_log, offset, language);
+        self.publish();
+    }
+
+    fn publish_fullscreen_message(&mut self, message_type: MessageType, language: &Box<Language>) {
+        self.fullscreen_message(message_type, language);
+        self.publish();
+    }
+
+    fn publish_fullscreen_translated_message(&mut self, message: &Message, offset: usize) {
+        self.fullscreen_translated_message(message, offset);
+        self.publish();
+    }
 }
