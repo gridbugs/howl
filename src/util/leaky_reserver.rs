@@ -1,5 +1,6 @@
 use num::Integer;
 
+#[derive(Serialize, Deserialize)]
 pub struct LeakyReserver<T: Integer>(T);
 
 impl<T: Integer + Copy> LeakyReserver<T> {

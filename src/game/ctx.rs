@@ -19,6 +19,21 @@ impl EntityIdReserver {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct SerializableEntityIdReserver(LeakyReserver<EntityId>);
+
+impl From<EntityIdReserver> for SerializableEntityIdReserver {
+    fn from(r: EntityIdReserver) -> Self {
+        SerializableEntityIdReserver(r.0.into_inner())
+    }
+}
+
+impl From<SerializableEntityIdReserver> for EntityIdReserver {
+    fn from(r: SerializableEntityIdReserver) -> Self {
+        EntityIdReserver(RefCell::new(r.0))
+    }
+}
+
 enum MainMenuSelection {
     NewGame,
     Quit,
@@ -29,7 +44,6 @@ enum MainMenuSelection {
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     renderer: RefCell<Renderer>,
     input_source: Input,
-    entity_ids: EntityIdReserver,
     turn_id: u64,
     action_id: u64,
     pc_observer: Shadowcast,
@@ -51,14 +65,16 @@ pub struct GlobalIds {
 
 pub struct GameState {
     levels: LevelTable,
-    ids: Option<GlobalIds>,
+    global_ids: Option<GlobalIds>,
+    entity_ids: EntityIdReserver,
 }
 
 impl GameState {
     pub fn new() -> Self {
         GameState {
             levels: LevelTable::new(),
-            ids: None,
+            global_ids: None,
+            entity_ids: EntityIdReserver::new(),
         }
     }
 }
@@ -66,36 +82,37 @@ impl GameState {
 #[derive(Serialize, Deserialize)]
 pub struct SerializableGameState {
     levels: SerializableLevelTable,
-    ids: Option<GlobalIds>,
+    global_ids: Option<GlobalIds>,
+    entity_ids: SerializableEntityIdReserver,
 }
 
 impl From<GameState> for SerializableGameState {
     fn from(game_state: GameState) -> Self {
-        let GameState { levels, ids } = game_state;
+        let GameState { levels, global_ids, entity_ids } = game_state;
         SerializableGameState {
             levels: SerializableLevelTable::from(levels),
-            ids: ids,
+            global_ids: global_ids,
+            entity_ids: SerializableEntityIdReserver::from(entity_ids),
         }
     }
 }
 
 impl From<SerializableGameState> for GameState {
     fn from(game_state: SerializableGameState) -> Self {
-        let SerializableGameState { levels, ids } = game_state;
+        let SerializableGameState { levels, global_ids, entity_ids } = game_state;
         GameState {
             levels: LevelTable::from(levels),
-            ids: ids,
+            global_ids: global_ids,
+            entity_ids: EntityIdReserver::from(entity_ids),
         }
     }
 }
 
 impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<Renderer, Input> {
     pub fn new(renderer: Renderer, input_source: Input, seed: usize, width: usize, height: usize) -> Self {
-        let entity_ids = EntityIdReserver::new();
         GameCtx {
             renderer: RefCell::new(renderer),
             input_source: input_source.clone(),
-            entity_ids: entity_ids,
             turn_id: 0,
             action_id: 0,
             pc_observer: Shadowcast::new(),
@@ -169,7 +186,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
-        let GlobalIds { pc_id, level_id } = game_state.ids.expect("Uninitialised game state");
+        let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
 
         let level = game_state.levels.level_mut(level_id);
         level.ecs.insert_control_map(pc_id, control_map);
@@ -178,7 +195,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn game_loop(&mut self, game_state: &mut GameState) -> GameResult<()> {
         loop {
 
-            let GlobalIds { pc_id, level_id } = game_state.ids.expect("Uninitialised game state");
+            let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
 
             self.turn_id += 1;
 
@@ -201,7 +218,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         action_schedule: &mut self.action_schedule,
                         turn_schedule: &mut level.turn_schedule,
                         pc_observer: &self.pc_observer,
-                        entity_ids: &self.entity_ids,
+                        entity_ids: &game_state.entity_ids,
                         rng: &self.rng,
                         language: &self.language,
                     }.turn()?
@@ -231,7 +248,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn welcome_message(&self, game_state: &GameState) {
-        let GlobalIds { pc_id, level_id } = game_state.ids.expect("Unitialised game state");
+        let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Unitialised game state");
 
         let ref ecs = game_state.levels.level(level_id).ecs;
         ecs.message_log_borrow_mut(pc_id).unwrap().add(MessageType::Welcome);
@@ -255,7 +272,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn init_demo(&mut self, game_state: &mut GameState) {
 
-        let pc_id = self.entity_ids.new_id();
+        let pc_id = game_state.entity_ids.new_id();
 
         let mut action = EcsAction::new();
         prototypes::pc(action.entity_mut(pc_id), Coord::new(0, 0));
@@ -263,7 +280,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let level = Level::new_with_pc(TerrainType::DemoA,
                                        pc_id,
                                        &mut action,
-                                       &self.entity_ids,
+                                       &game_state.entity_ids,
                                        &self.rng,
                                        self.action_id);
 
@@ -271,34 +288,34 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let level_id = game_state.levels.add_level(level);
 
-        game_state.ids = Some(GlobalIds {
+        game_state.global_ids = Some(GlobalIds {
             pc_id: pc_id,
             level_id: level_id,
         });
     }
 
     fn switch_level(&mut self, level_switch: LevelSwitch, game_state: &mut GameState) {
-        let ids = game_state.ids.as_mut().expect("Unitialised game state");
+        let global_ids = game_state.global_ids.as_mut().expect("Unitialised game state");
 
         let mut pc_insert = EcsAction::new();
         let mut pc_remove = EcsAction::new();
 
         {
-            let current_level = game_state.levels.level_mut(ids.level_id);
-            pc_remove.remove_entity_by_id(ids.pc_id, &current_level.ecs);
+            let current_level = game_state.levels.level_mut(global_ids.level_id);
+            pc_remove.remove_entity_by_id(global_ids.pc_id, &current_level.ecs);
             current_level.commit_into(&mut pc_remove, &mut pc_insert, self.action_id);
         }
 
         self.action_id += 1;
 
         let new_level = Level::new_with_pc(level_switch.terrain_type,
-                                           ids.pc_id,
+                                           global_ids.pc_id,
                                            &mut pc_insert,
-                                           &self.entity_ids,
+                                           &game_state.entity_ids,
                                            &self.rng,
                                            self.action_id);
         self.action_id += 1;
 
-        ids.level_id = game_state.levels.add_level(new_level);
+        global_ids.level_id = game_state.levels.add_level(new_level);
     }
 }
