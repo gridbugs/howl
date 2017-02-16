@@ -44,8 +44,6 @@ enum MainMenuSelection {
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     renderer: RefCell<Renderer>,
     input_source: Input,
-    turn_id: u64,
-    action_id: u64,
     pc_observer: Shadowcast,
     behaviour_ctx: BehaviourCtx<Renderer>,
     rule_reactions: Vec<Reaction>,
@@ -67,6 +65,8 @@ pub struct GameState {
     levels: LevelTable,
     global_ids: Option<GlobalIds>,
     entity_ids: EntityIdReserver,
+    turn_id: u64,
+    action_id: u64,
 }
 
 impl GameState {
@@ -75,6 +75,8 @@ impl GameState {
             levels: LevelTable::new(),
             global_ids: None,
             entity_ids: EntityIdReserver::new(),
+            turn_id: 0,
+            action_id: 0,
         }
     }
 }
@@ -84,26 +86,32 @@ pub struct SerializableGameState {
     levels: SerializableLevelTable,
     global_ids: Option<GlobalIds>,
     entity_ids: SerializableEntityIdReserver,
+    turn_id: u64,
+    action_id: u64,
 }
 
 impl From<GameState> for SerializableGameState {
     fn from(game_state: GameState) -> Self {
-        let GameState { levels, global_ids, entity_ids } = game_state;
+        let GameState { levels, global_ids, entity_ids, turn_id, action_id } = game_state;
         SerializableGameState {
             levels: SerializableLevelTable::from(levels),
             global_ids: global_ids,
             entity_ids: SerializableEntityIdReserver::from(entity_ids),
+            turn_id: turn_id,
+            action_id: action_id,
         }
     }
 }
 
 impl From<SerializableGameState> for GameState {
     fn from(game_state: SerializableGameState) -> Self {
-        let SerializableGameState { levels, global_ids, entity_ids } = game_state;
+        let SerializableGameState { levels, global_ids, entity_ids, turn_id, action_id } = game_state;
         GameState {
             levels: LevelTable::from(levels),
             global_ids: global_ids,
             entity_ids: EntityIdReserver::from(entity_ids),
+            turn_id: turn_id,
+            action_id: action_id,
         }
     }
 }
@@ -113,8 +121,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         GameCtx {
             renderer: RefCell::new(renderer),
             input_source: input_source.clone(),
-            turn_id: 0,
-            action_id: 0,
             pc_observer: Shadowcast::new(),
             behaviour_ctx: BehaviourCtx::new(input_source),
             rule_reactions: Vec::new(),
@@ -197,15 +203,15 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
 
-            self.turn_id += 1;
+            game_state.turn_id += 1;
 
             let resolution = {
                 let level = game_state.levels.level_mut(level_id);
                 if let Some(turn_event) = level.turn_schedule.next() {
 
                     TurnEnv {
-                        turn_id: self.turn_id,
-                        action_id: &mut self.action_id,
+                        turn_id: game_state.turn_id,
+                        action_id: &mut game_state.action_id,
                         level_id: level_id,
                         entity_id: turn_event.event,
                         pc_id: pc_id,
@@ -282,9 +288,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                        &mut action,
                                        &game_state.entity_ids,
                                        &self.rng,
-                                       self.action_id);
+                                       game_state.action_id);
 
-        self.action_id += 1;
+        game_state.action_id += 1;
 
         let level_id = game_state.levels.add_level(level);
 
@@ -303,18 +309,18 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         {
             let current_level = game_state.levels.level_mut(global_ids.level_id);
             pc_remove.remove_entity_by_id(global_ids.pc_id, &current_level.ecs);
-            current_level.commit_into(&mut pc_remove, &mut pc_insert, self.action_id);
+            current_level.commit_into(&mut pc_remove, &mut pc_insert, game_state.action_id);
         }
 
-        self.action_id += 1;
+        game_state.action_id += 1;
 
         let new_level = Level::new_with_pc(level_switch.terrain_type,
                                            global_ids.pc_id,
                                            &mut pc_insert,
                                            &game_state.entity_ids,
                                            &self.rng,
-                                           self.action_id);
-        self.action_id += 1;
+                                           game_state.action_id);
+        game_state.action_id += 1;
 
         global_ids.level_id = game_state.levels.add_level(new_level);
     }
