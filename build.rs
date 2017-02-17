@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::path;
+use std::path::{Path, PathBuf};
 
 extern crate genecs;
 extern crate copy_dir;
@@ -11,42 +11,38 @@ extern crate rustc_serialize;
 mod gensh;
 
 fn main() {
-    gensh::generate_spatial_hash("sh.toml", format!("src{}spatial_hash{}generated.rs",
-                                                    path::MAIN_SEPARATOR,
-                                                    path::MAIN_SEPARATOR));
-    genecs::generate_ecs("ecs.toml", format!("src{}ecs{}generated.rs",
-                                             path::MAIN_SEPARATOR,
-                                             path::MAIN_SEPARATOR));
+    gensh::generate_spatial_hash("sh.toml", Path::new("src").join("spatial_hash").join("generated.rs"));
+    genecs::generate_ecs("ecs.toml", Path::new("src").join("ecs").join("generated.rs"));
+
     copy_resources("resources");
     copy_resources("user");
 }
 
-fn target_dir_names() -> Result<Vec<String>, env::VarError> {
+fn target_dirs() -> Result<Vec<PathBuf>, env::VarError> {
     let target = env::var("TARGET")?;
     let host = env::var("HOST")?;
     let profile = env::var("PROFILE")?;
 
     if target == host {
         Ok(vec![
-            format!("target{}{}", path::MAIN_SEPARATOR, profile).to_string(),
-            format!("target{}{}{}{}", path::MAIN_SEPARATOR, target, path::MAIN_SEPARATOR, profile).to_string(),
+           Path::new("target").join(&profile),
+           Path::new("target").join(&target).join(&profile),
         ])
     } else {
-        Ok(vec![format!("target{}{}{}{}", path::MAIN_SEPARATOR, target, path::MAIN_SEPARATOR, profile).to_string()])
+        Ok(vec![Path::new("target").join(&target).join(&profile)])
     }
 }
 
 fn copy_resources(resources_dir_name: &str) {
-    let target_dir_names = target_dir_names().expect("Failed to locate target directory");
 
-    for target_dir_name in target_dir_names {
+    for target_dir in target_dirs().expect("Failed to locate target directory") {
 
-        if !path::PathBuf::from(&target_dir_name).is_dir() {
+        if !target_dir.is_dir() {
             continue;
         }
 
-        let dest_name = format!("{}{}{}", target_dir_name, path::MAIN_SEPARATOR, resources_dir_name);
-        let dest_path = path::PathBuf::from(dest_name);
+        let dest_path = target_dir.join(resources_dir_name);
+
         if dest_path.is_dir() {
             fs::remove_dir_all(&dest_path).expect("Failed to remove old resources directory");
         }
