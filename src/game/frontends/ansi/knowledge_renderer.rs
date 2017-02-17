@@ -29,10 +29,142 @@ const UNSEEN_BG: Rgb24 = Rgb24 { red: 0, green: 0, blue: 0 };
 const UNSEEN_FG: Rgb24 = Rgb24 { red: 0x80, green: 0x80, blue: 0x80 };
 
 const TEXT_BG: AnsiColour = AnsiColour::Rgb(ansi::RgbColour { red: 0, green: 0, blue: 0 });
+const GAME_BG: AnsiColour = AnsiColour::Rgb(ansi::RgbColour { red: 0, green: 0, blue: 0 });
 const CLEAR_COLOUR: AnsiColour = ansi::colours::BLACK;
 
 const MENU_SELECTED_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MENU_DESELECTED_COLOUR: Rgb24 = Rgb24 { red: 127, green: 127, blue: 127 };
+
+fn to_ansi_info(cell: &CellDrawInfo) -> AnsiInfo {
+    let mut info = AnsiInfo::default();
+
+    if let Some(bg_tile_type) = cell.background {
+        let bg_tile = resolve_tile::resolve_tile(bg_tile_type);
+        let tile = simple_tile(bg_tile, cell.front);
+        if let Some(c) = tile.background_colour() {
+            info.bg = c;
+        }
+        if let Some(c) = tile.character() {
+            info.ch = c;
+        }
+        if let Some(s) = tile.style() {
+            info.style = s;
+        }
+    }
+
+    if let Some(fg_tile_type) = cell.foreground {
+        let fg_tile = resolve_tile::resolve_tile(fg_tile_type);
+        let tile = simple_tile(fg_tile, cell.front);
+        if let Some(c) = tile.foreground_colour() {
+            info.fg = c;
+        }
+        if let Some(c) = tile.character() {
+            info.ch = c;
+        }
+        if let Some(s) = tile.style() {
+            info.style = s;
+        }
+    }
+
+    if cell.moon {
+        info.bg = MOON_COLOUR;
+    }
+
+    if let Some(health_overlay) = cell.health_overlay {
+        if health_overlay.status() != HealthStatus::Healthy {
+            info.bg = WOUND_OVERLAY_COLOUR;
+        }
+    }
+
+    if !cell.visible {
+        info.fg = ansi::AnsiColour::new_from_rgb24(UNSEEN_FG);
+        info.bg = ansi::AnsiColour::new_from_rgb24(UNSEEN_BG);
+    }
+
+    info
+}
+
+fn simple_tile(tile: ComplexTile, is_front: bool) -> SimpleTile {
+    match tile {
+        ComplexTile::Simple(s) => s,
+        ComplexTile::Wall { front, back } => {
+            if is_front {
+                front
+            } else {
+                back
+            }
+        }
+    }
+}
+
+fn render_message_part(window: &mut ansi::Window, part: &MessagePart, cursor: Coord) -> Coord {
+    match part.as_text() {
+        Some(text_part) => render_text_message_part(window, text_part, MESSAGE_LOG_PLAIN_COLOUR, cursor),
+        None => cursor,
+    }
+}
+
+fn render_text_message_part(window: &mut ansi::Window, part: &TextMessagePart, plain_colour: Rgb24, mut cursor: Coord) -> Coord {
+    let (colour, string) = match *part {
+        TextMessagePart::Plain(ref s) => (plain_colour, s),
+        TextMessagePart::Colour(c, ref s) => (c, s),
+    };
+
+    let ansi_colour = ansi::AnsiColour::new_from_rgb24(colour);
+
+    for ch in string.chars() {
+        if cursor.x >= window.width() as isize {
+            break;
+        }
+
+        assert!(cursor.x < window.width() as isize && cursor.y < window.height() as isize,
+            "Cursor {:?} out of bounds ({}x{})", cursor, window.width(), window.height());
+
+        window.get_cell(cursor.x, cursor.y).set(ch, ansi_colour, TEXT_BG, ansi::styles::NONE);
+
+        cursor.x += 1;
+    }
+
+    cursor
+
+}
+
+fn clear_to_line_end(window: &mut ansi::Window, mut cursor: Coord) -> Coord {
+    while cursor.x < window.width() as isize {
+        window.get_cell(cursor.x, cursor.y).set(' ', TEXT_BG, TEXT_BG, ansi::styles::NONE);
+
+        cursor.x += 1;
+    }
+
+    cursor
+}
+
+fn render_message(window: &mut ansi::Window, message: &Message, mut cursor: Coord) -> Coord {
+    for part in message {
+        cursor = render_message_part(window, part, cursor);
+    }
+
+    cursor = clear_to_line_end(window, cursor);
+
+    cursor.x = 0;
+    cursor.y += 1;
+
+    cursor
+}
+
+fn render_text_message(window: &mut ansi::Window, message: &TextMessage, plain_colour: Rgb24, mut cursor: Coord) -> Coord {
+    for part in message {
+        cursor = render_text_message_part(window, part, plain_colour, cursor);
+    }
+
+    cursor = clear_to_line_end(window, cursor);
+
+    cursor.x = 0;
+    cursor.y += 1;
+
+    cursor
+}
+
 
 struct AnsiInfo {
     ch: char,
@@ -44,7 +176,7 @@ struct AnsiInfo {
 impl Default for AnsiInfo {
     fn default() -> Self {
         AnsiInfo {
-            bg: AnsiColour::Rgb(ansi::RgbColour { red: 0, green: 0, blue: 0 }),
+            bg: GAME_BG,
             fg: ansi::colours::DARK_GREY,
             ch: ' ',
             style: ansi::styles::NONE,
@@ -52,17 +184,20 @@ impl Default for AnsiInfo {
     }
 }
 
-pub struct AnsiKnowledgeRenderer {
+pub struct AnsiKnowledgeRendererInner {
     window_allocator: Box<ansi::WindowAllocator>,
     window: ansi::Window,
-    buffer: TileBuffer,
     scroll_position: Coord,
     message_log_window: ansi::Window,
-    message_log: Vec<Message>,
     total_width: usize,
     total_height: usize,
     top_left: Coord,
     hud_window: ansi::Window,
+}
+
+pub struct AnsiKnowledgeRenderer {
+    renderer: AnsiKnowledgeRendererInner,
+    buffers: RendererBuffers,
 }
 
 pub enum AnsiKnowledgeRendererError {
@@ -72,7 +207,7 @@ pub enum AnsiKnowledgeRendererError {
     },
 }
 
-impl AnsiKnowledgeRenderer {
+impl AnsiKnowledgeRendererInner {
     pub fn new(window_allocator: Box<ansi::WindowAllocator>,
                game_width: usize,
                game_height: usize) -> result::Result<Self, AnsiKnowledgeRendererError> {
@@ -98,11 +233,6 @@ impl AnsiKnowledgeRenderer {
             MESSAGE_LOG_NUM_LINES,
             ansi::BufferType::Double);
 
-        let mut message_log = Vec::new();
-        for _ in 0..MESSAGE_LOG_NUM_LINES {
-            message_log.push(Message::new());
-        }
-
         let hud_window = window_allocator.make_window(
             ANSI_GAME_WINDOW_X as isize,
             (ANSI_GAME_WINDOW_Y + game_height + HUD_PADDING_TOP) as isize,
@@ -113,184 +243,16 @@ impl AnsiKnowledgeRenderer {
         window_allocator.fill(CLEAR_COLOUR);
         window_allocator.flush();
 
-        Ok(AnsiKnowledgeRenderer {
+        Ok(AnsiKnowledgeRendererInner {
             window_allocator: window_allocator,
             window: window,
-            buffer: TileBuffer::new(game_width, game_height),
             scroll_position: Coord::new(0, 0),
             message_log_window: message_log_window,
-            message_log: message_log,
             total_width: game_width,
             total_height: game_height + HUD_TOTAL_HEIGHT + MESSAGE_LOG_PADDING_TOP + MESSAGE_LOG_NUM_LINES,
             top_left: Coord::new(ANSI_GAME_WINDOW_X as isize, ANSI_GAME_WINDOW_Y as isize),
             hud_window: hud_window,
         })
-    }
-
-    fn simple_tile(tile: ComplexTile, is_front: bool) -> SimpleTile {
-        match tile {
-            ComplexTile::Simple(s) => s,
-            ComplexTile::Wall { front, back } => {
-                if is_front {
-                    front
-                } else {
-                    back
-                }
-            }
-        }
-    }
-
-    fn to_ansi_info(cell: &CellDrawInfo) -> AnsiInfo {
-        let mut info = AnsiInfo::default();
-
-        if let Some(bg_tile_type) = cell.background {
-            let bg_tile = resolve_tile::resolve_tile(bg_tile_type);
-            let tile = Self::simple_tile(bg_tile, cell.front);
-            if let Some(c) = tile.background_colour() {
-                info.bg = c;
-            }
-            if let Some(c) = tile.character() {
-                info.ch = c;
-            }
-            if let Some(s) = tile.style() {
-                info.style = s;
-            }
-        }
-
-        if let Some(fg_tile_type) = cell.foreground {
-            let fg_tile = resolve_tile::resolve_tile(fg_tile_type);
-            let tile = Self::simple_tile(fg_tile, cell.front);
-            if let Some(c) = tile.foreground_colour() {
-                info.fg = c;
-            }
-            if let Some(c) = tile.character() {
-                info.ch = c;
-            }
-            if let Some(s) = tile.style() {
-                info.style = s;
-            }
-        }
-
-        if cell.moon {
-            info.bg = MOON_COLOUR;
-        }
-
-        if let Some(health_overlay) = cell.health_overlay {
-            if health_overlay.status() != HealthStatus::Healthy {
-                info.bg = WOUND_OVERLAY_COLOUR;
-            }
-        }
-
-        if !cell.visible {
-            info.fg = ansi::AnsiColour::new_from_rgb24(UNSEEN_FG);
-            info.bg = ansi::AnsiColour::new_from_rgb24(UNSEEN_BG);
-        }
-
-        info
-    }
-
-    fn draw_internal(&mut self) {
-        for (coord, cell) in izip!(self.buffer.coord_iter(), self.buffer.iter()) {
-            let info = Self::to_ansi_info(cell);
-            self.window.get_cell(coord.x, coord.y).set(info.ch, info.fg, info.bg, info.style);
-        }
-    }
-
-    fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
-        if let Some(ref aim_line) = overlay.aim_line {
-            for coord in aim_line.iter() {
-                let screen_coord = self.world_to_screen(coord);
-                if let Some(cell) = self.buffer.get(screen_coord) {
-                    let mut info = Self::to_ansi_info(cell);
-                    info.bg = AIM_LINE_COLOUR;
-                    self.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
-                }
-            }
-        } else if let Some(examine_cursor) = overlay.examine_cursor {
-            let screen_coord = self.world_to_screen(examine_cursor);
-            if let Some(cell) = self.buffer.get(screen_coord) {
-                let mut info = Self::to_ansi_info(cell);
-                info.bg = AIM_LINE_COLOUR;
-                self.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
-            }
-        }
-    }
-
-    fn render_message_part(window: &mut ansi::Window, part: &MessagePart, cursor: Coord) -> Coord {
-        match part.as_text() {
-            Some(text_part) => Self::render_text_message_part(window, text_part, MESSAGE_LOG_PLAIN_COLOUR, cursor),
-            None => cursor,
-        }
-    }
-
-    fn render_text_message_part(window: &mut ansi::Window, part: &TextMessagePart, plain_colour: Rgb24, mut cursor: Coord) -> Coord {
-        let (colour, string) = match *part {
-            TextMessagePart::Plain(ref s) => (plain_colour, s),
-            TextMessagePart::Colour(c, ref s) => (c, s),
-        };
-
-        let ansi_colour = ansi::AnsiColour::new_from_rgb24(colour);
-
-        for ch in string.chars() {
-            if cursor.x >= window.width() as isize {
-                break;
-            }
-
-            assert!(cursor.x < window.width() as isize && cursor.y < window.height() as isize,
-                "Cursor {:?} out of bounds ({}x{})", cursor, window.width(), window.height());
-
-            window.get_cell(cursor.x, cursor.y).set(ch, ansi_colour, TEXT_BG, ansi::styles::NONE);
-
-            cursor.x += 1;
-        }
-
-        cursor
-
-    }
-
-    fn clear_to_line_end(window: &mut ansi::Window, mut cursor: Coord) -> Coord {
-        while cursor.x < window.width() as isize {
-            window.get_cell(cursor.x, cursor.y).set(' ', TEXT_BG, TEXT_BG, ansi::styles::NONE);
-
-            cursor.x += 1;
-        }
-
-        cursor
-    }
-
-    fn render_message(window: &mut ansi::Window, message: &Message, mut cursor: Coord) -> Coord {
-        for part in message {
-            cursor = Self::render_message_part(window, part, cursor);
-        }
-
-        cursor = Self::clear_to_line_end(window, cursor);
-
-        cursor.x = 0;
-        cursor.y += 1;
-
-        cursor
-    }
-
-    fn render_text_message(window: &mut ansi::Window, message: &TextMessage, plain_colour: Rgb24, mut cursor: Coord) -> Coord {
-        for part in message {
-            cursor = Self::render_text_message_part(window, part, plain_colour, cursor);
-        }
-
-        cursor = Self::clear_to_line_end(window, cursor);
-
-        cursor.x = 0;
-        cursor.y += 1;
-
-        cursor
-    }
-
-    fn draw_message_log_internal(&mut self) {
-
-        let mut cursor = Coord::new(0, 0);
-
-        for line in &self.message_log {
-            cursor = Self::render_message(&mut self.message_log_window, line, cursor);
-       }
     }
 
     fn scroll_bar(&self, num_messages: usize, offset: usize, from_top: bool) -> Option<(Coord, usize)> {
@@ -327,14 +289,14 @@ impl AnsiKnowledgeRenderer {
         let end_idx = cmp::min(wrapped.len(), offset + self.total_height);
 
         for line in &wrapped[offset..end_idx] {
-            cursor = Self::render_text_message(window, line, MESSAGE_LOG_PLAIN_COLOUR, cursor);
+            cursor = render_text_message(window, line, MESSAGE_LOG_PLAIN_COLOUR, cursor);
         }
 
         let ret = cursor;
 
         let message = Message::new();
         while cursor.y < self.fullscreen_log_num_rows() as isize {
-            cursor = Self::render_message(window, &message, cursor);
+            cursor = render_message(window, &message, cursor);
         }
 
         if let Some((position, size)) = self.scroll_bar(wrapped.len(), offset, true) {
@@ -353,45 +315,97 @@ impl AnsiKnowledgeRenderer {
         self.window_allocator.fill(CLEAR_COLOUR);
         window.delete();
     }
+
+    fn fullscreen_log_num_rows(&self) -> usize {
+        self.total_height
+    }
+}
+
+impl AnsiKnowledgeRenderer {
+    pub fn new(window_allocator: Box<ansi::WindowAllocator>,
+               game_width: usize,
+               game_height: usize) -> result::Result<Self, AnsiKnowledgeRendererError> {
+
+        Ok(AnsiKnowledgeRenderer {
+            renderer: AnsiKnowledgeRendererInner::new(window_allocator, game_width, game_height)?,
+            buffers: RendererBuffers::new(game_width, game_height, MESSAGE_LOG_NUM_LINES),
+        })
+    }
+
+    fn draw_message_log_internal(&mut self) {
+
+        let mut cursor = Coord::new(0, 0);
+
+        for line in &self.buffers.message_log {
+            cursor = render_message(&mut self.renderer.message_log_window, line, cursor);
+       }
+    }
+
+    fn draw_internal(&mut self) {
+        for (coord, cell) in izip!(self.buffers.tiles.coord_iter(), self.buffers.tiles.iter()) {
+            let info = to_ansi_info(cell);
+            self.renderer.window.get_cell(coord.x, coord.y).set(info.ch, info.fg, info.bg, info.style);
+        }
+    }
+
+    fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
+        if let Some(ref aim_line) = overlay.aim_line {
+            for coord in aim_line.iter() {
+                let screen_coord = self.world_to_screen(coord);
+                if let Some(cell) = self.buffers.tiles.get(screen_coord) {
+                    let mut info = to_ansi_info(cell);
+                    info.bg = AIM_LINE_COLOUR;
+                    self.renderer.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
+                }
+            }
+        } else if let Some(examine_cursor) = overlay.examine_cursor {
+            let screen_coord = self.world_to_screen(examine_cursor);
+            if let Some(cell) = self.buffers.tiles.get(screen_coord) {
+                let mut info = to_ansi_info(cell);
+                info.bg = AIM_LINE_COLOUR;
+                self.renderer.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
+            }
+        }
+    }
 }
 
 impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
     fn width(&self) -> usize {
-        self.window.width()
+        self.renderer.window.width()
     }
 
     fn height(&self) -> usize {
-        self.window.height()
+        self.renderer.window.height()
     }
 
     fn world_offset(&self) -> Coord {
-        self.scroll_position
+        self.renderer.scroll_position
     }
 
     fn update_game_window_buffer(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, position: Coord) {
-        self.scroll_position = self.centre_offset(position);
-        self.buffer.update(knowledge, turn_id, self.scroll_position);
+        self.renderer.scroll_position = self.centre_offset(position);
+        self.buffers.tiles.update(knowledge, turn_id, self.renderer.scroll_position);
     }
 
     fn draw_game_window(&mut self) {
         self.draw_internal();
-        self.window.flush();
+        self.renderer.window.flush();
     }
 
     fn draw_game_window_with_overlay(&mut self, overlay: &RenderOverlay) {
         self.draw_internal();
         self.draw_overlay_internal(overlay);
-        self.window.flush();
+        self.renderer.window.flush();
     }
 
     fn draw_log(&mut self) {
         self.draw_message_log_internal();
-        self.message_log_window.flush();
+        self.renderer.message_log_window.flush();
     }
 
     fn update_log_buffer(&mut self, messages: &MessageLog, language: &Box<Language>) {
-        for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
+        for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.buffers.message_log) {
             message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
@@ -399,7 +413,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
     fn fullscreen_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
 
-        let mut window = self.create_fullscreen_window();
+        let mut window = self.renderer.create_fullscreen_window();
 
         let mut cursor = Coord::new(0, 0);
         let mut message = Message::new();
@@ -407,15 +421,15 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         for log_entry in messages {
             message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
-            cursor = Self::render_message(&mut window, &message, cursor);
+            cursor = render_message(&mut window, &message, cursor);
         }
 
         message.clear();
         while cursor.y < self.fullscreen_log_num_rows() as isize {
-            cursor = Self::render_message(&mut window, &message, cursor);
+            cursor = render_message(&mut window, &message, cursor);
         }
 
-        if let Some((position, size)) = self.scroll_bar(message_log.len(), offset, false) {
+        if let Some((position, size)) = self.renderer.scroll_bar(message_log.len(), offset, false) {
             let scroll_bar_colour = ansi::AnsiColour::new_from_rgb24(SCROLL_BAR_COLOUR);
             for i in 0..(size as isize) {
                 let coord = position + Coord::new(0, i);
@@ -423,24 +437,24 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
             }
         }
 
-        self.delete_window(window);
+        self.renderer.delete_window(window);
     }
 
     fn fullscreen_log_num_rows(&self) -> usize {
-        self.total_height
+        self.renderer.fullscreen_log_num_rows()
     }
 
     fn fullscreen_log_num_cols(&self) -> usize {
-        self.total_width - 1
+        self.renderer.total_width - 1
     }
 
     fn fullscreen_wrapped_translated_message(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
 
-        let mut window = self.create_fullscreen_window();
+        let mut window = self.renderer.create_fullscreen_window();
 
-        self.display_wrapped_message_fullscreen_internal(&mut window, wrapped, offset);
+        self.renderer.display_wrapped_message_fullscreen_internal(&mut window, wrapped, offset);
 
-        self.delete_window(window);
+        self.renderer.delete_window(window);
     }
 
     fn draw_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
@@ -453,25 +467,25 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
         let health_text = format!(" ❤ {}/{}", hit_points.current(), hit_points.max());
 
         for ch in health_text.chars() {
-            if cursor >= self.hud_window.width() as isize {
+            if cursor >= self.renderer.hud_window.width() as isize {
                 break;
             }
 
-            self.hud_window.get_cell(cursor, 0).set(ch, ansi_colour, TEXT_BG, ansi::styles::NONE);
+            self.renderer.hud_window.get_cell(cursor, 0).set(ch, ansi_colour, TEXT_BG, ansi::styles::NONE);
             cursor += 1;
         }
 
-        while cursor < self.hud_window.width() as isize {
-            self.hud_window.get_cell(cursor, 0).set(' ', TEXT_BG, TEXT_BG, ansi::styles::NONE);
+        while cursor < self.renderer.hud_window.width() as isize {
+            self.renderer.hud_window.get_cell(cursor, 0).set(' ', TEXT_BG, TEXT_BG, ansi::styles::NONE);
             cursor += 1;
         }
 
-        self.hud_window.flush();
+        self.renderer.hud_window.flush();
     }
 
     fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
 
-        let mut window = self.create_fullscreen_window();
+        let mut window = self.renderer.create_fullscreen_window();
         let mut message = Message::new();
         let mut wrapped = Vec::new();
 
@@ -480,7 +494,7 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
 
             self.fullscreen_wrap(&message, &mut wrapped);
 
-            let mut cursor = self.display_wrapped_message_fullscreen_internal(&mut window, &wrapped, 0);
+            let mut cursor = self.renderer.display_wrapped_message_fullscreen_internal(&mut window, &wrapped, 0);
             cursor.y += 1;
 
             assert!(cursor.x < window.width() as isize && cursor.y < window.height() as isize,
@@ -508,10 +522,10 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
                 "Cursor {:?} out of bounds ({}x{})", cursor, window.width(), window.height());
 
             assert!(wrapped.len() > 0, "{:?} {:?}", message, wrapped);
-            cursor = Self::render_text_message(&mut window, &wrapped[0], colour, cursor);
+            cursor = render_text_message(&mut window, &wrapped[0], colour, cursor);
         }
 
-        self.delete_window(window);
+        self.renderer.delete_window(window);
     }
 
     fn log_num_lines(&self) -> usize {

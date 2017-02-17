@@ -24,6 +24,7 @@ mod terrain;
 mod turn_schedule;
 mod menu;
 mod config;
+mod renderer_buffers;
 
 pub use self::knowledge::*;
 pub use self::behaviour::*;
@@ -50,6 +51,7 @@ pub use self::terrain::*;
 pub use self::turn_schedule::*;
 pub use self::menu::*;
 pub use self::config::*;
+pub use self::renderer_buffers::*;
 
 pub mod data;
 pub mod prototypes;

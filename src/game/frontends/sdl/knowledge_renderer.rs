@@ -88,11 +88,6 @@ struct SdlCellInfo {
     health_overlay: Option<HitPoints>,
 }
 
-struct SdlKnowledgeRendererBuffers {
-    tiles: TileBuffer,
-    message_log: Vec<Message>,
-}
-
 struct GameTextures {
     colour: Texture,
     greyscale: Texture,
@@ -126,7 +121,7 @@ pub struct SdlKnowledgeRendererInternal<'a, 'b> {
 }
 
 pub struct SdlKnowledgeRenderer<'a, 'b> {
-    buffers: SdlKnowledgeRendererBuffers,
+    buffers: RendererBuffers,
     renderer: SdlKnowledgeRendererInternal<'a, 'b>,
     textures: GameTextures,
 }
@@ -148,20 +143,6 @@ impl GameTextures {
         GameTextures {
             colour: tile_texture,
             greyscale: greyscale_tile_texture,
-        }
-    }
-}
-
-impl SdlKnowledgeRendererBuffers {
-    fn new(game_width: usize, game_height: usize) -> Self {
-        let mut message_log = Vec::new();
-        for _ in 0..MESSAGE_LOG_NUM_LINES {
-            message_log.push(Message::new());
-        }
-
-        SdlKnowledgeRendererBuffers {
-            tiles: TileBuffer::new(game_width, game_height),
-            message_log: message_log,
         }
     }
 }
@@ -538,7 +519,7 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
         let renderer = SdlKnowledgeRendererInternal::new(video, title, game_width, game_height,
                                                          tileset, hud_path, hud, font, scale)?;
 
-        let buffers = SdlKnowledgeRendererBuffers::new(game_width, game_height);
+        let buffers = RendererBuffers::new(game_width, game_height, MESSAGE_LOG_NUM_LINES);
 
         let game_textures = GameTextures::new(&renderer.sdl_renderer, tile_path);
 
