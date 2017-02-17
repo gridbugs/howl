@@ -35,53 +35,55 @@ const CLEAR_COLOUR: AnsiColour = ansi::colours::BLACK;
 const MENU_SELECTED_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MENU_DESELECTED_COLOUR: Rgb24 = Rgb24 { red: 127, green: 127, blue: 127 };
 
-fn to_ansi_info(cell: &CellDrawInfo) -> AnsiInfo {
-    let mut info = AnsiInfo::default();
+impl<'a> From<&'a CellDrawInfo> for AnsiInfo {
+    fn from(cell: &'a CellDrawInfo) -> Self {
+        let mut info = AnsiInfo::default();
 
-    if let Some(bg_tile_type) = cell.background {
-        let bg_tile = resolve_tile::resolve_tile(bg_tile_type);
-        let tile = simple_tile(bg_tile, cell.front);
-        if let Some(c) = tile.background_colour() {
-            info.bg = c;
+        if let Some(bg_tile_type) = cell.background {
+            let bg_tile = resolve_tile::resolve_tile(bg_tile_type);
+            let tile = simple_tile(bg_tile, cell.front);
+            if let Some(c) = tile.background_colour() {
+                info.bg = c;
+            }
+            if let Some(c) = tile.character() {
+                info.ch = c;
+            }
+            if let Some(s) = tile.style() {
+                info.style = s;
+            }
         }
-        if let Some(c) = tile.character() {
-            info.ch = c;
+
+        if let Some(fg_tile_type) = cell.foreground {
+            let fg_tile = resolve_tile::resolve_tile(fg_tile_type);
+            let tile = simple_tile(fg_tile, cell.front);
+            if let Some(c) = tile.foreground_colour() {
+                info.fg = c;
+            }
+            if let Some(c) = tile.character() {
+                info.ch = c;
+            }
+            if let Some(s) = tile.style() {
+                info.style = s;
+            }
         }
-        if let Some(s) = tile.style() {
-            info.style = s;
+
+        if cell.moon {
+            info.bg = MOON_COLOUR;
         }
+
+        if let Some(health_overlay) = cell.health_overlay {
+            if health_overlay.status() != HealthStatus::Healthy {
+                info.bg = WOUND_OVERLAY_COLOUR;
+            }
+        }
+
+        if !cell.visible {
+            info.fg = ansi::AnsiColour::new_from_rgb24(UNSEEN_FG);
+            info.bg = ansi::AnsiColour::new_from_rgb24(UNSEEN_BG);
+        }
+
+        info
     }
-
-    if let Some(fg_tile_type) = cell.foreground {
-        let fg_tile = resolve_tile::resolve_tile(fg_tile_type);
-        let tile = simple_tile(fg_tile, cell.front);
-        if let Some(c) = tile.foreground_colour() {
-            info.fg = c;
-        }
-        if let Some(c) = tile.character() {
-            info.ch = c;
-        }
-        if let Some(s) = tile.style() {
-            info.style = s;
-        }
-    }
-
-    if cell.moon {
-        info.bg = MOON_COLOUR;
-    }
-
-    if let Some(health_overlay) = cell.health_overlay {
-        if health_overlay.status() != HealthStatus::Healthy {
-            info.bg = WOUND_OVERLAY_COLOUR;
-        }
-    }
-
-    if !cell.visible {
-        info.fg = ansi::AnsiColour::new_from_rgb24(UNSEEN_FG);
-        info.bg = ansi::AnsiColour::new_from_rgb24(UNSEEN_BG);
-    }
-
-    info
 }
 
 fn simple_tile(tile: ComplexTile, is_front: bool) -> SimpleTile {
@@ -343,7 +345,7 @@ impl AnsiKnowledgeRenderer {
 
     fn draw_internal(&mut self) {
         for (coord, cell) in izip!(self.buffers.tiles.coord_iter(), self.buffers.tiles.iter()) {
-            let info = to_ansi_info(cell);
+            let info = AnsiInfo::from(cell);
             self.renderer.window.get_cell(coord.x, coord.y).set(info.ch, info.fg, info.bg, info.style);
         }
     }
@@ -353,7 +355,7 @@ impl AnsiKnowledgeRenderer {
             for coord in aim_line.iter() {
                 let screen_coord = self.world_to_screen(coord);
                 if let Some(cell) = self.buffers.tiles.get(screen_coord) {
-                    let mut info = to_ansi_info(cell);
+                    let mut info = AnsiInfo::from(cell);
                     info.bg = AIM_LINE_COLOUR;
                     self.renderer.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
                 }
@@ -361,7 +363,7 @@ impl AnsiKnowledgeRenderer {
         } else if let Some(examine_cursor) = overlay.examine_cursor {
             let screen_coord = self.world_to_screen(examine_cursor);
             if let Some(cell) = self.buffers.tiles.get(screen_coord) {
-                let mut info = to_ansi_info(cell);
+                let mut info = AnsiInfo::from(cell);
                 info.bg = AIM_LINE_COLOUR;
                 self.renderer.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
             }
