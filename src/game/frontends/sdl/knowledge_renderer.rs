@@ -15,7 +15,7 @@ use sdl2::surface::Surface;
 use ecs::*;
 use game::*;
 use game::data::*;
-use game::frontends::sdl::{Tileset, ExtraTileType, Hud};
+use game::frontends::sdl::{Tileset, Hud};
 
 use coord::Coord;
 use colour::{Rgb24, Rgba32};
@@ -42,6 +42,44 @@ const HEALTH_BAR_HEIGHT_PX: usize = 2;
 const MENU_SELECTED_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MENU_DESELECTED_COLOUR: Rgb24 = Rgb24 { red: 127, green: 127, blue: 127 };
 
+fn rgb24_to_sdl_colour(rgb24: Rgb24) -> Color {
+    Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
+}
+
+fn rgba32_to_sdl_colour(rgba32: Rgba32) -> Color {
+    Color::RGBA(rgba32.red, rgba32.green, rgba32.blue, rgba32.alpha)
+}
+
+fn create_greyscale_tile_texture<P: AsRef<path::Path>>(renderer: &Renderer, tile_path: P) -> result::Result<Texture, String> {
+    let tile_surface = Surface::from_file(tile_path)?;
+
+    let size = (tile_surface.width() * tile_surface.height()) as usize;
+
+    let pixels = unsafe {
+        let pixels_ptr = (&mut *tile_surface.raw()).pixels as *mut u32;
+        slice::from_raw_parts_mut(pixels_ptr, size)
+    };
+
+    for pixel in pixels.iter_mut() {
+
+        const R: usize = 0;
+        const G: usize = 1;
+        const B: usize = 2;
+
+        let mut arr = unsafe { mem::transmute::<u32, [u8; 4]>(*pixel) };
+        let max = cmp::max(arr[R], cmp::max(arr[G], arr[B])) as u32;
+        let darkened = ((max * 1) / 3) as u8;
+
+        arr[R] = darkened;
+        arr[G] = darkened;
+        arr[B] = darkened;
+
+        *pixel = unsafe { mem::transmute::<[u8; 4], u32>(arr) };
+    }
+
+    renderer.create_texture_from_surface(tile_surface).map_err(|e| format!("{}", e))
+}
+
 struct SdlCellInfo {
     fg: Option<Rect>,
     bg: Option<Rect>,
@@ -50,35 +88,47 @@ struct SdlCellInfo {
     health_overlay: Option<HitPoints>,
 }
 
-pub struct SdlKnowledgeRenderer<'a> {
-    buffer: TileBuffer,
+struct SdlKnowledgeRendererBuffers {
+    tiles: TileBuffer,
+    message_log: Vec<Message>,
+}
+
+struct GameTextures {
+    colour: Texture,
+    greyscale: Texture,
+}
+
+pub struct SdlKnowledgeRendererInternal<'a, 'b> {
     sdl_renderer: Renderer<'static>,
-    tile_texture: Texture,
-    greyscale_tile_texture: Texture,
-    font: Font<'a>,
+    font: Font<'a, 'b>,
+    tileset: Tileset,
+    hud_texture: Texture,
+    hud: Hud,
     width: usize,
     height: usize,
     tile_width_px: usize,
     tile_height_px: usize,
     game_width_px: usize,
     game_height_px: usize,
-    width_px: usize,
-    height_px: usize,
-    tileset: Tileset,
+    total_width_px: usize,
+    total_height_px: usize,
     clear_colour: Color,
     game_rect: Rect,
     screen_rect: Rect,
     message_log_position: Coord,
     message_log_rect: Rect,
-    message_log: Vec<Message>,
     display_log_num_lines: usize,
     display_log_num_cols: usize,
     scroll_position: Coord,
     hud_position: Coord,
-    hud_texture: Texture,
-    hud: Hud,
     hud_rect: Rect,
     scale: usize,
+}
+
+pub struct SdlKnowledgeRenderer<'a, 'b> {
+    buffers: SdlKnowledgeRendererBuffers,
+    renderer: SdlKnowledgeRendererInternal<'a, 'b>,
+    textures: GameTextures,
 }
 
 #[derive(Debug)]
@@ -89,54 +139,65 @@ pub enum SdlKnowledgeRendererError {
     HudLoadFailure,
 }
 
-impl<'a> SdlKnowledgeRenderer<'a> {
+impl GameTextures {
+    fn new<P: AsRef<path::Path>>(renderer: &Renderer, path: P) -> Self {
+        let tile_texture = renderer.load_texture(&path).expect("Failed to load texture");
+        let greyscale_tile_texture = create_greyscale_tile_texture(renderer, path)
+            .expect("Failed to create greyscale texture");
 
-    fn create_greyscale_tile_texture(renderer: &Renderer, tile_path: &path::PathBuf) -> result::Result<Texture, String> {
-        let tile_surface = Surface::from_file(&tile_path)?;
+        GameTextures {
+            colour: tile_texture,
+            greyscale: greyscale_tile_texture,
+        }
+    }
+}
 
-        let size = (tile_surface.width() * tile_surface.height()) as usize;
-
-        let pixels = unsafe {
-            let pixels_ptr = (&mut *tile_surface.raw()).pixels as *mut u32;
-            slice::from_raw_parts_mut(pixels_ptr, size)
-        };
-
-        for pixel in pixels.iter_mut() {
-
-            const R: usize = 0;
-            const G: usize = 1;
-            const B: usize = 2;
-
-            let mut arr = unsafe { mem::transmute::<u32, [u8; 4]>(*pixel) };
-            let max = cmp::max(arr[R], cmp::max(arr[G], arr[B])) as u32;
-            let darkened = ((max * 1) / 3) as u8;
-
-            arr[R] = darkened;
-            arr[G] = darkened;
-            arr[B] = darkened;
-
-            *pixel = unsafe { mem::transmute::<[u8; 4], u32>(arr) };
+impl SdlKnowledgeRendererBuffers {
+    fn new(game_width: usize, game_height: usize) -> Self {
+        let mut message_log = Vec::new();
+        for _ in 0..MESSAGE_LOG_NUM_LINES {
+            message_log.push(Message::new());
         }
 
-        renderer.create_texture_from_surface(tile_surface).map_err(|e| format!("{}", e))
+        SdlKnowledgeRendererBuffers {
+            tiles: TileBuffer::new(game_width, game_height),
+            message_log: message_log,
+        }
     }
+}
 
-    pub fn new(video: &VideoSubsystem,
-               title: &str,
-               game_width: usize,
-               game_height: usize,
-               tile_path: path::PathBuf,
-               tileset: Tileset,
-               hud_path: path::PathBuf,
-               hud: Hud,
-               font: Font<'a>,
-               scale: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
+impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
+    fn new<P: AsRef<path::Path>>(
+        video: &VideoSubsystem,
+        title: &str,
+        game_width: usize,
+        game_height: usize,
+        tileset: Tileset,
+        hud_path: P,
+        hud: Hud,
+        font: Font<'a, 'b>,
+        scale: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
 
-        let game_width_px = (game_width * tileset.tile_width()) as usize * scale;
-        let game_height_px = (game_height * tileset.tile_height()) as usize * scale;
-        let width_px = game_width_px as u32;
-        let height_px = (game_height_px + MESSAGE_LOG_HEIGHT_PX * scale + HUD_TOTAL_HEIGHT_PX * scale) as u32;
-        let window = video.window(title, width_px, height_px)
+
+        let tile_width_px = tileset.tile_width() * scale;
+        let tile_height_px = tileset.tile_height() * scale;
+
+        let game_width_px = game_width * tile_width_px;
+        let game_height_px = game_height * tile_height_px;
+
+        let message_log_width_px = game_width_px;
+        let message_log_height_px = MESSAGE_LOG_HEIGHT_PX * scale;
+        let message_log_line_height_px = MESSAGE_LOG_LINE_HEIGHT_PX * scale;
+        let message_log_padding_px = MESSAGE_LOG_PADDING_PX * scale;
+        let message_log_total_line_height_px = message_log_line_height_px + message_log_padding_px;
+
+        let hud_width_px = game_width_px;
+        let hud_height_px = HUD_TOTAL_HEIGHT_PX * scale;
+
+        let total_width_px = game_width_px;
+        let total_height_px = game_height_px + message_log_height_px + hud_height_px;
+
+        let window = video.window(title, total_width_px as u32, total_height_px as u32)
             .build()
             .map_err(|_| SdlKnowledgeRendererError::WindowCreationFailure)?;
 
@@ -146,74 +207,83 @@ impl<'a> SdlKnowledgeRenderer<'a> {
 
         renderer.set_blend_mode(BlendMode::Blend);
 
-        let tile_texture = renderer.load_texture(&tile_path).map_err(|_| SdlKnowledgeRendererError::TileLoadFailure)?;
-        let hud_texture = renderer.load_texture(&hud_path).map_err(|_| SdlKnowledgeRendererError::HudLoadFailure)?;
-        let greyscale_tile_texture = Self::create_greyscale_tile_texture(&renderer, &tile_path).unwrap();
+        let hud_texture = renderer.load_texture(hud_path).map_err(|_| SdlKnowledgeRendererError::HudLoadFailure)?;
 
-        let mut message_log = Vec::new();
-        for _ in 0..MESSAGE_LOG_NUM_LINES {
-            message_log.push(Message::new());
-        }
-
-        let message_log_position = Coord::new(0, (game_height_px + HUD_TOTAL_HEIGHT_PX * scale) as isize);
+        let message_log_position = Coord::new(0, (game_height_px + hud_height_px) as isize);
         let message_log_rect = Rect::new(message_log_position.x as i32,
                                          message_log_position.y as i32,
-                                         width_px,
-                                         (MESSAGE_LOG_HEIGHT_PX * scale) as u32);
+                                         message_log_width_px as u32,
+                                         message_log_height_px as u32);
 
         let hud_position = Coord::new(0, game_height_px as isize);
 
-        Ok(SdlKnowledgeRenderer {
-            buffer: TileBuffer::new(game_width, game_height),
+        Ok(SdlKnowledgeRendererInternal {
             sdl_renderer: renderer,
-            tile_texture: tile_texture,
-            greyscale_tile_texture: greyscale_tile_texture,
             font: font,
             width: game_width,
             height: game_height,
             tile_width_px: tileset.tile_width(),
             tile_height_px: tileset.tile_height(),
-            game_width_px: width_px as usize,
+            game_width_px: game_width_px,
             game_height_px: game_height_px,
-            width_px: width_px as usize,
-            height_px: height_px as usize,
+            total_width_px: total_width_px,
+            total_height_px: total_height_px,
             tileset: tileset,
             clear_colour: Color::RGB(0, 0, 0),
             game_rect: Rect::new(0, 0, game_width_px as u32, game_height_px as u32),
-            screen_rect: Rect::new(0, 0, width_px, height_px),
+            screen_rect: Rect::new(0, 0, total_width_px as u32, total_height_px as u32),
             message_log_position: message_log_position,
             message_log_rect: message_log_rect,
-            message_log: message_log,
             scroll_position: Coord::new(0, 0),
-            display_log_num_lines: ((height_px as usize) / (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX)) / scale,
-            display_log_num_cols: ((width_px as usize - MESSAGE_LOG_PADDING_PX * 2) / MESSAGE_LOG_LINE_HEIGHT_PX) / scale, // square fonts only
+            display_log_num_lines: total_height_px / message_log_total_line_height_px,
+            display_log_num_cols: (total_width_px - message_log_padding_px * 2) / message_log_line_height_px, // square fonts only
             hud_position: hud_position,
             hud_texture: hud_texture,
             hud: hud,
-            hud_rect: Rect::new(hud_position.x as i32, hud_position.y as i32, width_px, (HUD_TOTAL_HEIGHT_PX * scale) as u32),
+            hud_rect: Rect::new(hud_position.x as i32, hud_position.y as i32, hud_width_px as u32, hud_height_px as u32),
             scale: scale,
         })
     }
 
-    fn padded_text_line_height(&self) -> usize {
+    fn text_line_height_px(&self) -> usize {
+       MESSAGE_LOG_LINE_HEIGHT_PX * self.scale
+    }
+
+    fn text_line_padded_height_px(&self) -> usize {
        (MESSAGE_LOG_LINE_HEIGHT_PX + MESSAGE_LOG_PADDING_PX) * self.scale
     }
 
-    fn text_padding(&self) -> usize {
+    fn text_padding_px(&self) -> usize {
         MESSAGE_LOG_PADDING_PX * self.scale
     }
 
-    fn tile_width(&self) -> usize {
-        self.tileset.tile_width()
+    fn tile_width_px(&self) -> usize {
+        self.tileset.tile_width() * self.scale
     }
 
-    fn tile_height(&self) -> usize {
-        self.tileset.tile_height()
+    fn tile_height_px(&self) -> usize {
+        self.tileset.tile_height() * self.scale
+    }
+
+    fn health_bar_height_px(&self) -> usize {
+        HEALTH_BAR_HEIGHT_PX * self.scale
+    }
+
+    fn scroll_bar_width_px(&self) -> usize {
+        SCROLL_BAR_WIDTH_PX * self.scale
+    }
+
+    fn hud_height_px(&self) -> usize {
+        HUD_HEIGHT_PX * self.scale
+    }
+
+    fn hud_padded_height_px(&self) -> usize {
+        (HUD_HEIGHT_PX + HUD_TOP_PADDING_PX) * self.scale
     }
 
     fn screen_rect(&self, coord: Coord) -> Rect {
-        let width = self.scale as i32 * self.tile_width() as i32;
-        let height = self.scale as i32 * self.tile_height() as i32;
+        let width = self.tile_width_px() as i32;
+        let height = self.tile_height_px() as i32;
 
         Rect::new(coord.x as i32 * width, coord.y as i32 * height, width as u32, height as u32)
     }
@@ -278,176 +348,61 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         self.sdl_renderer.fill_rect(self.screen_rect).expect("Failed to clear screen");
     }
 
-    fn draw_internal(&mut self) {
 
-        let blank = *self.tileset.resolve_extra(ExtraTileType::Blank);
-        let moon = *self.tileset.resolve_extra(ExtraTileType::Moon);
-
-        for (coord, cell) in izip!(self.buffer.coord_iter(), self.buffer.iter()) {
-            let rect = self.screen_rect(coord);
-            let info = self.to_sdl_info(cell);
-
-            self.sdl_renderer.copy(&self.tile_texture, Some(blank), Some(rect)).expect(RENDERING_FAILED_MSG);
-
-            let texture = if info.visible {
-                &self.tile_texture
-            } else {
-                &self.greyscale_tile_texture
-            };
-
-            if let Some(bg_rect) = info.bg {
-                self.sdl_renderer.copy(texture, Some(bg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
-            }
-
-
-            if let Some(fg_rect) = info.fg {
-                self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
-            }
-
-            if let Some(health_overlay) = info.health_overlay {
-                if !health_overlay.is_full() {
-                    let red = Self::rgba32_to_sdl_colour(HEALTH_BAR_RED);
-                    let green = Self::rgba32_to_sdl_colour(HEALTH_BAR_GREEN);
-
-                    let health_bar_green_px = if health_overlay.umax() == 0 {
-                        0
-                    } else {
-                        (self.scale * self.tile_width_px * health_overlay.ucurrent()) / health_overlay.umax()
-                    };
-
-                    let health_bar_green_rect = Rect::new(rect.x(),
-                                                          rect.y() + (self.tile_height_px * self.scale - HEALTH_BAR_HEIGHT_PX * self.scale) as i32,
-                                                          health_bar_green_px as u32,
-                                                          (HEALTH_BAR_HEIGHT_PX * self.scale) as u32);
-                    let health_bar_red_rect = Rect::new(rect.x() + health_bar_green_px as i32,
-                                                        health_bar_green_rect.y(),
-                                                        (self.tile_width_px * self.scale - health_bar_green_px) as u32,
-                                                        (HEALTH_BAR_HEIGHT_PX * self.scale) as u32);
-
-                    self.sdl_renderer.set_draw_color(red);
-                    self.sdl_renderer.fill_rect(health_bar_red_rect).expect("Failed to draw health bar red rect");
-                    self.sdl_renderer.set_draw_color(green);
-                    self.sdl_renderer.fill_rect(health_bar_green_rect).expect("Failed to draw health bar green rect");
-                }
-            }
-
-            if info.moon && info.visible {
-                self.sdl_renderer.copy(&self.tile_texture, Some(moon), Some(rect)).expect(RENDERING_FAILED_MSG);
-            }
-        }
-    }
-
-    fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
-        let aim_line_bg = *self.tileset.resolve_extra(ExtraTileType::AimLine);
-        if let Some(ref aim_line) = overlay.aim_line {
-            for coord in aim_line.iter() {
-                let screen_coord = self.world_to_screen(coord);
-                if let Some(cell) = self.buffer.get(screen_coord) {
-                    let rect = self.screen_rect(screen_coord);
-                    let info = self.to_sdl_info(cell);
-
-                    self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect(RENDERING_FAILED_MSG);
-                    if let Some(fg_rect) = info.fg {
-                        let texture = if info.visible {
-                            &self.tile_texture
-                        } else {
-                            &self.greyscale_tile_texture
-                        };
-                        self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
-                    }
-                }
-            }
-        } else if let Some(examine_cursor) = overlay.examine_cursor {
-            let screen_coord = self.world_to_screen(examine_cursor);
-            if let Some(cell) = self.buffer.get(screen_coord) {
-                let rect = self.screen_rect(screen_coord);
-                let info = self.to_sdl_info(cell);
-
-                self.sdl_renderer.copy(&self.tile_texture, Some(aim_line_bg), Some(rect)).expect(RENDERING_FAILED_MSG);
-                if let Some(fg_rect) = info.fg {
-                    let texture = if info.visible {
-                        &self.tile_texture
-                    } else {
-                        &self.greyscale_tile_texture
-                    };
-                    self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
-                }
-            }
-        }
-    }
-
-    fn rgb24_to_sdl_colour(rgb24: Rgb24) -> Color {
-        Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
-    }
-
-    fn rgba32_to_sdl_colour(rgba32: Rgba32) -> Color {
-        Color::RGBA(rgba32.red, rgba32.green, rgba32.blue, rgba32.alpha)
-    }
-
-    fn render_message_part(renderer: &mut Renderer, font: &Font, scale: usize, part: &MessagePart, cursor: Coord) -> Coord {
+    fn render_message_part(&mut self, part: &MessagePart, cursor: Coord) -> Coord {
         match part.as_text() {
-            Some(text_part) => Self::render_text_message_part(renderer, font, scale, MESSAGE_LOG_PLAIN_COLOUR, text_part, cursor),
+            Some(text_part) => self.render_text_message_part(MESSAGE_LOG_PLAIN_COLOUR, text_part, cursor),
             None => cursor,
         }
     }
 
-    fn render_text_message_part(renderer: &mut Renderer, font: &Font, scale: usize, plain_colour: Rgb24, part: &TextMessagePart, mut cursor: Coord) -> Coord {
+    fn render_text_message_part(&mut self, plain_colour: Rgb24, part: &TextMessagePart, mut cursor: Coord) -> Coord {
         let (colour, string) = match *part {
             TextMessagePart::Plain(ref s) => (plain_colour, s),
             TextMessagePart::Colour(c, ref s) => (c, s),
         };
 
-        let sdl_colour = Self::rgb24_to_sdl_colour(colour);
-        let surface = font.render(string.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
-        let texture = renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
+        let sdl_colour = rgb24_to_sdl_colour(colour);
+        let surface = self.font.render(string).solid(sdl_colour).expect("Failed to create text surface");
+        let texture = self.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
 
         // assume fixed-width, square font
-        let text_width = string.len() * MESSAGE_LOG_LINE_HEIGHT_PX * scale;
+        let text_width = string.len() * self.text_line_height_px();
         let text_rect = Rect::new(cursor.x as i32, cursor.y as i32, text_width as u32,
-                                  (MESSAGE_LOG_LINE_HEIGHT_PX * scale) as u32);
-        renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
+                                  self.text_line_height_px() as u32);
+        self.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
         cursor.x += text_width as isize;
 
         cursor
     }
 
-    fn render_message(renderer: &mut Renderer, font: &Font, scale: usize, message: &Message, cursor: Coord) -> Coord {
+    fn render_message(&mut self, message: &Message, cursor: Coord) -> Coord {
         let mut tmp_cursor = cursor;
         for part in message {
-            tmp_cursor = Self::render_message_part(renderer, font, scale, part, tmp_cursor);
+            tmp_cursor = self.render_message_part(part, tmp_cursor);
         }
         tmp_cursor.x = cursor.x;
-        tmp_cursor.y += (MESSAGE_LOG_LINE_HEIGHT_PX * scale) as isize;
+        tmp_cursor.y += self.text_line_padded_height_px() as isize;
 
         tmp_cursor
     }
 
-    fn render_text_message(renderer: &mut Renderer, font: &Font, scale: usize, plain_colour: Rgb24, message: &TextMessage, cursor: Coord) -> Coord {
+    fn render_text_message(&mut self, plain_colour: Rgb24, message: &TextMessage, cursor: Coord) -> Coord {
         let mut tmp_cursor = cursor;
         for part in message {
-            tmp_cursor = Self::render_text_message_part(renderer, font, scale, plain_colour, part, tmp_cursor);
+            tmp_cursor = self.render_text_message_part(plain_colour, part, tmp_cursor);
         }
         tmp_cursor.x = cursor.x;
-        tmp_cursor.y += (MESSAGE_LOG_LINE_HEIGHT_PX * scale) as isize;
+        tmp_cursor.y += self.text_line_padded_height_px() as isize;
 
         tmp_cursor
-    }
-
-    fn draw_message_log_internal(&mut self) {
-        self.clear_message_log();
-        let mut cursor = self.message_log_position + Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
-
-        for line in &self.message_log {
-            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, self.scale, line, cursor);
-            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
-        }
     }
 
     fn scroll_bar_rect(&self, num_messages: usize, offset: usize, from_top: bool) -> Option<Rect> {
         let num_lines = self.fullscreen_log_num_rows();
         if num_messages > num_lines {
-            let scroll_bar_height_px = (self.height_px * num_lines) / num_messages;
-            let remaining_px = self.height_px - scroll_bar_height_px;
+            let scroll_bar_height_px = (self.total_height_px * num_lines) / num_messages;
+            let remaining_px = self.total_height_px - scroll_bar_height_px;
             let max_offset = num_messages - num_lines;
             let scroll_px = (offset * remaining_px) / max_offset;
             let scroll_bar_top_px = if from_top {
@@ -455,9 +410,9 @@ impl<'a> SdlKnowledgeRenderer<'a> {
             } else {
                 remaining_px - scroll_px
             };
-            let scroll_bar_left_px = self.width_px - SCROLL_BAR_WIDTH_PX * self.scale;
+            let scroll_bar_left_px = self.total_width_px - self.scroll_bar_width_px();
             Some(Rect::new(scroll_bar_left_px as i32, scroll_bar_top_px as i32,
-                           (SCROLL_BAR_WIDTH_PX * self.scale) as u32, scroll_bar_height_px as u32))
+                           self.scroll_bar_width_px() as u32, scroll_bar_height_px as u32))
         } else {
             None
         }
@@ -473,39 +428,180 @@ impl<'a> SdlKnowledgeRenderer<'a> {
         let end_idx = cmp::min(wrapped.len(), offset + self.fullscreen_log_num_rows());
 
         for line in &wrapped[offset..end_idx] {
-            cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, self.scale, MESSAGE_LOG_PLAIN_COLOUR, line, cursor);
+            cursor = self.render_text_message(MESSAGE_LOG_PLAIN_COLOUR, line, cursor);
             cursor.y += MESSAGE_LOG_PADDING_PX as isize;
         }
 
         if let Some(scroll_bar) = self.scroll_bar_rect(wrapped.len(), offset, true) {
-            self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
+            self.sdl_renderer.set_draw_color(rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
             self.sdl_renderer.fill_rect(scroll_bar).expect("Failed to draw scroll bar");
         }
 
         cursor
     }
+
+    fn fullscreen_log_num_rows(&self) -> usize {
+        self.display_log_num_lines
+    }
+
+    fn draw_overlay_cell(&mut self, cell: &CellDrawInfo, screen_coord: Coord, overlay: Rect, textures: &GameTextures) {
+        let dest = self.screen_rect(screen_coord);
+        let info = self.to_sdl_info(cell);
+
+        self.sdl_renderer.copy(&textures.colour,
+                               Some(overlay),
+                               Some(dest)).expect(RENDERING_FAILED_MSG);
+
+        if let Some(fg_rect) = info.fg {
+            let texture = if info.visible {
+                &textures.colour
+            } else {
+                &textures.greyscale
+            };
+            self.sdl_renderer.copy(texture, Some(fg_rect), Some(dest)).expect(RENDERING_FAILED_MSG);
+        }
+    }
+
+    fn draw_health_bar(&mut self, coord: Coord, health_overlay: HitPoints) {
+        if !health_overlay.is_full() {
+            let red = rgba32_to_sdl_colour(HEALTH_BAR_RED);
+            let green = rgba32_to_sdl_colour(HEALTH_BAR_GREEN);
+
+            let health_bar_green_px = if health_overlay.umax() == 0 {
+                0
+            } else {
+                (self.tile_width_px() * health_overlay.ucurrent()) / health_overlay.umax()
+            };
+
+            let health_bar_green_rect = Rect::new(coord.x as i32 * self.tile_width_px() as i32,
+                                                  coord.y as i32 * self.tile_height_px() as i32
+                                                    + (self.tile_height_px() - self.health_bar_height_px()) as i32,
+                                                  health_bar_green_px as u32,
+                                                  self.health_bar_height_px() as u32);
+            let health_bar_red_rect = Rect::new(coord.x as i32 * self.tile_width_px() as i32
+                                                    + health_bar_green_px as i32,
+                                                health_bar_green_rect.y(),
+                                                (self.tile_width_px() - health_bar_green_px) as u32,
+                                                self.health_bar_height_px() as u32);
+
+            self.sdl_renderer.set_draw_color(red);
+            self.sdl_renderer.fill_rect(health_bar_red_rect).expect("Failed to draw health bar red rect");
+            self.sdl_renderer.set_draw_color(green);
+            self.sdl_renderer.fill_rect(health_bar_green_rect).expect("Failed to draw health bar green rect");
+        }
+    }
+
+    fn draw_cell(&mut self, cell: &CellDrawInfo, coord: Coord, textures: &GameTextures) {
+        let rect = self.screen_rect(coord);
+        let info = self.to_sdl_info(cell);
+
+        self.sdl_renderer.copy(&textures.colour, Some(self.tileset.extra.blank), Some(rect)).expect(RENDERING_FAILED_MSG);
+
+        let texture = if info.visible {
+            &textures.colour
+        } else {
+            &textures.greyscale
+        };
+
+        if let Some(bg_rect) = info.bg {
+            self.sdl_renderer.copy(texture, Some(bg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+        }
+
+        if let Some(fg_rect) = info.fg {
+            self.sdl_renderer.copy(texture, Some(fg_rect), Some(rect)).expect(RENDERING_FAILED_MSG);
+        }
+
+        if let Some(health_overlay) = info.health_overlay {
+            self.draw_health_bar(coord, health_overlay);
+        }
+
+        if info.moon && info.visible {
+            self.sdl_renderer.copy(&textures.colour, Some(self.tileset.extra.moon), Some(rect)).expect(RENDERING_FAILED_MSG);
+        }
+    }
 }
 
-impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
+impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
+
+    pub fn new<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
+        video: &VideoSubsystem,
+        title: &str,
+        game_width: usize,
+        game_height: usize,
+        tile_path: P,
+        tileset: Tileset,
+        hud_path: Q,
+        hud: Hud,
+        font: Font<'a, 'b>,
+        scale: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
+
+        let renderer = SdlKnowledgeRendererInternal::new(video, title, game_width, game_height,
+                                                         tileset, hud_path, hud, font, scale)?;
+
+        let buffers = SdlKnowledgeRendererBuffers::new(game_width, game_height);
+
+        let game_textures = GameTextures::new(&renderer.sdl_renderer, tile_path);
+
+        Ok(SdlKnowledgeRenderer {
+            buffers: buffers,
+            renderer: renderer,
+            textures: game_textures,
+        })
+    }
+
+    fn draw_message_log_internal(&mut self) {
+        self.renderer.clear_message_log();
+        let mut cursor = self.renderer.message_log_position + Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
+
+        for line in &self.buffers.message_log {
+            cursor = self.renderer.render_message(line, cursor);
+        }
+    }
+
+    fn draw_internal(&mut self) {
+        for (coord, cell) in izip!(self.buffers.tiles.coord_iter(), self.buffers.tiles.iter()) {
+            self.renderer.draw_cell(cell, coord, &self.textures);
+        }
+    }
+
+    fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
+        let aim_line_bg = self.renderer.tileset.extra.aim_line;
+        if let Some(ref aim_line) = overlay.aim_line {
+            for coord in aim_line.iter() {
+                let screen_coord = self.world_to_screen(coord);
+                if let Some(cell) = self.buffers.tiles.get(screen_coord) {
+                    self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_bg, &self.textures);
+                }
+            }
+        } else if let Some(examine_cursor) = overlay.examine_cursor {
+            let screen_coord = self.world_to_screen(examine_cursor);
+            if let Some(cell) = self.buffers.tiles.get(screen_coord) {
+                self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_bg, &self.textures);
+            }
+        }
+    }
+}
+
+impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
     fn width(&self) -> usize {
-        self.width
+        self.renderer.width
     }
 
     fn height(&self) -> usize {
-        self.height
+        self.renderer.height
     }
 
     fn world_offset(&self) -> Coord {
-        self.scroll_position
+        self.renderer.scroll_position
     }
 
     fn update_game_window_buffer(&mut self, knowledge: &DrawableKnowledgeLevel, turn_id: u64, player_position: Coord) {
-        self.scroll_position = self.centre_offset(player_position);
-        self.buffer.update(knowledge, turn_id, self.scroll_position);
+        self.renderer.scroll_position = self.centre_offset(player_position);
+        self.buffers.tiles.update(knowledge, turn_id, self.renderer.scroll_position);
     }
 
     fn draw_game_window(&mut self) {
-        self.clear_game();
+        self.renderer.clear_game();
         self.draw_internal();
     }
 
@@ -519,14 +615,14 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
     }
 
     fn update_log_buffer(&mut self, messages: &MessageLog, language: &Box<Language>) {
-        for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.message_log) {
+        for (log_entry, message) in izip!(messages.tail(MESSAGE_LOG_NUM_LINES), &mut self.buffers.message_log) {
             message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, message);
         }
     }
 
     fn fullscreen_log(&mut self, message_log: &MessageLog, offset: usize, language: &Box<Language>) {
-        self.clear_screen();
+        self.renderer.clear_screen();
 
         let mut cursor = Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
         let mut message = Message::new();
@@ -536,56 +632,57 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
         for log_entry in messages {
             message.clear();
             language.translate_repeated(log_entry.message, log_entry.repeated, &mut message);
-            cursor = Self::render_message(&mut self.sdl_renderer, &self.font, self.scale, &message, cursor);
-            cursor.y += MESSAGE_LOG_PADDING_PX as isize;
+            cursor = self.renderer.render_message(&message, cursor);
         }
 
-        if let Some(scroll_bar_rect) = self.scroll_bar_rect(message_log.len(), offset, false) {
-            self.sdl_renderer.set_draw_color(Self::rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
-            self.sdl_renderer.fill_rect(scroll_bar_rect).expect("Failed to draw scroll bar");
+        if let Some(scroll_bar_rect) = self.renderer.scroll_bar_rect(message_log.len(), offset, false) {
+            self.renderer.sdl_renderer.set_draw_color(rgb24_to_sdl_colour(SCROLL_BAR_COLOUR));
+            self.renderer.sdl_renderer.fill_rect(scroll_bar_rect).expect("Failed to draw scroll bar");
         }
     }
 
     fn fullscreen_log_num_rows(&self) -> usize {
-        self.display_log_num_lines
+        self.renderer.fullscreen_log_num_rows()
     }
 
     fn fullscreen_log_num_cols(&self) -> usize {
-        self.display_log_num_cols - 1
+        self.renderer.display_log_num_cols - 1
     }
 
     fn fullscreen_wrapped_translated_message(&mut self, wrapped: &Vec<TextMessage>, offset: usize) {
-        self.clear_screen();
-        self.display_wrapped_message_fullscreen_internal(wrapped, offset);
+        self.renderer.clear_screen();
+        self.renderer.display_wrapped_message_fullscreen_internal(wrapped, offset);
     }
 
     fn draw_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
-        self.clear_hud();
-        let sdl_colour = Self::rgb24_to_sdl_colour(HUD_TEXT_COLOUR);
+        self.renderer.clear_hud();
+        let sdl_colour = rgb24_to_sdl_colour(HUD_TEXT_COLOUR);
         let mut cursor = HUD_TOP_PADDING_PX;
 
-        let health_rect = Rect::new((self.hud_position.x + cursor as isize) as i32,
-                                    (self.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
-                                    (HUD_HEIGHT_PX * self.scale) as u32,
-                                    (HUD_HEIGHT_PX * self.scale) as u32);
+        let health_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
+                                    (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+                                    self.renderer.hud_height_px() as u32,
+                                    self.renderer.hud_height_px() as u32);
 
-        self.sdl_renderer.copy(&self.hud_texture, Some(self.hud.health), Some(health_rect)).expect("Failed to render symbol");
+        self.renderer.sdl_renderer.copy(&self.renderer.hud_texture,
+                                        Some(self.renderer.hud.health),
+                                        Some(health_rect)).expect("Failed to render symbol");
 
-        cursor += (HUD_HEIGHT_PX + HUD_TOP_PADDING_PX) * self.scale;
+        cursor += self.renderer.hud_padded_height_px();
 
         let hit_points = entity.hit_points().expect("Entity missing hit_points");
 
         let health_text = format!("{}/{}", hit_points.current(), hit_points.max());
-        let surface = self.font.render(health_text.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
-        let texture = self.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
+        let surface = self.renderer.font.render(health_text.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
+        let texture = self.renderer.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
 
-        let text_width = health_text.len() * HUD_HEIGHT_PX * self.scale;
-        let text_rect = Rect::new((self.hud_position.x + cursor as isize) as i32,
-                                  (self.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+        let text_width = health_text.len() * self.renderer.hud_height_px(); // square fonts
+        let text_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
+                                  (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
                                   text_width as u32,
-                                  (HUD_HEIGHT_PX  * self.scale) as u32);
+                                  self.renderer.hud_height_px() as u32);
 
-        self.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
+        self.renderer.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
     }
 
     fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
@@ -593,20 +690,20 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
         let mut message = Message::new();
         let mut wrapped = Vec::new();
 
-        self.clear_screen();
+        self.renderer.clear_screen();
 
         let mut cursor = if let Some(message_type) = prelude {
             language.translate(message_type, &mut message);
 
             self.fullscreen_wrap(&message, &mut wrapped);
 
-            let mut cursor = self.display_wrapped_message_fullscreen_internal(&wrapped, 0);
+            let mut cursor = self.renderer.display_wrapped_message_fullscreen_internal(&wrapped, 0);
 
-            cursor.y += self.padded_text_line_height() as isize;
+            cursor.y += self.renderer.text_line_padded_height_px() as isize;
 
             cursor
         } else {
-            self.fullscreen_initial_cursor()
+            self.renderer.fullscreen_initial_cursor()
         };
 
         for (item_state, item) in state.iter(menu) {
@@ -622,13 +719,13 @@ impl<'a> KnowledgeRenderer for SdlKnowledgeRenderer<'a> {
                 MENU_DESELECTED_COLOUR
             };
 
-            cursor = Self::render_text_message(&mut self.sdl_renderer, &self.font, self.scale, colour, &wrapped[0], cursor);
-            cursor.y += self.text_padding() as isize;
+            cursor = self.renderer.render_text_message(colour, &wrapped[0], cursor);
+            cursor.y += self.renderer.text_padding_px() as isize;
         }
     }
 
     fn publish(&mut self) {
-        self.sdl_renderer.present();
+        self.renderer.sdl_renderer.present();
     }
 
     fn log_num_lines(&self) -> usize {

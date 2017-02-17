@@ -14,12 +14,12 @@ pub enum TilesetError {
 
 pub type TilesetResult<T> = result::Result<T, TilesetError>;
 
-#[derive(Hash, Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ExtraTileType {
-    Blank,
-    Moon,
-    AimLine,
-    Wounded,
+#[derive(Debug)]
+pub struct ExtraTiles {
+    pub blank: Rect,
+    pub moon: Rect,
+    pub aim_line: Rect,
+    pub wounded: Rect,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -164,8 +164,8 @@ impl ComplexTile {
 
 #[derive(Debug)]
 pub struct Tileset {
+    pub extra: ExtraTiles,
     tiles: HashMap<TileType, ComplexTile>,
-    extra: HashMap<ExtraTileType, Rect>,
     tile_width: usize,
     tile_height: usize,
 }
@@ -197,11 +197,12 @@ impl Tileset {
         let extra_table = table.get("extra").ok_or(TilesetError::InvalidSpec)?
             .as_table().ok_or(TilesetError::InvalidSpec)?;
 
-        let mut extra = HashMap::new();
-        extra.insert(ExtraTileType::Blank, extra_rect(&extra_table, "Blank",  tile_width, tile_height, tile_padding)?);
-        extra.insert(ExtraTileType::Moon, extra_rect(&extra_table, "Moon",  tile_width, tile_height, tile_padding)?);
-        extra.insert(ExtraTileType::AimLine, extra_rect(&extra_table, "AimLine",  tile_width, tile_height, tile_padding)?);
-        extra.insert(ExtraTileType::Wounded, extra_rect(&extra_table, "Wounded",  tile_width, tile_height, tile_padding)?);
+        let extra = ExtraTiles {
+            blank: extra_rect(&extra_table, "Blank",  tile_width, tile_height, tile_padding)?,
+            moon: extra_rect(&extra_table, "Moon",  tile_width, tile_height, tile_padding)?,
+            aim_line: extra_rect(&extra_table, "AimLine",  tile_width, tile_height, tile_padding)?,
+            wounded: extra_rect(&extra_table, "Wounded",  tile_width, tile_height, tile_padding)?,
+        };
 
         Ok(Tileset {
             tiles: tile_map,
@@ -221,9 +222,5 @@ impl Tileset {
 
     pub fn resolve(&self, tile_type: TileType) -> &ComplexTile {
         self.tiles.get(&tile_type).expect(format!("Couldn't find tile for {:?}", tile_type).as_ref())
-    }
-
-    pub fn resolve_extra(&self, tile_type: ExtraTileType) -> &Rect {
-        self.extra.get(&tile_type).expect(format!("Couldn't find extra tile for {:?}", tile_type).as_ref())
     }
 }

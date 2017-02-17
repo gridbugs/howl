@@ -19,7 +19,7 @@ serde_derive = "0.9"
 bincode = "1.0.0-alpha2"
 
 [dependencies.sdl2]
-version = "0.28"
+version = "0.29"
 optional = true
 default-features = false
 features = ["image", "ttf"]
