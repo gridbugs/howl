@@ -25,6 +25,9 @@
 [field.outside]
     type = "any"
 
+[field.bump_attackable]
+    type = "any"
+
 [field.transform_on_moon_change]
     type = "set"
 

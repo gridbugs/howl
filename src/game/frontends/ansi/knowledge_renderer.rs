@@ -11,7 +11,8 @@ use colour::Rgb24;
 
 const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 const AIM_LINE_COLOUR: ansi::AnsiColour = ansi::colours::YELLOW;
-const WOUND_OVERLAY_COLOUR: ansi::AnsiColour =  ansi::colours::RED;
+const WOUND_OVERLAY_COLOUR: ansi::AnsiColour = ansi::colours::RED;
+const DEATH_OVERLAY_COLOUR: ansi::AnsiColour = ansi::colours::RED;
 
 const ANSI_GAME_WINDOW_X: usize = 1;
 const ANSI_GAME_WINDOW_Y: usize = 1;
@@ -351,21 +352,31 @@ impl AnsiKnowledgeRenderer {
     }
 
     fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
-        if let Some(ref aim_line) = overlay.aim_line {
-            for coord in aim_line.iter() {
-                let screen_coord = self.world_to_screen(coord);
+        match *overlay {
+            RenderOverlay::AimLine(ref aim_line) => {
+                for coord in aim_line.iter() {
+                    let screen_coord = self.world_to_screen(coord);
+                    if let Some(cell) = self.buffers.tiles.get(screen_coord) {
+                        let mut info = AnsiInfo::from(cell);
+                        info.bg = AIM_LINE_COLOUR;
+                        self.renderer.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
+                    }
+                }
+            }
+            RenderOverlay::ExamineCursor(examine_cursor) => {
+                let screen_coord = self.world_to_screen(examine_cursor);
                 if let Some(cell) = self.buffers.tiles.get(screen_coord) {
                     let mut info = AnsiInfo::from(cell);
                     info.bg = AIM_LINE_COLOUR;
                     self.renderer.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
                 }
             }
-        } else if let Some(examine_cursor) = overlay.examine_cursor {
-            let screen_coord = self.world_to_screen(examine_cursor);
-            if let Some(cell) = self.buffers.tiles.get(screen_coord) {
-                let mut info = AnsiInfo::from(cell);
-                info.bg = AIM_LINE_COLOUR;
-                self.renderer.window.get_cell(screen_coord.x, screen_coord.y).set(info.ch, info.fg, info.bg, info.style);
+            RenderOverlay::Death => {
+                for (coord, cell) in izip!(self.buffers.tiles.coord_iter(), self.buffers.tiles.iter()) {
+                    let mut info = AnsiInfo::from(cell);
+                    info.bg = DEATH_OVERLAY_COLOUR;
+                    self.renderer.window.get_cell(coord.x, coord.y).set(info.ch, info.fg, info.bg, info.style);
+                }
             }
         }
     }
@@ -535,4 +546,8 @@ impl KnowledgeRenderer for AnsiKnowledgeRenderer {
     }
 
     fn publish(&mut self) {}
+
+    fn reset_buffers(&mut self) {
+        self.buffers.reset();
+    }
 }

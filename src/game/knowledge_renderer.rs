@@ -1,8 +1,12 @@
+use std::ops::Deref;
 use ecs::*;
 use game::*;
 use coord::Coord;
 
 pub trait KnowledgeRenderer {
+
+    /// Resets any internal buffers
+    fn reset_buffers(&mut self);
 
     /// Width of game window in cells
     fn width(&self) -> usize;
@@ -71,18 +75,6 @@ pub trait KnowledgeRenderer {
     /// Number of characters that fit in a single line of the fullscreen message log
     fn fullscreen_log_num_cols(&self) -> usize;
 
-    fn render(&mut self, knowledge: &DrawableKnowledgeLevel,
-              turn_id: u64, position: Coord) {
-        self.update_game_window_buffer(knowledge, turn_id, position);
-        self.draw_game_window();
-    }
-
-    fn render_with_overlay(&mut self, knowledge: &DrawableKnowledgeLevel,
-                           turn_id: u64, position: Coord, overlay: &RenderOverlay) {
-        self.update_game_window_buffer(knowledge, turn_id, position);
-        self.draw_game_window_with_overlay(overlay);
-    }
-
     /// Displays a message in fullscreen
     fn fullscreen_message(&mut self, message_type: MessageType, language: &Box<Language>) {
         let mut message = Message::new();
@@ -148,6 +140,60 @@ pub trait KnowledgeRenderer {
         self.draw_hud(entity, language);
 
         self.publish();
+    }
+
+    fn update_and_publish_all_windows_with_overlay(&mut self,
+                                                   turn_id: u64,
+                                                   knowledge: &DrawableKnowledgeLevel,
+                                                   position: Coord,
+                                                   messages: &MessageLog,
+                                                   entity: EntityRef,
+                                                   language: &Box<Language>,
+                                                   overlay: &RenderOverlay) {
+
+        self.update_log_buffer(messages, language);
+        self.update_game_window_buffer(knowledge, turn_id, position);
+
+        self.draw_game_window_with_overlay(overlay);
+        self.draw_log();
+        self.draw_hud(entity, language);
+
+        self.publish();
+
+    }
+
+
+
+    fn update_and_publish_all_windows_for_entity(&mut self,
+                                                 turn_id: u64,
+                                                 level_id: LevelId,
+                                                 entity: EntityRef,
+                                                 language: &Box<Language>) {
+        let knowledge = entity.drawable_knowledge_borrow().expect("Expected drawable_knowledge component");
+        let knowledge_level = knowledge.level(level_id);
+        self.update_and_publish_all_windows(turn_id,
+                                            knowledge_level,
+                                            entity.position().expect("Expected position component"),
+                                            entity.message_log_borrow().expect("Expected message_log component").deref(),
+                                            entity,
+                                            language);
+    }
+
+    fn update_and_publish_all_windows_for_entity_with_overlay(&mut self,
+                                                              turn_id: u64,
+                                                              level_id: LevelId,
+                                                              entity: EntityRef,
+                                                              language: &Box<Language>,
+                                                              overlay: &RenderOverlay) {
+        let knowledge = entity.drawable_knowledge_borrow().expect("Expected drawable_knowledge component");
+        let knowledge_level = knowledge.level(level_id);
+        self.update_and_publish_all_windows_with_overlay(turn_id,
+                                                         knowledge_level,
+                                                         entity.position().expect("Expected position component"),
+                                                         entity.message_log_borrow().expect("Expected message_log component").deref(),
+                                                         entity,
+                                                         language,
+                                                         overlay);
     }
 
     fn publish_fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {

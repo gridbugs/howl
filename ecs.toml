@@ -17,6 +17,11 @@ imports = [
 [component.enemy]
 [component.projectile]
 [component.projectile_collider]
+[component.bump_attackable]
+
+[component.bump_attacker]
+    type = "usize"
+    copy = true
 
 [component.projectile_damage]
     type = "usize"
@@ -143,3 +148,4 @@ imports = [
     copy = true
 
 [action_property.no_commit]
+[action_property.player_died]

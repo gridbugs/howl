@@ -88,7 +88,8 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_you_see(YouSeeMessageType::Player);
     entity.insert_description(DescriptionMessageType::Player);
     entity.insert_projectile_collider();
-    entity.insert_hit_points(HitPoints::new(3));
+    entity.insert_hit_points(HitPoints::new(10));
+    entity.insert_bump_attackable();
 
     entity
 }
@@ -126,6 +127,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_enemy();
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(2));
+    entity.insert_bump_attacker(1);
 
     entity.id()
 }

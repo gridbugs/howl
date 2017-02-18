@@ -17,4 +17,11 @@ impl RendererBuffers {
             message_log: message_log,
         }
     }
+
+    pub fn reset(&mut self) {
+        self.tiles.reset();
+        for message in self.message_log.iter_mut() {
+            message.clear();
+        }
+    }
 }

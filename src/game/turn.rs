@@ -35,6 +35,13 @@ pub enum TurnResolution {
     Quit(EntityId),
     Schedule(EntityId, u64),
     LevelSwitch(LevelSwitch),
+    GameOver(GameOverReason),
+}
+
+#[derive(PartialEq, Eq)]
+enum ForceRender {
+    IgnoreChange,
+    IgnoreShouldRender,
 }
 
 impl TurnResolution {
@@ -49,6 +56,7 @@ impl TurnResolution {
 enum CommitResolution {
     Reschedule(u64),
     LevelSwitch(LevelSwitch),
+    GameOver(GameOverReason),
 }
 
 pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
@@ -92,7 +100,7 @@ impl<'game> ActionEnv<'game> {
 impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer> {
     pub fn turn(&mut self) -> GameResult<TurnResolution> {
 
-        self.pc_render(None, true);
+        self.pc_render(None, Some(ForceRender::IgnoreChange));
 
         let resolution = self.take_turn()?;
 
@@ -162,6 +170,9 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                             CommitResolution::LevelSwitch(level_switch) => {
                                 return Ok(TurnResolution::LevelSwitch(level_switch));
                             }
+                            CommitResolution::GameOver(reason) => {
+                                return Ok(TurnResolution::GameOver(reason));
+                            }
                         }
                     } else {
                         self.declare_action_return(false)?;
@@ -198,6 +209,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         } else {
             rules::open_door(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::close_door(rule_env, self.ecs_action, self.rule_reactions)?;
@@ -218,11 +230,11 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.ecs.commit(self.ecs_action);
     }
 
-    fn pc_render(&mut self, action_description: Option<&ActionDescription>, force: bool) -> bool {
+    fn pc_render(&mut self, action_description: Option<&ActionDescription>, force: Option<ForceRender>) -> bool {
 
         let entity = self.ecs.entity(self.pc_id);
 
-        if !self.ecs.contains_should_render(self.entity_id) {
+        if !(force == Some(ForceRender::IgnoreShouldRender) || self.ecs.contains_should_render(self.entity_id)) {
             return false;
         }
 
@@ -248,7 +260,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             }
         }
 
-        if changed || force {
+        if force == Some(ForceRender::IgnoreChange) || changed {
             let mut renderer = self.renderer.borrow_mut();
             renderer.update_and_publish_all_windows(*self.action_id,
                                                     level_knowledge,
@@ -267,6 +279,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         let mut first = true;
         let mut action_description = None;
         let mut level_switch = None;
+        let mut game_over_reason = None;
 
         self.action_schedule.insert(action, 0);
 
@@ -274,7 +287,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
             // render the scene if time has passed
             if action_event.time_delta != 0 {
-                if self.pc_render(action_description.as_ref(), false) {
+                if self.pc_render(action_description.as_ref(), Some(ForceRender::IgnoreShouldRender)) {
                     // if the change in scene was visible, add a delay
                     thread::sleep(Duration::from_millis(action_event.time_delta));
                 }
@@ -314,6 +327,10 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                             self.turn_schedule.invalidate(sequence_no);
                         }
 
+                        if self.ecs_action.contains_player_died() {
+                            game_over_reason = Some(GameOverReason::PlayerDied);
+                        }
+
                         self.commit();
                         break;
                     }
@@ -335,12 +352,17 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             }
         }
 
+        if let Some(game_over_reason) = game_over_reason {
+            self.pc_render(None, Some(ForceRender::IgnoreShouldRender));
+            return Ok(Some(CommitResolution::GameOver(game_over_reason)));
+        }
+
         if first {
             return Ok(None);
         }
 
         if action_description.is_some() {
-            self.pc_render(action_description.as_ref(), false);
+            self.pc_render(action_description.as_ref(), None);
         }
 
         if let Some(level_switch) = level_switch {

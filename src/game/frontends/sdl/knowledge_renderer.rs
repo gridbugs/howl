@@ -441,6 +441,9 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
             };
             self.sdl_renderer.copy(texture, Some(fg_rect), Some(dest)).expect(RENDERING_FAILED_MSG);
         }
+        if let Some(health_overlay) = info.health_overlay {
+            self.draw_health_bar(screen_coord, health_overlay);
+        }
     }
 
     fn draw_health_bar(&mut self, coord: Coord, health_overlay: HitPoints) {
@@ -454,21 +457,27 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
                 (self.tile_width_px() * health_overlay.ucurrent()) / health_overlay.umax()
             };
 
-            let health_bar_green_rect = Rect::new(coord.x as i32 * self.tile_width_px() as i32,
-                                                  coord.y as i32 * self.tile_height_px() as i32
-                                                    + (self.tile_height_px() - self.health_bar_height_px()) as i32,
-                                                  health_bar_green_px as u32,
-                                                  self.health_bar_height_px() as u32);
+            let y_coord = coord.y as i32 * self.tile_height_px() as i32
+                + (self.tile_height_px() - self.health_bar_height_px()) as i32;
+
             let health_bar_red_rect = Rect::new(coord.x as i32 * self.tile_width_px() as i32
                                                     + health_bar_green_px as i32,
-                                                health_bar_green_rect.y(),
+                                                y_coord,
                                                 (self.tile_width_px() - health_bar_green_px) as u32,
                                                 self.health_bar_height_px() as u32);
 
             self.sdl_renderer.set_draw_color(red);
             self.sdl_renderer.fill_rect(health_bar_red_rect).expect("Failed to draw health bar red rect");
-            self.sdl_renderer.set_draw_color(green);
-            self.sdl_renderer.fill_rect(health_bar_green_rect).expect("Failed to draw health bar green rect");
+
+            if health_bar_green_px > 0 {
+                let health_bar_green_rect = Rect::new(coord.x as i32 * self.tile_width_px() as i32,
+                                                      y_coord,
+                                                      health_bar_green_px as u32,
+                                                      self.health_bar_height_px() as u32);
+
+                self.sdl_renderer.set_draw_color(green);
+                self.sdl_renderer.fill_rect(health_bar_green_rect).expect("Failed to draw health bar green rect");
+            }
         }
     }
 
@@ -546,18 +555,28 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
     }
 
     fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
-        let aim_line_bg = self.renderer.tileset.extra.aim_line;
-        if let Some(ref aim_line) = overlay.aim_line {
-            for coord in aim_line.iter() {
-                let screen_coord = self.world_to_screen(coord);
-                if let Some(cell) = self.buffers.tiles.get(screen_coord) {
-                    self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_bg, &self.textures);
+        match *overlay {
+            RenderOverlay::AimLine(ref aim_line) => {
+                for coord in aim_line.iter() {
+                    let screen_coord = self.world_to_screen(coord);
+                    if let Some(cell) = self.buffers.tiles.get(screen_coord) {
+                        let aim_line_rect = self.renderer.tileset.extra.aim_line;
+                        self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_rect, &self.textures);
+                    }
                 }
             }
-        } else if let Some(examine_cursor) = overlay.examine_cursor {
-            let screen_coord = self.world_to_screen(examine_cursor);
-            if let Some(cell) = self.buffers.tiles.get(screen_coord) {
-                self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_bg, &self.textures);
+            RenderOverlay::ExamineCursor(examine_cursor) => {
+                let screen_coord = self.world_to_screen(examine_cursor);
+                if let Some(cell) = self.buffers.tiles.get(screen_coord) {
+                    let aim_line_rect = self.renderer.tileset.extra.aim_line;
+                    self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_rect, &self.textures);
+                }
+            }
+            RenderOverlay::Death => {
+                for (coord, cell) in izip!(self.buffers.tiles.coord_iter(), self.buffers.tiles.iter()) {
+                    let death_rect = self.renderer.tileset.extra.death;
+                    self.renderer.draw_overlay_cell(cell, coord, death_rect, &self.textures);
+                }
             }
         }
     }
@@ -711,5 +730,9 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
 
     fn log_num_lines(&self) -> usize {
         MESSAGE_LOG_NUM_LINES
+    }
+
+    fn reset_buffers(&mut self) {
+        self.buffers.reset();
     }
 }

@@ -41,6 +41,15 @@ enum MainMenuSelection {
     SaveAndQuit,
 }
 
+pub enum GameOverReason {
+    PlayerDied,
+}
+
+pub enum ExitReason {
+    GameOver(GameOverReason),
+    Pause,
+}
+
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     renderer: RefCell<Renderer>,
     input_source: Input,
@@ -139,6 +148,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         loop {
 
+            self.renderer.borrow_mut().reset_buffers();
+
             let control_map = control_spec::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
 
             let mut menu = Menu::new();
@@ -185,9 +196,21 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             Self::install_control_map(&mut game_state, control_map);
 
-            self.game_loop(&mut game_state)?;
+            match self.game_loop(&mut game_state)? {
+                ExitReason::Pause => {
+                    current_game_state = Some(game_state);
+                }
+                ExitReason::GameOver(reason) => {
+                    match reason {
+                        GameOverReason::PlayerDied => {
+                            self.death_message(&game_state);
+                            self.input_source.next_input();
+                        }
+                    }
+                    current_game_state = None;
+                }
+            }
 
-            current_game_state = Some(game_state);
         }
     }
 
@@ -198,7 +221,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         level.ecs.insert_control_map(pc_id, control_map);
     }
 
-    fn game_loop(&mut self, game_state: &mut GameState) -> GameResult<()> {
+    fn game_loop(&mut self, game_state: &mut GameState) -> GameResult<ExitReason> {
         loop {
 
             let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
@@ -239,7 +262,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     let level = game_state.levels.level_mut(level_id);
                     let ticket = level.turn_schedule.insert(entity_id, 0);
                     level.ecs.insert_schedule_ticket(entity_id, ticket);
-                    return Ok(());
+                    return Ok(ExitReason::Pause);
                 }
                 TurnResolution::Schedule(entity_id, delay) => {
                     let level = game_state.levels.level_mut(level_id);
@@ -249,15 +272,34 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 TurnResolution::LevelSwitch(level_switch) => {
                     self.switch_level(level_switch, game_state);
                 }
+                TurnResolution::GameOver(reason) => {
+                    return Ok(ExitReason::GameOver(reason));
+                }
             }
         }
     }
 
     fn welcome_message(&self, game_state: &GameState) {
+        self.add_message(game_state, MessageType::Welcome);
+    }
+
+    fn death_message(&self, game_state: &GameState) {
+        let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Unitialised game state");
+        self.add_message(game_state, MessageType::YouDied);
+        let entity = game_state.levels.level(level_id).ecs.entity(pc_id);
+        self.renderer.borrow_mut().update_and_publish_all_windows_for_entity_with_overlay(
+            game_state.action_id,
+            level_id,
+            entity,
+            &self.language,
+            &RenderOverlay::Death);
+    }
+
+    fn add_message(&self, game_state: &GameState, message: MessageType) {
         let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Unitialised game state");
 
         let ref ecs = game_state.levels.level(level_id).ecs;
-        ecs.message_log_borrow_mut(pc_id).unwrap().add(MessageType::Welcome);
+        ecs.message_log_borrow_mut(pc_id).expect("Expected message log component").add(message);
     }
 
     fn intro_message(&mut self, control_map: &ControlMap) {

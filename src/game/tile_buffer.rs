@@ -17,6 +17,10 @@ impl TileBuffer {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.grid.reset_all();
+    }
+
     fn is_front(coord: Coord, knowledge: &DrawableKnowledgeLevel) -> bool {
         let south_coord = coord + Direction::South.vector();
         let cell = knowledge.get_with_default(south_coord);

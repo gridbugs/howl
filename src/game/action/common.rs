@@ -112,9 +112,11 @@ pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) {
 }
 
 pub fn die(action: &mut EcsAction, entity: EntityRef) {
-
-    let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
-    action.set_schedule_invalidate(ticket.sequence_no);
-
-    action.remove_entity(entity);
+    if entity.contains_pc() {
+        action.set_player_died();
+    } else {
+        let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
+        action.set_schedule_invalidate(ticket.sequence_no);
+        action.remove_entity(entity);
+    }
 }

@@ -52,7 +52,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
 
     loop {
 
-        let overlay = RenderOverlay::aim_line(StraightLine::new(start, end));
+        let overlay = RenderOverlay::AimLine(StraightLine::new(start, end));
         renderer.publish_game_window_with_overlay(&overlay);
 
         if let Some(event) = input_source.next_input() {
@@ -161,7 +161,7 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
             renderer.update_log_buffer(message_log.deref(), input.language);
         }
 
-        let overlay = RenderOverlay::examine_cursor(cursor);
+        let overlay = RenderOverlay::ExamineCursor(cursor);
         renderer.publish_all_windows_with_overlay(input.entity, input.language, &overlay);
 
         if let Some(event) = input_source.next_input() {

@@ -120,6 +120,9 @@ impl Language for English {
                 message.push(MessagePart::colour(colours::PURPLE, "HOWL"));
                 message.push(MessagePart::plain("!"));
             }
+            MessageType::YouDied => {
+                message.push(MessagePart::colour(colours::RED, "YOU DIED"));
+            }
             MessageType::Action(action) => {
                 self.translate_action(action, message);
             }

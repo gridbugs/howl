@@ -6,7 +6,7 @@ tile_padding = 0
 Blank = { x = 16, y = 0 }
 Moon = { x = 13, y = 0 }
 AimLine = { x = 14, y = 0 }
-Wounded = { x = 17, y = 0 }
+Death = { x = 17, y = 0 }
 
 [tiles.Player]
 foreground = { x = 0, y = 0 }

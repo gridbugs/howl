@@ -19,7 +19,7 @@ pub struct ExtraTiles {
     pub blank: Rect,
     pub moon: Rect,
     pub aim_line: Rect,
-    pub wounded: Rect,
+    pub death: Rect,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -201,7 +201,7 @@ impl Tileset {
             blank: extra_rect(&extra_table, "Blank",  tile_width, tile_height, tile_padding)?,
             moon: extra_rect(&extra_table, "Moon",  tile_width, tile_height, tile_padding)?,
             aim_line: extra_rect(&extra_table, "AimLine",  tile_width, tile_height, tile_padding)?,
-            wounded: extra_rect(&extra_table, "Wounded",  tile_width, tile_height, tile_padding)?,
+            death: extra_rect(&extra_table, "Death",  tile_width, tile_height, tile_padding)?,
         };
 
         Ok(Tileset {

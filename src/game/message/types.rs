@@ -5,6 +5,7 @@ pub enum MessageType {
     Intro,
     Title,
     PressAnyKey,
+    YouDied,
     Action(ActionMessageType),
     YouSee(Option<YouSeeMessageType>),
     YouRemember(Option<YouSeeMessageType>),
