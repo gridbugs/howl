@@ -258,10 +258,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             };
 
             match resolution {
-                TurnResolution::Quit(entity_id) => {
+                TurnResolution::Pause(entity_id) => {
                     let level = game_state.levels.level_mut(level_id);
-                    let ticket = level.turn_schedule.insert(entity_id, 0);
-                    level.ecs.insert_schedule_ticket(entity_id, ticket);
+                    let old_ticket = level.ecs.schedule_ticket(entity_id).expect("Expected schedule_ticket component");
+                    let new_ticket = level.turn_schedule.insert_with_ticket(entity_id, 0, old_ticket);
+                    level.ecs.insert_schedule_ticket(entity_id, new_ticket);
                     return Ok(ExitReason::Pause);
                 }
                 TurnResolution::Schedule(entity_id, delay) => {

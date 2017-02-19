@@ -116,7 +116,7 @@ pub fn die(action: &mut EcsAction, entity: EntityRef) {
         action.set_player_died();
     } else {
         let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
-        action.set_schedule_invalidate(ticket.sequence_no);
+        action.set_schedule_invalidate(ticket);
         action.remove_entity(entity);
     }
 }

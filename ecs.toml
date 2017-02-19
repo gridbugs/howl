@@ -116,6 +116,7 @@ imports = [
 
 [component.schedule_ticket]
     type = "ScheduleTicket"
+    copy = true
 
 [component.level_switch_trigger]
     type = "LevelSwitch"
@@ -144,7 +145,7 @@ imports = [
     copy = true
 
 [action_property.schedule_invalidate]
-    type = "u64"
+    type = "ScheduleTicket"
     copy = true
 
 [action_property.no_commit]

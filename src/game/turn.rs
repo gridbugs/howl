@@ -32,7 +32,7 @@ pub struct Turn<'game> {
 }
 
 pub enum TurnResolution {
-    Quit(EntityId),
+    Pause(EntityId),
     Schedule(EntityId, u64),
     LevelSwitch(LevelSwitch),
     GameOver(GameOverReason),
@@ -47,7 +47,7 @@ enum ForceRender {
 impl TurnResolution {
     pub fn game_continues(&self) -> bool {
         match *self {
-            TurnResolution::Quit(_) => false,
+            TurnResolution::Pause(_) => false,
             _ => true,
         }
     }
@@ -158,7 +158,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             match self.get_meta_action()? {
                 MetaAction::External(External::Quit) => {
                     self.declare_action_return(true)?;
-                    return Ok(TurnResolution::Quit(self.entity_id));
+                    return Ok(TurnResolution::Pause(self.entity_id));
                 }
                 MetaAction::ActionArgs(action_args) => {
                     if let Some(resolution) = self.try_commit_action(action_args)? {
@@ -323,8 +323,8 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                             level_switch = Some(level_switch_action);
                         }
 
-                        if let Some(sequence_no) = self.ecs_action.schedule_invalidate() {
-                            self.turn_schedule.invalidate(sequence_no);
+                        if let Some(ticket) = self.ecs_action.schedule_invalidate() {
+                            self.turn_schedule.invalidate(ticket);
                         }
 
                         if self.ecs_action.contains_player_died() {

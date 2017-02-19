@@ -64,10 +64,9 @@ impl<T> ScheduleEvent<T> {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct ScheduleTicket {
-    pub sequence_no: u64,
-    pub absolute_time: u64,
+    seq: u64,
 }
 
 pub struct Schedule<T> {
@@ -131,10 +130,6 @@ impl<T> Schedule<T> {
         }
     }
 
-    pub fn sequence_no(&self) -> u64 {
-        self.seq
-    }
-
     pub fn insert(&mut self, value: T, rel_time: u64) -> ScheduleTicket {
         let seq = self.seq;
         let abs_time = self.abs_time + rel_time;
@@ -144,8 +139,21 @@ impl<T> Schedule<T> {
         self.seq += 1;
 
         ScheduleTicket {
-            sequence_no: seq,
-            absolute_time: abs_time,
+            seq: seq,
+        }
+    }
+
+    pub fn insert_with_ticket(&mut self, value: T, rel_time: u64, ticket: ScheduleTicket) -> ScheduleTicket {
+
+        // it must be a ticket we've given out in the past
+        assert!(ticket.seq < self.seq, "Invalid schedule ticket");
+
+        let abs_time = self.abs_time + rel_time;
+        let entry = ScheduleEntry::new(value, abs_time, rel_time, ticket.seq);
+        self.heap.push(entry);
+
+        ScheduleTicket {
+            seq: ticket.seq,
         }
     }
 
@@ -175,7 +183,7 @@ impl<T> Schedule<T> {
         self.abs_time
     }
 
-    pub fn invalidate(&mut self, seq: u64) {
-        self.invalid.insert(seq);
+    pub fn invalidate(&mut self, ticket: ScheduleTicket) {
+        self.invalid.insert(ticket.seq);
     }
 }
