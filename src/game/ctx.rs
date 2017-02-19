@@ -208,6 +208,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         }
                     }
                     current_game_state = None;
+                    save_file::delete(args.user_path.as_path());
                 }
             }
 
