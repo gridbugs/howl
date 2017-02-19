@@ -10,9 +10,10 @@ pub mod menu_operation {
                                                         input: &mut I,
                                                         prelude: Option<MessageType>,
                                                         language: &Box<Language>,
-                                                        menu: Menu<T>) -> T {
+                                                        menu: Menu<T>,
+                                                        initial_state: Option<MenuState>) -> (T, MenuState) {
 
-        let mut state = MenuState::new();
+        let mut state = initial_state.unwrap_or_default();
 
         loop {
             renderer.publish_fullscreen_menu(prelude, &menu, &state, language);
@@ -26,7 +27,7 @@ pub mod menu_operation {
                         state.select_prev(&menu);
                     }
                     InputEvent::Return => {
-                        return state.confirm(menu);
+                        return (state.confirm(menu), state);
                     }
                     _ => {}
                 }

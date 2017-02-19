@@ -52,6 +52,12 @@ impl MenuState {
     }
 }
 
+impl Default for MenuState {
+    fn default() -> Self {
+        MenuState::new()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuItemState {
     Selected,

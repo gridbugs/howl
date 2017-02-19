@@ -39,6 +39,7 @@ enum MainMenuSelection {
     Quit,
     Continue,
     SaveAndQuit,
+    ViewControls,
 }
 
 pub enum GameOverReason {
@@ -145,6 +146,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     pub fn run(&mut self, args: Arguments) -> GameResult<()> {
 
         let mut current_game_state = save_file::load(args.user_path.as_path());
+        let mut current_menu_state = None;
 
         loop {
 
@@ -159,6 +161,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             }
 
             menu.push(MenuItem::new(MenuMessageType::NewGame, MainMenuSelection::NewGame));
+            menu.push(MenuItem::new(MenuMessageType::ViewControls, MainMenuSelection::ViewControls));
 
             if current_game_state.is_some() {
                 menu.push(MenuItem::new(MenuMessageType::SaveAndQuit, MainMenuSelection::SaveAndQuit));
@@ -166,12 +169,15 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 menu.push(MenuItem::new(MenuMessageType::Quit, MainMenuSelection::Quit));
             }
 
-            let item = menu_operation::run(
+            let (item, menu_state) = menu_operation::run(
                 self.renderer.borrow_mut().deref_mut(),
                 &mut self.input_source,
                 Some(MessageType::Title),
                 &self.language,
-                menu);
+                menu,
+                current_menu_state);
+
+            current_menu_state = None;
 
             let mut game_state = match item {
                 MainMenuSelection::Quit => {
@@ -186,12 +192,17 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     let mut game_state = GameState::new();
 
                     self.init_demo(&mut game_state);
-                    self.intro_message(&control_map);
+                    self.intro_message();
                     self.welcome_message(&game_state);
 
                     game_state
                 }
                 MainMenuSelection::Continue => current_game_state.take().expect("Missing game state"),
+                MainMenuSelection::ViewControls => {
+                    self.view_controls(&control_map);
+                    current_menu_state = Some(menu_state);
+                    continue;
+                }
             };
 
             Self::install_control_map(&mut game_state, control_map);
@@ -304,7 +315,18 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         ecs.message_log_borrow_mut(pc_id).expect("Expected message log component").add(message);
     }
 
-    fn intro_message(&mut self, control_map: &ControlMap) {
+    fn view_controls(&mut self, control_map: &ControlMap) {
+        let mut message = Message::new();
+
+        self.language.translate_controls(control_map, &mut message);
+        message.push(MessagePart::Newline);
+        message.push(MessagePart::Newline);
+        self.language.translate(MessageType::PressAnyKey, &mut message);
+
+        display_message_scrolling(self.renderer.borrow_mut().deref_mut(), &mut self.input_source, &message, true);
+    }
+
+    fn intro_message(&mut self) {
 
         let mut message = Message::new();
 
@@ -312,10 +334,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         message.push(MessagePart::Newline);
         message.push(MessagePart::Newline);
         self.language.translate(MessageType::PressAnyKey, &mut message);
-        message.push(MessagePart::Newline);
-        message.push(MessagePart::Newline);
-        message.push(MessagePart::Newline);
-        self.language.translate_controls(control_map, &mut message);
 
         display_message_scrolling(self.renderer.borrow_mut().deref_mut(), &mut self.input_source, &message, true);
     }

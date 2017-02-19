@@ -39,4 +39,5 @@ pub enum MenuMessageType {
     Continue,
     Quit,
     SaveAndQuit,
+    ViewControls,
 }

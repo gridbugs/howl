@@ -51,6 +51,9 @@ impl English {
             MenuMessageType::SaveAndQuit => {
                 message.push(MessagePart::plain("Save and Quit"));
             }
+            MenuMessageType::ViewControls => {
+                message.push(MessagePart::plain("View Controls"));
+            }
         }
     }
 
