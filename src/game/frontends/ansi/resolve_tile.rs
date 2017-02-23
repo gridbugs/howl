@@ -41,5 +41,9 @@ pub fn resolve_tile(tile_type: TileType) -> ansi::ComplexTile {
                                                 ansi::styles::BOLD),
         TileType::Book => ansi::foreground('=', ansi::colours::BRIGHT_MAGENTA,
                                                 ansi::styles::BOLD),
+        TileType::UpStairs => ansi::foreground('<', ansi::colours::WHITE,
+                                                ansi::styles::BOLD),
+        TileType::DownStairs => ansi::foreground('>', ansi::colours::WHITE,
+                                                ansi::styles::BOLD),
     }
 }

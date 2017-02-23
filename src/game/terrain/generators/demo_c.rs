@@ -5,10 +5,11 @@ use coord::Coord;
 
 const START_COORD: Coord = Coord { x: 30, y: 4 };
 
-pub fn demo_b<S: TurnScheduleQueue>(ids: &EntityIdReserver,
+pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                   rng: &GameRng,
                                   schedule: &mut S,
-                                  g: &mut EcsAction) -> TerrainMetadata {
+                                  g: &mut EcsAction,
+                                  _parent: ParentLevelCtx) -> TerrainMetadata {
 
     let (width, height) = util::terrain_from_strings(&level_str(), None, ids, schedule, g);
 

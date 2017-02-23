@@ -1,3 +1,5 @@
+use std::slice;
+
 use game::*;
 use ecs::*;
 use spatial_hash::*;
@@ -44,16 +46,18 @@ impl Level {
                        action: &mut EcsAction,
                        ids: &EntityIdReserver,
                        rng: &GameRng,
-                       action_id: u64) -> Self {
+                       action_id: u64,
+                       parent: Option<ParentLevelCtx>) -> (Self, LevelConnectionReport) {
 
         let mut schedule = TurnSchedule::new();
 
-        let md = terrain.generate(ids, rng, &mut schedule, action);
+        let TerrainMetadata { width, height, start_coord, connection_report } =
+            terrain.generate(ids, rng, &mut schedule, action, parent);
 
-        let mut sh = SpatialHashTable::new(md.width, md.height);
+        let mut sh = SpatialHashTable::new(width, height);
         let mut ecs = EcsCtx::new();
 
-        action.insert_position(pc_id, md.start_coord);
+        action.insert_position(pc_id, start_coord);
 
         let pc_ticket = schedule.insert(pc_id, NPC_TURN_OFFSET);
         action.insert_schedule_ticket(pc_id, pc_ticket);
@@ -62,11 +66,11 @@ impl Level {
 
         ecs.commit(action);
 
-        Level {
+        (Level {
             ecs: ecs,
             spatial_hash: sh,
             turn_schedule: schedule,
-        }
+        }, connection_report)
     }
 
     pub fn commit(&mut self, action: &mut EcsAction, action_id: u64) {
@@ -77,5 +81,44 @@ impl Level {
     pub fn commit_into(&mut self, from: &mut EcsAction, to: &mut EcsAction, action_id: u64) {
         self.spatial_hash.update(&self.ecs, from, action_id);
         self.ecs.commit_into(from, to);
+    }
+}
+
+pub struct LevelConnectionReport {
+    connections: Vec<LevelConnection>,
+}
+
+// Connection between a level switching entity (e.g. stairs) in an existing level and a new level
+#[derive(Clone, Copy)]
+pub struct LevelConnection {
+    pub original: EntityId,
+    pub new: EntityId,
+}
+
+impl LevelConnectionReport {
+    pub fn new() -> Self {
+        LevelConnectionReport {
+            connections: Vec::new(),
+        }
+    }
+
+    pub fn iter(&self) -> LevelConnectionReportIter {
+        LevelConnectionReportIter(self.connections.iter())
+    }
+
+    pub fn connect(&mut self, original: EntityId, new: EntityId) {
+        self.connections.push(LevelConnection {
+            original: original,
+            new: new,
+        });
+    }
+}
+
+pub struct LevelConnectionReportIter<'a>(slice::Iter<'a, LevelConnection>);
+
+impl<'a> Iterator for LevelConnectionReportIter<'a> {
+    type Item = LevelConnection;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(|r| *r)
     }
 }

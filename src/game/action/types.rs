@@ -30,7 +30,7 @@ pub enum ActionArgs {
     MoveClouds(EntityId),
     TransformTerrorPillarTerrorFly(EntityId),
     TransformTree(EntityId),
-    LevelSwitch(LevelSwitch),
+    LevelSwitch(EntityId, LevelSwitch),
     ProjectileCollision(ProjectileCollision),
     Damage(EntityId, usize),
     Die(EntityId),
@@ -70,8 +70,8 @@ impl ActionArgs {
             ActionArgs::TransformTree(entity_id) => {
                 actions::transform_tree(action, ecs.entity(entity_id));
             }
-            ActionArgs::LevelSwitch(level_switch) => {
-                actions::level_switch(action, level_switch);
+            ActionArgs::LevelSwitch(entity_id, level_switch) => {
+                actions::level_switch(action, entity_id, level_switch);
             }
             ActionArgs::ProjectileCollision(projectile_collision) => {
                 actions::projectile_collision(action, projectile_collision);

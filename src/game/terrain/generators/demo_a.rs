@@ -11,9 +11,7 @@ pub fn demo_a<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                   schedule: &mut S,
                                   g: &mut EcsAction) -> TerrainMetadata {
 
-    let level_switch = LevelSwitch {
-        terrain_type: TerrainType::DemoB,
-    };
+    let level_switch = LevelSwitch::NewLevel(TerrainType::DemoB);
     let (width, height) = util::terrain_from_strings(&level_str(), Some(level_switch), ids, schedule, g);
 
     util::generate_clouds(width, height, ids, rng, schedule, g);
@@ -22,6 +20,7 @@ pub fn demo_a<S: TurnScheduleQueue>(ids: &EntityIdReserver,
         width: width,
         height: height,
         start_coord: START_COORD,
+        connection_report: LevelConnectionReport::new(),
     }
 }
 

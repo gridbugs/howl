@@ -12,6 +12,8 @@ pub enum TileType {
     TerrorPillar,
     TerrorFly,
     Book,
+    UpStairs,
+    DownStairs,
 }
 
 impl TileType {
@@ -47,6 +49,8 @@ impl TileType {
             "TerrorPillar" => TileType::TerrorPillar,
             "TerrorFly" => TileType::TerrorFly,
             "Book" => TileType::Book,
+            "UpStairs" => TileType::UpStairs,
+            "DownStairs" => TileType::DownStairs,
             _ => return None,
         };
 

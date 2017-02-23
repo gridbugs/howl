@@ -15,7 +15,7 @@ pub fn level_switch_trigger(env: RuleEnv, action: &EcsAction, reactions: &mut Ve
             let level_switch = env.ecs.level_switch_trigger(trigger_id)
                 .expect("Entity missing level_switch_trigger");
 
-            reactions.push(Reaction::new(ActionArgs::LevelSwitch(level_switch), 0));
+            reactions.push(Reaction::new(ActionArgs::LevelSwitch(trigger_id, level_switch), 0));
             break;
         }
     }

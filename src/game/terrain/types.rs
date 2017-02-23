@@ -2,17 +2,24 @@ use ecs::*;
 use game::*;
 use coord::Coord;
 
-#[derive(Clone, Copy, Debug)]
 pub struct TerrainMetadata {
     pub width: usize,
     pub height: usize,
     pub start_coord: Coord,
+    pub connection_report: LevelConnectionReport,
+}
+
+pub struct ParentLevelCtx<'a> {
+    pub level: &'a Level,
+    pub level_id: LevelId,
+    pub entrance_entity_id: EntityId,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum TerrainType {
     DemoA,
     DemoB,
+    DemoC,
 }
 
 impl TerrainType {
@@ -20,10 +27,12 @@ impl TerrainType {
                                           ids: &EntityIdReserver,
                                           rng: &GameRng,
                                           schedule: &mut S,
-                                          action: &mut EcsAction) -> TerrainMetadata {
+                                          action: &mut EcsAction,
+                                          parent: Option<ParentLevelCtx>) -> TerrainMetadata {
         match self {
             TerrainType::DemoA => generators::demo_a(ids, rng, schedule, action),
             TerrainType::DemoB => generators::demo_b(ids, rng, schedule, action),
+            TerrainType::DemoC => generators::demo_c(ids, rng, schedule, action, parent.expect("Expected parent level")),
         }
     }
 }

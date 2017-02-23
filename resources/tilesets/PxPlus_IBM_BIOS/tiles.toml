@@ -48,3 +48,9 @@ foreground = { x = 12, y = 0 }
 
 [tiles.Book]
 foreground = { x = 15, y = 0 }
+
+[tiles.DownStairs]
+foreground = { x = 18, y = 0 }
+
+[tiles.UpStairs]
+foreground = { x = 19, y = 0 }

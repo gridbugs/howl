@@ -122,6 +122,8 @@ imports = [
     type = "LevelSwitch"
     copy = true
 
+[component.level_switch_returnable]
+
 [action_property.alternative_turn_time]
     type = "u64"
     copy = true
@@ -137,7 +139,7 @@ imports = [
     type = "ActionDescription"
 
 [action_property.level_switch_action]
-    type = "LevelSwitch"
+    type = "LevelSwitchAction"
     copy = true
 
 [action_property.projectile_collision]

@@ -34,7 +34,7 @@ pub struct Turn<'game> {
 pub enum TurnResolution {
     Pause(EntityId),
     Schedule(EntityId, u64),
-    LevelSwitch(LevelSwitch),
+    LevelSwitch(EntityId, LevelSwitch),
     GameOver(GameOverReason),
 }
 
@@ -55,7 +55,7 @@ impl TurnResolution {
 
 enum CommitResolution {
     Reschedule(u64),
-    LevelSwitch(LevelSwitch),
+    LevelSwitch(EntityId, LevelSwitch),
     GameOver(GameOverReason),
 }
 
@@ -167,8 +167,8 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                             CommitResolution::Reschedule(delay) => {
                                 return Ok(TurnResolution::Schedule(self.entity_id, delay));
                             }
-                            CommitResolution::LevelSwitch(level_switch) => {
-                                return Ok(TurnResolution::LevelSwitch(level_switch));
+                            CommitResolution::LevelSwitch(entity_id, level_switch) => {
+                                return Ok(TurnResolution::LevelSwitch(entity_id, level_switch));
                             }
                             CommitResolution::GameOver(reason) => {
                                 return Ok(TurnResolution::GameOver(reason));
@@ -366,7 +366,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
 
         if let Some(level_switch) = level_switch {
-            return Ok(Some(CommitResolution::LevelSwitch(level_switch)));
+            return Ok(Some(CommitResolution::LevelSwitch(level_switch.trigger_id, level_switch.level_switch)));
         }
 
         Ok(turn_time.map(|t| CommitResolution::Reschedule(cmp::max(t, MIN_TURN_TIME))))

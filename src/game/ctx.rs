@@ -282,8 +282,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     let ticket = level.turn_schedule.insert(entity_id, delay);
                     level.ecs.insert_schedule_ticket(entity_id, ticket);
                 }
-                TurnResolution::LevelSwitch(level_switch) => {
-                    self.switch_level(level_switch, game_state);
+                TurnResolution::LevelSwitch(trigger_id, level_switch) => {
+                    self.switch_level(trigger_id, level_switch, game_state);
                 }
                 TurnResolution::GameOver(reason) => {
                     return Ok(ExitReason::GameOver(reason));
@@ -345,12 +345,14 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let mut action = EcsAction::new();
         prototypes::pc(action.entity_mut(pc_id), Coord::new(0, 0));
 
-        let level = Level::new_with_pc(TerrainType::DemoA,
+        // throw away connections in the first level a they would have nothing to connect to anyway
+        let (level, _) = Level::new_with_pc(TerrainType::DemoA,
                                        pc_id,
                                        &mut action,
                                        &game_state.entity_ids,
                                        &self.rng,
-                                       game_state.action_id);
+                                       game_state.action_id,
+                                       None);
 
         game_state.action_id += 1;
 
@@ -362,7 +364,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         });
     }
 
-    fn switch_level(&mut self, level_switch: LevelSwitch, game_state: &mut GameState) {
+    fn switch_level(&mut self, trigger_id: EntityId, level_switch: LevelSwitch, game_state: &mut GameState) {
         let global_ids = game_state.global_ids.as_mut().expect("Unitialised game state");
 
         let mut pc_insert = EcsAction::new();
@@ -376,14 +378,55 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         game_state.action_id += 1;
 
-        let new_level = Level::new_with_pc(level_switch.terrain_type,
-                                           global_ids.pc_id,
-                                           &mut pc_insert,
-                                           &game_state.entity_ids,
-                                           &self.rng,
-                                           game_state.action_id);
-        game_state.action_id += 1;
+        match level_switch {
+            LevelSwitch::NewLevel(terrain_type) => {
 
-        global_ids.level_id = game_state.levels.add_level(new_level);
+                let ( level, connections ) = {
+
+                    let current_level = game_state.levels.level(global_ids.level_id);
+
+                    // create link to level trigger if it's possible to return
+                    let parent_ctx = if current_level.ecs.contains_level_switch_returnable(trigger_id) {
+                        Some(ParentLevelCtx {
+                            level: current_level,
+                            level_id: global_ids.level_id,
+                            entrance_entity_id: trigger_id,
+                        })
+                    } else {
+                        None
+                    };
+
+                    // create the new level
+                    Level::new_with_pc(terrain_type,
+                                       global_ids.pc_id,
+                                       &mut pc_insert,
+                                       &game_state.entity_ids,
+                                       &self.rng,
+                                       game_state.action_id,
+                                       parent_ctx)
+                };
+
+                game_state.action_id += 1;
+
+                // add the new level to the level table
+                let new_level_id = game_state.levels.add_level(level);
+
+                // update the current level
+                global_ids.level_id = new_level_id;
+
+                let current_level = game_state.levels.level_mut(global_ids.level_id);
+
+                for LevelConnection { original, new } in connections.iter() {
+                    let existing = ExistingLevel {
+                        level_id: new_level_id,
+                        entrance_entity_id: new,
+                    };
+                    current_level.ecs.insert_level_switch_trigger(original, LevelSwitch::ExistingLevel(existing));
+                }
+            }
+            LevelSwitch::ExistingLevel(_) => {
+
+            }
+        }
     }
 }
