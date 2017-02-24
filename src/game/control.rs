@@ -16,6 +16,8 @@ pub enum Control {
     Select,
     Quit,
     Help,
+    Ascend,
+    Descend,
 }
 
 pub type ControlMapIter<'a> = hash_map::Iter<'a, InputEvent, Control>;
@@ -55,6 +57,9 @@ impl ControlMap {
         self.insert(InputEvent::Down, Control::Direction(Direction::South));
         self.insert(InputEvent::Left, Control::Direction(Direction::West));
         self.insert(InputEvent::Right, Control::Direction(Direction::East));
+
+        self.insert(InputEvent::Char('<'), Control::Ascend);
+        self.insert(InputEvent::Char('>'), Control::Descend);
 
         self.insert(InputEvent::Char('c'), Control::Close);
         self.insert(InputEvent::Char('x'), Control::Examine);

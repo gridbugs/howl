@@ -12,6 +12,8 @@ fn parse_control(name: &str) -> Option<Control> {
         "South" => Control::Direction(Direction::South),
         "East" => Control::Direction(Direction::East),
         "West" => Control::Direction(Direction::West),
+        "Ascend" => Control::Ascend,
+        "Descend" => Control::Descend,
         "Close" => Control::Close,
         "Examine" => Control::Examine,
         "Wait" => Control::Wait,

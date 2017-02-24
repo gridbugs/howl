@@ -189,6 +189,33 @@ pub fn book<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: Lev
     entity.insert_tile(TileType::Book);
     entity.insert_tile_depth(1);
     entity.insert_level_switch_trigger(level_switch);
+    entity.insert_level_switch_auto();
+
+    entity
+}
+
+pub fn down_stairs<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: LevelSwitch, group: Option<usize>) -> E {
+
+    entity.insert_position(position);
+    entity.insert_tile(TileType::DownStairs);
+    entity.insert_tile_depth(1);
+    entity.insert_level_switch_trigger(level_switch);
+    entity.insert_level_switch_returnable();
+
+    group.map(|group| entity.insert_level_switch_group(group));
+
+    entity
+}
+
+pub fn up_stairs<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: LevelSwitch, group: Option<usize>) -> E {
+
+    entity.insert_position(position);
+    entity.insert_tile(TileType::UpStairs);
+    entity.insert_tile_depth(1);
+    entity.insert_level_switch_trigger(level_switch);
+    entity.insert_level_switch_returnable();
+
+    group.map(|group| entity.insert_level_switch_group(group));
 
     entity
 }

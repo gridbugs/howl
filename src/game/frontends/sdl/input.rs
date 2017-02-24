@@ -59,14 +59,27 @@ impl InputSource for SdlInputSource {
                         Keycode::Y => Some(InputEvent::Char('y')),
                         Keycode::Z => Some(InputEvent::Char('z')),
                         Keycode::Space => Some(InputEvent::Char(' ')),
-                        Keycode::Period => Some(InputEvent::Char('.')),
+                        Keycode::Period => {
+                            if keymod.contains(keyboard::LSHIFTMOD) || keymod.contains(keyboard::RSHIFTMOD) {
+                                Some(InputEvent::Char('>'))
+                            } else {
+                                Some(InputEvent::Char('.'))
+                            }
+                        }
+                        Keycode::Comma => {
+                            if keymod.contains(keyboard::LSHIFTMOD) || keymod.contains(keyboard::RSHIFTMOD) {
+                                Some(InputEvent::Char('<'))
+                            } else {
+                                Some(InputEvent::Char(','))
+                            }
+                        }
                         Keycode::Escape => Some(InputEvent::Escape),
                         Keycode::Return => Some(InputEvent::Return),
                         Keycode::Slash => {
-                            if keymod.contains(keyboard::LSHIFTMOD) {
+                            if keymod.contains(keyboard::LSHIFTMOD) || keymod.contains(keyboard::RSHIFTMOD) {
                                 Some(InputEvent::Char('?'))
                             } else {
-                                None
+                                Some(InputEvent::Char('/'))
                             }
                         }
                         _ => None,

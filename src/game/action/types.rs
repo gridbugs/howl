@@ -31,6 +31,7 @@ pub enum ActionArgs {
     TransformTerrorPillarTerrorFly(EntityId),
     TransformTree(EntityId),
     LevelSwitch(EntityId, LevelSwitch),
+    TryLevelSwitch(EntityId),
     ProjectileCollision(ProjectileCollision),
     Damage(EntityId, usize),
     Die(EntityId),
@@ -81,6 +82,9 @@ impl ActionArgs {
             }
             ActionArgs::Die(entity_id) => {
                 actions::die(action, ecs.entity(entity_id));
+            }
+            ActionArgs::TryLevelSwitch(entity_id) => {
+                actions::try_level_switch(action, entity_id);
             }
         }
     }

@@ -411,9 +411,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 // add the new level to the level table
                 let new_level_id = game_state.levels.add_level(level);
 
-                // update the current level
-                global_ids.level_id = new_level_id;
-
                 let current_level = game_state.levels.level_mut(global_ids.level_id);
 
                 for LevelConnection { original, new } in connections.iter() {
@@ -421,11 +418,36 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         level_id: new_level_id,
                         entrance_entity_id: new,
                     };
-                    current_level.ecs.insert_level_switch_trigger(original, LevelSwitch::ExistingLevel(existing));
-                }
-            }
-            LevelSwitch::ExistingLevel(_) => {
 
+                    let mut action = EcsAction::new();
+                    action.insert_level_switch_trigger(original, LevelSwitch::ExistingLevel(existing));
+                    current_level.commit(&mut action, game_state.action_id);
+                    game_state.action_id += 1;
+                }
+
+                // update the current level
+                global_ids.level_id = new_level_id;
+            }
+            LevelSwitch::ExistingLevel(existing) => {
+
+                // determine the new position for the character
+                let level = game_state.levels.level_mut(existing.level_id);
+                let destination = level.ecs.position(existing.entrance_entity_id)
+                    .expect("Missing position component");
+
+                // move the character
+                pc_insert.insert_position(global_ids.pc_id, destination);
+
+                // insert character into level's schedule
+                let ticket = level.turn_schedule.insert(global_ids.pc_id, PC_TURN_OFFSET);
+                pc_insert.insert_schedule_ticket(global_ids.pc_id, ticket);
+
+                // commit the action
+                level.commit(&mut pc_insert, game_state.action_id);
+                game_state.action_id += 1;
+
+                // update the current level
+                global_ids.level_id = existing.level_id;
             }
         }
     }

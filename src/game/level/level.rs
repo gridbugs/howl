@@ -59,7 +59,7 @@ impl Level {
 
         action.insert_position(pc_id, start_coord);
 
-        let pc_ticket = schedule.insert(pc_id, NPC_TURN_OFFSET);
+        let pc_ticket = schedule.insert(pc_id, PC_TURN_OFFSET);
         action.insert_schedule_ticket(pc_id, pc_ticket);
 
         sh.update(&ecs, &action, action_id);

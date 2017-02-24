@@ -100,6 +100,10 @@ pub fn level_switch(action: &mut EcsAction, trigger_id: EntityId, level_switch: 
     });
 }
 
+pub fn try_level_switch(action: &mut EcsAction, entity_id: EntityId) {
+    action.set_try_level_switch(entity_id);
+}
+
 pub fn projectile_collision(action: &mut EcsAction, projectile_collision: ProjectileCollision) {
     action.set_projectile_collision(projectile_collision);
     action.set_no_commit();
