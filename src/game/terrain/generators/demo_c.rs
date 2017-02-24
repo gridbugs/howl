@@ -9,8 +9,6 @@ const STAIR_COORDS: [Coord; 2] = [
     Coord { x: 22, y: 17 },
 ];
 
-const START_COORD: Coord = STAIR_COORDS[0];
-
 pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                   rng: &GameRng,
                                   schedule: &mut S,
@@ -24,6 +22,8 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
     let mut connections = LevelConnectionReport::new();
     let mut count = 0;
 
+    let mut start_coord = None;
+
     if let Some(entrance_group) = parent.level.ecs.level_switch_group(parent.entrance_entity_id) {
 
         // loop through all level switches with groups in the parent level
@@ -31,6 +31,10 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
 
             // check if the group is the same as the group of the current level switch
             if group == entrance_group {
+
+                if id == parent.entrance_entity_id {
+                    start_coord = Some(STAIR_COORDS[count]);
+                }
 
                 // create corresponding up stairs
                 let local_id = ids.new_id();
@@ -50,10 +54,12 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
 
                 // connect the level switch in the parent to the new level switch
                 connections.connect(id, local_id);
-
             }
         }
     } else {
+
+        start_coord = Some(STAIR_COORDS[count]);
+
         let local_id = ids.new_id();
 
         let existing = ExistingLevel {
@@ -72,7 +78,7 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
     TerrainMetadata {
         width: width,
         height: height,
-        start_coord: START_COORD,
+        start_coord: start_coord.expect("Expected start coordinate"),
         connection_report: connections,
     }
 }
