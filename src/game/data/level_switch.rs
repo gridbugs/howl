@@ -4,13 +4,14 @@ use ecs::*;
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum LevelSwitch {
     NewLevel(TerrainType),
-    ExistingLevel(ExistingLevel),
+    ExistingLevel(LevelExit),
 }
 
+// the id of a level, and the id of an entity within that level
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct ExistingLevel {
+pub struct LevelExit {
     pub level_id: LevelId,
-    pub entrance_entity_id: EntityId,
+    pub exit_id: EntityId,
 }
 
 #[derive(Clone, Copy, Debug)]

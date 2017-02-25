@@ -24,7 +24,7 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
 
     let mut start_coord = None;
 
-    if let Some(entrance_group) = parent.level.ecs.level_switch_group(parent.entrance_entity_id) {
+    if let Some(entrance_group) = parent.level.ecs.level_switch_group(parent.exit_id) {
 
         // loop through all level switches with groups in the parent level
         for (id, group) in parent.level.ecs.level_switch_group_iter() {
@@ -32,16 +32,16 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
             // check if the group is the same as the group of the current level switch
             if group == entrance_group {
 
-                if id == parent.entrance_entity_id {
+                if id == parent.exit_id {
                     start_coord = Some(STAIR_COORDS[count]);
                 }
 
                 // create corresponding up stairs
                 let local_id = ids.new_id();
 
-                let existing = ExistingLevel {
+                let existing = LevelExit {
                     level_id: parent.level_id,
-                    entrance_entity_id: id,
+                    exit_id: id,
                 };
 
                 prototypes::up_stairs(g.entity_mut(local_id),
@@ -62,9 +62,9 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
 
         let local_id = ids.new_id();
 
-        let existing = ExistingLevel {
+        let existing = LevelExit {
             level_id: parent.level_id,
-            entrance_entity_id: parent.entrance_entity_id,
+            exit_id: parent.exit_id,
         };
 
         prototypes::up_stairs(g.entity_mut(local_id),
@@ -72,7 +72,7 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                               LevelSwitch::ExistingLevel(existing),
                               Some(count));
 
-        connections.connect(parent.entrance_entity_id, local_id);
+        connections.connect(parent.exit_id, local_id);
     }
 
     TerrainMetadata {

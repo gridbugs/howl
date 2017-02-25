@@ -12,7 +12,7 @@ pub struct TerrainMetadata {
 pub struct ParentLevelCtx<'a> {
     pub level: &'a Level,
     pub level_id: LevelId,
-    pub entrance_entity_id: EntityId,
+    pub exit_id: EntityId,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]

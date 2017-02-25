@@ -207,7 +207,6 @@ pub fn down_stairs<E: EntityPopulate>(mut entity: E, position: Coord, level_swit
     entity.insert_tile(TileType::DownStairs);
     entity.insert_tile_depth(1);
     entity.insert_level_switch(level_switch);
-    entity.insert_level_switch_returnable();
 
     group.map(|group| entity.insert_level_switch_group(group));
 
@@ -220,7 +219,6 @@ pub fn up_stairs<E: EntityPopulate>(mut entity: E, position: Coord, level_switch
     entity.insert_tile(TileType::UpStairs);
     entity.insert_tile_depth(1);
     entity.insert_level_switch(level_switch);
-    entity.insert_level_switch_returnable();
 
     group.map(|group| entity.insert_level_switch_group(group));
 

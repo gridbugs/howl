@@ -76,7 +76,7 @@ pub struct GameState {
     global_ids: Option<GlobalIds>,
     entity_ids: EntityIdReserver,
     turn_id: u64,
-    action_id: u64,
+    action_id: ActionId,
 }
 
 impl GameState {
@@ -97,7 +97,7 @@ pub struct SerializableGameState {
     global_ids: Option<GlobalIds>,
     entity_ids: SerializableEntityIdReserver,
     turn_id: u64,
-    action_id: u64,
+    action_id: ActionId,
 }
 
 impl From<GameState> for SerializableGameState {
@@ -364,20 +364,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         });
     }
 
-    fn switch_level(&mut self, entity_id: EntityId, trigger_id: EntityId, level_switch: LevelSwitch, game_state: &mut GameState) {
+    fn switch_level(&mut self, entity_id: EntityId, exit_id: EntityId, level_switch: LevelSwitch, game_state: &mut GameState) {
         let global_ids = game_state.global_ids.as_mut().expect("Unitialised game state");
 
-        let mut entity_insert = EcsAction::new();
-
-        {
-            let current_level = game_state.levels.level_mut(global_ids.level_id);
-
-            // remove the entity from the level's entity store, creating an action that
-            // when applied, adds the entity to an entity store
-            let mut entity_remove = EcsAction::new();
-            entity_remove.remove_entity_by_id(entity_id, &current_level.ecs);
-            current_level.commit_into(&mut entity_remove, &mut entity_insert, game_state.action_id);
-        }
+        let mut entity_insert = game_state.levels
+            .level_mut(global_ids.level_id)
+            .remove_entity(entity_id, game_state.action_id);
 
         game_state.action_id += 1;
 
@@ -388,15 +380,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
                     let current_level = game_state.levels.level(global_ids.level_id);
 
-                    // create link to level trigger if it's possible to return
-                    let parent_ctx = if current_level.ecs.contains_level_switch_returnable(trigger_id) {
-                        Some(ParentLevelCtx {
-                            level: current_level,
-                            level_id: global_ids.level_id,
-                            entrance_entity_id: trigger_id,
-                        })
-                    } else {
-                        None
+                    // create link to level exit
+                    let parent_ctx = ParentLevelCtx {
+                        level: current_level,
+                        level_id: global_ids.level_id,
+                        exit_id: exit_id,
                     };
 
                     // create the new level
@@ -406,7 +394,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                            &game_state.entity_ids,
                                            &self.rng,
                                            game_state.action_id,
-                                           parent_ctx)
+                                           Some(parent_ctx))
                 };
 
                 game_state.action_id += 1;
@@ -414,42 +402,22 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 // add the new level to the level table
                 let new_level_id = game_state.levels.add_level(level);
 
-                let current_level = game_state.levels.level_mut(global_ids.level_id);
-
-                for LevelConnection { original, new } in connections.iter() {
-                    let existing = ExistingLevel {
-                        level_id: new_level_id,
-                        entrance_entity_id: new,
-                    };
-
-                    current_level.ecs.insert_level_switch(original, LevelSwitch::ExistingLevel(existing));
-                    game_state.action_id += 1;
-                }
+                // connect the current level to the new level
+                game_state.levels.level_mut(global_ids.level_id).connect(new_level_id, &connections);
 
                 // update the current level
                 global_ids.level_id = new_level_id;
             }
-            LevelSwitch::ExistingLevel(existing) => {
+            LevelSwitch::ExistingLevel(exit) => {
 
-                // determine the new position for the character
-                let level = game_state.levels.level_mut(existing.level_id);
-                let destination = level.ecs.position(existing.entrance_entity_id)
-                    .expect("Missing position component");
+                game_state.levels.level_mut(exit.level_id)
+                    .insert_entity_at_exit_and_commit(&mut entity_insert, entity_id,
+                                                      exit.exit_id, game_state.action_id);
 
-                // move the character
-                entity_insert.insert_position(entity_id, destination);
-
-                // insert character into level's schedule
-                let turn_offset = entity_insert.turn_offset(entity_id).expect("Expected component turn_offset");
-                let ticket = level.turn_schedule.insert(entity_id, turn_offset);
-                entity_insert.insert_schedule_ticket(entity_id, ticket);
-
-                // commit the action
-                level.commit(&mut entity_insert, game_state.action_id);
                 game_state.action_id += 1;
 
                 // update the current level
-                global_ids.level_id = existing.level_id;
+                global_ids.level_id = exit.level_id;
             }
         }
     }

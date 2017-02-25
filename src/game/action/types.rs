@@ -6,6 +6,8 @@ use spatial_hash::*;
 use direction::Direction;
 use coord::Coord;
 
+pub type ActionId = u64;
+
 #[derive(Debug, Clone, Copy)]
 pub enum External {
     Quit,

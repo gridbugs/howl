@@ -1,6 +1,7 @@
 use std::slice;
 
 use game::*;
+use game::data::*;
 use ecs::*;
 use spatial_hash::*;
 use util::*;
@@ -46,42 +47,84 @@ impl Level {
                        action: &mut EcsAction,
                        ids: &EntityIdReserver,
                        rng: &GameRng,
-                       action_id: u64,
+                       action_id: ActionId,
                        parent: Option<ParentLevelCtx>) -> (Self, LevelConnectionReport) {
 
         let mut schedule = TurnSchedule::new();
 
+        // generate the level's contents
         let TerrainMetadata { width, height, start_coord, connection_report } =
             terrain.generate(ids, rng, &mut schedule, action, parent);
 
-        let mut sh = SpatialHashTable::new(width, height);
-        let mut ecs = EcsCtx::new();
+        // compose a level object
+        let mut level = Level {
+            ecs: EcsCtx::new(),
+            spatial_hash: SpatialHashTable::new(width, height),
+            turn_schedule: schedule,
+        };
 
+        // add the character's starting position to the action that will insert them
         action.insert_position(entity_id, start_coord);
 
-        let turn_offset = action.turn_offset(entity_id).expect("Missing component turn_offset");
-        let pc_ticket = schedule.insert(entity_id, turn_offset);
-        action.insert_schedule_ticket(entity_id, pc_ticket);
+        // insert the character to the schedule and level contents
+        level.schedule_from_action_and_commit(action, entity_id, action_id);
 
-        sh.update(&ecs, &action, action_id);
-
-        ecs.commit(action);
-
-        (Level {
-            ecs: ecs,
-            spatial_hash: sh,
-            turn_schedule: schedule,
-        }, connection_report)
+        (level, connection_report)
     }
 
-    pub fn commit(&mut self, action: &mut EcsAction, action_id: u64) {
+    pub fn schedule_from_action(&mut self, action: &mut EcsAction, entity_id: EntityId) {
+        let turn_offset = action.turn_offset(entity_id).expect("Missing component turn_offset");
+        let ticket = self.turn_schedule.insert(entity_id, turn_offset);
+        action.insert_schedule_ticket(entity_id, ticket);
+    }
+
+    pub fn schedule_from_action_and_commit(&mut self, action: &mut EcsAction, entity_id: EntityId, action_id: ActionId) {
+        self.schedule_from_action(action, entity_id);
+        self.commit(action, action_id);
+    }
+
+    pub fn insert_entity_at_exit_and_commit(&mut self, action: &mut EcsAction,
+                                            entity_id: EntityId, exit_id: EntityId, action_id: ActionId) {
+
+        // find the position of the exit
+        let position = self.ecs.position(exit_id).expect("Missing position component");
+
+        // move the character to that position in the action that will insert them
+        action.insert_position(entity_id, position);
+
+        self.schedule_from_action_and_commit(action, entity_id, action_id);
+    }
+
+    pub fn commit(&mut self, action: &mut EcsAction, action_id: ActionId) {
         self.spatial_hash.update(&self.ecs, action, action_id);
         self.ecs.commit(action);
     }
 
-    pub fn commit_into(&mut self, from: &mut EcsAction, to: &mut EcsAction, action_id: u64) {
+    pub fn commit_into(&mut self, from: &mut EcsAction, to: &mut EcsAction, action_id: ActionId) {
         self.spatial_hash.update(&self.ecs, from, action_id);
         self.ecs.commit_into(from, to);
+    }
+
+    pub fn remove_entity(&mut self, entity_id: EntityId, action_id: ActionId) -> EcsAction {
+        // remove the entity from the level's entity store, creating an action that
+        // when applied, adds the entity to an entity store
+        let mut entity_remove = EcsAction::new();
+        let mut entity_insert = EcsAction::new();
+        entity_remove.remove_entity_by_id(entity_id, &self.ecs);
+        self.commit_into(&mut entity_remove, &mut entity_insert, action_id);
+
+        entity_insert
+    }
+
+    pub fn connect(&mut self, level_id: LevelId, connections: &LevelConnectionReport) {
+        for LevelConnection { original, new } in connections.iter() {
+            let exit = LevelExit {
+                level_id: level_id,
+                exit_id: new,
+            };
+
+            self.ecs.insert_level_switch(original, LevelSwitch::ExistingLevel(exit));
+        }
     }
 }
 

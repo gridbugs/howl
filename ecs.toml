@@ -126,7 +126,6 @@ imports = [
     type = "LevelSwitch"
     copy = true
 
-[component.level_switch_returnable]
 [component.level_switch_auto]
 [component.level_switch_group]
     type = "usize"
