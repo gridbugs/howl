@@ -373,7 +373,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         game_state.action_id += 1;
 
-        match level_switch {
+        if entity_id == global_ids.pc_id {
+            let level = game_state.levels.level(global_ids.level_id);
+            self.pc_observe_from_action(&mut entity_insert, entity_id, global_ids.level_id, level, game_state.action_id);
+        }
+
+        let new_level_id = match level_switch {
             LevelSwitch::NewLevel(terrain_type) => {
 
                 let ( level, connections ) = {
@@ -405,8 +410,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 // connect the current level to the new level
                 game_state.levels.level_mut(global_ids.level_id).connect(new_level_id, &connections);
 
-                // update the current level
-                global_ids.level_id = new_level_id;
+                new_level_id
             }
             LevelSwitch::ExistingLevel(exit) => {
 
@@ -416,9 +420,26 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
                 game_state.action_id += 1;
 
-                // update the current level
-                global_ids.level_id = exit.level_id;
+                exit.level_id
             }
-        }
+        };
+
+        // update the current level
+        global_ids.level_id = new_level_id;
+    }
+
+    fn pc_observe_from_action(&self, action: &mut EcsAction, entity_id: EntityId,
+                              level_id: LevelId, level: &Level, action_id: ActionId) {
+
+        let position = action.position(entity_id).expect("Missing component position");
+        let vision_distance = action.vision_distance(entity_id).expect("Missing component vision_distance");
+        let knowledge = action.drawable_knowledge_mut(entity_id).expect("Missing component drawable_knowledge");
+        let level_knowledge = knowledge.level_mut_or_insert_size(level_id,
+                                                                 level.spatial_hash.width(),
+                                                                 level.spatial_hash.height());
+
+        let action_env = ActionEnv::new(&level.ecs, action_id);
+
+        self.pc_observer.observe(position, &level.spatial_hash, vision_distance, level_knowledge, action_env);
     }
 }
