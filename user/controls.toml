@@ -5,18 +5,17 @@ North = "Up"
 South = "Down"
 East = "Right"
 West = "Left"
-Ascend = "<"
-Descend = ">"
 
 # Interaction
-Close = "c"
+Use = "Space"
+Use = "Return"
 Examine = "x"
 Wait = "."
 
 # Combat
 Fire = "f"
 NextTarget = "n"
-PrevTarget = "m"
+PrevTarget = "N"
 
 # UI
 DisplayMessageLog = "t"

@@ -66,6 +66,7 @@ impl English {
             InputEvent::Right => MessagePart::plain("right"),
             InputEvent::Escape => MessagePart::plain("esc"),
             InputEvent::Return => MessagePart::plain("return"),
+            InputEvent::Space => MessagePart::plain("space"),
             InputEvent::Quit => return None,
         };
 
@@ -98,8 +99,7 @@ impl English {
             Control::Select => "select",
             Control::Quit => "quit",
             Control::Help => "help",
-            Control::Ascend => "ascend",
-            Control::Descend => "descend",
+            Control::Use => "use",
         };
 
         message.push(MessagePart::plain(string));
@@ -167,14 +167,13 @@ impl Language for English {
 
     fn translate_controls(&self, control_map: &ControlMap, message: &mut Message) {
 
-        const NUM_CONTROLS: usize = 15;
+        const NUM_CONTROLS: usize = 14;
         const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
             Control::Direction(Direction::North),
             Control::Direction(Direction::South),
             Control::Direction(Direction::East),
             Control::Direction(Direction::West),
-            Control::Ascend,
-            Control::Descend,
+            Control::Use,
             Control::Wait,
             Control::Close,
             Control::Fire,

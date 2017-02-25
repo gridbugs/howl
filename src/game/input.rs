@@ -8,6 +8,7 @@ pub enum InputEvent {
     Quit,
     Escape,
     Return,
+    Space,
 }
 
 pub trait InputSource {

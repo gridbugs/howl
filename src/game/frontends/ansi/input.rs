@@ -6,6 +6,7 @@ use rustty;
 const ETX: char = '\u{3}';
 const ESC: char = '\u{1b}';
 const RETURN: char = '\r';
+const SPACE: char = ' ';
 
 impl InputSource for AnsiInputSource {
     fn next_input(&mut self) -> Option<InputEvent> {
@@ -15,6 +16,7 @@ impl InputSource for AnsiInputSource {
                 rustty::Event::Char(ETX) => Some(InputEvent::Quit),
                 rustty::Event::Char(ESC) => Some(InputEvent::Escape),
                 rustty::Event::Char(RETURN) => Some(InputEvent::Return),
+                rustty::Event::Char(SPACE) => Some(InputEvent::Space),
                 rustty::Event::Char(ch) => Some(InputEvent::Char(ch)),
                 rustty::Event::Up => Some(InputEvent::Up),
                 rustty::Event::Down => Some(InputEvent::Down),

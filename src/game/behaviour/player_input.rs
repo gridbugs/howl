@@ -241,7 +241,7 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         display_help(input, input_source, map);
                         None
                     }
-                    Control::Ascend | Control::Descend => {
+                    Control::Use => {
                         Some(MetaAction::ActionArgs(ActionArgs::TryLevelSwitch(input.entity.id())))
                     }
                     _ => None,

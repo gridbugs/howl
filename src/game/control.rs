@@ -6,18 +6,17 @@ use direction::Direction;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Control {
     Direction(Direction),
-    Close,
+    Use,
     Fire,
     NextTarget,
     PrevTarget,
+    Close,
     Wait,
     DisplayMessageLog,
     Examine,
     Select,
     Quit,
     Help,
-    Ascend,
-    Descend,
 }
 
 pub type ControlMapIter<'a> = hash_map::Iter<'a, InputEvent, Control>;
@@ -58,8 +57,8 @@ impl ControlMap {
         self.insert(InputEvent::Left, Control::Direction(Direction::West));
         self.insert(InputEvent::Right, Control::Direction(Direction::East));
 
-        self.insert(InputEvent::Char('<'), Control::Ascend);
-        self.insert(InputEvent::Char('>'), Control::Descend);
+        self.insert(InputEvent::Return, Control::Use);
+        self.insert(InputEvent::Space, Control::Use);
 
         self.insert(InputEvent::Char('c'), Control::Close);
         self.insert(InputEvent::Char('x'), Control::Examine);
@@ -67,7 +66,7 @@ impl ControlMap {
 
         self.insert(InputEvent::Char('f'), Control::Fire);
         self.insert(InputEvent::Char('n'), Control::NextTarget);
-        self.insert(InputEvent::Char('m'), Control::PrevTarget);
+        self.insert(InputEvent::Char('N'), Control::PrevTarget);
 
         self.insert(InputEvent::Char('t'), Control::DisplayMessageLog);
         self.insert(InputEvent::Char('?'), Control::Help);
