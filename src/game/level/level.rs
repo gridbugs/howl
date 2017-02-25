@@ -41,8 +41,8 @@ impl From<SerializableLevel> for Level {
 }
 
 impl Level {
-    pub fn new_with_pc(terrain: TerrainType,
-                       pc_id: EntityId,
+    pub fn new_with_entity(terrain: TerrainType,
+                       entity_id: EntityId,
                        action: &mut EcsAction,
                        ids: &EntityIdReserver,
                        rng: &GameRng,
@@ -57,10 +57,11 @@ impl Level {
         let mut sh = SpatialHashTable::new(width, height);
         let mut ecs = EcsCtx::new();
 
-        action.insert_position(pc_id, start_coord);
+        action.insert_position(entity_id, start_coord);
 
-        let pc_ticket = schedule.insert(pc_id, PC_TURN_OFFSET);
-        action.insert_schedule_ticket(pc_id, pc_ticket);
+        let turn_offset = action.turn_offset(entity_id).expect("Missing component turn_offset");
+        let pc_ticket = schedule.insert(entity_id, turn_offset);
+        action.insert_schedule_ticket(entity_id, pc_ticket);
 
         sh.update(&ecs, &action, action_id);
 

@@ -93,10 +93,11 @@ pub fn move_clouds<R: Rng>(action: &mut EcsAction, entity_id: EntityId, ecs: &Ec
     }
 }
 
-pub fn level_switch(action: &mut EcsAction, trigger_id: EntityId, level_switch: LevelSwitch) {
+pub fn level_switch(action: &mut EcsAction, entity_id: EntityId, exit_id: EntityId, level_switch: LevelSwitch) {
     action.set_level_switch_action(LevelSwitchAction {
+        entity_id: entity_id,
+        exit_id: exit_id,
         level_switch: level_switch,
-        trigger_id: trigger_id,
     });
 }
 

@@ -47,7 +47,8 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
                     let id = prototypes::terror_pillar(g, ids, coord);
 
-                    let ticket = schedule.schedule_turn(id, NPC_TURN_OFFSET);
+                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
                 }
                 _ => panic!(),
@@ -68,6 +69,7 @@ pub fn generate_clouds<S: TurnScheduleQueue>(width: usize,
                                              g: &mut EcsAction) {
     let cloud_id = ids.new_id();
     prototypes::clouds(g.entity_mut(cloud_id), width, height, rng.inner_mut().deref_mut());
-    let ticket = schedule.schedule_turn(cloud_id, ENV_TURN_OFFSET);
+    let turn_offset = g.turn_offset(cloud_id).expect("Expected component turn_offset");
+    let ticket = schedule.schedule_turn(cloud_id, turn_offset);
     g.insert_schedule_ticket(cloud_id, ticket);
 }

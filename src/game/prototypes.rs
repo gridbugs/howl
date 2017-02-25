@@ -6,6 +6,10 @@ use ecs::*;
 use game::*;
 use game::data::*;
 
+pub const ENV_TURN_OFFSET: u64 = 0;
+pub const NPC_TURN_OFFSET: u64 = 1;
+pub const PC_TURN_OFFSET: u64 = 2;
+
 pub fn wall<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_opacity(1.0);
@@ -78,6 +82,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::PlayerInput);
+    entity.insert_turn_offset(PC_TURN_OFFSET);
     entity.insert_drawable_knowledge(DrawableKnowledge::new());
     entity.insert_vision_distance(16);
     entity.insert_door_opener();
@@ -116,6 +121,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::SimpleNpc);
+    entity.insert_turn_offset(NPC_TURN_OFFSET);
     entity.insert_vision_distance(8);
     entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
     entity.insert_path_traverse(PathTraverse::new());
@@ -178,6 +184,7 @@ pub fn clouds<E: EntityPopulate, R: Rng>(mut entity: E, width: usize, height: us
                                               SCROLL_RATE, MUTATE_RATE, r));
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::Clouds);
+    entity.insert_turn_offset(ENV_TURN_OFFSET);
     entity.insert_turn_time(TURN_DURATION_BASE);
 
     entity
@@ -188,7 +195,7 @@ pub fn book<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: Lev
     entity.insert_position(position);
     entity.insert_tile(TileType::Book);
     entity.insert_tile_depth(1);
-    entity.insert_level_switch_trigger(level_switch);
+    entity.insert_level_switch(level_switch);
     entity.insert_level_switch_auto();
 
     entity
@@ -199,7 +206,7 @@ pub fn down_stairs<E: EntityPopulate>(mut entity: E, position: Coord, level_swit
     entity.insert_position(position);
     entity.insert_tile(TileType::DownStairs);
     entity.insert_tile_depth(1);
-    entity.insert_level_switch_trigger(level_switch);
+    entity.insert_level_switch(level_switch);
     entity.insert_level_switch_returnable();
 
     group.map(|group| entity.insert_level_switch_group(group));
@@ -212,7 +219,7 @@ pub fn up_stairs<E: EntityPopulate>(mut entity: E, position: Coord, level_switch
     entity.insert_position(position);
     entity.insert_tile(TileType::UpStairs);
     entity.insert_tile_depth(1);
-    entity.insert_level_switch_trigger(level_switch);
+    entity.insert_level_switch(level_switch);
     entity.insert_level_switch_returnable();
 
     group.map(|group| entity.insert_level_switch_group(group));

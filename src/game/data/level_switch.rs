@@ -15,6 +15,7 @@ pub struct ExistingLevel {
 
 #[derive(Clone, Copy, Debug)]
 pub struct LevelSwitchAction {
+    pub entity_id: EntityId,
+    pub exit_id: EntityId,
     pub level_switch: LevelSwitch,
-    pub trigger_id: EntityId,
 }

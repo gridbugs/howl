@@ -3,7 +3,7 @@ use ecs::*;
 
 pub fn moon_transform(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for entity_id in action.moon().insertion_iter() {
+    for entity_id in action.moon_profile().insertion_iter() {
         if let Some(position) = env.ecs.position(entity_id) {
             let cell = env.spatial_hash.get(position);
             for transformer_id in cell.transform_on_moon_change_iter() {
@@ -21,7 +21,7 @@ pub fn moon_transform(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reac
         }
     }
 
-    for entity_id in action.moon().removal_iter() {
+    for entity_id in action.moon_profile().removal_iter() {
         if let Some(position) = env.ecs.position(entity_id) {
             let cell = env.spatial_hash.get(position);
             for transformer_id in cell.transform_on_moon_change_iter() {

@@ -15,9 +15,6 @@ const FAILED_ACTION_DELAY: u64 = 16;
 const MIN_TURN_TIME: u64 = 1;
 
 pub const TURN_DURATION_BASE: u64 = 16;
-pub const ENV_TURN_OFFSET: u64 = 0;
-pub const NPC_TURN_OFFSET: u64 = 1;
-pub const PC_TURN_OFFSET: u64 = 2;
 
 #[derive(Clone, Copy)]
 pub struct ActionEnv<'game> {
@@ -34,7 +31,11 @@ pub struct Turn<'game> {
 pub enum TurnResolution {
     Pause(EntityId),
     Schedule(EntityId, u64),
-    LevelSwitch(EntityId, LevelSwitch),
+    LevelSwitch {
+        entity_id: EntityId,
+        exit_id: EntityId,
+        level_switch: LevelSwitch,
+    },
     GameOver(GameOverReason),
 }
 
@@ -55,7 +56,11 @@ impl TurnResolution {
 
 enum CommitResolution {
     Reschedule(u64),
-    LevelSwitch(EntityId, LevelSwitch),
+    LevelSwitch {
+        entity_id: EntityId,
+        exit_id: EntityId,
+        level_switch: LevelSwitch,
+    },
     GameOver(GameOverReason),
 }
 
@@ -167,8 +172,12 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                             CommitResolution::Reschedule(delay) => {
                                 return Ok(TurnResolution::Schedule(self.entity_id, delay));
                             }
-                            CommitResolution::LevelSwitch(entity_id, level_switch) => {
-                                return Ok(TurnResolution::LevelSwitch(entity_id, level_switch));
+                            CommitResolution::LevelSwitch { entity_id, exit_id, level_switch } => {
+                                return Ok(TurnResolution::LevelSwitch {
+                                    entity_id: entity_id, 
+                                    exit_id: exit_id,
+                                    level_switch: level_switch,
+                                });
                             }
                             CommitResolution::GameOver(reason) => {
                                 return Ok(TurnResolution::GameOver(reason));
@@ -219,8 +228,8 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::enemy_collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::pc_collision(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::level_switch_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::level_switch_trigger_auto(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::level_switch(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::level_switch_auto(rule_env, self.ecs_action, self.rule_reactions)?;
         }
 
         RULE_ACCEPT
@@ -367,7 +376,11 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
 
         if let Some(level_switch) = level_switch {
-            return Ok(Some(CommitResolution::LevelSwitch(level_switch.trigger_id, level_switch.level_switch)));
+            return Ok(Some(CommitResolution::LevelSwitch {
+                entity_id: level_switch.entity_id,
+                exit_id: level_switch.exit_id,
+                level_switch: level_switch.level_switch
+            }));
         }
 
         Ok(turn_time.map(|t| CommitResolution::Reschedule(cmp::max(t, MIN_TURN_TIME))))

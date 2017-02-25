@@ -15,7 +15,7 @@ pub fn realtime_velocity_start(env: RuleEnv, action: &EcsAction, reactions: &mut
 
 pub fn realtime_velocity(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (entity_id, _position) in action.position().insertion_copy_iter() {
+    for (entity_id, _position) in action.position_profile().insertion_copy_iter() {
         let entity = env.ecs.entity(entity_id);
         if let Some(velocity) = entity.realtime_velocity() {
             reactions.push(Reaction::new(ActionArgs::RealtimeVelocityMove(entity_id, *velocity), 0));

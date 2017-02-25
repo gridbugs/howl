@@ -18,7 +18,7 @@
     component = "door_state"
     component_has_type = true
 
-[field.level_switch_trigger]
+[field.level_switch]
     type = "any"
     component_has_type = true
 

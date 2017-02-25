@@ -4,7 +4,7 @@ use ecs::*;
 
 pub fn projectile_collision_trigger(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (projectile_id, position) in action.position().insertion_copy_iter() {
+    for (projectile_id, position) in action.position_profile().insertion_copy_iter() {
 
         if let Some(collider_id) = env.spatial_hash.get(position).any_projectile_collider() {
 

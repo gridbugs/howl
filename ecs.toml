@@ -82,6 +82,10 @@ imports = [
     type = "BehaviourState"
     container = "RefCell"
 
+[component.turn_offset]
+    type = "u64"
+    copy = true
+
 [component.drawable_knowledge]
     type = "DrawableKnowledge"
     container = "RefCell"
@@ -118,7 +122,7 @@ imports = [
     type = "ScheduleTicket"
     copy = true
 
-[component.level_switch_trigger]
+[component.level_switch]
     type = "LevelSwitch"
     copy = true
 

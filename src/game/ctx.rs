@@ -282,8 +282,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     let ticket = level.turn_schedule.insert(entity_id, delay);
                     level.ecs.insert_schedule_ticket(entity_id, ticket);
                 }
-                TurnResolution::LevelSwitch(trigger_id, level_switch) => {
-                    self.switch_level(trigger_id, level_switch, game_state);
+                TurnResolution::LevelSwitch { entity_id, exit_id, level_switch } => {
+                    self.switch_level(entity_id, exit_id, level_switch, game_state);
                 }
                 TurnResolution::GameOver(reason) => {
                     return Ok(ExitReason::GameOver(reason));
@@ -346,13 +346,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         prototypes::pc(action.entity_mut(pc_id), Coord::new(0, 0));
 
         // throw away connections in the first level a they would have nothing to connect to anyway
-        let (level, _) = Level::new_with_pc(TerrainType::DemoA,
-                                       pc_id,
-                                       &mut action,
-                                       &game_state.entity_ids,
-                                       &self.rng,
-                                       game_state.action_id,
-                                       None);
+        let (level, _) = Level::new_with_entity(TerrainType::DemoA,
+                                                pc_id,
+                                                &mut action,
+                                                &game_state.entity_ids,
+                                                &self.rng,
+                                                game_state.action_id,
+                                                None);
 
         game_state.action_id += 1;
 
@@ -364,16 +364,19 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         });
     }
 
-    fn switch_level(&mut self, trigger_id: EntityId, level_switch: LevelSwitch, game_state: &mut GameState) {
+    fn switch_level(&mut self, entity_id: EntityId, trigger_id: EntityId, level_switch: LevelSwitch, game_state: &mut GameState) {
         let global_ids = game_state.global_ids.as_mut().expect("Unitialised game state");
 
-        let mut pc_insert = EcsAction::new();
-        let mut pc_remove = EcsAction::new();
+        let mut entity_insert = EcsAction::new();
 
         {
             let current_level = game_state.levels.level_mut(global_ids.level_id);
-            pc_remove.remove_entity_by_id(global_ids.pc_id, &current_level.ecs);
-            current_level.commit_into(&mut pc_remove, &mut pc_insert, game_state.action_id);
+
+            // remove the entity from the level's entity store, creating an action that
+            // when applied, adds the entity to an entity store
+            let mut entity_remove = EcsAction::new();
+            entity_remove.remove_entity_by_id(entity_id, &current_level.ecs);
+            current_level.commit_into(&mut entity_remove, &mut entity_insert, game_state.action_id);
         }
 
         game_state.action_id += 1;
@@ -397,13 +400,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     };
 
                     // create the new level
-                    Level::new_with_pc(terrain_type,
-                                       global_ids.pc_id,
-                                       &mut pc_insert,
-                                       &game_state.entity_ids,
-                                       &self.rng,
-                                       game_state.action_id,
-                                       parent_ctx)
+                    Level::new_with_entity(terrain_type,
+                                           entity_id,
+                                           &mut entity_insert,
+                                           &game_state.entity_ids,
+                                           &self.rng,
+                                           game_state.action_id,
+                                           parent_ctx)
                 };
 
                 game_state.action_id += 1;
@@ -419,9 +422,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         entrance_entity_id: new,
                     };
 
-                    let mut action = EcsAction::new();
-                    action.insert_level_switch_trigger(original, LevelSwitch::ExistingLevel(existing));
-                    current_level.commit(&mut action, game_state.action_id);
+                    current_level.ecs.insert_level_switch(original, LevelSwitch::ExistingLevel(existing));
                     game_state.action_id += 1;
                 }
 
@@ -436,14 +437,15 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     .expect("Missing position component");
 
                 // move the character
-                pc_insert.insert_position(global_ids.pc_id, destination);
+                entity_insert.insert_position(entity_id, destination);
 
                 // insert character into level's schedule
-                let ticket = level.turn_schedule.insert(global_ids.pc_id, PC_TURN_OFFSET);
-                pc_insert.insert_schedule_ticket(global_ids.pc_id, ticket);
+                let turn_offset = entity_insert.turn_offset(entity_id).expect("Expected component turn_offset");
+                let ticket = level.turn_schedule.insert(entity_id, turn_offset);
+                entity_insert.insert_schedule_ticket(entity_id, ticket);
 
                 // commit the action
-                level.commit(&mut pc_insert, game_state.action_id);
+                level.commit(&mut entity_insert, game_state.action_id);
                 game_state.action_id += 1;
 
                 // update the current level
