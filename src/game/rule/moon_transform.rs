@@ -1,6 +1,31 @@
 use game::*;
 use ecs::*;
 
+pub fn moon_move_transform(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
+
+    for (entity_id, new_position) in action.position_profile().insertion_copy_iter() {
+
+        let entity = env.ecs.post_action_entity(entity_id, action);
+
+        if let Some(transformation_state) = entity.transformation_state() {
+
+            let transformation_type = entity.transformation_type().expect("Expected transformation_type component");
+
+            if env.spatial_hash.get(new_position).moon() {
+                if transformation_state == TransformationState::Real {
+                    reactions.push(Reaction::new(transformation_type.to_action_args(entity_id), 0));
+                }
+            } else {
+                if transformation_state == TransformationState::Other {
+                    reactions.push(Reaction::new(transformation_type.to_action_args(entity_id), 0));
+                }
+            }
+        }
+    }
+
+    RULE_ACCEPT
+}
+
 pub fn moon_transform(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
     for entity_id in action.moon_profile().insertion_iter() {

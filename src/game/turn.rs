@@ -110,52 +110,12 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         let resolution = self.take_turn()?;
 
         match resolution {
-            TurnResolution::Schedule(id, old_delay) => {
-                let new_delay = if let Some(delay) = self.process_transformation()? {
-                    delay
-                } else {
-                    old_delay
-                };
-
-                Ok(TurnResolution::Schedule(id, new_delay))
+            TurnResolution::Schedule(id, ..) => {
+                let delay = self.ecs.turn_time(self.entity_id).expect("Expected turn_time component");
+                Ok(TurnResolution::Schedule(id, delay))
             }
             other => Ok(other),
         }
-    }
-
-    fn process_transformation(&mut self) -> GameResult<Option<u64>> {
-        if let Some(transformation) = self.get_transformation() {
-            let action_args = transformation.to_action_args(self.entity_id);
-            self.try_commit_action(action_args)?;
-
-            let delay = self.ecs.turn_time(self.entity_id);
-            return Ok(delay);
-        }
-
-        Ok(None)
-    }
-
-    fn get_transformation(&self) -> Option<TransformationType> {
-        // The state of the cell in which an actor ends their turn determines
-        // whether a transformation will occur.
-
-        let entity = self.ecs.entity(self.entity_id);
-
-        if let Some(position) = entity.position() {
-            if let Some(transformation_state) = entity.transformation_state() {
-                if self.spatial_hash.get(position).moon() {
-                    if transformation_state == TransformationState::Real {
-                        return entity.transformation_type();
-                    }
-                } else {
-                    if transformation_state == TransformationState::Other {
-                        return entity.transformation_type();
-                    }
-                }
-            }
-        }
-
-        None
     }
 
     fn take_turn(&mut self) -> GameResult<TurnResolution> {
@@ -230,6 +190,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::pc_collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::level_switch(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::level_switch_auto(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::moon_move_transform(rule_env, self.ecs_action, self.rule_reactions)?;
         }
 
         RULE_ACCEPT
