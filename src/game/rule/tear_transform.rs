@@ -31,7 +31,7 @@ pub fn tear_transform(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reac
     for entity_id in action.tear_profile().insertion_iter() {
         if let Some(position) = env.ecs.position(entity_id) {
             let cell = env.spatial_hash.get(position);
-            for transformer_id in cell.tear_transform_iter() {
+            for transformer_id in cell.transformation_state_iter() {
                 let transformer = env.ecs.entity(transformer_id);
                 let transformation_state = transformer.transformation_state()
                     .expect("Entity missing transformation_state");
@@ -49,7 +49,7 @@ pub fn tear_transform(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reac
     for entity_id in action.tear_profile().removal_iter() {
         if let Some(position) = env.ecs.position(entity_id) {
             let cell = env.spatial_hash.get(position);
-            for transformer_id in cell.tear_transform_iter() {
+            for transformer_id in cell.transformation_state_iter() {
                 let transformer = env.ecs.entity(transformer_id);
                 let transformation_state = transformer.transformation_state()
                     .expect("Entity missing transformation_state");

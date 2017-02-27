@@ -47,7 +47,6 @@ pub fn tree(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> 
     entity.insert_shadow_entity(shadow_id);
     entity.insert_transformation_state(TransformationState::Real);
     entity.insert_transformation_type(TransformationType::Tree);
-    entity.insert_tear_transform();
 
     entity.id()
 }
@@ -130,7 +129,6 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_shadow_entity(shadow_id);
     entity.insert_transformation_type(TransformationType::TerrorPillarTerrorFly);
     entity.insert_transformation_state(TransformationState::Real);
-    entity.insert_tear_transform();
     entity.insert_enemy();
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(2));

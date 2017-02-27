@@ -12,7 +12,6 @@ imports = [
 [component.pc]
 [component.floor]
 [component.tear]
-[component.tear_transform]
 [component.should_render]
 [component.enemy]
 [component.projectile]
