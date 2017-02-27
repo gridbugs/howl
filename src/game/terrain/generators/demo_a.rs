@@ -17,7 +17,7 @@ pub fn demo_a<S: TurnScheduleQueue>(ids: &EntityIdReserver,
     let level_switch = LevelSwitch::NewLevel(TerrainType::DemoB);
     let (width, height) = util::terrain_from_strings(&level_str(), Some(level_switch), ids, schedule, g);
 
-    util::generate_clouds(width, height, ids, rng, schedule, g);
+    util::generate_tear(width, height, ids, rng, schedule, g);
 
     prototypes::down_stairs(g.entity_mut(ids.new_id()),
                             STAIR_COORD_A,

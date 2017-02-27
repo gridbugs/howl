@@ -17,7 +17,7 @@ pub fn demo_c<S: TurnScheduleQueue>(ids: &EntityIdReserver,
 
     let (width, height) = util::terrain_from_strings(&level_str(), None, ids, schedule, g);
 
-    util::generate_clouds(width, height, ids, rng, schedule, g);
+    util::generate_tear(width, height, ids, rng, schedule, g);
 
     let mut connections = LevelConnectionReport::new();
     let mut count = 0;

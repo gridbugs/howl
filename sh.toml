@@ -7,7 +7,7 @@
 [field.pc]
     type = "count_bool"
 
-[field.moon]
+[field.tear]
     type = "count_bool"
 
 [field.enemy]
@@ -28,7 +28,7 @@
 [field.bump_attackable]
     type = "any"
 
-[field.transform_on_moon_change]
+[field.tear_transform]
     type = "set"
 
 [field.projectile_collider]

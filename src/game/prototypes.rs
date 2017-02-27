@@ -47,7 +47,7 @@ pub fn tree(action: &mut EcsAction, ids: &EntityIdReserver, position: Coord) -> 
     entity.insert_shadow_entity(shadow_id);
     entity.insert_transformation_state(TransformationState::Real);
     entity.insert_transformation_type(TransformationType::Tree);
-    entity.insert_transform_on_moon_change();
+    entity.insert_tear_transform();
 
     entity.id()
 }
@@ -130,7 +130,7 @@ pub fn terror_pillar(action: &mut EcsAction, ids: &EntityIdReserver, position: C
     entity.insert_shadow_entity(shadow_id);
     entity.insert_transformation_type(TransformationType::TerrorPillarTerrorFly);
     entity.insert_transformation_state(TransformationState::Real);
-    entity.insert_transform_on_moon_change();
+    entity.insert_tear_transform();
     entity.insert_enemy();
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(2));
@@ -172,7 +172,7 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
     entity
 }
 
-pub fn clouds<E: EntityPopulate, R: Rng>(mut entity: E, width: usize, height: usize, r: &mut R) -> E {
+pub fn tear<E: EntityPopulate, R: Rng>(mut entity: E, width: usize, height: usize, r: &mut R) -> E {
 
     const PERLIN_X_ZOOM: f64 = 0.05;
     const PERLIN_Y_ZOOM: f64 = 0.05;
@@ -180,10 +180,10 @@ pub fn clouds<E: EntityPopulate, R: Rng>(mut entity: E, width: usize, height: us
     const SCROLL_RATE: Vector2<f64> = Vector2 { x: 0.05, y: 0.02 };
     const MUTATE_RATE: f64 = 0.01;
 
-    entity.insert_cloud_state(CloudState::new(width, height, PERLIN_X_ZOOM, PERLIN_Y_ZOOM,
+    entity.insert_tear_state(TearState::new(width, height, PERLIN_X_ZOOM, PERLIN_Y_ZOOM,
                                               PERLIN_SIZE, SCROLL_RATE, MUTATE_RATE, r));
     entity.insert_behaviour_state(BehaviourState::new());
-    entity.insert_behaviour_type(BehaviourType::Clouds);
+    entity.insert_behaviour_type(BehaviourType::Tear);
     entity.insert_turn_offset(ENV_TURN_OFFSET);
     entity.insert_turn_time(TURN_DURATION_BASE);
 

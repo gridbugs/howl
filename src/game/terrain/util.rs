@@ -61,15 +61,15 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
     (width, height)
 }
 
-pub fn generate_clouds<S: TurnScheduleQueue>(width: usize,
+pub fn generate_tear<S: TurnScheduleQueue>(width: usize,
                                              height: usize,
                                              ids: &EntityIdReserver,
                                              rng: &GameRng,
                                              schedule: &mut S,
                                              g: &mut EcsAction) {
-    let cloud_id = ids.new_id();
-    prototypes::clouds(g.entity_mut(cloud_id), width, height, rng.inner_mut().deref_mut());
-    let turn_offset = g.turn_offset(cloud_id).expect("Expected component turn_offset");
-    let ticket = schedule.schedule_turn(cloud_id, turn_offset);
-    g.insert_schedule_ticket(cloud_id, ticket);
+    let tear_id = ids.new_id();
+    prototypes::tear(g.entity_mut(tear_id), width, height, rng.inner_mut().deref_mut());
+    let turn_offset = g.turn_offset(tear_id).expect("Expected component turn_offset");
+    let ticket = schedule.schedule_turn(tear_id, turn_offset);
+    g.insert_schedule_ticket(tear_id, ticket);
 }

@@ -83,7 +83,7 @@ fn create_greyscale_tile_texture<P: AsRef<path::Path>>(renderer: &Renderer, tile
 struct SdlCellInfo {
     fg: Option<Rect>,
     bg: Option<Rect>,
-    moon: bool,
+    tear: bool,
     visible: bool,
     health_overlay: Option<HitPoints>,
 }
@@ -284,7 +284,7 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
 
     fn to_sdl_info(&self, cell: &CellDrawInfo) -> SdlCellInfo {
         let mut info = SdlCellInfo {
-            moon: cell.moon,
+            tear: cell.tear,
             visible: cell.visible,
             fg: None,
             bg: None,
@@ -505,8 +505,8 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
             self.draw_health_bar(coord, health_overlay);
         }
 
-        if info.moon && info.visible {
-            self.sdl_renderer.copy(&textures.colour, Some(self.tileset.extra.moon), Some(rect)).expect(RENDERING_FAILED_MSG);
+        if info.tear && info.visible {
+            self.sdl_renderer.copy(&textures.colour, Some(self.tileset.extra.tear), Some(rect)).expect(RENDERING_FAILED_MSG);
         }
     }
 }

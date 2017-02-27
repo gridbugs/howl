@@ -29,7 +29,7 @@ pub enum ActionArgs {
     FireBullet(EntityId, Coord),
     RealtimeVelocityMove(EntityId, RealtimeVelocity),
     Destroy(EntityId),
-    MoveClouds(EntityId),
+    MoveTear(EntityId),
     TransformTerrorPillarTerrorFly(EntityId),
     TransformTree(EntityId),
     LevelSwitch {
@@ -68,8 +68,8 @@ impl ActionArgs {
             ActionArgs::Destroy(entity_id) => {
                 actions::destroy(action, ecs.entity(entity_id));
             }
-            ActionArgs::MoveClouds(entity_id) => {
-                actions::move_clouds(action, entity_id, ecs, spatial_hash, r);
+            ActionArgs::MoveTear(entity_id) => {
+                actions::move_tear(action, entity_id, ecs, spatial_hash, r);
             }
             ActionArgs::TransformTerrorPillarTerrorFly(entity_id) => {
                 actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id));

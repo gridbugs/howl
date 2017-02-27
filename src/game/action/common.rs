@@ -73,21 +73,21 @@ pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
     action.remove_entity(entity);
 }
 
-pub fn move_clouds<R: Rng>(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, r: &mut R) {
+pub fn move_tear<R: Rng>(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, r: &mut R) {
 
-    let mut cloud_state = ecs.cloud_state_borrow_mut(entity_id)
-        .expect("Entity missing cloud_state");
+    let mut tear_state = ecs.tear_state_borrow_mut(entity_id)
+        .expect("Entity missing tear_state");
 
-    cloud_state.progress(r, 1.0);
+    tear_state.progress(r, 1.0);
 
     for (coord, cell) in izip!(spatial_hash.coord_iter(), spatial_hash.cell_iter()) {
-        let moon = !cloud_state.is_cloud(coord);
-        if cell.floor() && cell.moon() != moon {
+        let tear = !tear_state.is_tear(coord);
+        if cell.floor() && cell.tear() != tear {
             let floor = cell.any_floor().expect("Expected floor entity");
-            if moon {
-                action.insert_moon(floor);
+            if tear {
+                action.insert_tear(floor);
             } else {
-                action.remove_moon(floor);
+                action.remove_tear(floor);
             }
         }
     }

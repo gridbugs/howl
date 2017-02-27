@@ -17,7 +17,7 @@ pub type TilesetResult<T> = result::Result<T, TilesetError>;
 #[derive(Debug)]
 pub struct ExtraTiles {
     pub blank: Rect,
-    pub moon: Rect,
+    pub tear: Rect,
     pub aim_line: Rect,
     pub death: Rect,
 }
@@ -199,7 +199,7 @@ impl Tileset {
 
         let extra = ExtraTiles {
             blank: extra_rect(&extra_table, "Blank",  tile_width, tile_height, tile_padding)?,
-            moon: extra_rect(&extra_table, "Moon",  tile_width, tile_height, tile_padding)?,
+            tear: extra_rect(&extra_table, "Tear",  tile_width, tile_height, tile_padding)?,
             aim_line: extra_rect(&extra_table, "AimLine",  tile_width, tile_height, tile_padding)?,
             death: extra_rect(&extra_table, "Death",  tile_width, tile_height, tile_padding)?,
         };

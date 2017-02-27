@@ -9,7 +9,7 @@ use frontends::ansi::{self, ComplexTile, SimpleTile, AnsiColour, Style};
 use coord::Coord;
 use colour::Rgb24;
 
-const MOON_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
+const TEAR_COLOUR: ansi::AnsiColour = ansi::colours::MAGENTA;
 const AIM_LINE_COLOUR: ansi::AnsiColour = ansi::colours::YELLOW;
 const WOUND_OVERLAY_COLOUR: ansi::AnsiColour = ansi::colours::RED;
 const DEATH_OVERLAY_COLOUR: ansi::AnsiColour = ansi::colours::RED;
@@ -68,8 +68,8 @@ impl<'a> From<&'a CellDrawInfo> for AnsiInfo {
             }
         }
 
-        if cell.moon {
-            info.bg = MOON_COLOUR;
+        if cell.tear {
+            info.bg = TEAR_COLOUR;
         }
 
         if let Some(health_overlay) = cell.health_overlay {

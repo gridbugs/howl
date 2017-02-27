@@ -11,8 +11,8 @@ imports = [
 [component.destroy_on_collision]
 [component.pc]
 [component.floor]
-[component.moon]
-[component.transform_on_moon_change]
+[component.tear]
+[component.tear_transform]
 [component.should_render]
 [component.enemy]
 [component.projectile]
@@ -102,8 +102,8 @@ imports = [
     type = "u64"
     copy = true
 
-[component.cloud_state]
-    type = "CloudState"
+[component.tear_state]
+    type = "TearState"
     container = "RefCell"
 
 [component.shadow_entity]

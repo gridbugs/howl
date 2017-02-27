@@ -14,7 +14,7 @@ pub struct DrawableKnowledgeCell {
     background: BestMap<isize, TileType>,
     you_see: BestMap<isize, YouSeeMessageType>,
     description: BestMap<isize, DescriptionMessageType>,
-    moon: bool,
+    tear: bool,
     health_overlay: BestMap<isize, HitPoints>,
 }
 
@@ -26,7 +26,7 @@ impl DrawableKnowledgeCell {
             background: BestMap::new(),
             you_see: BestMap::new(),
             description: BestMap::new(),
-            moon: false,
+            tear: false,
             health_overlay: BestMap::new(),
         }
     }
@@ -39,8 +39,8 @@ impl DrawableKnowledgeCell {
         self.background.value()
     }
 
-    pub fn moon(&self) -> bool {
-        self.moon
+    pub fn tear(&self) -> bool {
+        self.tear
     }
 
     pub fn you_see(&self) -> Option<YouSeeMessageType> {
@@ -65,7 +65,7 @@ impl DrawableKnowledgeCell {
 
         if self.last_updated <= world_cell.last_updated() {
 
-            self.moon = world_cell.moon();
+            self.tear = world_cell.tear();
             self.foreground.clear();
             self.background.clear();
             self.you_see.clear();
@@ -185,7 +185,7 @@ pub struct CellDrawInfo {
     pub foreground: Option<TileType>,
     pub background: Option<TileType>,
     pub visible: bool,
-    pub moon: bool,
+    pub tear: bool,
     pub front: bool,
     pub health_overlay: Option<HitPoints>,
 }
@@ -196,7 +196,7 @@ impl Default for CellDrawInfo {
             foreground: None,
             background: None,
             visible: false,
-            moon: false,
+            tear: false,
             front: false,
             health_overlay: None,
         }

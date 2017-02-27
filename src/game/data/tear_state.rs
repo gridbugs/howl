@@ -4,7 +4,7 @@ use math::Vector2;
 use coord::Coord;
 
 #[derive(Serialize, Deserialize)]
-pub struct CloudState {
+pub struct TearState {
     perlin: PerlinGrid,
     x_zoom: f64,
     y_zoom: f64,
@@ -15,7 +15,7 @@ pub struct CloudState {
     height: usize,
 }
 
-impl CloudState {
+impl TearState {
     pub fn new<R: Rng>(width: usize,
                        height: usize,
                        x_zoom: f64,
@@ -28,7 +28,7 @@ impl CloudState {
         let zoomed_width = ((width as f64) * x_zoom).ceil() as usize;
         let zoomed_height = ((height as f64) * y_zoom).ceil() as usize;
 
-        CloudState {
+        TearState {
             perlin: PerlinGrid::new(zoomed_width, zoomed_height, PerlinWrapType::Regenerate, r),
             x_zoom: x_zoom,
             y_zoom: y_zoom,
@@ -52,7 +52,7 @@ impl CloudState {
         self.perlin.noise(x * self.x_zoom, y * self.y_zoom)
     }
 
-    pub fn is_cloud(&self, coord: Coord) -> bool {
+    pub fn is_tear(&self, coord: Coord) -> bool {
         self.noise(coord.x as f64, coord.y as f64).map_or(false, |noise| {
             let min = 0.0;
             let max = 0.1;
@@ -60,20 +60,20 @@ impl CloudState {
         })
     }
 
-    pub fn iter(&self) -> CloudStateIter {
-        CloudStateIter {
+    pub fn iter(&self) -> TearStateIter {
+        TearStateIter {
             state: self,
             coord: Coord::new(0, 0),
         }
     }
 }
 
-pub struct CloudStateIter<'a> {
-    state: &'a CloudState,
+pub struct TearStateIter<'a> {
+    state: &'a TearState,
     coord: Coord,
 }
 
-impl<'a> Iterator for CloudStateIter<'a> {
+impl<'a> Iterator for TearStateIter<'a> {
     type Item = (Coord, bool);
     fn next(&mut self) -> Option<Self::Item> {
 
@@ -88,6 +88,6 @@ impl<'a> Iterator for CloudStateIter<'a> {
             self.coord.y += 1;
         }
 
-        Some((coord, self.state.is_cloud(coord)))
+        Some((coord, self.state.is_tear(coord)))
     }
 }

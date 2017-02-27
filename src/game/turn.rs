@@ -182,7 +182,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::close_door(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::moon_transform(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::tear_transform(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
@@ -190,7 +190,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::pc_collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::level_switch(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::level_switch_auto(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::moon_move_transform(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::tear_move_transform(rule_env, self.ecs_action, self.rule_reactions)?;
         }
 
         RULE_ACCEPT
