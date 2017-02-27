@@ -58,6 +58,7 @@ pub fn floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_tile(TileType::Floor);
 
     entity.insert_tile_depth(0);
+    entity.insert_floor();
 
     entity
 }
@@ -68,7 +69,7 @@ pub fn outside_floor<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_tile(TileType::Ground);
 
     entity.insert_tile_depth(0);
-    entity.insert_outside();
+    entity.insert_floor();
 
     entity
 }
@@ -173,15 +174,14 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
 
 pub fn clouds<E: EntityPopulate, R: Rng>(mut entity: E, width: usize, height: usize, r: &mut R) -> E {
 
-    const PERLIN_ZOOM: f64 = 0.05;
-    const PERLIN_MIN: f64 = -0.1;
-    const PERLIN_MAX: f64 = 0.1;
+    const PERLIN_X_ZOOM: f64 = 0.05;
+    const PERLIN_Y_ZOOM: f64 = 0.05;
+    const PERLIN_SIZE: f64 = 0.1;
     const SCROLL_RATE: Vector2<f64> = Vector2 { x: 0.05, y: 0.02 };
     const MUTATE_RATE: f64 = 0.01;
 
-    entity.insert_cloud_state(CloudState::new(width, height, PERLIN_ZOOM,
-                                              PERLIN_MIN, PERLIN_MAX,
-                                              SCROLL_RATE, MUTATE_RATE, r));
+    entity.insert_cloud_state(CloudState::new(width, height, PERLIN_X_ZOOM, PERLIN_Y_ZOOM,
+                                              PERLIN_SIZE, SCROLL_RATE, MUTATE_RATE, r));
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_behaviour_type(BehaviourType::Clouds);
     entity.insert_turn_offset(ENV_TURN_OFFSET);

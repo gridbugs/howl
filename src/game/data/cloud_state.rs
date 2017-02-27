@@ -6,9 +6,9 @@ use coord::Coord;
 #[derive(Serialize, Deserialize)]
 pub struct CloudState {
     perlin: PerlinGrid,
-    zoom: f64,
-    min: f64,
-    max: f64,
+    x_zoom: f64,
+    y_zoom: f64,
+    size: f64,
     scroll_rate: Vector2<f64>,
     mutate_rate: f64,
     width: usize,
@@ -18,21 +18,21 @@ pub struct CloudState {
 impl CloudState {
     pub fn new<R: Rng>(width: usize,
                        height: usize,
-                       zoom: f64,
-                       min: f64,
-                       max: f64,
+                       x_zoom: f64,
+                       y_zoom: f64,
+                       size: f64,
                        scroll_rate: Vector2<f64>,
                        mutate_rate: f64,
                        r: &mut R) -> Self {
 
-        let zoomed_width = ((width as f64) * zoom).ceil() as usize;
-        let zoomed_height = ((height as f64) * zoom).ceil() as usize;
+        let zoomed_width = ((width as f64) * x_zoom).ceil() as usize;
+        let zoomed_height = ((height as f64) * y_zoom).ceil() as usize;
 
         CloudState {
             perlin: PerlinGrid::new(zoomed_width, zoomed_height, PerlinWrapType::Regenerate, r),
-            zoom: zoom,
-            min: min,
-            max: max,
+            x_zoom: x_zoom,
+            y_zoom: y_zoom,
+            size: size,
             scroll_rate: scroll_rate,
             mutate_rate: mutate_rate,
             width: width,
@@ -49,12 +49,14 @@ impl CloudState {
     }
 
     fn noise(&self, x: f64, y: f64) -> Option<f64> {
-        self.perlin.noise(x * self.zoom, y * self.zoom)
+        self.perlin.noise(x * self.x_zoom, y * self.y_zoom)
     }
 
     pub fn is_cloud(&self, coord: Coord) -> bool {
         self.noise(coord.x as f64, coord.y as f64).map_or(false, |noise| {
-            noise >= self.min && noise <= self.max
+            let min = 0.0;
+            let max = 0.1;
+            noise <= min || noise >= max
         })
     }
 

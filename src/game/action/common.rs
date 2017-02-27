@@ -82,12 +82,12 @@ pub fn move_clouds<R: Rng>(action: &mut EcsAction, entity_id: EntityId, ecs: &Ec
 
     for (coord, cell) in izip!(spatial_hash.coord_iter(), spatial_hash.cell_iter()) {
         let moon = !cloud_state.is_cloud(coord);
-        if cell.outside() && cell.moon() != moon {
-            let outside = cell.any_outside().expect("Expected outside entity");
+        if cell.floor() && cell.moon() != moon {
+            let floor = cell.any_floor().expect("Expected floor entity");
             if moon {
-                action.insert_moon(outside);
+                action.insert_moon(floor);
             } else {
-                action.remove_moon(outside);
+                action.remove_moon(floor);
             }
         }
     }

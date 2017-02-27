@@ -10,7 +10,7 @@ imports = [
 [component.door_opener]
 [component.destroy_on_collision]
 [component.pc]
-[component.outside]
+[component.floor]
 [component.moon]
 [component.transform_on_moon_change]
 [component.should_render]
