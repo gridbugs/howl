@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use game::*;
 use colour::*;
 use direction::*;
@@ -51,8 +49,23 @@ impl English {
             MenuMessageType::SaveAndQuit => {
                 message.push(MessagePart::plain("Save and Quit"));
             }
-            MenuMessageType::ViewControls => {
-                message.push(MessagePart::plain("View Controls"));
+            MenuMessageType::Controls => {
+                message.push(MessagePart::plain("Controls"));
+            }
+            MenuMessageType::Control(input, control) => {
+                if let Some(input_message) = self.translate_input_event(input) {
+                    self.translate_control(control, message);
+                    message.push(MessagePart::plain(": "));
+                    message.push(input_message);
+                }
+            }
+            MenuMessageType::UnboundControl(control) => {
+                self.translate_control(control, message);
+                message.push(MessagePart::plain(": (unbound)"));
+            }
+            MenuMessageType::ControlBinding(control) => {
+                self.translate_control(control, message);
+                message.push(MessagePart::plain(": press a key..."));
             }
         }
     }
@@ -96,9 +109,7 @@ impl English {
             Control::Wait => "wait a turn",
             Control::DisplayMessageLog => "full screen message log",
             Control::Examine => "examine",
-            Control::Select => "select",
-            Control::Quit => "quit",
-            Control::Help => "help",
+            Control::Pause => "pause",
             Control::Use => "use",
         };
 
@@ -162,60 +173,6 @@ impl Language for English {
 
         if repeated > 1 {
             message.push(MessagePart::Text(TextMessagePart::Plain(format!("(x{})", repeated))));
-        }
-    }
-
-    fn translate_controls(&self, control_map: &ControlMap, message: &mut Message) {
-
-        const NUM_CONTROLS: usize = 14;
-        const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
-            Control::Direction(Direction::North),
-            Control::Direction(Direction::South),
-            Control::Direction(Direction::East),
-            Control::Direction(Direction::West),
-            Control::Use,
-            Control::Wait,
-            Control::Close,
-            Control::Fire,
-            Control::NextTarget,
-            Control::PrevTarget,
-            Control::Examine,
-            Control::DisplayMessageLog,
-            Control::Select,
-            Control::Quit,
-        ];
-
-        let mut reverse_table = HashMap::new();
-
-        for (input_event, control) in control_map.iter() {
-            reverse_table.entry(*control).or_insert_with(Vec::new).push(*input_event);
-        }
-
-        let mut remaining = reverse_table.len();
-        for control in CONTROL_ORDER.iter() {
-            if let Some(input_events) = reverse_table.get(control) {
-                self.translate_control(*control, message);
-                message.push(MessagePart::plain(": "));
-
-                let mut count = 0;
-                for input_event in input_events.iter() {
-
-                    if let Some(part) = self.translate_input_event(*input_event) {
-                        if count > 0 {
-                            message.push(MessagePart::plain(", "));
-                        }
-
-                        message.push(part);
-
-                        count += 1;
-                    }
-                }
-
-                remaining -= 1;
-                if remaining > 0 {
-                    message.push(MessagePart::Newline);
-                }
-            }
         }
     }
 }

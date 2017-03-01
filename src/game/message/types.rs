@@ -1,3 +1,5 @@
+use game::*;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum MessageType {
     Empty,
@@ -39,5 +41,8 @@ pub enum MenuMessageType {
     Continue,
     Quit,
     SaveAndQuit,
-    ViewControls,
+    Controls,
+    Control(InputEvent, Control),
+    UnboundControl(Control),
+    ControlBinding(Control),
 }

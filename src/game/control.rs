@@ -14,14 +14,29 @@ pub enum Control {
     Wait,
     DisplayMessageLog,
     Examine,
-    Select,
-    Quit,
-    Help,
+    Pause,
 }
+
+const NUM_CONTROLS: usize = 13;
+const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
+    Control::Direction(Direction::North),
+    Control::Direction(Direction::South),
+    Control::Direction(Direction::East),
+    Control::Direction(Direction::West),
+    Control::Use,
+    Control::Wait,
+    Control::Close,
+    Control::Fire,
+    Control::NextTarget,
+    Control::PrevTarget,
+    Control::Examine,
+    Control::DisplayMessageLog,
+    Control::Pause,
+];
 
 pub type ControlMapIter<'a> = hash_map::Iter<'a, InputEvent, Control>;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ControlMap {
     map: HashMap<InputEvent, Control>,
 }
@@ -39,15 +54,13 @@ impl ControlMap {
         self.map.insert(input, control);
     }
 
-    pub fn bare() -> Self {
-        let mut map = HashMap::new();
+    pub fn remove(&mut self, input: InputEvent) {
+        self.map.remove(&input);
+    }
 
-        map.insert(InputEvent::Quit, Control::Quit);
-        map.insert(InputEvent::Return, Control::Select);
-        map.insert(InputEvent::Escape, Control::Quit);
-
+    pub fn new() -> Self {
         ControlMap {
-            map: map,
+            map: HashMap::new(),
         }
     }
 
@@ -58,7 +71,7 @@ impl ControlMap {
         self.insert(InputEvent::Right, Control::Direction(Direction::East));
 
         self.insert(InputEvent::Return, Control::Use);
-        self.insert(InputEvent::Space, Control::Use);
+        self.insert(InputEvent::Escape, Control::Pause);
 
         self.insert(InputEvent::Char('c'), Control::Close);
         self.insert(InputEvent::Char('x'), Control::Examine);
@@ -69,14 +82,50 @@ impl ControlMap {
         self.insert(InputEvent::Char('N'), Control::PrevTarget);
 
         self.insert(InputEvent::Char('t'), Control::DisplayMessageLog);
-        self.insert(InputEvent::Char('?'), Control::Help);
+    }
+
+    pub fn invert(&self) -> HashMap<Control, Vec<InputEvent>> {
+        let mut inverted = HashMap::new();
+
+        for (input_event, control) in self.iter() {
+            inverted.entry(*control).or_insert_with(Vec::new).push(*input_event);
+        }
+
+        inverted
+    }
+
+    pub fn descriptions(&self) -> Vec<ControlDescription> {
+        let mut descriptions = Vec::new();
+
+        let inverted = self.invert();
+
+        for control in CONTROL_ORDER.iter() {
+            if let Some(inputs) = inverted.get(control) {
+                descriptions.push(ControlDescription {
+                    control: *control,
+                    inputs: inputs.clone(),
+                });
+            } else {
+                descriptions.push(ControlDescription {
+                    control: *control,
+                    inputs: Vec::new(),
+                });
+            }
+        }
+
+        descriptions
     }
 }
 
 impl Default for ControlMap {
     fn default() -> Self {
-        let mut map = ControlMap::bare();
+        let mut map = ControlMap::new();
         map.add_defaults();
         map
     }
+}
+
+pub struct ControlDescription {
+    pub control: Control,
+    pub inputs: Vec<InputEvent>,
 }

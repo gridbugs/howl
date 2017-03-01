@@ -10,6 +10,7 @@ pub type ActionId = u64;
 
 #[derive(Debug, Clone, Copy)]
 pub enum External {
+    Pause,
     Quit,
 }
 

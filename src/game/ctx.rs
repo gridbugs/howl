@@ -39,7 +39,7 @@ enum MainMenuSelection {
     Quit,
     Continue,
     SaveAndQuit,
-    ViewControls,
+    Controls,
 }
 
 pub enum GameOverReason {
@@ -49,6 +49,7 @@ pub enum GameOverReason {
 pub enum ExitReason {
     GameOver(GameOverReason),
     Pause,
+    Quit,
 }
 
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
@@ -152,7 +153,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             self.renderer.borrow_mut().reset_buffers();
 
-            let control_map = control_spec::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
+            let mut control_map = control_spec::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
 
             let mut menu = SelectMenu::new();
 
@@ -161,7 +162,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             }
 
             menu.push(SelectMenuItem::new(MenuMessageType::NewGame, MainMenuSelection::NewGame));
-            menu.push(SelectMenuItem::new(MenuMessageType::ViewControls, MainMenuSelection::ViewControls));
+            menu.push(SelectMenuItem::new(MenuMessageType::Controls, MainMenuSelection::Controls));
 
             if current_game_state.is_some() {
                 menu.push(SelectMenuItem::new(MenuMessageType::SaveAndQuit, MainMenuSelection::SaveAndQuit));
@@ -169,13 +170,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 menu.push(SelectMenuItem::new(MenuMessageType::Quit, MainMenuSelection::Quit));
             }
 
-            let (item, menu_state) = select_menu::run(
+            let (item, menu_state) = SelectMenuOperation::new(
                 self.renderer.borrow_mut().deref_mut(),
                 &mut self.input_source,
                 Some(MessageType::Title),
                 &self.language,
                 menu,
-                current_menu_state);
+                current_menu_state).run();
 
             current_menu_state = None;
 
@@ -198,8 +199,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     game_state
                 }
                 MainMenuSelection::Continue => current_game_state.take().expect("Missing game state"),
-                MainMenuSelection::ViewControls => {
-                    self.view_controls(&control_map);
+                MainMenuSelection::Controls => {
+                    self.configure_controls(&mut control_map);
+                    control_spec::to_file(args.user_path.join(user_files::CONTROL), &control_map);
                     current_menu_state = Some(menu_state);
                     continue;
                 }
@@ -210,6 +212,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             match self.game_loop(&mut game_state)? {
                 ExitReason::Pause => {
                     current_game_state = Some(game_state);
+                }
+                ExitReason::Quit => {
+                    save_file::save(args.user_path.as_path(), game_state);
+                    return Ok(());
                 }
                 ExitReason::GameOver(reason) => {
                     match reason {
@@ -270,12 +276,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             };
 
             match resolution {
-                TurnResolution::Pause(entity_id) => {
+                TurnResolution::Exit(reason, entity_id) => {
                     let level = game_state.levels.level_mut(level_id);
                     let old_ticket = level.ecs.schedule_ticket(entity_id).expect("Expected schedule_ticket component");
                     let new_ticket = level.turn_schedule.insert_with_ticket(entity_id, 0, old_ticket);
                     level.ecs.insert_schedule_ticket(entity_id, new_ticket);
-                    return Ok(ExitReason::Pause);
+                    return Ok(reason);
                 }
                 TurnResolution::Schedule(entity_id, delay) => {
                     let level = game_state.levels.level_mut(level_id);
@@ -315,15 +321,70 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         ecs.message_log_borrow_mut(pc_id).expect("Expected message log component").add(message);
     }
 
-    fn view_controls(&mut self, control_map: &ControlMap) {
-        let mut message = Message::new();
+    fn configure_controls(&mut self, control_map: &mut ControlMap) {
 
-        self.language.translate_controls(control_map, &mut message);
-        message.push(MessagePart::Newline);
-        message.push(MessagePart::Newline);
-        self.language.translate(MessageType::PressAnyKey, &mut message);
+        let mut renderer_borrow = self.renderer.borrow_mut();
+        let mut renderer = renderer_borrow.deref_mut();
+        let mut current_menu_state = None;
 
-        display_message_scrolling(self.renderer.borrow_mut().deref_mut(), &mut self.input_source, &message, true);
+        loop {
+            let mut menu = SelectMenu::new();
+
+            for desc in control_map.descriptions() {
+                let message = if let Some(input) = desc.inputs.get(0) {
+                    MenuMessageType::Control(*input, desc.control)
+                } else {
+                    MenuMessageType::UnboundControl(desc.control)
+                };
+
+                menu.push(SelectMenuItem::new(message, desc.control));
+            }
+
+            if let Some((control_to_change, menu_state)) = SelectMenuOperation::new(
+                renderer,
+                &mut self.input_source,
+                None,
+                &self.language,
+                menu,
+                current_menu_state).run_can_escape() {
+
+                current_menu_state = Some(menu_state.clone());
+                let mut menu = SelectMenu::new();
+
+                for desc in control_map.descriptions() {
+                    let message = if desc.control == control_to_change {
+                        MenuMessageType::ControlBinding(desc.control)
+                    } else {
+                        if let Some(input) = desc.inputs.get(0) {
+                            MenuMessageType::Control(*input, desc.control)
+                        } else {
+                            MenuMessageType::UnboundControl(desc.control)
+                        }
+                    };
+
+                    menu.push(SelectMenuItem::new(message, desc.control));
+                }
+                SelectMenuOperation::new(
+                    renderer,
+                    &mut self.input_source,
+                    None,
+                    &self.language,
+                    menu,
+                    Some(menu_state)).publish();
+
+                if let Some(input) = self.input_source.next_input() {
+                    control_map.invert().get(&control_to_change).map(|inputs| {
+                        for i in inputs {
+                            control_map.remove(*i);
+                        }
+                    });
+
+                    control_map.insert(input, control_to_change);
+                }
+            } else {
+                break;
+            }
+        }
     }
 
     fn intro_message(&mut self) {

@@ -1,5 +1,4 @@
 use std::ops::Deref;
-use std::ops::DerefMut;
 use std::cmp;
 
 use game::*;
@@ -72,7 +71,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
                         target_idx = (target_idx + targets.len() - 1) % targets.len();
                         end = targets[target_idx];
                     }
-                } else if control == Control::Fire {
+                } else if control == Control::Fire || control == Control::Use {
                     renderer.publish_game_window();
                     return Some(end);
                 } else {
@@ -108,7 +107,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
         if let Some(event) = input_source.next_input() {
             if let Some(control) = map.control(event) {
                 match control {
-                    Control::Quit |
+                    Control::Pause |
                         Control::DisplayMessageLog => break,
                     Control::Direction(Direction::North) => {
                         offset = cmp::min(max_offset, offset + 1);
@@ -167,12 +166,12 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
         if let Some(event) = input_source.next_input() {
             if let Some(control) = map.control(event) {
                 match control {
-                    Control::Quit |
+                    Control::Pause |
                         Control::Examine => break,
                     Control::Direction(direction) => {
                         cursor += direction.vector();
                     }
-                    Control::Select => {
+                    Control::Use => {
                         let message = if let Some(description) = cell.description() {
                             MessageType::Description(description)
                         } else if let Some(you_see) = cell.you_see() {
@@ -199,16 +198,11 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
     renderer.draw_game_window();
 }
 
-fn display_help<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
-    let mut renderer = input.renderer.borrow_mut();
-    let mut message = Message::new();
-    input.language.translate_controls(map, &mut message);
-    display_message_scrolling(renderer.deref_mut(), &mut input_source, &message, true);
-    renderer.publish_all_windows(input.entity, input.language);
-}
-
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
+        if event == InputEvent::Quit {
+            return Some(MetaAction::External(External::Quit));
+        }
         input.entity.control_map_borrow().and_then(|map_ref| {
             let map = map_ref.deref();
             map.control(event).and_then(|control| {
@@ -228,17 +222,13 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                     Control::Wait => {
                         Some(MetaAction::ActionArgs(ActionArgs::Null))
                     }
-                    Control::Quit => Some(MetaAction::External(External::Quit)),
+                    Control::Pause => Some(MetaAction::External(External::Pause)),
                     Control::DisplayMessageLog => {
                         display_message_log(input, input_source, map);
                         None
                     }
                     Control::Examine => {
                         examine(input, input_source, map);
-                        None
-                    }
-                    Control::Help => {
-                        display_help(input, input_source, map);
                         None
                     }
                     Control::Use => {

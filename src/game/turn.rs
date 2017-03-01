@@ -29,7 +29,7 @@ pub struct Turn<'game> {
 }
 
 pub enum TurnResolution {
-    Pause(EntityId),
+    Exit(ExitReason, EntityId),
     Schedule(EntityId, u64),
     LevelSwitch {
         entity_id: EntityId,
@@ -43,15 +43,6 @@ pub enum TurnResolution {
 enum ForceRender {
     IgnoreChange,
     IgnoreShouldRender,
-}
-
-impl TurnResolution {
-    pub fn game_continues(&self) -> bool {
-        match *self {
-            TurnResolution::Pause(_) => false,
-            _ => true,
-        }
-    }
 }
 
 enum CommitResolution {
@@ -121,9 +112,13 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
     fn take_turn(&mut self) -> GameResult<TurnResolution> {
         loop {
             match self.get_meta_action()? {
-                MetaAction::External(External::Quit) => {
+                MetaAction::External(external) => {
                     self.declare_action_return(true)?;
-                    return Ok(TurnResolution::Pause(self.entity_id));
+                    let reason = match external {
+                        External::Quit => ExitReason::Quit,
+                        External::Pause => ExitReason::Pause,
+                    };
+                    return Ok(TurnResolution::Exit(reason, self.entity_id));
                 }
                 MetaAction::ActionArgs(action_args) => {
                     if let Some(resolution) = self.try_commit_action(action_args)? {

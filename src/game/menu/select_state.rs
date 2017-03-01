@@ -1,6 +1,7 @@
 use std::slice;
 use game::*;
 
+#[derive(Clone)]
 pub struct SelectMenuState {
     selected_index: usize,
 }

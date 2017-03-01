@@ -1,22 +1,13 @@
-[controls]
-
-# Movement
 North = "Up"
 South = "Down"
 East = "Right"
 West = "Left"
-
-# Interaction
-Use = "Space"
 Use = "Return"
+Close = "c"
+Pause = "Escape"
 Examine = "x"
 Wait = "."
-
-# Combat
 Fire = "f"
 NextTarget = "n"
 PrevTarget = "N"
-
-# UI
 DisplayMessageLog = "t"
-Help = "?"
