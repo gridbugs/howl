@@ -154,22 +154,22 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             let control_map = control_spec::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
 
-            let mut menu = Menu::new();
+            let mut menu = SelectMenu::new();
 
             if current_game_state.is_some() {
-                menu.push(MenuItem::new(MenuMessageType::Continue, MainMenuSelection::Continue));
+                menu.push(SelectMenuItem::new(MenuMessageType::Continue, MainMenuSelection::Continue));
             }
 
-            menu.push(MenuItem::new(MenuMessageType::NewGame, MainMenuSelection::NewGame));
-            menu.push(MenuItem::new(MenuMessageType::ViewControls, MainMenuSelection::ViewControls));
+            menu.push(SelectMenuItem::new(MenuMessageType::NewGame, MainMenuSelection::NewGame));
+            menu.push(SelectMenuItem::new(MenuMessageType::ViewControls, MainMenuSelection::ViewControls));
 
             if current_game_state.is_some() {
-                menu.push(MenuItem::new(MenuMessageType::SaveAndQuit, MainMenuSelection::SaveAndQuit));
+                menu.push(SelectMenuItem::new(MenuMessageType::SaveAndQuit, MainMenuSelection::SaveAndQuit));
             } else {
-                menu.push(MenuItem::new(MenuMessageType::Quit, MainMenuSelection::Quit));
+                menu.push(SelectMenuItem::new(MenuMessageType::Quit, MainMenuSelection::Quit));
             }
 
-            let (item, menu_state) = menu_operation::run(
+            let (item, menu_state) = select_menu::run(
                 self.renderer.borrow_mut().deref_mut(),
                 &mut self.input_source,
                 Some(MessageType::Title),

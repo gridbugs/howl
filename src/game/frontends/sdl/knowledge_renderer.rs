@@ -685,7 +685,7 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
         self.renderer.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
     }
 
-    fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
+    fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState, language: &Box<Language>) {
 
         let mut message = Message::new();
         let mut wrapped = Vec::new();
@@ -713,7 +713,7 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
             wrapped.clear();
             self.fullscreen_wrap(&message, &mut wrapped);
 
-            let colour = if item_state == MenuItemState::Selected {
+            let colour = if item_state == SelectMenuItemState::Selected {
                 MENU_SELECTED_COLOUR
             } else {
                 MENU_DESELECTED_COLOUR

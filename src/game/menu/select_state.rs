@@ -1,29 +1,29 @@
 use std::slice;
 use game::*;
 
-pub struct MenuState {
+pub struct SelectMenuState {
     selected_index: usize,
 }
 
-impl MenuState {
+impl SelectMenuState {
     pub fn new() -> Self {
         Self::new_with_index(0)
     }
 
     pub fn new_with_index(index: usize) -> Self {
-        MenuState {
+        SelectMenuState {
             selected_index: index,
         }
     }
 
-    pub fn select_next<T>(&mut self, menu: &Menu<T>) {
+    pub fn select_next<T>(&mut self, menu: &SelectMenu<T>) {
         self.selected_index += 1;
         if self.selected_index >= menu.len() {
             self.selected_index = 0;
         }
     }
 
-    pub fn select_prev<T>(&mut self, menu: &Menu<T>) {
+    pub fn select_prev<T>(&mut self, menu: &SelectMenu<T>) {
         if self.selected_index == 0 {
             self.selected_index = menu.len() - 1;
         } else {
@@ -31,7 +31,7 @@ impl MenuState {
         }
     }
 
-    pub fn confirm<T>(&self, mut menu: Menu<T>) -> T {
+    pub fn confirm<T>(&self, mut menu: SelectMenu<T>) -> T {
 
         assert!(self.selected_index < menu.len(),
                 "Attempt to confirm non-existent menu item");
@@ -43,8 +43,8 @@ impl MenuState {
         menu.pop().map(|i| i.to_value()).expect("Unexpected empty menu")
     }
 
-    pub fn iter<'a, T>(&self, menu: &'a Menu<T>) -> MenuStateIter<'a, T> {
-        MenuStateIter {
+    pub fn iter<'a, T>(&self, menu: &'a SelectMenu<T>) -> SelectMenuStateIter<'a, T> {
+        SelectMenuStateIter {
             menu_iter: menu.iter(),
             current_index: 0,
             selected_index: self.selected_index,
@@ -52,34 +52,34 @@ impl MenuState {
     }
 }
 
-impl Default for MenuState {
+impl Default for SelectMenuState {
     fn default() -> Self {
-        MenuState::new()
+        SelectMenuState::new()
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MenuItemState {
+pub enum SelectMenuItemState {
     Selected,
     Deselected,
 }
 
-pub struct MenuStateIter<'a, T: 'a> {
-    menu_iter: slice::Iter<'a, MenuItem<T>>,
+pub struct SelectMenuStateIter<'a, T: 'a> {
+    menu_iter: slice::Iter<'a, SelectMenuItem<T>>,
     current_index: usize,
     selected_index: usize,
 }
 
-impl<'a, T: 'a> Iterator for MenuStateIter<'a, T> {
+impl<'a, T: 'a> Iterator for SelectMenuStateIter<'a, T> {
 
-    type Item = (MenuItemState, &'a MenuItem<T>);
+    type Item = (SelectMenuItemState, &'a SelectMenuItem<T>);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.menu_iter.next().map(|item| {
             let item_state = if self.current_index == self.selected_index {
-                MenuItemState::Selected
+                SelectMenuItemState::Selected
             } else {
-                MenuItemState::Deselected
+                SelectMenuItemState::Deselected
             };
 
             self.current_index += 1;

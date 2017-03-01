@@ -1,14 +1,14 @@
 use game::*;
 
 #[derive(Debug)]
-pub struct MenuItem<T> {
+pub struct SelectMenuItem<T> {
     message: MenuMessageType,
     value: T,
 }
 
-impl <T> MenuItem<T> {
+impl <T> SelectMenuItem<T> {
     pub fn new(message: MenuMessageType, value: T) -> Self {
-        MenuItem {
+        SelectMenuItem {
             message: message,
             value: value,
         }
@@ -23,7 +23,7 @@ impl <T> MenuItem<T> {
     }
 }
 
-impl MenuItem<MenuMessageType> {
+impl SelectMenuItem<MenuMessageType> {
     pub fn simple(message: MenuMessageType) -> Self {
         Self::new(message, message)
     }

@@ -98,7 +98,7 @@ pub trait KnowledgeRenderer {
     fn fullscreen_wrapped_translated_message(&mut self, wrapped: &Vec<TextMessage>, offset: usize);
 
     /// Display a fullscreen menu
-    fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>);
+    fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState, language: &Box<Language>);
 
     fn publish_game_window(&mut self) {
         self.draw_game_window();
@@ -196,7 +196,7 @@ pub trait KnowledgeRenderer {
                                                          overlay);
     }
 
-    fn publish_fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &Menu<T>, state: &MenuState, language: &Box<Language>) {
+    fn publish_fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState, language: &Box<Language>) {
         self.fullscreen_menu(prelude, menu, state, language);
         self.publish();
     }
