@@ -170,13 +170,23 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 menu.push(SelectMenuItem::new(MenuMessageType::Quit, MainMenuSelection::Quit));
             }
 
-            let (item, menu_state) = SelectMenuOperation::new(
-                self.renderer.borrow_mut().deref_mut(),
-                &mut self.input_source,
-                Some(MessageType::Title),
-                &self.language,
-                menu,
-                current_menu_state).run();
+            let (item, menu_state) = {
+                let mut renderer_borrow = self.renderer.borrow_mut();
+                let renderer = renderer_borrow.deref_mut();
+                let menu_op = SelectMenuOperation::new(
+                    renderer,
+                    &mut self.input_source,
+                    Some(MessageType::Title),
+                    &self.language,
+                    menu,
+                    current_menu_state);
+
+                if current_game_state.is_some() {
+                    menu_op.run_can_escape().unwrap_or((MainMenuSelection::Continue, SelectMenuState::new()))
+                } else {
+                    menu_op.run()
+                }
+            };
 
             current_menu_state = None;
 
