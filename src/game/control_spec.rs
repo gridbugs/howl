@@ -4,11 +4,11 @@ use toml;
 use game::*;
 use direction::*;
 
-type ControlSpec = HashMap<String, String>;
+type StringControlSpec = HashMap<String, String>;
 
-impl<'a> From<&'a ControlMap> for ControlSpec {
+impl<'a> From<&'a ControlMap> for StringControlSpec {
     fn from(map: &'a ControlMap) -> Self {
-        let mut spec = ControlSpec::new();
+        let mut spec = StringControlSpec::new();
 
         for (input_event, control) in map.iter() {
             spec.insert(String::from(*control), String::from(*input_event));
@@ -18,8 +18,8 @@ impl<'a> From<&'a ControlMap> for ControlSpec {
     }
 }
 
-impl<'a> From<&'a ControlSpec> for ControlMap {
-    fn from(spec: &'a ControlSpec) -> Self {
+impl<'a> From<&'a StringControlSpec> for ControlMap {
+    fn from(spec: &'a StringControlSpec) -> Self {
         let mut map = ControlMap::new();
 
         for (control, input) in spec.iter() {
@@ -172,11 +172,11 @@ fn from_toml(table: toml::value::Table) -> Option<ControlMap> {
 }
 
 pub fn from_file<P: AsRef<path::Path>>(path: P) -> Option<ControlMap> {
-    let spec: Option<ControlSpec> = game_file::read_toml(path).ok();
+    let spec: Option<StringControlSpec> = game_file::read_toml(path).ok();
     spec.as_ref().map(ControlMap::from)
 }
 
 pub fn to_file<P: AsRef<path::Path>>(path: P, map: &ControlMap) {
-    game_file::write_toml(path, &ControlSpec::from(map))
+    game_file::write_toml(path, &StringControlSpec::from(map))
         .expect("Failed to write controls file");
 }
