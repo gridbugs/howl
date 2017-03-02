@@ -25,6 +25,7 @@ mod turn_schedule;
 mod menu;
 mod config;
 mod renderer_buffers;
+mod control_spec;
 
 pub use self::knowledge::*;
 pub use self::behaviour::*;
@@ -52,11 +53,12 @@ pub use self::turn_schedule::*;
 pub use self::menu::*;
 pub use self::config::*;
 pub use self::renderer_buffers::*;
+pub use self::control_spec::*;
 
 pub mod data;
 pub mod prototypes;
 pub mod frontends;
 pub mod save_file;
-pub mod control_spec;
 pub mod game_file;
 pub mod user_files;
+pub mod control_file;

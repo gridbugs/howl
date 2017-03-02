@@ -1,32 +1,95 @@
-use std::collections::HashMap;
-use std::path;
-use toml;
+use std::collections::{hash_map, HashMap};
 use game::*;
 use direction::*;
 
-type StringControlSpec = HashMap<String, String>;
+pub struct ControlSpec {
+    controls: HashMap<Control, InputEvent>,
+}
 
-impl<'a> From<&'a ControlMap> for StringControlSpec {
+impl ControlSpec {
+    pub fn new() -> Self {
+        ControlSpec {
+            controls: HashMap::new(),
+        }
+    }
+
+    pub fn iter(&self) -> ControlSpecIter {
+        ControlSpecIter(self.controls.iter())
+    }
+
+    pub fn get(&self, control: Control) -> Option<InputEvent> {
+        self.controls.get(&control).map(|i| *i)
+    }
+}
+
+impl<'a> From<&'a ControlMap> for ControlSpec {
     fn from(map: &'a ControlMap) -> Self {
-        let mut spec = StringControlSpec::new();
+        let mut spec = ControlSpec::new();
 
-        for (input_event, control) in map.iter() {
-            spec.insert(String::from(*control), String::from(*input_event));
+        for (input, control) in map.iter() {
+            spec.controls.insert(control, input);
         }
 
         spec
     }
 }
 
-impl<'a> From<&'a StringControlSpec> for ControlMap {
-    fn from(spec: &'a StringControlSpec) -> Self {
+impl<'a> From<&'a ControlSpec> for ControlMap {
+    fn from(spec: &'a ControlSpec) -> Self {
         let mut map = ControlMap::new();
 
         for (control, input) in spec.iter() {
-            map.insert(InputEvent::from(input), Control::from(control));
+            map.insert(input, control);
         }
 
         map
+    }
+}
+
+pub struct ControlSpecIter<'a>(hash_map::Iter<'a, Control, InputEvent>);
+impl<'a> Iterator for ControlSpecIter<'a> {
+    type Item = (Control, InputEvent);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(|(c, i)| (*c, *i))
+    }
+}
+
+pub type StringControlSpec = HashMap<String, String>;
+
+impl<'a> From<&'a ControlSpec> for StringControlSpec {
+    fn from(spec: &'a ControlSpec) -> Self {
+        let mut string_spec = StringControlSpec::new();
+
+        for (control, input_event) in spec.iter() {
+            string_spec.insert(String::from(control), String::from(input_event));
+        }
+
+        string_spec
+    }
+}
+
+impl<'a> From<&'a StringControlSpec> for ControlSpec {
+    fn from(string_spec: &'a StringControlSpec) -> Self {
+        let mut spec = ControlSpec::new();
+
+        for (control, input_event) in string_spec.iter() {
+            spec.controls.insert(Control::from(control), InputEvent::from(input_event));
+        }
+
+        spec
+    }
+}
+
+
+impl<'a> From<&'a ControlMap> for StringControlSpec {
+    fn from(map: &'a ControlMap) -> Self {
+        StringControlSpec::from(&ControlSpec::from(map))
+    }
+}
+
+impl<'a> From<&'a StringControlSpec> for ControlMap {
+    fn from(spec: &'a StringControlSpec) -> Self {
+        ControlMap::from(&ControlSpec::from(spec))
     }
 }
 
@@ -109,14 +172,4 @@ impl<'a> From<&'a String> for InputEvent {
 
         panic!("No such input: {}", s);
     }
-}
-
-pub fn from_file<P: AsRef<path::Path>>(path: P) -> Option<ControlMap> {
-    let spec: Option<StringControlSpec> = game_file::read_toml(path).ok();
-    spec.as_ref().map(ControlMap::from)
-}
-
-pub fn to_file<P: AsRef<path::Path>>(path: P, map: &ControlMap) {
-    game_file::write_toml(path, &StringControlSpec::from(map))
-        .expect("Failed to write controls file");
 }

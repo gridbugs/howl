@@ -18,7 +18,7 @@ pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(inpu
 
 fn get_direction<I: InputSource>(map: &ControlMap, mut input_source: I) -> Option<Direction> {
     input_source.next_input().and_then(|event| {
-        map.control(event).and_then(|control| {
+        map.get(event).and_then(|control| {
             control_to_direction(control)
         })
     })
@@ -55,7 +55,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
         renderer.publish_game_window_with_overlay(&overlay);
 
         if let Some(event) = input_source.next_input() {
-            if let Some(control) = map.control(event) {
+            if let Some(control) = map.get(event) {
                 if let Some(direction) = control_to_direction(control) {
                     let next_end = end + direction.vector();
                     if renderer.contains_world_coord(next_end) {
@@ -105,7 +105,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
         renderer.publish_fullscreen_log(message_log.deref(), offset, input.language);
 
         if let Some(event) = input_source.next_input() {
-            if let Some(control) = map.control(event) {
+            if let Some(control) = map.get(event) {
                 match control {
                     Control::Pause |
                         Control::DisplayMessageLog => break,
@@ -164,7 +164,7 @@ fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut i
         renderer.publish_all_windows_with_overlay(input.entity, input.language, &overlay);
 
         if let Some(event) = input_source.next_input() {
-            if let Some(control) = map.control(event) {
+            if let Some(control) = map.get(event) {
                 match control {
                     Control::Pause |
                         Control::Examine => break,
@@ -205,7 +205,7 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
         }
         input.entity.control_map_borrow().and_then(|map_ref| {
             let map = map_ref.deref();
-            map.control(event).and_then(|control| {
+            map.get(event).and_then(|control| {
                 match control {
                     Control::Direction(d) => Some(MetaAction::ActionArgs(ActionArgs::Walk(input.entity.id(), d))),
                     Control::Close => {

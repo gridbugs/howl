@@ -153,7 +153,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             self.renderer.borrow_mut().reset_buffers();
 
-            let mut control_map = control_spec::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
+            let mut control_map = control_file::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
 
             let mut menu = SelectMenu::new();
 
@@ -201,7 +201,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 MainMenuSelection::Continue => current_game_state.take().expect("Missing game state"),
                 MainMenuSelection::Controls => {
                     self.configure_controls(&mut control_map);
-                    control_spec::to_file(args.user_path.join(user_files::CONTROL), &control_map);
+                    control_file::to_file(args.user_path.join(user_files::CONTROL), &control_map);
                     current_menu_state = Some(menu_state);
                     continue;
                 }
@@ -329,15 +329,16 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         loop {
             let mut menu = SelectMenu::new();
+            let descriptions = control_map.descriptions();
 
-            for desc in control_map.descriptions() {
-                let message = if let Some(input) = desc.inputs.get(0) {
-                    MenuMessageType::Control(*input, desc.control)
+            for (control, maybe_input) in descriptions.iter() {
+                let message = if let Some(input) = maybe_input {
+                    MenuMessageType::Control(input, control)
                 } else {
-                    MenuMessageType::UnboundControl(desc.control)
+                    MenuMessageType::UnboundControl(control)
                 };
 
-                menu.push(SelectMenuItem::new(message, desc.control));
+                menu.push(SelectMenuItem::new(message, control));
             }
 
             if let Some((control_to_change, menu_state)) = SelectMenuOperation::new(
@@ -351,18 +352,18 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 current_menu_state = Some(menu_state.clone());
                 let mut menu = SelectMenu::new();
 
-                for desc in control_map.descriptions() {
-                    let message = if desc.control == control_to_change {
-                        MenuMessageType::ControlBinding(desc.control)
+                for (control, maybe_input) in descriptions.iter() {
+                    let message = if control == control_to_change {
+                        MenuMessageType::ControlBinding(control)
                     } else {
-                        if let Some(input) = desc.inputs.get(0) {
-                            MenuMessageType::Control(*input, desc.control)
+                        if let Some(input) = maybe_input {
+                            MenuMessageType::Control(input, control)
                         } else {
-                            MenuMessageType::UnboundControl(desc.control)
+                            MenuMessageType::UnboundControl(control)
                         }
                     };
 
-                    menu.push(SelectMenuItem::new(message, desc.control));
+                    menu.push(SelectMenuItem::new(message, control));
                 }
                 SelectMenuOperation::new(
                     renderer,
@@ -373,10 +374,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     Some(menu_state)).publish();
 
                 if let Some(input) = self.input_source.next_input() {
-                    control_map.invert().get(&control_to_change).map(|inputs| {
-                        for i in inputs {
-                            control_map.remove(*i);
-                        }
+                    ControlSpec::from(&*control_map).get(control_to_change).map(|input| {
+                        control_map.remove(input);
                     });
 
                     control_map.insert(input, control_to_change);

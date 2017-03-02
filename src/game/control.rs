@@ -1,6 +1,8 @@
 use std::collections::{hash_map, HashMap};
+use std::slice;
 
 use game::InputEvent;
+use game::control_spec::ControlSpec;
 use direction::Direction;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -34,7 +36,13 @@ const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
     Control::Pause,
 ];
 
-pub type ControlMapIter<'a> = hash_map::Iter<'a, InputEvent, Control>;
+pub struct ControlMapIter<'a>(hash_map::Iter<'a, InputEvent, Control>);
+impl<'a> Iterator for ControlMapIter<'a> {
+    type Item = (InputEvent, Control);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(|(i, c)| (*i, *c))
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ControlMap {
@@ -42,12 +50,12 @@ pub struct ControlMap {
 }
 
 impl ControlMap {
-    pub fn control(&self, event: InputEvent) -> Option<Control> {
+    pub fn get(&self, event: InputEvent) -> Option<Control> {
         self.map.get(&event).map(|r| *r)
     }
 
     pub fn iter(&self) -> ControlMapIter {
-        self.map.iter()
+        ControlMapIter(self.map.iter())
     }
 
     pub fn insert(&mut self, input: InputEvent, control: Control) {
@@ -84,33 +92,13 @@ impl ControlMap {
         self.insert(InputEvent::Char('t'), Control::DisplayMessageLog);
     }
 
-    pub fn invert(&self) -> HashMap<Control, Vec<InputEvent>> {
-        let mut inverted = HashMap::new();
+    pub fn descriptions(&self) -> ControlDescriptions {
+        let mut descriptions = ControlDescriptions::new();
 
-        for (input_event, control) in self.iter() {
-            inverted.entry(*control).or_insert_with(Vec::new).push(*input_event);
-        }
-
-        inverted
-    }
-
-    pub fn descriptions(&self) -> Vec<ControlDescription> {
-        let mut descriptions = Vec::new();
-
-        let inverted = self.invert();
+        let spec = ControlSpec::from(self);
 
         for control in CONTROL_ORDER.iter() {
-            if let Some(inputs) = inverted.get(control) {
-                descriptions.push(ControlDescription {
-                    control: *control,
-                    inputs: inputs.clone(),
-                });
-            } else {
-                descriptions.push(ControlDescription {
-                    control: *control,
-                    inputs: Vec::new(),
-                });
-            }
+            descriptions.descriptions.push((*control, spec.get(*control)));
         }
 
         descriptions
@@ -128,4 +116,28 @@ impl Default for ControlMap {
 pub struct ControlDescription {
     pub control: Control,
     pub inputs: Vec<InputEvent>,
+}
+
+pub struct ControlDescriptions {
+    descriptions: Vec<(Control, Option<InputEvent>)>,
+}
+
+impl ControlDescriptions {
+    fn new() -> Self {
+        ControlDescriptions {
+            descriptions: Vec::new(),
+        }
+    }
+
+    pub fn iter(&self) -> ControlDescriptionsIter {
+        ControlDescriptionsIter(self.descriptions.iter())
+    }
+}
+
+pub struct ControlDescriptionsIter<'a>(slice::Iter<'a, (Control, Option<InputEvent>)>);
+impl<'a> Iterator for ControlDescriptionsIter<'a> {
+    type Item = (Control, Option<InputEvent>);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(|d| *d)
+    }
 }
