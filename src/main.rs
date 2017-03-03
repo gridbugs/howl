@@ -11,9 +11,6 @@ extern crate serde_derive;
 extern crate serde;
 extern crate bincode;
 
-#[cfg(all(unix, feature = "rustty"))]
-extern crate rustty;
-
 #[cfg(feature = "sdl2")]
 extern crate sdl2;
 
@@ -21,7 +18,6 @@ use std::env;
 
 #[macro_use]
 mod debug;
-mod frontends;
 mod ecs;
 mod math;
 mod game;

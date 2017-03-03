@@ -5,7 +5,7 @@ authors = ["Stephen Sherratt <stephen@sherra.tt>"]
 build = "build.rs"
 
 [features]
-default = ["sdl2", "rustty"]
+default = ["sdl2"]
 use_sdl2_mac_framework = ["sdl2/use_mac_framework"]
 
 [dependencies]
@@ -23,9 +23,6 @@ version = "0.29"
 optional = true
 default-features = false
 features = ["image", "ttf"]
-
-[target.'cfg(unix)'.dependencies]
-rustty = { git = "https://github.com/stevebob/rustty.git", optional = true }
 
 [build-dependencies]
 copy_dir = "0.1"

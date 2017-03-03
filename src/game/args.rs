@@ -106,8 +106,6 @@ fn user_dir_path() -> Option<path::PathBuf> {
 fn sane_frontend() -> Option<Frontend> {
     if cfg!(feature = "sdl2") {
         Some(Frontend::Sdl)
-    } else if cfg!(all(unix, feature = "rustty")) {
-        Some(Frontend::Ansi)
     } else {
         None
     }
