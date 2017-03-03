@@ -3,8 +3,8 @@
 set -e
 
 
-MACOS_BIN_NAME=howl-bin
-MACOS_APP_NAME=Howl
+MACOS_BIN_NAME=apocalypse-post-bin
+MACOS_APP_NAME=apocalypse-post
 MACOS_APP_DIR=$MACOS_APP_NAME.app
 
 echo "Creating app directory structure"

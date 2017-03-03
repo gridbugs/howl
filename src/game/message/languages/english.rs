@@ -1,6 +1,8 @@
 use game::*;
 use colour::*;
 
+const DARK_YELLOW: Rgb24 = Rgb24 { red: 0x80, green: 0x80, blue: 0 };
+
 pub struct English;
 
 impl English {
@@ -80,11 +82,11 @@ impl Language for English {
         match message_type {
             MessageType::Empty => {},
             MessageType::Intro => self.translate_intro(message),
-            MessageType::Title => message.push(MessagePart::colour(colours::PURPLE, "HOWL")),
+            MessageType::Title => message.push(MessagePart::colour(DARK_YELLOW, "Apocalypse Post")),
             MessageType::PressAnyKey => message.push(MessagePart::plain("Press any key...")),
             MessageType::Welcome => {
                 message.push(MessagePart::plain("Welcome to "));
-                message.push(MessagePart::colour(colours::PURPLE, "HOWL"));
+                message.push(MessagePart::colour(DARK_YELLOW, "Apocalypse Post"));
                 message.push(MessagePart::plain("!"));
             }
             MessageType::YouDied => {

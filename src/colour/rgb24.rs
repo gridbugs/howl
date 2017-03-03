@@ -33,6 +33,4 @@ pub mod colours {
     pub const RED: Rgb24 = Rgb24 { red: 255, green: 0, blue: 0 };
     pub const GREEN: Rgb24 = Rgb24 { red: 0, green: 255, blue: 0 };
     pub const BLUE: Rgb24 = Rgb24 { red: 0, green: 0, blue: 255 };
-
-    pub const PURPLE: Rgb24 = Rgb24 { red: 0x99, green: 0x00, blue: 0xcc };
 }

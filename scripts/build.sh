@@ -4,7 +4,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-APP_NAME=howl
+APP_NAME=apocalypse-post
 SUFFIX=$TRAVIS_BRANCH
 RESOURCES=resources
 USER=user

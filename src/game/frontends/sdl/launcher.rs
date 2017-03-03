@@ -57,7 +57,7 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
 
     let renderer = match frontends::sdl::SdlKnowledgeRenderer::new(
         &video,
-        "Howl",
+        "Apocalypse Post",
         GAME_WIDTH,
         GAME_HEIGHT,
         tile_path,

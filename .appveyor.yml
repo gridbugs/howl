@@ -4,9 +4,9 @@ os: Visual Studio 2015
 environment:
   matrix:
   - TARGET: x86_64-pc-windows-msvc
-    NAME: howl
+    NAME: apocalypse-post
     BIN_PATH: target\release
-    BIN_NAME: howl-windows-x86_64
+    BIN_NAME: apocalypse-post-windows-x86_64
 install:
 - cmd: >-
 

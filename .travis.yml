@@ -32,5 +32,5 @@ deploy:
   acl: public_read
   on:
     all_branches: true
-    repo: stevebob/howl
+    repo: stevebob/apocalypse-post
     condition: $TRAVIS_RUST_VERSION = stable
