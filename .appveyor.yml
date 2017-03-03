@@ -1,5 +1,6 @@
 version: '{build}'
 clone_depth: 1
+os: Visual Studio 2015
 environment:
   matrix:
   - TARGET: x86_64-pc-windows-msvc
@@ -9,9 +10,11 @@ environment:
 install:
 - cmd: >-
 
-    curl -sSf -o rustup-init.exe https://win.rustup.rs  &
-    rustup-init.exe -y --default-host %TARGET%          &
-    set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+    curl -sSf -o rust-install.exe   https://static.rust-lang.org/dist/rust-nightly-%TARGET%.exe
+
+    rust-install.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+
+    set PATH=%PATH%;C:\Program Files (x86)\Rust\bin
 
     rustc -V &
     cargo -V
@@ -33,7 +36,7 @@ install:
 build_script:
 - cmd: >-
 
-    cargo rustc --release -- -Clink-args="/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
+    cargo rustc --release -- -Clink-args="/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup" -Ctarget-feature=+crt-static -Zunstable-options
 
     set FULL_NAME=%BIN_NAME%-%APPVEYOR_REPO_BRANCH%
 
