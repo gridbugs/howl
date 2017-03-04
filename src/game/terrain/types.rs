@@ -18,8 +18,6 @@ pub struct ParentLevelCtx<'a> {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum TerrainType {
     DemoA,
-    DemoB,
-    DemoC,
 }
 
 impl TerrainType {
@@ -28,11 +26,9 @@ impl TerrainType {
                                           rng: &GameRng,
                                           schedule: &mut S,
                                           action: &mut EcsAction,
-                                          parent: Option<ParentLevelCtx>) -> TerrainMetadata {
+                                          _parent: Option<ParentLevelCtx>) -> TerrainMetadata {
         match self {
             TerrainType::DemoA => generators::demo_a(ids, rng, schedule, action),
-            TerrainType::DemoB => generators::demo_b(ids, rng, schedule, action),
-            TerrainType::DemoC => generators::demo_c(ids, rng, schedule, action, parent.expect("Expected parent level")),
         }
     }
 }

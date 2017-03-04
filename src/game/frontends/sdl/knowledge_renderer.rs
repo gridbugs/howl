@@ -504,10 +504,6 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
         if let Some(health_overlay) = info.health_overlay {
             self.draw_health_bar(coord, health_overlay);
         }
-
-        if info.tear && info.visible {
-            self.sdl_renderer.copy(&textures.colour, Some(self.tileset.extra.tear), Some(rect)).expect(RENDERING_FAILED_MSG);
-        }
     }
 }
 
@@ -556,22 +552,6 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
 
     fn draw_overlay_internal(&mut self, overlay: &RenderOverlay) {
         match *overlay {
-            RenderOverlay::AimLine(ref aim_line) => {
-                for coord in aim_line.iter() {
-                    let screen_coord = self.world_to_screen(coord);
-                    if let Some(cell) = self.buffers.tiles.get(screen_coord) {
-                        let aim_line_rect = self.renderer.tileset.extra.aim_line;
-                        self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_rect, &self.textures);
-                    }
-                }
-            }
-            RenderOverlay::ExamineCursor(examine_cursor) => {
-                let screen_coord = self.world_to_screen(examine_cursor);
-                if let Some(cell) = self.buffers.tiles.get(screen_coord) {
-                    let aim_line_rect = self.renderer.tileset.extra.aim_line;
-                    self.renderer.draw_overlay_cell(cell, screen_coord, aim_line_rect, &self.textures);
-                }
-            }
             RenderOverlay::Death => {
                 for (coord, cell) in izip!(self.buffers.tiles.coord_iter(), self.buffers.tiles.iter()) {
                     let death_rect = self.renderer.tileset.extra.death;

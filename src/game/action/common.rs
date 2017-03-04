@@ -12,32 +12,6 @@ pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
     action.insert_position(entity.id(), new_position);
 }
 
-pub fn open_door(action: &mut EcsAction, door: EntityRef) {
-    action.remove_solid(door.id());
-    action.insert_opacity(door.id(), 0.0);
-    action.insert_door_state(door.id(), DoorState::Open);
-
-    action.insert_tile(door.id(), TileType::OpenDoor);
-
-    action.set_action_description(ActionDescription {
-        message: ActionMessageType::PlayerOpenDoor,
-        coord: door.position().expect("Entity missing position"),
-    });
-}
-
-pub fn close_door(action: &mut EcsAction, door: EntityRef) {
-    action.insert_solid(door.id());
-    action.insert_opacity(door.id(), 1.0);
-    action.insert_door_state(door.id(), DoorState::Closed);
-
-    action.insert_tile(door.id(), TileType::ClosedDoor);
-
-    action.set_action_description(ActionDescription {
-        message: ActionMessageType::PlayerCloseDoor,
-        coord: door.position().expect("Entity missing position"),
-    });
-}
-
 pub fn close(action: &mut EcsAction, entity_id: EntityId, direction: Direction) {
     action.set_close(Close::new(entity_id, direction));
 }

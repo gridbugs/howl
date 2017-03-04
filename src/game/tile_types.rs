@@ -1,56 +1,48 @@
 #[derive(Hash, Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TileType {
-    Wall,
-    Tree,
-    DeadTree,
-    Floor,
-    Ground,
-    OpenDoor,
-    ClosedDoor,
+    Van,
+    Zombie,
+    Wreck0,
+    Wreck1,
+    Wreck2,
     Bullet,
-    Player,
-    TerrorPillar,
-    TerrorFly,
-    Book,
-    UpStairs,
-    DownStairs,
+    Road0,
+    Road1,
+    Dirt0,
+    Dirt1,
+    Acid0,
+    Acid1,
 }
 
 impl TileType {
     pub fn opaque_bg(self) -> bool {
         match self {
-            TileType::Wall
-                | TileType::Floor
-                | TileType::Ground
-                | TileType::ClosedDoor
-                => true,
+            TileType::Road0 |
+            TileType::Road1 |
+            TileType::Dirt0 |
+            TileType::Dirt1 |
+            TileType::Acid0 |
+            TileType::Acid1 => true,
             _ => false,
         }
     }
 
-    pub fn has_front_variant(self) -> bool {
-        match self {
-            TileType::Wall => true,
-            _ => false,
-        }
-    }
+    pub fn has_front_variant(self) -> bool { false }
 
     pub fn from_str(s: &str) -> Option<Self> {
         let tile = match s {
-            "Wall" => TileType::Wall,
-            "Tree" => TileType::Tree,
-            "DeadTree" => TileType::DeadTree,
-            "Floor" => TileType::Floor,
-            "Ground" => TileType::Ground,
-            "OpenDoor" => TileType::OpenDoor,
-            "ClosedDoor" => TileType::ClosedDoor,
+            "Van" => TileType::Van,
+            "Zombie" => TileType::Zombie,
+            "Wreck0" => TileType::Wreck0,
+            "Wreck1" => TileType::Wreck1,
+            "Wreck2" => TileType::Wreck2,
             "Bullet" => TileType::Bullet,
-            "Player" => TileType::Player,
-            "TerrorPillar" => TileType::TerrorPillar,
-            "TerrorFly" => TileType::TerrorFly,
-            "Book" => TileType::Book,
-            "UpStairs" => TileType::UpStairs,
-            "DownStairs" => TileType::DownStairs,
+            "Road0" => TileType::Road0,
+            "Road1" => TileType::Road1,
+            "Dirt0" => TileType::Dirt0,
+            "Dirt1" => TileType::Dirt1,
+            "Acid0" => TileType::Acid0,
+            "Acid1" => TileType::Acid1,
             _ => return None,
         };
 

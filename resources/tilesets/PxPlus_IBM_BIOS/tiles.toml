@@ -3,54 +3,47 @@ tile_height = 16
 tile_padding = 0
 
 [extra]
-Blank = { x = 16, y = 0 }
-Tear = { x = 13, y = 0 }
-AimLine = { x = 14, y = 0 }
-Death = { x = 17, y = 0 }
+Death = { x = 0, y = 4 }
+Blank = { x = 0, y = 5 }
 
-[tiles.Player]
-foreground = { x = 0, y = 0 }
-
-[tiles.TerrorPillar]
+[tiles.Van]
 foreground = { x = 1, y = 0 }
 
-[tiles.TerrorFly]
+[tiles.Zombie]
+foreground = { x = 0, y = 0 }
+
+[tiles.Wreck0]
 foreground = { x = 2, y = 0 }
 
-[tiles.Tree]
+[tiles.Wreck1]
 foreground = { x = 3, y = 0 }
 
-[tiles.DeadTree]
+[tiles.Wreck2]
 foreground = { x = 4, y = 0 }
 
-[tiles.Floor]
-background = { x = 7, y = 0 }
+[tiles.Bullet]
 foreground = { x = 5, y = 0 }
 
-[tiles.Ground]
-background = { x = 7, y = 0 }
-foreground = { x = 6, y = 0 }
+[tiles.Road0]
+background = { x = 0, y = 1 }
+foreground = { x = 1, y = 1 }
 
-[tiles.Wall.front]
-background = { x = 8, y = 0 }
+[tiles.Road1]
+background = { x = 0, y = 1 }
+foreground = { x = 2, y = 1 }
 
-[tiles.Wall.back]
-background = { x = 9, y = 0 }
+[tiles.Dirt0]
+background = { x = 0, y = 2 }
+foreground = { x = 1, y = 2 }
 
-[tiles.ClosedDoor]
-background = { x = 10, y = 0 }
+[tiles.Dirt1]
+background = { x = 0, y = 2 }
+foreground = { x = 2, y = 2 }
 
-[tiles.OpenDoor]
-foreground = { x = 11, y = 0 }
+[tiles.Acid0]
+background = { x = 0, y = 3 }
+foreground = { x = 1, y = 3 }
 
-[tiles.Bullet]
-foreground = { x = 12, y = 0 }
-
-[tiles.Book]
-foreground = { x = 15, y = 0 }
-
-[tiles.DownStairs]
-foreground = { x = 18, y = 0 }
-
-[tiles.UpStairs]
-foreground = { x = 19, y = 0 }
+[tiles.Acid1]
+background = { x = 0, y = 3 }
+foreground = { x = 2, y = 3 }

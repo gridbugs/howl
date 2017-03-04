@@ -172,11 +172,9 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         if self.ecs_action.contains_no_commit() {
             rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         } else {
-            rules::open_door(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::close_door(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::tear_transform(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;

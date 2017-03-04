@@ -4,7 +4,6 @@ use std::cmp;
 use game::*;
 use behaviour::LeafResolution;
 use direction::Direction;
-use coord::{Coord, StraightLine};
 
 pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(input_source: I) -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
@@ -29,62 +28,6 @@ fn control_to_direction(control: Control) -> Option<Direction> {
         Control::Direction(d) => Some(d),
         _ => None,
     }
-}
-
-fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<Coord> {
-    let start = input.entity.position().unwrap();
-    let mut knowledge = input.entity.drawable_knowledge_borrow_mut().unwrap();
-    let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
-                                                             input.spatial_hash.width(),
-                                                             input.spatial_hash.height());
-
-    let targets = level_knowledge.sort_targets(start);
-    let mut target_idx = 0;
-
-    let mut end = if !targets.is_empty() {
-        targets[target_idx]
-    } else {
-        start
-    };
-
-    let mut renderer = input.renderer.borrow_mut();
-
-    loop {
-
-        let overlay = RenderOverlay::AimLine(StraightLine::new(start, end));
-        renderer.publish_game_window_with_overlay(&overlay);
-
-        if let Some(event) = input_source.next_input() {
-            if let Some(control) = map.get(event) {
-                if let Some(direction) = control_to_direction(control) {
-                    let next_end = end + direction.vector();
-                    if renderer.contains_world_coord(next_end) {
-                        end = next_end;
-                    }
-                } else if control == Control::NextTarget {
-                    if !targets.is_empty() {
-                        target_idx = (target_idx + 1) % targets.len();
-                        end = targets[target_idx];
-                    }
-                } else if control == Control::PrevTarget {
-                    if !targets.is_empty() {
-                        target_idx = (target_idx + targets.len() - 1) % targets.len();
-                        end = targets[target_idx];
-                    }
-                } else if control == Control::Fire || control == Control::Use {
-                    renderer.publish_game_window();
-                    return Some(end);
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-    }
-
-    renderer.publish_game_window();
-    None
 }
 
 fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
@@ -126,78 +69,6 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
     renderer.publish_all_windows(input.entity, input.language);
 }
 
-fn examine<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
-
-
-    let mut knowledge = input.entity.drawable_knowledge_borrow_mut().unwrap();
-    let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
-                                                             input.spatial_hash.width(),
-                                                             input.spatial_hash.height());
-
-    let mut renderer = input.renderer.borrow_mut();
-    let mut message_log = input.entity.message_log_borrow_mut().unwrap();
-    let position = input.entity.position().unwrap();
-
-    let mut cursor = position;
-    let mut alternative_message = false;
-
-    loop {
-
-        let cell = level_knowledge.get_with_default(cursor);
-
-        if alternative_message {
-            alternative_message = false;
-        } else {
-            let message = if cell.last_updated() == input.action_env.id {
-                MessageType::YouSee(cell.you_see())
-            } else if cell.last_updated() == 0 {
-                MessageType::Unseen
-            } else {
-                MessageType::YouRemember(cell.you_see())
-            };
-
-            message_log.add_temporary(message);
-            renderer.update_log_buffer(message_log.deref(), input.language);
-        }
-
-        let overlay = RenderOverlay::ExamineCursor(cursor);
-        renderer.publish_all_windows_with_overlay(input.entity, input.language, &overlay);
-
-        if let Some(event) = input_source.next_input() {
-            if let Some(control) = map.get(event) {
-                match control {
-                    Control::Pause |
-                        Control::Examine => break,
-                    Control::Direction(direction) => {
-                        cursor += direction.vector();
-                    }
-                    Control::Use => {
-                        let message = if let Some(description) = cell.description() {
-                            MessageType::Description(description)
-                        } else if let Some(you_see) = cell.you_see() {
-                            MessageType::YouSeeDescription(you_see)
-                        } else {
-                            message_log.add_temporary(MessageType::NoDescription);
-                            renderer.update_log_buffer(message_log.deref(), input.language);
-                            alternative_message = true;
-                            continue;
-                        };
-
-                        renderer.publish_fullscreen_message(message, input.language);
-                        input_source.next_input();
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
-
-    message_log.add_temporary(MessageType::Empty);
-    renderer.update_log_buffer(message_log.deref(), input.language);
-    renderer.draw_hud(input.entity, input.language);
-    renderer.draw_game_window();
-}
-
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         if event == InputEvent::Quit {
@@ -212,12 +83,7 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         get_direction(map, input_source).map(|d| MetaAction::ActionArgs(ActionArgs::Close(input.entity.id(), d)))
                     }
                     Control::Fire => {
-                        aim(input, map, input_source).map(|coord| {
-                            let delta = coord - input.entity.position().unwrap();
-
-
-                            MetaAction::ActionArgs(ActionArgs::FireBullet(input.entity.id(), delta))
-                        })
+                        None
                     }
                     Control::Wait => {
                         Some(MetaAction::ActionArgs(ActionArgs::Null))
@@ -228,7 +94,6 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         None
                     }
                     Control::Examine => {
-                        examine(input, input_source, map);
                         None
                     }
                     Control::Use => {

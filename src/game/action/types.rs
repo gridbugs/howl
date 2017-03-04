@@ -24,8 +24,6 @@ pub enum MetaAction {
 pub enum ActionArgs {
     Null,
     Walk(EntityId, Direction),
-    OpenDoor(EntityId),
-    CloseDoor(EntityId),
     Close(EntityId, Direction),
     FireBullet(EntityId, Coord),
     RealtimeVelocityMove(EntityId, RealtimeVelocity),
@@ -50,12 +48,6 @@ impl ActionArgs {
             ActionArgs::Null => (),
             ActionArgs::Walk(entity_id, direction) => {
                 actions::walk(action, ecs.entity(entity_id), direction);
-            }
-            ActionArgs::OpenDoor(entity_id) => {
-                actions::open_door(action, ecs.entity(entity_id));
-            }
-            ActionArgs::CloseDoor(entity_id) => {
-                actions::close_door(action, ecs.entity(entity_id));
             }
             ActionArgs::Close(entity_id, direction) => {
                 actions::close(action, entity_id, direction);

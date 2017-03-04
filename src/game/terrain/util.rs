@@ -1,14 +1,14 @@
-use std::ops::DerefMut;
 use ecs::*;
 use game::*;
 use game::data::*;
 use coord::Coord;
 
 pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
-                                                  level_switch: Option<LevelSwitch>,
+                                                  _level_switch: Option<LevelSwitch>,
                                                   ids: &EntityIdReserver,
                                                   schedule: &mut S,
-                                                  g: &mut EcsAction) -> (usize, usize) {
+                                                  g: &mut EcsAction,
+                                                  rng: &GameRng) -> (usize, usize) {
     let width = strings[0].len();
     let height = strings.len();
 
@@ -18,38 +18,38 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
         for ch in line.chars() {
             let coord = Coord::new(x, y);
             match ch {
-                '#' => {
-                    prototypes::wall(g.entity_mut(ids.new_id()), coord);
-                    prototypes::floor(g.entity_mut(ids.new_id()), coord);
-                }
-                '&' => {
-                    prototypes::tree(g, ids, coord);
-
-                    prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
-                }
                 '.' => {
-                    prototypes::floor(g.entity_mut(ids.new_id()), coord);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
                 }
                 ',' => {
-                    prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
                 }
-                '=' => {
-                    if let Some(level_switch) = level_switch {
-                        prototypes::book(g.entity_mut(ids.new_id()), coord, level_switch);
-                        prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
-                    }
-                }
-                '+' => {
-                    prototypes::door(g.entity_mut(ids.new_id()), coord, DoorState::Closed);
-                    prototypes::floor(g.entity_mut(ids.new_id()), coord);
-                }
-                't' => {
-                    prototypes::outside_floor(g.entity_mut(ids.new_id()), coord);
-                    let id = prototypes::terror_pillar(g, ids, coord);
-
+                'z' => {
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    let id = ids.new_id();
+                    prototypes::zombie(g.entity_mut(id), coord);
                     let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
                     let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
+                }
+                'Z' => {
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                    let id = ids.new_id();
+                    prototypes::zombie(g.entity_mut(id), coord);
+                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let ticket = schedule.schedule_turn(id, turn_offset);
+                    g.insert_schedule_ticket(id, ticket);
+                }
+                '%' => {
+                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                }
+                '$' => {
+                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                }
+                '~' => {
+                    prototypes::acid(g.entity_mut(ids.new_id()), coord, rng);
                 }
                 _ => panic!(),
             }
@@ -59,17 +59,4 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
     }
 
     (width, height)
-}
-
-pub fn generate_tear<S: TurnScheduleQueue>(width: usize,
-                                             height: usize,
-                                             ids: &EntityIdReserver,
-                                             rng: &GameRng,
-                                             schedule: &mut S,
-                                             g: &mut EcsAction) {
-    let tear_id = ids.new_id();
-    prototypes::tear(g.entity_mut(tear_id), width, height, rng.inner_mut().deref_mut());
-    let turn_offset = g.turn_offset(tear_id).expect("Expected component turn_offset");
-    let ticket = schedule.schedule_turn(tear_id, turn_offset);
-    g.insert_schedule_ticket(tear_id, ticket);
 }
