@@ -28,7 +28,6 @@ pub enum ActionArgs {
     FireBullet(EntityId, Coord),
     RealtimeVelocityMove(EntityId, RealtimeVelocity),
     Destroy(EntityId),
-    MoveTear(EntityId),
     TransformTerrorPillarTerrorFly(EntityId),
     TransformTree(EntityId),
     LevelSwitch {
@@ -40,10 +39,11 @@ pub enum ActionArgs {
     ProjectileCollision(ProjectileCollision),
     Damage(EntityId, usize),
     Die(EntityId),
+    AcidAnimate,
 }
 
 impl ActionArgs {
-    pub fn to_action<R: Rng>(self, action: &mut EcsAction, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver, r: &mut R) {
+    pub fn to_action<R: Rng>(self, action: &mut EcsAction, ecs: &EcsCtx, _spatial_hash: &SpatialHashTable, entity_ids: &EntityIdReserver, r: &mut R) {
         match self {
             ActionArgs::Null => (),
             ActionArgs::Walk(entity_id, direction) => {
@@ -60,9 +60,6 @@ impl ActionArgs {
             }
             ActionArgs::Destroy(entity_id) => {
                 actions::destroy(action, ecs.entity(entity_id));
-            }
-            ActionArgs::MoveTear(entity_id) => {
-                actions::move_tear(action, entity_id, ecs, spatial_hash, r);
             }
             ActionArgs::TransformTerrorPillarTerrorFly(entity_id) => {
                 actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id));
@@ -84,6 +81,9 @@ impl ActionArgs {
             }
             ActionArgs::TryLevelSwitch(entity_id) => {
                 actions::try_level_switch(action, entity_id);
+            }
+            ActionArgs::AcidAnimate => {
+                actions::acid_animate(action, ecs, r);
             }
         }
     }

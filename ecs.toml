@@ -11,12 +11,12 @@ imports = [
 [component.destroy_on_collision]
 [component.pc]
 [component.floor]
-[component.tear]
 [component.should_render]
 [component.enemy]
 [component.projectile]
 [component.projectile_collider]
 [component.bump_attackable]
+[component.acid_animation]
 
 [component.bump_attacker]
     type = "usize"
@@ -101,10 +101,6 @@ imports = [
     type = "u64"
     copy = true
 
-[component.tear_state]
-    type = "TearState"
-    container = "RefCell"
-
 [component.shadow_entity]
     type = "EntityId"
     copy = true
@@ -129,6 +125,9 @@ imports = [
 [component.level_switch_group]
     type = "usize"
     copy = true
+
+[component.probabilistic_animation]
+    type = "FirstWeightedProbabilisticChoice<TileType>"
 
 [action_property.alternative_turn_time]
     type = "u64"

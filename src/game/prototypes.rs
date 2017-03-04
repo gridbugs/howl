@@ -1,3 +1,5 @@
+use std::ops::DerefMut;
+
 use coord::Coord;
 
 use ecs::*;
@@ -7,6 +9,7 @@ use game::data::*;
 pub const ENV_TURN_OFFSET: u64 = 0;
 pub const NPC_TURN_OFFSET: u64 = 1;
 pub const PC_TURN_OFFSET: u64 = 2;
+pub const ACID_ANIMATION_TURN_OFFSET: u64 = 3;
 
 pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
@@ -106,13 +109,11 @@ pub fn dirt<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) ->
 pub fn acid<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity.insert_position(position);
 
-    let rest_tiles = [
-        TileType::Acid1,
-    ];
+    let animation = FirstWeightedProbabilisticChoice::new(0.90, TileType::Acid0, vec![TileType::Acid1]);
 
-    let tile = *rng.select_or_select_uniform(0.95, &TileType::Acid0, &rest_tiles);
-
-    entity.insert_tile(tile);
+    entity.insert_tile(*animation.choose(rng.inner_mut().deref_mut()));
+    entity.insert_probabilistic_animation(animation);
+    entity.insert_acid_animation();
     entity.insert_tile_depth(0);
     entity.insert_floor();
 
@@ -134,6 +135,15 @@ pub fn wreck<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -
     entity.insert_tile_depth(0);
     entity.insert_floor();
     entity.insert_solid();
+
+    entity
+}
+
+pub fn acid_animator<E: EntityPopulate>(mut entity: E) -> E {
+    entity.insert_behaviour_type(BehaviourType::AcidAnimate);
+    entity.insert_behaviour_state(BehaviourState::new());
+    entity.insert_turn_time(TURN_DURATION_BASE);
+    entity.insert_turn_offset(ACID_ANIMATION_TURN_OFFSET);
 
     entity
 }

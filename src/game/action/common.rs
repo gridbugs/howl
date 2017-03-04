@@ -2,7 +2,6 @@ use rand::Rng;
 use ecs::*;
 use game::*;
 use game::data::*;
-use spatial_hash::*;
 use direction::Direction;
 use coord::Coord;
 
@@ -47,26 +46,6 @@ pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
     action.remove_entity(entity);
 }
 
-pub fn move_tear<R: Rng>(action: &mut EcsAction, entity_id: EntityId, ecs: &EcsCtx, spatial_hash: &SpatialHashTable, r: &mut R) {
-
-    let mut tear_state = ecs.tear_state_borrow_mut(entity_id)
-        .expect("Entity missing tear_state");
-
-    tear_state.progress(r, 1.0);
-
-    for (coord, cell) in izip!(spatial_hash.coord_iter(), spatial_hash.cell_iter()) {
-        let tear = !tear_state.is_tear(coord);
-        if cell.floor() && cell.tear() != tear {
-            let floor = cell.any_floor().expect("Expected floor entity");
-            if tear {
-                action.insert_tear(floor);
-            } else {
-                action.remove_tear(floor);
-            }
-        }
-    }
-}
-
 pub fn level_switch(action: &mut EcsAction, entity_id: EntityId, exit_id: EntityId, level_switch: LevelSwitch) {
     action.set_level_switch_action(LevelSwitchAction {
         entity_id: entity_id,
@@ -100,5 +79,19 @@ pub fn die(action: &mut EcsAction, entity: EntityRef) {
         let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
         action.set_schedule_invalidate(ticket);
         action.remove_entity(entity);
+    }
+}
+
+pub fn acid_animate<R: Rng>(action: &mut EcsAction, ecs: &EcsCtx, r: &mut R) {
+    for id in ecs.acid_animation_id_iter() {
+
+        // don't always change every tile
+        if r.next_f64() > 0.1 {
+            continue;
+        }
+
+        let animation = ecs.probabilistic_animation(id).expect("Entity missing probabilistic_animation");
+        let tile = *animation.choose(r);
+        action.insert_tile(id, tile);
     }
 }

@@ -7,9 +7,6 @@
 [field.pc]
     type = "count_bool"
 
-[field.tear]
-    type = "count_bool"
-
 [field.enemy]
     type = "count_bool"
 
@@ -36,5 +33,9 @@
     type = "any"
 
 [field.hit_points]
+    type = "void"
+    component_has_type = true
+
+[field.tile]
     type = "void"
     component_has_type = true

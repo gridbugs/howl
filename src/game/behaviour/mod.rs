@@ -10,4 +10,4 @@ pub use self::types::*;
 mod player_input;
 mod observation;
 mod search;
-mod tear;
+mod acid_animation;

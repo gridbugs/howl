@@ -83,7 +83,6 @@ fn create_greyscale_tile_texture<P: AsRef<path::Path>>(renderer: &Renderer, tile
 struct SdlCellInfo {
     fg: Option<Rect>,
     bg: Option<Rect>,
-    tear: bool,
     visible: bool,
     health_overlay: Option<HitPoints>,
 }
@@ -284,7 +283,6 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
 
     fn to_sdl_info(&self, cell: &CellDrawInfo) -> SdlCellInfo {
         let mut info = SdlCellInfo {
-            tear: cell.tear,
             visible: cell.visible,
             fg: None,
             bg: None,

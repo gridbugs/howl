@@ -54,7 +54,6 @@ impl TileBuffer {
             let knowledge_cell = knowledge.get_with_default(world_coord);
             cell.background = knowledge_cell.background();
             cell.foreground = knowledge_cell.foreground();
-            cell.tear = knowledge_cell.tear();
             cell.visible = knowledge_cell.last_updated() == turn_id;
             cell.front = Self::is_front(world_coord, knowledge);
             cell.health_overlay = knowledge_cell.health_overlay();

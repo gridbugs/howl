@@ -2,7 +2,7 @@ use game::*;
 use game::behaviour::player_input::*;
 use game::behaviour::observation::*;
 use game::behaviour::search::*;
-use game::behaviour::tear::*;
+use game::behaviour::acid_animation::*;
 
 use behaviour::{LeafResolution, CollectionNode};
 
@@ -10,7 +10,7 @@ pub struct BehaviourNodes {
     pub null: BehaviourNodeIndex,
     pub player_input: BehaviourNodeIndex,
     pub simple_npc: BehaviourNodeIndex,
-    pub tear: BehaviourNodeIndex,
+    pub acid_animate: BehaviourNodeIndex,
 }
 
 pub struct BehaviourCtx<K: KnowledgeRenderer> {
@@ -24,7 +24,7 @@ impl BehaviourNodes {
             BehaviourType::Null => self.null,
             BehaviourType::PlayerInput => self.player_input,
             BehaviourType::SimpleNpc => self.simple_npc,
-            BehaviourType::Tear => self.tear,
+            BehaviourType::AcidAnimate => self.acid_animate,
         }
     }
 }
@@ -46,13 +46,13 @@ impl<K: KnowledgeRenderer> BehaviourCtx<K> {
 
         let simple_npc = graph.add_switch(simple_npc_shadowcast(simple_npc_loop));
 
-        let move_tear = graph.add_leaf(move_tear());
+        let acid_animate_leaf = graph.add_leaf(acid_animate());
 
         let nodes = BehaviourNodes {
             null: graph.add_collection(CollectionNode::Forever(null_leaf)),
             player_input: graph.add_collection(CollectionNode::Forever(player_input_leaf)),
             simple_npc: graph.add_collection(CollectionNode::Forever(simple_npc)),
-            tear: graph.add_collection(CollectionNode::Forever(move_tear)),
+            acid_animate: graph.add_collection(CollectionNode::Forever(acid_animate_leaf)),
         };
 
         BehaviourCtx {
