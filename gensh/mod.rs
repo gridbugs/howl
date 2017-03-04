@@ -239,6 +239,10 @@ impl SpatialHashTable {
         self.grid.limits_max()
     }
 
+    pub fn is_valid_coord(&self, coord: Coord) -> bool {
+        self.grid.is_valid_coord(coord)
+    }
+
     pub fn width(&self) -> usize {
         self.grid.width()
     }

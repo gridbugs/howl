@@ -8,6 +8,8 @@ mod hit_points;
 mod probabilistic_choice;
 mod steer_direction;
 mod change_speed;
+mod direction_table;
+mod gun_type;
 
 pub use self::speed::*;
 pub use self::path_traverse::*;
@@ -19,3 +21,5 @@ pub use self::hit_points::*;
 pub use self::probabilistic_choice::*;
 pub use self::steer_direction::*;
 pub use self::change_speed::*;
+pub use self::direction_table::*;
+pub use self::gun_type::*;

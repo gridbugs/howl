@@ -18,6 +18,20 @@ imports = [
 [component.bump_attackable]
 [component.acid_animation]
 
+[component.can_run_over]
+[component.can_be_run_over]
+[component.die_on_bump]
+[component.bloodstain_on_death]
+[component.destroy_when_stopped]
+
+[component.gun_type]
+    type = "GunType"
+    copy = true
+
+[component.weapon_slots]
+    type = "DirectionTable<EntityId>"
+    container = "RefCell"
+
 [component.current_speed]
     type = "usize"
     copy = true
@@ -185,3 +199,4 @@ imports = [
 [action_property.physics]
 [action_property.steer]
 [action_property.realtime_delay]
+[action_property.start_realtime_move]

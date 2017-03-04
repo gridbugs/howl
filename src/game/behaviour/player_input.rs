@@ -3,6 +3,7 @@ use std::cmp;
 
 use game::*;
 use game::data::*;
+use ecs::*;
 use behaviour::LeafResolution;
 use direction::Direction;
 
@@ -70,6 +71,47 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
     renderer.publish_all_windows(input.entity, input.language);
 }
 
+fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<(EntityId, Direction)> {
+
+    let mut renderer = input.renderer.borrow_mut();
+    let mut message_log = input.entity.message_log_borrow_mut().expect("Expected component message_log");
+
+    message_log.add_temporary(MessageType::ChooseDirection);
+    renderer.update_log_buffer(message_log.deref(), input.language);
+    renderer.draw_log();
+    renderer.publish();
+
+    let mut should_clear_log = true;
+
+    let ret = input_source.next_input().and_then(|event| {
+        map.get(event).and_then(|control| {
+            match control {
+                Control::Direction(direction) => {
+                    let weapon_slots = input.entity.weapon_slots_borrow().expect("Expected component weapon_slots");
+                    if let Some(weapon) = weapon_slots.get(direction) {
+                        Some((*weapon, direction))
+                    } else {
+                        message_log.add(MessageType::EmptyWeaponSlot);
+                        should_clear_log = false;
+                        None
+                    }
+                }
+                _ => None,
+            }
+        })
+    });
+
+    if should_clear_log {
+        message_log.add_temporary(MessageType::Empty);
+    }
+    renderer.update_log_buffer(message_log.deref(), input.language);
+    renderer.draw_log();
+    renderer.publish();
+
+    ret
+}
+
+
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
         if event == InputEvent::Quit {
@@ -84,7 +126,13 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                     Control::Direction(Direction::North) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity.id(), SteerDirection::Up))),
                     Control::Direction(Direction::South) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity.id(), SteerDirection::Down))),
                     Control::Fire => {
-                        None
+                        aim(input, map, input_source).map(|(gun_id, direction)| {
+                            MetaAction::ActionArgs(ActionArgs::FireGun {
+                                gun_id: gun_id,
+                                shooter_id: input.entity.id(),
+                                direction: direction,
+                            })
+                        })
                     }
                     Control::Wait => {
                         Some(MetaAction::ActionArgs(ActionArgs::Null))

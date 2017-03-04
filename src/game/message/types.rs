@@ -16,6 +16,8 @@ pub enum MessageType {
     YouSeeDescription(YouSeeMessageType),
     NoDescription,
     Menu(MenuMessageType),
+    ChooseDirection,
+    EmptyWeaponSlot,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

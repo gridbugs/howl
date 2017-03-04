@@ -4,7 +4,6 @@ use game::*;
 use game::data::*;
 use spatial_hash::*;
 use direction::Direction;
-use coord::Coord;
 
 pub type ActionId = u64;
 
@@ -24,7 +23,6 @@ pub enum MetaAction {
 pub enum ActionArgs {
     Null,
     Walk(EntityId, Direction),
-    FireBullet(EntityId, Coord),
     RealtimeVelocityMove(EntityId, RealtimeVelocity),
     RealtimeVelocityStart(EntityId, RealtimeVelocity, usize),
     RealtimeVelocityStop(EntityId),
@@ -44,6 +42,12 @@ pub enum ActionArgs {
     Physics,
     Steer(EntityId, SteerDirection),
     ChangeSpeed(EntityId, ChangeSpeed),
+    BecomeBloodstain(EntityId),
+    FireGun {
+        gun_id: EntityId,
+        shooter_id: EntityId,
+        direction: Direction,
+    },
 }
 
 impl ActionArgs {
@@ -52,9 +56,6 @@ impl ActionArgs {
             ActionArgs::Null => (),
             ActionArgs::Walk(entity_id, direction) => {
                 actions::walk(action, ecs.entity(entity_id), direction);
-            }
-            ActionArgs::FireBullet(entity_id, delta) => {
-                actions::fire_bullet(action, ecs.entity(entity_id), delta, entity_ids);
             }
             ActionArgs::RealtimeVelocityMove(entity_id, velocity) => {
                 actions::realtime_velocity_move(action, ecs.entity(entity_id), velocity);
@@ -100,6 +101,12 @@ impl ActionArgs {
             }
             ActionArgs::ChangeSpeed(entity_id, change) => {
                 actions::change_speed(action, ecs.entity(entity_id), change);
+            }
+            ActionArgs::BecomeBloodstain(entity_id) => {
+                actions::become_bloodstain(action, ecs.entity(entity_id), entity_ids);
+            }
+            ActionArgs::FireGun { gun_id, shooter_id, direction } => {
+                actions::fire_gun(action, ecs.entity(gun_id), ecs.entity(shooter_id), direction, entity_ids);
             }
         }
     }

@@ -122,6 +122,12 @@ impl Language for English {
             MessageType::Menu(menu_message) => {
                 self.translate_menu(menu_message, message);
             }
+            MessageType::ChooseDirection => {
+                message.push(MessagePart::plain("Which direction?"));
+            }
+            MessageType::EmptyWeaponSlot => {
+                message.push(MessagePart::plain("No gun in slot!"));
+            }
         }
 
         if repeated > 1 {

@@ -10,6 +10,8 @@ mod enemy_collision;
 mod bump_attack;
 mod physics;
 mod driving;
+mod run_over;
+mod bounds;
 
 pub mod rules {
     pub use super::collision::*;
@@ -21,4 +23,6 @@ pub mod rules {
     pub use super::bump_attack::*;
     pub use super::physics::*;
     pub use super::driving::*;
+    pub use super::run_over::*;
+    pub use super::bounds::*;
 }

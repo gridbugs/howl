@@ -6,6 +6,7 @@ use game::data::*;
 use ecs::*;
 use util::{LeakyReserver, Schedule};
 use coord::Coord;
+use direction::Direction;
 
 pub struct EntityIdReserver(RefCell<LeakyReserver<EntityId>>);
 
@@ -414,6 +415,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let mut action = EcsAction::new();
         prototypes::pc(action.entity_mut(pc_id), Coord::new(0, 0));
+
+        let pistol_id = game_state.entity_ids.new_id();
+        prototypes::pistol(action.entity_mut(pistol_id));
+
+        action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
+            .insert(Direction::East, pistol_id);
 
         // throw away connections in the first level a they would have nothing to connect to anyway
         let (level, _) = Level::new_with_entity(TerrainType::DemoA,

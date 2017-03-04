@@ -4,7 +4,6 @@ use ecs::*;
 use game::*;
 use game::data::*;
 use direction::Direction;
-use coord::Coord;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
     let current_position = entity.position().expect("Entity missing position");
@@ -12,23 +11,10 @@ pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
     action.insert_position(entity.id(), new_position);
 }
 
-pub fn fire_bullet(action: &mut EcsAction,
-                   entity: EntityRef,
-                   delta: Coord,
-                   ids: &EntityIdReserver) {
-
-    const SPEED_CELLS_PER_SEC: f64 = 40.0;
-
-    let mut velocity = RealtimeVelocity::new(delta, SPEED_CELLS_PER_SEC);
-    let firer_position = entity.position().expect("Entity missing position");
-    let bullet_position = firer_position + velocity.step_in_place();
-
-    prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity);
-}
-
 pub fn realtime_velocity_start(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity, moves: usize) {
     action.insert_realtime_velocity(entity.id(), velocity);
     action.insert_realtime_moves_remaining(entity.id(), moves);
+    action.set_start_realtime_move();
 }
 
 pub fn realtime_velocity_stop(action: &mut EcsAction, entity_id: EntityId) {
@@ -136,4 +122,27 @@ pub fn change_speed(action: &mut EcsAction, entity: EntityRef, change: ChangeSpe
     };
 
     action.insert_current_speed(entity.id(), new_speed);
+}
+
+pub fn become_bloodstain(action: &mut EcsAction, entity: EntityRef, ids: &EntityIdReserver) {
+    let position = entity.position().expect("Missing component position");
+    let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
+    action.set_schedule_invalidate(ticket);
+    action.remove_entity(entity);
+    prototypes::bloodstain(action.entity_mut(ids.new_id()), position);
+}
+
+pub fn fire_gun(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, ids: &EntityIdReserver) {
+    let gun_type = gun.gun_type().expect("Missing component gun_type");
+    let shooter_position = shooter.position().expect("Missing component position");
+    match gun_type {
+        GunType::Pistol => {
+            const SPEED_CELLS_PER_SEC: f64 = 100.0;
+            const RANGE: usize = 20;
+            let mut velocity = RealtimeVelocity::new(direction.vector(), SPEED_CELLS_PER_SEC);
+            let bullet_position = shooter_position + velocity.step_in_place();
+            prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, RANGE);
+            action.set_action_time_ms(velocity.ms_per_cell());
+        }
+    }
 }

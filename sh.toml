@@ -8,7 +8,7 @@
     type = "count_bool"
 
 [field.enemy]
-    type = "count_bool"
+    type = "any"
 
 [field.level_switch]
     type = "any"

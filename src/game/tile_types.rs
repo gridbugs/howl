@@ -12,6 +12,7 @@ pub enum TileType {
     Dirt1,
     Acid0,
     Acid1,
+    Bloodstain,
 }
 
 impl TileType {
@@ -43,6 +44,7 @@ impl TileType {
             "Dirt1" => TileType::Dirt1,
             "Acid0" => TileType::Acid0,
             "Acid1" => TileType::Acid1,
+            "Bloodstain" => TileType::Bloodstain,
             _ => return None,
         };
 

@@ -35,6 +35,9 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(10));
     entity.insert_bump_attackable();
+    entity.insert_weapon_slots(DirectionTable::new());
+
+    entity.insert_can_run_over();
 
     entity.insert_current_speed(1);
     entity.insert_max_speed(3);
@@ -65,16 +68,22 @@ pub fn zombie<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_hit_points(HitPoints::new(2));
     entity.insert_bump_attacker(1);
 
+    entity.insert_can_be_run_over();
+    entity.insert_bloodstain_on_death();
+
     entity
 }
 
-pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: RealtimeVelocity) -> E {
+pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: RealtimeVelocity, range: usize) -> E {
 
     entity.insert_position(position);
     entity.insert_realtime_velocity(velocity);
+    entity.insert_realtime_moves_remaining(range);
     entity.insert_destroy_on_collision();
     entity.insert_projectile();
+    entity.insert_collider();
     entity.insert_projectile_damage(1);
+    entity.insert_destroy_when_stopped();
 
     entity.insert_tile(TileType::Bullet);
 
@@ -142,7 +151,6 @@ pub fn wreck<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -
 
     entity.insert_tile(tile);
     entity.insert_tile_depth(0);
-    entity.insert_floor();
     entity.insert_solid();
 
     entity
@@ -162,6 +170,21 @@ pub fn physics<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_turn_offset(PHYSICS_TURN_OFFSET);
+
+    entity
+}
+
+pub fn bloodstain<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+    entity.insert_position(position);
+    entity.insert_tile(TileType::Bloodstain);
+    entity.insert_tile_depth(1);
+
+    entity
+}
+
+pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
+
+    entity.insert_gun_type(GunType::Pistol);
 
     entity
 }

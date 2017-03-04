@@ -122,6 +122,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 }
                 MetaAction::ActionArgs(action_args) => {
                     if let Some(resolution) = self.try_commit_action(action_args)? {
+
                         self.declare_action_return(true)?;
                         match resolution {
                             CommitResolution::Reschedule(delay) => {
@@ -172,6 +173,8 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         if self.ecs_action.contains_no_commit() {
             rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         } else {
+            rules::bounds(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::run_over(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
