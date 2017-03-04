@@ -41,4 +41,16 @@ impl GameRng {
     pub fn inner_mut(&self) -> RefMut<StdRng> {
         self.rng.borrow_mut()
     }
+
+    pub fn select_uniform<'a, T>(&self, items: &'a [T]) -> &'a T {
+        &items[self.gen_usize_below(items.len())]
+    }
+
+    pub fn select_or_select_uniform<'a, T>(&self, first_probability: f64, first: &'a T, rest: &'a [T]) -> &'a T {
+        if self.gen_f64() < first_probability {
+            first
+        } else {
+            self.select_uniform(rest)
+        }
+    }
 }
