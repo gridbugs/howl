@@ -10,11 +10,6 @@
 [field.enemy]
     type = "count_bool"
 
-[field.door]
-    type = "any"
-    component = "door_state"
-    component_has_type = true
-
 [field.level_switch]
     type = "any"
     component_has_type = true

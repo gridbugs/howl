@@ -8,6 +8,8 @@ mod projectile_collision;
 mod death;
 mod enemy_collision;
 mod bump_attack;
+mod physics;
+mod driving;
 
 pub mod rules {
     pub use super::collision::*;
@@ -17,4 +19,6 @@ pub mod rules {
     pub use super::death::*;
     pub use super::enemy_collision::*;
     pub use super::bump_attack::*;
+    pub use super::physics::*;
+    pub use super::driving::*;
 }

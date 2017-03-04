@@ -3,11 +3,11 @@ imports = [
     "game::*",
     "game::data::*",
     "util::ScheduleTicket",
+    "direction::Direction",
 ]
 
 [component.solid]
 [component.collider]
-[component.door_opener]
 [component.destroy_on_collision]
 [component.pc]
 [component.floor]
@@ -17,6 +17,30 @@ imports = [
 [component.projectile_collider]
 [component.bump_attackable]
 [component.acid_animation]
+
+[component.current_speed]
+    type = "usize"
+    copy = true
+
+[component.max_speed]
+    type = "usize"
+    copy = true
+
+[component.redline_speed]
+    type = "usize"
+    copy = true
+
+[component.num_tires]
+    type = "usize"
+    copy = true
+
+[component.max_tires]
+    type = "usize"
+    copy = true
+
+[component.facing]
+    type = "Direction"
+    copy = true
 
 [component.bump_attacker]
     type = "usize"
@@ -33,6 +57,10 @@ imports = [
 [component.realtime_velocity]
     type = "RealtimeVelocity"
 
+[component.realtime_moves_remaining]
+    type = "usize"
+    copy = true
+
 [component.tile]
     type = "TileType"
     copy = true
@@ -43,10 +71,6 @@ imports = [
 
 [component.opacity]
     type = "f64"
-    copy = true
-
-[component.door_state]
-    type = "DoorState"
     copy = true
 
 [component.vision_distance]
@@ -137,9 +161,6 @@ imports = [
     type = "u64"
     copy = true
 
-[action_property.close]
-    type = "Close"
-
 [action_property.action_description]
     type = "ActionDescription"
 
@@ -161,3 +182,6 @@ imports = [
 
 [action_property.no_commit]
 [action_property.player_died]
+[action_property.physics]
+[action_property.steer]
+[action_property.realtime_delay]

@@ -175,13 +175,15 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::enemy_collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::pc_collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::level_switch(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::level_switch_auto(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::physics(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::driving(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
         }
 
         RULE_ACCEPT
@@ -242,6 +244,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         let mut action_description = None;
         let mut level_switch = None;
         let mut game_over_reason = None;
+        let mut realtime_delay = false;
 
         self.action_schedule.insert(action, 0);
 
@@ -249,11 +252,12 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
             // render the scene if time has passed
             if action_event.time_delta != 0 {
-                if self.pc_render(action_description.as_ref(), Some(ForceRender::IgnoreShouldRender)) {
+                if self.pc_render(action_description.as_ref(), Some(ForceRender::IgnoreShouldRender)) && realtime_delay {
                     // if the change in scene was visible, add a delay
                     thread::sleep(Duration::from_millis(action_event.time_delta));
                 }
             }
+            realtime_delay = false;
 
             *self.action_id += 1;
 
@@ -279,6 +283,9 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                             }
                         }
                         action_time = self.ecs_action.action_time_ms().unwrap_or(0);
+                        if action_time != 0 {
+                            realtime_delay = true;
+                        }
                         action_description = self.ecs_action.clear_action_description();
 
                         if let Some(level_switch_action) = self.ecs_action.level_switch_action() {

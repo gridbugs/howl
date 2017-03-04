@@ -4,4 +4,5 @@ pub enum BehaviourType {
     PlayerInput,
     SimpleNpc,
     AcidAnimate,
+    Physics,
 }

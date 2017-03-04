@@ -24,9 +24,10 @@ pub enum MetaAction {
 pub enum ActionArgs {
     Null,
     Walk(EntityId, Direction),
-    Close(EntityId, Direction),
     FireBullet(EntityId, Coord),
     RealtimeVelocityMove(EntityId, RealtimeVelocity),
+    RealtimeVelocityStart(EntityId, RealtimeVelocity, usize),
+    RealtimeVelocityStop(EntityId),
     Destroy(EntityId),
     TransformTerrorPillarTerrorFly(EntityId),
     TransformTree(EntityId),
@@ -40,6 +41,9 @@ pub enum ActionArgs {
     Damage(EntityId, usize),
     Die(EntityId),
     AcidAnimate,
+    Physics,
+    Steer(EntityId, SteerDirection),
+    ChangeSpeed(EntityId, ChangeSpeed),
 }
 
 impl ActionArgs {
@@ -49,14 +53,17 @@ impl ActionArgs {
             ActionArgs::Walk(entity_id, direction) => {
                 actions::walk(action, ecs.entity(entity_id), direction);
             }
-            ActionArgs::Close(entity_id, direction) => {
-                actions::close(action, entity_id, direction);
-            }
             ActionArgs::FireBullet(entity_id, delta) => {
                 actions::fire_bullet(action, ecs.entity(entity_id), delta, entity_ids);
             }
             ActionArgs::RealtimeVelocityMove(entity_id, velocity) => {
                 actions::realtime_velocity_move(action, ecs.entity(entity_id), velocity);
+            }
+            ActionArgs::RealtimeVelocityStart(entity_id, velocity, moves) => {
+                actions::realtime_velocity_start(action, ecs.entity(entity_id), velocity, moves);
+            }
+            ActionArgs::RealtimeVelocityStop(entity_id) => {
+                actions::realtime_velocity_stop(action, entity_id);
             }
             ActionArgs::Destroy(entity_id) => {
                 actions::destroy(action, ecs.entity(entity_id));
@@ -84,6 +91,15 @@ impl ActionArgs {
             }
             ActionArgs::AcidAnimate => {
                 actions::acid_animate(action, ecs, r);
+            }
+            ActionArgs::Physics => {
+                actions::physics(action);
+            }
+            ActionArgs::Steer(entity_id, direction) => {
+                actions::steer(action, ecs.entity(entity_id), direction);
+            }
+            ActionArgs::ChangeSpeed(entity_id, change) => {
+                actions::change_speed(action, ecs.entity(entity_id), change);
             }
         }
     }

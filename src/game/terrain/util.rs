@@ -64,5 +64,11 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
     let ticket = schedule.schedule_turn(acid_animator_id, turn_offset);
     g.insert_schedule_ticket(acid_animator_id, ticket);
 
+    let physics_id = ids.new_id();
+    prototypes::physics(g.entity_mut(physics_id));
+    let turn_offset = g.turn_offset(physics_id).expect("Expected component turn_offset");
+    let ticket = schedule.schedule_turn(physics_id, turn_offset);
+    g.insert_schedule_ticket(physics_id, ticket);
+
     (width, height)
 }

@@ -11,15 +11,13 @@ pub fn collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>
 
         let entity = env.ecs.post_action_entity(entity_id, action);
 
-        let mut reject = false;
         if entity.contains_collider() {
-            reject = true;
-        }
-        if entity.contains_destroy_on_collision() {
-            reactions.push(Reaction::new(ActionArgs::Destroy(entity_id), 0));
-            reject = true;
-        }
-        if reject {
+            if entity.current_realtime_velocity().is_some() {
+                reactions.push(Reaction::new(ActionArgs::RealtimeVelocityStop(entity_id), 0));
+            }
+            if entity.contains_destroy_on_collision() {
+                reactions.push(Reaction::new(ActionArgs::Destroy(entity_id), 0));
+            }
             return RULE_REJECT;
         }
     }

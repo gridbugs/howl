@@ -12,14 +12,13 @@ pub enum Control {
     Fire,
     NextTarget,
     PrevTarget,
-    Close,
     Wait,
     DisplayMessageLog,
     Examine,
     Pause,
 }
 
-const NUM_CONTROLS: usize = 13;
+const NUM_CONTROLS: usize = 12;
 const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
     Control::Direction(Direction::North),
     Control::Direction(Direction::South),
@@ -27,7 +26,6 @@ const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
     Control::Direction(Direction::West),
     Control::Use,
     Control::Wait,
-    Control::Close,
     Control::Fire,
     Control::NextTarget,
     Control::PrevTarget,
@@ -81,7 +79,6 @@ impl ControlMap {
         self.insert(InputEvent::Return, Control::Use);
         self.insert(InputEvent::Escape, Control::Pause);
 
-        self.insert(InputEvent::Char('c'), Control::Close);
         self.insert(InputEvent::Char('x'), Control::Examine);
         self.insert(InputEvent::Char('.'), Control::Wait);
 

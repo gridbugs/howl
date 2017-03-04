@@ -1,3 +1,4 @@
+use std::cmp;
 use rand::Rng;
 use ecs::*;
 use game::*;
@@ -9,10 +10,6 @@ pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
     let current_position = entity.position().expect("Entity missing position");
     let new_position = current_position + direction.vector();
     action.insert_position(entity.id(), new_position);
-}
-
-pub fn close(action: &mut EcsAction, entity_id: EntityId, direction: Direction) {
-    action.set_close(Close::new(entity_id, direction));
 }
 
 pub fn fire_bullet(action: &mut EcsAction,
@@ -29,6 +26,16 @@ pub fn fire_bullet(action: &mut EcsAction,
     prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity);
 }
 
+pub fn realtime_velocity_start(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity, moves: usize) {
+    action.insert_realtime_velocity(entity.id(), velocity);
+    action.insert_realtime_moves_remaining(entity.id(), moves);
+}
+
+pub fn realtime_velocity_stop(action: &mut EcsAction, entity_id: EntityId) {
+    action.remove_realtime_velocity(entity_id);
+    action.remove_realtime_moves_remaining(entity_id);
+}
+
 pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity) {
 
     let current_position = entity.position().expect("Entity missing position");
@@ -38,6 +45,12 @@ pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocit
 
     action.insert_realtime_velocity(entity.id(), new_velocity);
     action.insert_position(entity.id(), current_position + offset);
+
+    if let Some(remaining) = entity.realtime_moves_remaining() {
+        if remaining > 0 {
+            action.insert_realtime_moves_remaining(entity.id(), remaining - 1);
+        }
+    }
 
     action.set_action_time_ms(velocity.ms_per_cell());
 }
@@ -94,4 +107,33 @@ pub fn acid_animate<R: Rng>(action: &mut EcsAction, ecs: &EcsCtx, r: &mut R) {
         let tile = *animation.choose(r);
         action.insert_tile(id, tile);
     }
+}
+
+pub fn physics(action: &mut EcsAction) {
+    action.set_physics();
+}
+
+pub fn steer(action: &mut EcsAction, entity: EntityRef, direction: SteerDirection) {
+    let current_position = entity.position().expect("Entity missing position");
+    let new_position = current_position + Direction::from(direction).vector();
+    action.insert_position(entity.id(), new_position);
+    action.set_steer();
+}
+
+pub fn change_speed(action: &mut EcsAction, entity: EntityRef, change: ChangeSpeed) {
+    let current_speed = entity.current_speed().expect("Entity missing current_speed");
+    let max_speed = entity.max_speed().expect("Entity missing max_speed");
+
+    let new_speed = match change {
+        ChangeSpeed::Accelerate => cmp::min(current_speed + 1, max_speed),
+        ChangeSpeed::Decelerate => {
+            if current_speed == 0 {
+                0
+            } else {
+                current_speed - 1
+            }
+        }
+    };
+
+    action.insert_current_speed(entity.id(), new_speed);
 }

@@ -2,6 +2,7 @@ use std::ops::Deref;
 use std::cmp;
 
 use game::*;
+use game::data::*;
 use behaviour::LeafResolution;
 use direction::Direction;
 
@@ -78,10 +79,10 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
             let map = map_ref.deref();
             map.get(event).and_then(|control| {
                 match control {
-                    Control::Direction(d) => Some(MetaAction::ActionArgs(ActionArgs::Walk(input.entity.id(), d))),
-                    Control::Close => {
-                        get_direction(map, input_source).map(|d| MetaAction::ActionArgs(ActionArgs::Close(input.entity.id(), d)))
-                    }
+                    Control::Direction(Direction::East) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity.id(), ChangeSpeed::Accelerate))),
+                    Control::Direction(Direction::West) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity.id(), ChangeSpeed::Decelerate))),
+                    Control::Direction(Direction::North) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity.id(), SteerDirection::Up))),
+                    Control::Direction(Direction::South) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity.id(), SteerDirection::Down))),
                     Control::Fire => {
                         None
                     }

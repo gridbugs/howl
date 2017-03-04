@@ -1,6 +1,8 @@
 use std::ops::DerefMut;
+use std::cmp;
 
 use coord::Coord;
+use direction::Direction;
 
 use ecs::*;
 use game::*;
@@ -9,7 +11,8 @@ use game::data::*;
 pub const ENV_TURN_OFFSET: u64 = 0;
 pub const NPC_TURN_OFFSET: u64 = 1;
 pub const PC_TURN_OFFSET: u64 = 2;
-pub const ACID_ANIMATION_TURN_OFFSET: u64 = 3;
+pub const PHYSICS_TURN_OFFSET: u64 = 3;
+pub const ANIMATION_TURN_OFFSET: u64 = 4;
 
 pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
@@ -22,8 +25,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_behaviour_type(BehaviourType::PlayerInput);
     entity.insert_turn_offset(PC_TURN_OFFSET);
     entity.insert_drawable_knowledge(DrawableKnowledge::new());
-    entity.insert_vision_distance(16);
-    entity.insert_door_opener();
+    entity.insert_vision_distance(cmp::max(GAME_WIDTH, GAME_HEIGHT));
     entity.insert_pc();
     entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_should_render();
@@ -33,6 +35,13 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(10));
     entity.insert_bump_attackable();
+
+    entity.insert_current_speed(1);
+    entity.insert_max_speed(3);
+    entity.insert_redline_speed(3);
+    entity.insert_num_tires(4);
+    entity.insert_max_tires(4);
+    entity.insert_facing(Direction::East);
 
     entity
 }
@@ -143,7 +152,16 @@ pub fn acid_animator<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_behaviour_type(BehaviourType::AcidAnimate);
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_turn_time(TURN_DURATION_BASE);
-    entity.insert_turn_offset(ACID_ANIMATION_TURN_OFFSET);
+    entity.insert_turn_offset(ANIMATION_TURN_OFFSET);
+
+    entity
+}
+
+pub fn physics<E: EntityPopulate>(mut entity: E) -> E {
+    entity.insert_behaviour_type(BehaviourType::Physics);
+    entity.insert_behaviour_state(BehaviourState::new());
+    entity.insert_turn_time(TURN_DURATION_BASE);
+    entity.insert_turn_offset(PHYSICS_TURN_OFFSET);
 
     entity
 }
