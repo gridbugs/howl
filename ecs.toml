@@ -176,7 +176,7 @@ imports = [
     type = "FirstWeightedProbabilisticChoice<TileType>"
 
 [component.inventory]
-    type = "Vec<EntityId>"
+    type = "EntitySet"
     container = "RefCell"
 
 [action_property.alternative_turn_time]

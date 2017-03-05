@@ -119,7 +119,7 @@ impl Level {
 
         if let Some(inventory) = self.ecs.inventory_borrow(entity_id) {
             for id in inventory.iter() {
-                entity_remove.remove_entity_by_id(*id, &self.ecs);
+                entity_remove.remove_entity_by_id(id, &self.ecs);
             }
         }
 

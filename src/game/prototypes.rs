@@ -46,12 +46,12 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_max_tires(4);
     entity.insert_facing(Direction::East);
 
-    entity.insert_inventory(Vec::new());
+    entity.insert_inventory(EntitySet::new());
 
     entity
 }
 
-pub fn shop<E: EntityPopulate>(mut entity: E, inventory: Vec<EntityId>) -> E {
+pub fn shop<E: EntityPopulate>(mut entity: E, inventory: EntitySet) -> E {
 
     entity.insert_inventory(inventory);
 

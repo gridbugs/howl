@@ -330,15 +330,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         loop {
             let mut menu = SelectMenu::new();
 
-            let mut idx = 0;
             for entity_id in game_state.staging.inventory_borrow(shop_id).expect("Missing component inventory").iter() {
-                let item = game_state.staging.entity(*entity_id);
+                let item = game_state.staging.entity(entity_id);
                 let name = item.name().expect("Missing component name");
                 let price = item.price().expect("Missing component price");
 
                 let menu_message = MenuMessageType::ShopItem(name, price);
-                menu.push(SelectMenuItem::new(menu_message, idx));
-                idx += 1;
+                menu.push(SelectMenuItem::new(menu_message, entity_id));
             }
 
             let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
@@ -357,9 +355,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 menu,
                 None).run_can_escape();
 
-            if let Some((idx, _)) = maybe_selection {
+            if let Some((item_id, _)) = maybe_selection {
 
-                insufficient_funds = !self.buy_item(game_state, idx);
+                insufficient_funds = !self.buy_item(game_state, item_id);
 
             } else {
                 break;
@@ -367,11 +365,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    fn buy_item(&mut self, game_state: &mut GameState, inventory_index: usize) -> bool {
+    fn buy_item(&mut self, game_state: &mut GameState, item_id: EntityId) -> bool {
         let GlobalIds { shop_id, pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
         let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
-        let item_id = game_state.staging.inventory_borrow(shop_id).expect("Missing component inventory")[inventory_index];
         let price = game_state.staging.price(item_id).expect("Missing component price");
 
         if price > bank {
@@ -383,10 +380,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         game_state.staging.insert_bank(pc_id, remaining_bank);
 
         // remove the item from the shop
-        game_state.staging.inventory_borrow_mut(shop_id).expect("Missing component inventory").remove(inventory_index);
+        game_state.staging.inventory_borrow_mut(shop_id).expect("Missing component inventory").remove(item_id);
 
         // add the item to the player's inventory
-        game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").push(item_id);
+        game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").insert(item_id);
 
         true
     }
@@ -413,7 +410,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         game_state.staging.insert_price(id_b, 50);
         game_state.staging.insert_price(id_c, 50);
 
-        let inventory = vec![id_a, id_b, id_c];
+        let mut inventory = EntitySet::new();
+        inventory.insert(id_a);
+        inventory.insert(id_b);
+        inventory.insert(id_c);
         prototypes::shop(game_state.staging.entity_mut(shop_id), inventory);
     }
 
@@ -645,7 +645,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         if let Some(inventory) = game_state.staging.inventory_borrow(entity_id) {
             for id in inventory.iter() {
-                entity_remove.remove_entity_by_id(*id, &game_state.staging);
+                entity_remove.remove_entity_by_id(id, &game_state.staging);
             }
         }
 
