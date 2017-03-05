@@ -80,7 +80,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     message_log.add_temporary(MessageType::ChooseDirection);
     renderer.update_log_buffer(message_log.deref(), input.language);
     renderer.draw_log();
-    renderer.publish();
+    renderer.publish_all_windows(input.entity, input.language);
 
     let mut should_clear_log = true;
 
@@ -107,7 +107,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     }
     renderer.update_log_buffer(message_log.deref(), input.language);
     renderer.draw_log();
-    renderer.publish();
+    renderer.publish_all_windows(input.entity, input.language);
 
     ret
 }
