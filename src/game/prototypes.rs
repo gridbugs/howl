@@ -104,9 +104,7 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
 pub fn road<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity.insert_position(position);
 
-    let rest_tiles = [
-        TileType::Road1,
-    ];
+    let rest_tiles = [];
 
     let tile = *rng.select_or_select_uniform(0.95, &TileType::Road0, &rest_tiles);
 

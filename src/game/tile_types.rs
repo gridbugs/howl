@@ -7,7 +7,6 @@ pub enum TileType {
     Wreck2,
     Bullet,
     Road0,
-    Road1,
     Dirt0,
     Dirt1,
     Acid0,
@@ -19,7 +18,6 @@ impl TileType {
     pub fn opaque_bg(self) -> bool {
         match self {
             TileType::Road0 |
-            TileType::Road1 |
             TileType::Dirt0 |
             TileType::Dirt1 |
             TileType::Acid0 |
@@ -39,7 +37,6 @@ impl TileType {
             "Wreck2" => TileType::Wreck2,
             "Bullet" => TileType::Bullet,
             "Road0" => TileType::Road0,
-            "Road1" => TileType::Road1,
             "Dirt0" => TileType::Dirt0,
             "Dirt1" => TileType::Dirt1,
             "Acid0" => TileType::Acid0,

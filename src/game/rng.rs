@@ -47,7 +47,7 @@ impl GameRng {
     }
 
     pub fn select_or_select_uniform<'a, T>(&self, first_probability: f64, first: &'a T, rest: &'a [T]) -> &'a T {
-        if self.gen_f64() < first_probability {
+        if rest.is_empty() || self.gen_f64() < first_probability {
             first
         } else {
             self.select_uniform(rest)

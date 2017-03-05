@@ -31,10 +31,6 @@ foreground = { x = 6, y = 0 }
 background = { x = 0, y = 1 }
 foreground = { x = 1, y = 1 }
 
-[tiles.Road1]
-background = { x = 0, y = 1 }
-foreground = { x = 2, y = 1 }
-
 [tiles.Dirt0]
 background = { x = 0, y = 2 }
 foreground = { x = 1, y = 2 }
