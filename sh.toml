@@ -20,10 +20,6 @@
 [field.bump_attackable]
     type = "any"
 
-[field.transformation_state]
-    type = "set"
-    component_has_type = true
-
 [field.projectile_collider]
     type = "any"
 

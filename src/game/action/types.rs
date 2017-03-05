@@ -27,8 +27,6 @@ pub enum ActionArgs {
     RealtimeVelocityStart(EntityId, RealtimeVelocity, usize),
     RealtimeVelocityStop(EntityId),
     Destroy(EntityId),
-    TransformTerrorPillarTerrorFly(EntityId),
-    TransformTree(EntityId),
     LevelSwitch {
         entity_id: EntityId,
         exit_id: EntityId,
@@ -68,12 +66,6 @@ impl ActionArgs {
             }
             ActionArgs::Destroy(entity_id) => {
                 actions::destroy(action, ecs.entity(entity_id));
-            }
-            ActionArgs::TransformTerrorPillarTerrorFly(entity_id) => {
-                actions::transform_terror_pillar_terror_fly(action, ecs.entity(entity_id));
-            }
-            ActionArgs::TransformTree(entity_id) => {
-                actions::transform_tree(action, ecs.entity(entity_id));
             }
             ActionArgs::LevelSwitch { entity_id, exit_id, level_switch }  => {
                 actions::level_switch(action, entity_id, exit_id, level_switch);

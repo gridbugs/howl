@@ -150,14 +150,6 @@ imports = [
     type = "EntityId"
     copy = true
 
-[component.transformation_state]
-    type = "TransformationState"
-    copy = true
-
-[component.transformation_type]
-    type = "TransformationType"
-    copy = true
-
 [component.schedule_ticket]
     type = "ScheduleTicket"
     copy = true
@@ -215,3 +207,6 @@ imports = [
 [action_property.steer]
 [action_property.realtime_delay]
 [action_property.start_realtime_move]
+[action_property.then]
+    type = "ActionArgs"
+    copy = true
