@@ -167,6 +167,10 @@ imports = [
 [component.probabilistic_animation]
     type = "FirstWeightedProbabilisticChoice<TileType>"
 
+[component.inventory]
+    type = "Vec<EntityId>"
+    container = "RefCell"
+
 [action_property.alternative_turn_time]
     type = "u64"
     copy = true
