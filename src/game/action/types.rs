@@ -106,7 +106,7 @@ impl ActionArgs {
                 actions::become_bloodstain(action, ecs.entity(entity_id), entity_ids);
             }
             ActionArgs::FireGun { gun_id, shooter_id, direction } => {
-                actions::fire_gun(action, ecs.entity(gun_id), ecs.entity(shooter_id), direction, entity_ids);
+                actions::fire_gun(action, ecs.entity(gun_id), ecs.entity(shooter_id), direction, entity_ids, r);
             }
         }
     }

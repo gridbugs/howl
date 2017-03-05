@@ -28,6 +28,7 @@ pub enum MessageType {
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum NameMessageType {
     Pistol,
+    Shotgun,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

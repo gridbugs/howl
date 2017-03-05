@@ -11,6 +11,9 @@ impl English {
             NameMessageType::Pistol => {
                 message.push(MessagePart::plain("Pistol"));
             }
+            NameMessageType::Shotgun => {
+                message.push(MessagePart::plain("Shotgun"));
+            }
         }
     }
 

@@ -189,6 +189,14 @@ pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
+pub fn shotgun<E: EntityPopulate>(mut entity: E) -> E {
+
+    entity.insert_gun_type(GunType::Shotgun);
+    entity.insert_name(NameMessageType::Shotgun);
+
+    entity
+}
+
 pub fn goal<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: LevelSwitch) -> E {
     entity.insert_position(position);
     entity.insert_level_switch(level_switch);

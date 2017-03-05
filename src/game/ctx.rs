@@ -511,8 +511,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let pistol_id = game_state.entity_ids.new_id();
         prototypes::pistol(action.entity_mut(pistol_id));
 
+        let shotgun_id = game_state.entity_ids.new_id();
+        prototypes::shotgun(action.entity_mut(shotgun_id));
+
         action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
             .insert(Direction::East, pistol_id);
+        action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
+            .insert(Direction::North, shotgun_id);
 
         // throw away connections in the first level a they would have nothing to connect to anyway
         let (level, _) = Level::new_with_entity(TerrainType::DemoA,
@@ -539,6 +544,19 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let mut entity_remove = EcsAction::new();
         let mut entity_insert = EcsAction::new();
+
+        if let Some(weapon_slots) = game_state.staging.weapon_slots_borrow(entity_id) {
+            for (_, id) in weapon_slots.iter() {
+                entity_remove.remove_entity_by_id(*id, &game_state.staging);
+            }
+        }
+
+        if let Some(inventory) = game_state.staging.inventory_borrow(entity_id) {
+            for id in inventory.iter() {
+                entity_remove.remove_entity_by_id(*id, &game_state.staging);
+            }
+        }
+
         entity_remove.remove_entity_by_id(entity_id, &game_state.staging);
         game_state.staging.commit_into(&mut entity_remove, &mut entity_insert);
         game_state.action_id += 1;

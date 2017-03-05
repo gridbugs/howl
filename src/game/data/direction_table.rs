@@ -28,4 +28,31 @@ impl<T> DirectionTable<T> {
     pub fn remove(&mut self, direction: direction::Direction) -> Option<T> {
         mem::replace(&mut self.slots[direction.index()], None)
     }
+
+    pub fn iter(&self) -> DirectionTableIter<T> {
+        DirectionTableIter {
+            table: self,
+            iter: direction::iter(),
+        }
+    }
+}
+
+pub struct DirectionTableIter<'a, T: 'a> {
+    table: &'a DirectionTable<T>,
+    iter: direction::Iter,
+}
+
+impl<'a, T: 'a> Iterator for DirectionTableIter<'a, T> {
+    type Item = (direction::Direction, &'a T);
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(d) = self.iter.next() {
+                if let Some(x) = self.table.get(d) {
+                    return Some((d, x));
+                }
+            } else {
+                return None;
+            }
+        }
+    }
 }

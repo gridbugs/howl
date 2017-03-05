@@ -4,6 +4,7 @@ use ecs::*;
 use game::*;
 use game::data::*;
 use direction::Direction;
+use coord::Coord;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
     let current_position = entity.position().expect("Entity missing position");
@@ -132,7 +133,7 @@ pub fn become_bloodstain(action: &mut EcsAction, entity: EntityRef, ids: &Entity
     prototypes::bloodstain(action.entity_mut(ids.new_id()), position);
 }
 
-pub fn fire_gun(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, ids: &EntityIdReserver) {
+pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, ids: &EntityIdReserver, r: &mut R) {
     let gun_type = gun.gun_type().expect("Missing component gun_type");
     let shooter_position = shooter.position().expect("Missing component position");
     match gun_type {
@@ -143,6 +144,24 @@ pub fn fire_gun(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, dire
             let bullet_position = shooter_position + velocity.step_in_place();
             prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, RANGE);
             action.set_action_time_ms(velocity.ms_per_cell());
+        }
+        GunType::Shotgun => {
+            const SPEED_CELLS_PER_SEC: f64 = 100.0;
+            const RANGE: usize = 10;
+            const NUM_SHOTS: usize = 10;
+            const SPREAD: usize = 6;
+            let ideal_vector = direction.vector() * RANGE as isize;
+            for _ in 0..NUM_SHOTS {
+                let x_spread = (r.gen::<usize>() % SPREAD) as isize - (SPREAD / 2) as isize;
+                let y_spread = (r.gen::<usize>() % SPREAD) as isize - (SPREAD / 2) as isize;
+
+                let vector = ideal_vector + Coord::new(x_spread, y_spread);
+                let mut velocity = RealtimeVelocity::new(vector, SPEED_CELLS_PER_SEC);
+
+                let bullet_position = shooter_position + velocity.step_in_place();
+                prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, RANGE);
+                action.set_action_time_ms(velocity.ms_per_cell());
+            }
         }
     }
 }
