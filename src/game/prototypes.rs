@@ -35,6 +35,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_hit_points(HitPoints::new(10));
     entity.insert_bump_attackable();
     entity.insert_weapon_slots(DirectionTable::new());
+    entity.insert_bank(100);
 
     entity.insert_can_run_over();
 
@@ -44,6 +45,15 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_num_tires(4);
     entity.insert_max_tires(4);
     entity.insert_facing(Direction::East);
+
+    entity.insert_inventory(Vec::new());
+
+    entity
+}
+
+pub fn shop<E: EntityPopulate>(mut entity: E, inventory: Vec<EntityId>) -> E {
+
+    entity.insert_inventory(inventory);
 
     entity
 }

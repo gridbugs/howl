@@ -75,6 +75,14 @@ impl English {
             MenuMessageType::Garage => {
                 message.push(MessagePart::plain("Garage"));
             }
+            MenuMessageType::Name(name) => {
+                self.translate_name(name, message);
+            }
+            MenuMessageType::ShopItem(name, price) => {
+                self.translate_name(name, message);
+                message.push(MessagePart::plain(": "));
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("{}", price))));
+            }
         }
     }
 
@@ -148,6 +156,17 @@ impl Language for English {
             }
             MessageType::EmptyWeaponSlot => {
                 message.push(MessagePart::plain("(empty)"));
+            }
+            MessageType::SurvivorCamp => {
+                message.push(MessagePart::plain("Survivor Camp"));
+            }
+            MessageType::ShopTitle(balance) => {
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Shop - Your balance: {}", balance))));
+            }
+            MessageType::ShopTitleInsufficientFunds(balance) => {
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Shop - Your balance: {}", balance))));
+                message.push(MessagePart::Newline);
+                message.push(MessagePart::plain("You can't afford that!"));
             }
         }
 

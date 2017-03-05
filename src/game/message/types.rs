@@ -23,6 +23,9 @@ pub enum MessageType {
     Left,
     Right,
     EmptyWeaponSlot,
+    SurvivorCamp,
+    ShopTitle(usize),
+    ShopTitleInsufficientFunds(usize),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -55,4 +58,6 @@ pub enum MenuMessageType {
     NextDelivery,
     Shop,
     Garage,
+    Name(NameMessageType),
+    ShopItem(NameMessageType, usize),
 }

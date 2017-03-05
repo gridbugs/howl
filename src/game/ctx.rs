@@ -83,6 +83,7 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
 pub struct GlobalIds {
     pc_id: EntityId,
     level_id: LevelId,
+    shop_id: EntityId,
 }
 
 pub struct GameState {
@@ -298,7 +299,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             let maybe_selection = SelectMenuOperation::new(
                 self.renderer.borrow_mut().deref_mut(),
                 &mut self.input_source,
-                Some(MessageType::Title),
+                Some(MessageType::SurvivorCamp),
                 &self.language,
                 menu,
                 current_menu_state).run_can_escape();
@@ -312,6 +313,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         }
                     }
                     BetweenLevelsSelection::Shop => {
+                        self.shop_menu(game_state);
                     }
                     BetweenLevelsSelection::Garage => {
                     }
@@ -322,6 +324,73 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
+    fn shop_menu(&mut self, game_state: &mut GameState) {
+        let GlobalIds { shop_id, pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+        let mut insufficient_funds = false;
+        loop {
+            let mut menu = SelectMenu::new();
+
+            let mut idx = 0;
+            for entity_id in game_state.staging.inventory_borrow(shop_id).expect("Missing component inventory").iter() {
+                let item = game_state.staging.entity(*entity_id);
+                let name = item.name().expect("Missing component name");
+                let price = item.price().expect("Missing component price");
+
+                let menu_message = MenuMessageType::ShopItem(name, price);
+                menu.push(SelectMenuItem::new(menu_message, idx));
+                idx += 1;
+            }
+
+            let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
+
+            let title = if insufficient_funds  {
+                MessageType::ShopTitleInsufficientFunds(bank)
+            } else {
+                MessageType::ShopTitle(bank)
+            };
+
+            let maybe_selection = SelectMenuOperation::new(
+                self.renderer.borrow_mut().deref_mut(),
+                &mut self.input_source,
+                Some(title),
+                &self.language,
+                menu,
+                None).run_can_escape();
+
+            if let Some((idx, _)) = maybe_selection {
+
+                insufficient_funds = !self.buy_item(game_state, idx);
+
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn buy_item(&mut self, game_state: &mut GameState, inventory_index: usize) -> bool {
+        let GlobalIds { shop_id, pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+
+        let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
+        let item_id = game_state.staging.inventory_borrow(shop_id).expect("Missing component inventory")[inventory_index];
+        let price = game_state.staging.price(item_id).expect("Missing component price");
+
+        if price > bank {
+            return false;
+        }
+
+        // commit the payment
+        let remaining_bank = bank - price;
+        game_state.staging.insert_bank(pc_id, remaining_bank);
+
+        // remove the item from the shop
+        game_state.staging.inventory_borrow_mut(shop_id).expect("Missing component inventory").remove(inventory_index);
+
+        // add the item to the player's inventory
+        game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").push(item_id);
+
+        true
+    }
+
     fn next_level_menu(&mut self, game_state: &mut GameState) -> bool {
 
         self.unstage(TerrainType::DemoA, game_state);
@@ -330,11 +399,26 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn prepare_between_levels(&mut self, game_state: &mut GameState) {
+        let GlobalIds { shop_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
+
+        let id_a = game_state.entity_ids.new_id();
+        prototypes::pistol(game_state.staging.entity_mut(id_a));
+        let id_b = game_state.entity_ids.new_id();
+        prototypes::shotgun(game_state.staging.entity_mut(id_b));
+        let id_c = game_state.entity_ids.new_id();
+        prototypes::shotgun(game_state.staging.entity_mut(id_c));
+
+        game_state.staging.insert_price(id_a, 20);
+        game_state.staging.insert_price(id_b, 50);
+        game_state.staging.insert_price(id_c, 50);
+
+        let inventory = vec![id_a, id_b, id_c];
+        prototypes::shop(game_state.staging.entity_mut(shop_id), inventory);
     }
 
     fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
-        let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
+        let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
         let level = game_state.levels.level_mut(level_id);
         level.ecs.insert_control_map(pc_id, control_map);
@@ -348,7 +432,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         loop {
 
-            let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
+            let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
             game_state.turn_id += 1;
 
@@ -413,7 +497,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn death_message(&self, game_state: &GameState) {
-        let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Unitialised game state");
+        let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Unitialised game state");
         self.add_message(game_state, MessageType::YouDied);
         let entity = game_state.levels.level(level_id).ecs.entity(pc_id);
         self.renderer.borrow_mut().update_and_publish_all_windows_for_entity_with_overlay(
@@ -425,7 +509,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn add_message(&self, game_state: &GameState, message: MessageType) {
-        let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Unitialised game state");
+        let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Unitialised game state");
 
         let ref ecs = game_state.levels.level(level_id).ecs;
         ecs.message_log_borrow_mut(pc_id).expect("Expected message log component").add(message);
@@ -542,6 +626,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         game_state.global_ids = Some(GlobalIds {
             pc_id: pc_id,
             level_id: level_id,
+            shop_id: game_state.entity_ids.new_id(),
         });
     }
 

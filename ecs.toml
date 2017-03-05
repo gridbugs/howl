@@ -24,6 +24,14 @@ imports = [
 [component.bloodstain_on_death]
 [component.destroy_when_stopped]
 
+[component.bank]
+    type = "usize"
+    copy = true
+
+[component.price]
+    type = "usize"
+    copy = true
+
 [component.gun_type]
     type = "GunType"
     copy = true
