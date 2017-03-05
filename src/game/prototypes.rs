@@ -34,7 +34,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_hit_points(HitPoints::new(10));
     entity.insert_bump_attackable();
     entity.insert_weapon_slots(DirectionTable::new());
-    entity.insert_bank(100);
+    entity.insert_bank(0);
 
     entity.insert_can_run_over();
 

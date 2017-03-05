@@ -643,7 +643,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn prepare_between_levels(&mut self, game_state: &mut GameState) {
-        let GlobalIds { shop_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+        let GlobalIds { pc_id, shop_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
 
         let id_a = game_state.entity_ids.new_id();
@@ -662,6 +662,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         inventory.insert(id_b);
         inventory.insert(id_c);
         prototypes::shop(game_state.staging.entity_mut(shop_id), inventory);
+
+
+        let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
+        game_state.staging.insert_bank(pc_id, bank + 100);
     }
 
     fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
@@ -832,9 +836,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let pistol_id = game_state.entity_ids.new_id();
         prototypes::pistol(action.entity_mut(pistol_id));
-
-        let shotgun_id = game_state.entity_ids.new_id();
-        prototypes::shotgun(action.entity_mut(shotgun_id));
 
         action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
             .insert(Direction::East, pistol_id);
