@@ -839,8 +839,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
             .insert(Direction::East, pistol_id);
-        action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
-            .insert(Direction::North, shotgun_id);
 
         // throw away connections in the first level a they would have nothing to connect to anyway
         let (level, _) = Level::new_with_entity(TerrainType::DemoA,
