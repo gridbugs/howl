@@ -31,6 +31,8 @@ const HUD_TOP_PADDING_PX: usize = 4;
 const HUD_HEIGHT_PX: usize = 16;
 const HUD_TOTAL_HEIGHT_PX: usize = HUD_TOP_PADDING_PX + HUD_HEIGHT_PX;
 const HUD_TEXT_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
+const HUD_HEALTH_LEN: usize = 5;
+const HUD_SPEED_LEN: usize = 3;
 
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const SCROLL_BAR_WIDTH_PX: usize = 16;
@@ -654,13 +656,45 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
         let surface = self.renderer.font.render(health_text.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
         let texture = self.renderer.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
 
+        let text_space = HUD_HEALTH_LEN * self.renderer.hud_height_px();
         let text_width = health_text.len() * self.renderer.hud_height_px(); // square fonts
+        cursor += text_space - text_width;
         let text_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
                                   (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
                                   text_width as u32,
                                   self.renderer.hud_height_px() as u32);
 
         self.renderer.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
+
+        cursor += text_width + self.renderer.hud_height_px();
+
+        let speed_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
+                                    (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+                                    self.renderer.hud_height_px() as u32,
+                                    self.renderer.hud_height_px() as u32);
+
+        self.renderer.sdl_renderer.copy(&self.renderer.hud_texture,
+                                        Some(self.renderer.hud.speed),
+                                        Some(speed_rect)).expect("Failed to render symbol");
+
+        cursor += self.renderer.hud_padded_height_px();
+
+        let speed = entity.current_speed().expect("Entity missing current_speed");
+        let max_speed = entity.max_speed().expect("Entity missing max_speed");
+        let speed_text = format!("{}/{}", speed, max_speed);
+        let surface = self.renderer.font.render(speed_text.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
+        let texture = self.renderer.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
+        let text_space = HUD_SPEED_LEN * self.renderer.hud_height_px();
+        let text_width = speed_text.len() * self.renderer.hud_height_px();
+        cursor += text_space - text_width;
+
+        let text_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
+                                  (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+                                  text_width as u32,
+                                  self.renderer.hud_height_px() as u32);
+
+        self.renderer.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
+
     }
 
     fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState, language: &Box<Language>) {

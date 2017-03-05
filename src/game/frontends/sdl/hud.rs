@@ -13,6 +13,7 @@ pub type HudResult<T> = result::Result<T, HudError>;
 
 pub struct Hud {
     pub health: Rect,
+    pub speed: Rect,
 }
 
 impl Hud {
@@ -40,6 +41,7 @@ impl Hud {
 
         Ok(Hud {
             health: Self::get_rect(symbol_table, "Health", symbol_width, symbol_height)?,
+            speed: Self::get_rect(symbol_table, "Speed", symbol_width, symbol_height)?,
         })
     }
 }
