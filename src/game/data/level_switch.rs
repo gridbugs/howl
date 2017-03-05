@@ -5,6 +5,7 @@ use ecs::*;
 pub enum LevelSwitch {
     NewLevel(TerrainType),
     ExistingLevel(LevelExit),
+    LeaveLevel,
 }
 
 // the id of a level, and the id of an entity within that level

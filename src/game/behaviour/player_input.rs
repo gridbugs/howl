@@ -122,7 +122,7 @@ fn direction_to_relative_message(direction: Direction) -> MessageType {
     }
 }
 
-fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) {
     let mut renderer = input.renderer.borrow_mut();
     let weapon_slots = input.entity.weapon_slots_borrow().expect("Expected component weapon_slots");
 
@@ -177,7 +177,7 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         None
                     }
                     Control::Status => {
-                        display_status(input, input_source, map);
+                        display_status(input, input_source);
                         None
                     }
                     _ => None,

@@ -92,6 +92,8 @@ pub struct GameState {
     turn_id: u64,
     action_id: ActionId,
     between_levels: bool,
+    staging: EcsCtx,
+    staged: Option<EntityId>,
 }
 
 impl GameState {
@@ -103,6 +105,8 @@ impl GameState {
             turn_id: 0,
             action_id: 0,
             between_levels: false,
+            staging: EcsCtx::new(),
+            staged: None,
         }
     }
 }
@@ -115,11 +119,13 @@ pub struct SerializableGameState {
     turn_id: u64,
     action_id: ActionId,
     between_levels: bool,
+    staging: SerializableEcsCtx,
+    staged: Option<EntityId>,
 }
 
 impl From<GameState> for SerializableGameState {
     fn from(game_state: GameState) -> Self {
-        let GameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels } = game_state;
+        let GameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels, staging, staged } = game_state;
         SerializableGameState {
             levels: SerializableLevelTable::from(levels),
             global_ids: global_ids,
@@ -127,13 +133,15 @@ impl From<GameState> for SerializableGameState {
             turn_id: turn_id,
             action_id: action_id,
             between_levels: between_levels,
+            staging: SerializableEcsCtx::from(staging),
+            staged: staged,
         }
     }
 }
 
 impl From<SerializableGameState> for GameState {
     fn from(game_state: SerializableGameState) -> Self {
-        let SerializableGameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels } = game_state;
+        let SerializableGameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels, staging, staged } = game_state;
         GameState {
             levels: LevelTable::from(levels),
             global_ids: global_ids,
@@ -141,6 +149,8 @@ impl From<SerializableGameState> for GameState {
             turn_id: turn_id,
             action_id: action_id,
             between_levels: between_levels,
+            staging: EcsCtx::from(staging),
+            staged: staged,
         }
     }
 }
@@ -277,8 +287,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn between_levels_menu(&mut self, game_state: &mut GameState) -> BetwenLevelsResolution {
         let mut current_menu_state = None;
-        let mut renderer_borrow = self.renderer.borrow_mut();
-        let mut renderer = renderer_borrow.deref_mut();
 
         loop {
             let mut menu = SelectMenu::new();
@@ -288,7 +296,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             menu.push(SelectMenuItem::new(MenuMessageType::NextDelivery, BetweenLevelsSelection::NextDelivery));
 
             let maybe_selection = SelectMenuOperation::new(
-                renderer,
+                self.renderer.borrow_mut().deref_mut(),
                 &mut self.input_source,
                 Some(MessageType::Title),
                 &self.language,
@@ -298,7 +306,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             if let Some((selection, menu_state)) = maybe_selection {
                 current_menu_state = Some(menu_state.clone());
                 match selection {
-                    BetweenLevelsSelection::NextDelivery => return BetwenLevelsResolution::Start,
+                    BetweenLevelsSelection::NextDelivery => {
+                        if self.next_level_menu(game_state) {
+                            return BetwenLevelsResolution::Start;
+                        }
+                    }
                     BetweenLevelsSelection::Shop => {
                     }
                     BetweenLevelsSelection::Garage => {
@@ -308,6 +320,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 return BetwenLevelsResolution::Pause;
             }
         }
+    }
+
+    fn next_level_menu(&mut self, game_state: &mut GameState) -> bool {
+
+        self.unstage(TerrainType::DemoA, game_state);
+
+        true
     }
 
     fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
@@ -514,6 +533,29 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         });
     }
 
+    fn unstage(&mut self, terrain_type: TerrainType, game_state: &mut GameState) {
+        let entity_id = game_state.staged.take().expect("No staged entity");
+        let global_ids = game_state.global_ids.as_mut().expect("Unitialised game state");
+
+        let mut entity_remove = EcsAction::new();
+        let mut entity_insert = EcsAction::new();
+        entity_remove.remove_entity_by_id(entity_id, &game_state.staging);
+        game_state.staging.commit_into(&mut entity_remove, &mut entity_insert);
+        game_state.action_id += 1;
+
+        let (level, _) = Level::new_with_entity(terrain_type,
+                                                entity_id,
+                                                &mut entity_insert,
+                                                &game_state.entity_ids,
+                                                &self.rng,
+                                                game_state.action_id,
+                                                None);
+        game_state.action_id += 1;
+
+        let new_level_id = game_state.levels.add_level(level);
+        global_ids.level_id = new_level_id;
+    }
+
     fn switch_level(&mut self, entity_id: EntityId, exit_id: EntityId, level_switch: LevelSwitch, game_state: &mut GameState) {
         let global_ids = game_state.global_ids.as_mut().expect("Unitialised game state");
 
@@ -571,6 +613,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 game_state.action_id += 1;
 
                 exit.level_id
+            }
+            LevelSwitch::LeaveLevel => {
+                game_state.staging.commit(&mut entity_insert);
+                game_state.staged = Some(entity_id);
+                global_ids.level_id
             }
         };
 

@@ -11,7 +11,7 @@ pub fn demo_a<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                   schedule: &mut S,
                                   g: &mut EcsAction) -> TerrainMetadata {
 
-    let level_switch = LevelSwitch::NewLevel(TerrainType::DemoA);
+    let level_switch = LevelSwitch::LeaveLevel;
 
     let (width, height) = util::terrain_from_strings(&level_str(), Some(level_switch), ids, schedule, g, rng);
 
