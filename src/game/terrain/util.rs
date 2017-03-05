@@ -4,7 +4,7 @@ use game::data::*;
 use coord::Coord;
 
 pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
-                                                  _level_switch: Option<LevelSwitch>,
+                                                  level_switch: Option<LevelSwitch>,
                                                   ids: &EntityIdReserver,
                                                   schedule: &mut S,
                                                   g: &mut EcsAction,
@@ -53,6 +53,11 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                 }
                 _ => panic!(),
             }
+
+            if x == line.len() as isize - 1 {
+                prototypes::goal(g.entity_mut(ids.new_id()), coord, level_switch.unwrap());
+            }
+
             x += 1;
         }
         y += 1;

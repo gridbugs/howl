@@ -188,3 +188,11 @@ pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
 
     entity
 }
+
+pub fn goal<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: LevelSwitch) -> E {
+    entity.insert_position(position);
+    entity.insert_level_switch(level_switch);
+    entity.insert_level_switch_auto();
+
+    entity
+}
