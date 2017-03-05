@@ -76,6 +76,10 @@ enum BuyError {
     InventoryFull,
 }
 
+enum WeaponMenuError {
+    InventoryFull,
+}
+
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     renderer: RefCell<Renderer>,
     input_source: Input,
@@ -243,8 +247,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     let mut game_state = GameState::new();
 
                     self.init_demo(&mut game_state);
-                    self.intro_message();
-                    self.welcome_message(&game_state);
 
                     game_state
                 }
@@ -328,6 +330,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         self.shop_menu(game_state);
                     }
                     BetweenLevelsSelection::Garage => {
+                        self.garage_menu(game_state);
                     }
                     BetweenLevelsSelection::Inventory => {
                         self.inventory_menu(game_state);
@@ -468,6 +471,140 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         inventory.remove(item_id);
     }
 
+    fn garage_menu(&mut self, game_state: &mut GameState) {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+        const DIRECTIONS: [Direction; 4] = [Direction::East, Direction::West, Direction::North, Direction::South];
+        let mut result = Ok(());
+        loop {
+            let menu = {
+                let mut menu = SelectMenu::new();
+
+                let weapon_slots = game_state.staging.weapon_slots_borrow(pc_id).expect("Expected component weapon_slots");
+
+                for d in DIRECTIONS.iter() {
+                    let maybe_name = weapon_slots.get(*d).and_then(|id| game_state.staging.name(*id));
+                    let message = MenuMessageType::WeaponSlot(RelativeDirection::from(*d), maybe_name);
+                    menu.push(SelectMenuItem::new(message, *d));
+                }
+
+                menu
+            };
+
+            let title = match result {
+                Err(WeaponMenuError::InventoryFull) => MessageType::GarageInventoryFull,
+                _ => MessageType::Garage,
+            };
+
+            let maybe_selection = SelectMenuOperation::new(
+                self.renderer.borrow_mut().deref_mut(),
+                &mut self.input_source,
+                Some(title),
+                &self.language,
+                menu,
+                None).run_can_escape();
+
+            if let Some((selection, _)) = maybe_selection {
+                result = self.weapon_slot_menu(game_state, selection);
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn weapon_slot_menu(&mut self, game_state: &mut GameState, slot: Direction) -> Result<(), WeaponMenuError> {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+
+        let menu = {
+
+            let mut menu = SelectMenu::new();
+
+            let inventory = game_state.staging.inventory_borrow(pc_id).expect("Expected component inventory");
+
+            menu.push(SelectMenuItem::new(MenuMessageType::Empty, None));
+
+            for entity_id in inventory.iter() {
+                if game_state.staging.contains_gun_type(entity_id) {
+                    let name = game_state.staging.name(entity_id).expect("Expected component name");
+                    menu.push(SelectMenuItem::new(MenuMessageType::Name(name), Some(entity_id)));
+                }
+            }
+
+            menu
+        };
+
+        let title = {
+            let direction = RelativeDirection::from(slot);
+            let weapon_slots = game_state.staging.weapon_slots_borrow(pc_id).expect("Expected component weapon_slots");
+            let current = weapon_slots.get(slot);
+            let maybe_name = current.map(|id| game_state.staging.name(*id).expect("Expected component name"));
+            MessageType::WeaponSlotTitle(direction, maybe_name)
+        };
+
+        let maybe_selection = SelectMenuOperation::new(
+            self.renderer.borrow_mut().deref_mut(),
+            &mut self.input_source,
+            Some(title),
+            &self.language,
+            menu,
+            None).run_can_escape();
+
+        if let Some((selection, _)) = maybe_selection {
+            if let Some(weapon_id) = selection {
+                self.equip_weapon(game_state, slot, weapon_id)
+            } else {
+                self.clear_weapon(game_state, slot)
+            }
+        } else {
+            Ok(())
+        }
+    }
+
+    fn equip_weapon(&mut self, game_state: &mut GameState, slot: Direction, to_equip: EntityId) -> Result<(), WeaponMenuError> {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+
+        let maybe_to_unequip = {
+            let mut weapon_slots = game_state.staging.weapon_slots_borrow_mut(pc_id).expect("Expected component weapon_slots");
+            let maybe_to_unequip = weapon_slots.remove(slot);
+            weapon_slots.insert(slot, to_equip);
+            maybe_to_unequip
+        };
+
+        let mut inventory = game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory");
+
+        inventory.remove(to_equip);
+        if let Some(to_unequip) = maybe_to_unequip {
+            inventory.insert(to_unequip);
+        }
+
+        Ok(())
+    }
+
+    fn clear_weapon(&mut self, game_state: &mut GameState, slot: Direction) -> Result<(), WeaponMenuError> {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+
+        let maybe_weapon_id = {
+            let mut weapon_slots = game_state.staging.weapon_slots_borrow_mut(pc_id).expect("Expected component weapon_slots");
+
+            if weapon_slots.get(slot).is_some() {
+                let max_inventory = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
+                let current_inventory = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
+
+                if current_inventory >= max_inventory {
+                    return Err(WeaponMenuError::InventoryFull);
+                }
+            }
+
+            weapon_slots.remove(slot)
+        };
+
+        if let Some(weapon_id) = maybe_weapon_id {
+            let mut inventory = game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory");
+            inventory.insert(weapon_id);
+        }
+
+        Ok(())
+    }
+
     fn buy_item(&mut self, game_state: &mut GameState, item_id: EntityId) -> Result<(), BuyError> {
         let GlobalIds { shop_id, pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
@@ -481,7 +618,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let max_inventory = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
         let current_inventory = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
 
-        if current_inventory == max_inventory {
+        if current_inventory >= max_inventory {
             return Err(BuyError::InventoryFull);
         }
 
@@ -602,10 +739,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    fn welcome_message(&self, game_state: &GameState) {
-        self.add_message(game_state, MessageType::Welcome);
-    }
-
     fn death_message(&self, game_state: &GameState) {
         let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Unitialised game state");
         self.add_message(game_state, MessageType::YouDied);
@@ -688,18 +821,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 break;
             }
         }
-    }
-
-    fn intro_message(&mut self) {
-
-        let mut message = Message::new();
-
-        self.language.translate(MessageType::Intro, &mut message);
-        message.push(MessagePart::Newline);
-        message.push(MessagePart::Newline);
-        self.language.translate(MessageType::PressAnyKey, &mut message);
-
-        display_message_scrolling(self.renderer.borrow_mut().deref_mut(), &mut self.input_source, &message, true);
     }
 
     fn init_demo(&mut self, game_state: &mut GameState) {

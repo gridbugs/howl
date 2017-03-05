@@ -1,10 +1,9 @@
 use game::*;
+use game::data::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum MessageType {
     Empty,
-    Welcome,
-    Intro,
     Title,
     PressAnyKey,
     YouDied,
@@ -32,6 +31,9 @@ pub enum MessageType {
         capacity: usize,
     },
     NameAndDescription(NameMessageType, DescriptionMessageType),
+    Garage,
+    GarageInventoryFull,
+    WeaponSlotTitle(RelativeDirection, Option<NameMessageType>),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -70,4 +72,6 @@ pub enum MenuMessageType {
     ShopItem(NameMessageType, usize),
     Back,
     Remove,
+    WeaponSlot(RelativeDirection, Option<NameMessageType>),
+    Empty,
 }

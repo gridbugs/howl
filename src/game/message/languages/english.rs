@@ -1,11 +1,28 @@
 use game::*;
+use game::data::*;
 use colour::*;
 
-const DARK_YELLOW: Rgb24 = Rgb24 { red: 0x80, green: 0x80, blue: 0 };
+const DARK_YELLOW: Rgb24 = Rgb24 { red: 0xa0, green: 0x60, blue: 0 };
 
 pub struct English;
 
 impl English {
+    fn translate_relative_direction(&self, direction: RelativeDirection, message: &mut Message) {
+        match direction {
+            RelativeDirection::Rear => {
+                message.push(MessagePart::plain("Rear"));
+            }
+            RelativeDirection::Front => {
+                message.push(MessagePart::plain("Front"));
+            }
+            RelativeDirection::Left => {
+                message.push(MessagePart::plain("Left"));
+            }
+            RelativeDirection::Right => {
+                message.push(MessagePart::plain("Right"));
+            }
+        }
+    }
     fn translate_name(&self, name: NameMessageType, message: &mut Message) {
         match name {
             NameMessageType::Pistol => {
@@ -34,7 +51,7 @@ impl English {
                 message.push(MessagePart::plain("Simple, reliable, accurate."));
             }
             DescriptionMessageType::Shotgun => {
-                message.push(MessagePart::plain("Reasonable chance to hit the target...as well as anything that happens to be nearby."));
+                message.push(MessagePart::plain("Reasonable chance to hit the target...as well as anything that happens to be next to the target."));
             }
         }
     }
@@ -95,13 +112,19 @@ impl English {
             MenuMessageType::Remove => {
                 message.push(MessagePart::plain("Remove"));
             }
+            MenuMessageType::WeaponSlot(direction, maybe_name) => {
+                self.translate_relative_direction(direction, message);
+                message.push(MessagePart::plain(": "));
+                if let Some(name) = maybe_name {
+                    self.translate_name(name, message);
+                } else {
+                    message.push(MessagePart::plain("(empty)"));
+                }
+            }
+            MenuMessageType::Empty => {
+                message.push(MessagePart::plain("(empty)"));
+            }
         }
-    }
-
-    fn translate_intro(&self, message: &mut Message) {
-        message.push(MessagePart::plain("Everything beneath the moonlight appears different. "));
-        message.push(MessagePart::plain("An arcane tome is rumored to be hidden somewhere in the forest. "));
-        message.push(MessagePart::plain("Perhaps the answers lie within."));
     }
 }
 
@@ -110,14 +133,8 @@ impl Language for English {
 
         match message_type {
             MessageType::Empty => {},
-            MessageType::Intro => self.translate_intro(message),
             MessageType::Title => message.push(MessagePart::colour(DARK_YELLOW, "Apocalypse Post")),
             MessageType::PressAnyKey => message.push(MessagePart::plain("Press any key...")),
-            MessageType::Welcome => {
-                message.push(MessagePart::plain("Welcome to "));
-                message.push(MessagePart::colour(DARK_YELLOW, "Apocalypse Post"));
-                message.push(MessagePart::plain("!"));
-            }
             MessageType::YouDied => {
                 message.push(MessagePart::colour(colours::RED, "YOU DIED"));
             }
@@ -193,6 +210,23 @@ impl Language for English {
                 message.push(MessagePart::Newline);
                 message.push(MessagePart::Newline);
                 self.translate_description(description, message);
+            }
+            MessageType::Garage => {
+                message.push(MessagePart::plain("Garage"));
+            }
+            MessageType::WeaponSlotTitle(d, maybe_name) => {
+                self.translate_relative_direction(d, message);
+                if let Some(name) = maybe_name {
+                    message.push(MessagePart::plain(" - Contains "));
+                    self.translate_name(name, message);
+                } else {
+                    message.push(MessagePart::plain(" - Empty"));
+                }
+            }
+            MessageType::GarageInventoryFull => {
+                message.push(MessagePart::plain("Garage"));
+                message.push(MessagePart::Newline);
+                message.push(MessagePart::plain("No space in inventory!"));
             }
         }
 
