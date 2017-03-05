@@ -6,13 +6,10 @@ const DARK_YELLOW: Rgb24 = Rgb24 { red: 0x80, green: 0x80, blue: 0 };
 pub struct English;
 
 impl English {
-    fn translate_you_see(&self, name: YouSeeMessageType, message: &mut Message) {
+    fn translate_name(&self, name: NameMessageType, message: &mut Message) {
         match name {
-            YouSeeMessageType::Player => {
-                message.push(MessagePart::plain("Myself"));
-            }
-            YouSeeMessageType::Tree => {
-                message.push(MessagePart::plain("A tree"));
+            NameMessageType::Pistol => {
+                message.push(MessagePart::plain("Pistol"));
             }
         }
     }
@@ -104,16 +101,13 @@ impl Language for English {
             MessageType::Action(action) => {
                 self.translate_action(action, message);
             }
-            MessageType::YouSee(name) => {
-                message.push(MessagePart::plain("I see: "));
-                if let Some(name) = name {
-                    self.translate_you_see(name, message);
-                }
+            MessageType::Name(name) => {
+                self.translate_name(name, message);
             }
             MessageType::YouRemember(name) => {
                 message.push(MessagePart::plain("I remember: "));
                 if let Some(name) = name {
-                    self.translate_you_see(name, message);
+                    self.translate_name(name, message);
                 }
             }
             MessageType::Unseen => {
@@ -122,8 +116,8 @@ impl Language for English {
             MessageType::Description(description) => {
                 self.translate_description(description, message);
             }
-            MessageType::YouSeeDescription(you_see) => {
-                self.translate_you_see(you_see, message);
+            MessageType::NameDescription(name) => {
+                self.translate_name(name, message);
             }
             MessageType::NoDescription => {
                 message.push(MessagePart::plain("I see nothing of interest."));
@@ -134,8 +128,23 @@ impl Language for English {
             MessageType::ChooseDirection => {
                 message.push(MessagePart::plain("Which direction?"));
             }
-            MessageType::EmptyWeaponSlot => {
+            MessageType::EmptyWeaponSlotMessage => {
                 message.push(MessagePart::plain("No gun in slot!"));
+            }
+            MessageType::Front => {
+                message.push(MessagePart::plain("Front"));
+            }
+            MessageType::Rear => {
+                message.push(MessagePart::plain("Rear"));
+            }
+            MessageType::Left => {
+                message.push(MessagePart::plain("Left"));
+            }
+            MessageType::Right => {
+                message.push(MessagePart::plain("Right"));
+            }
+            MessageType::EmptyWeaponSlot => {
+                message.push(MessagePart::plain("(empty)"));
             }
         }
 

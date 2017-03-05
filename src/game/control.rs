@@ -8,28 +8,22 @@ use direction::Direction;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Control {
     Direction(Direction),
-    Use,
     Fire,
-    NextTarget,
-    PrevTarget,
     Wait,
     DisplayMessageLog,
-    Examine,
     Pause,
+    Status,
 }
 
-const NUM_CONTROLS: usize = 12;
+const NUM_CONTROLS: usize = 9;
 const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
     Control::Direction(Direction::North),
     Control::Direction(Direction::South),
     Control::Direction(Direction::East),
     Control::Direction(Direction::West),
-    Control::Use,
     Control::Wait,
     Control::Fire,
-    Control::NextTarget,
-    Control::PrevTarget,
-    Control::Examine,
+    Control::Status,
     Control::DisplayMessageLog,
     Control::Pause,
 ];
@@ -76,15 +70,11 @@ impl ControlMap {
         self.insert(InputEvent::Left, Control::Direction(Direction::West));
         self.insert(InputEvent::Right, Control::Direction(Direction::East));
 
-        self.insert(InputEvent::Return, Control::Use);
         self.insert(InputEvent::Escape, Control::Pause);
 
-        self.insert(InputEvent::Char('x'), Control::Examine);
         self.insert(InputEvent::Char('.'), Control::Wait);
 
         self.insert(InputEvent::Char('f'), Control::Fire);
-        self.insert(InputEvent::Char('n'), Control::NextTarget);
-        self.insert(InputEvent::Char('N'), Control::PrevTarget);
 
         self.insert(InputEvent::Char('t'), Control::DisplayMessageLog);
     }

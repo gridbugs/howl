@@ -12,7 +12,7 @@ pub struct DrawableKnowledgeCell {
     last_updated: u64,
     foreground: BestMap<isize, TileType>,
     background: BestMap<isize, TileType>,
-    you_see: BestMap<isize, YouSeeMessageType>,
+    name: BestMap<isize, NameMessageType>,
     description: BestMap<isize, DescriptionMessageType>,
     health_overlay: BestMap<isize, HitPoints>,
 }
@@ -23,7 +23,7 @@ impl DrawableKnowledgeCell {
             last_updated: 0,
             foreground: BestMap::new(),
             background: BestMap::new(),
-            you_see: BestMap::new(),
+            name: BestMap::new(),
             description: BestMap::new(),
             health_overlay: BestMap::new(),
         }
@@ -37,8 +37,8 @@ impl DrawableKnowledgeCell {
         self.background.value()
     }
 
-    pub fn you_see(&self) -> Option<YouSeeMessageType> {
-        self.you_see.value()
+    pub fn name(&self) -> Option<NameMessageType> {
+        self.name.value()
     }
 
     pub fn description(&self) -> Option<DescriptionMessageType> {
@@ -61,7 +61,7 @@ impl DrawableKnowledgeCell {
 
             self.foreground.clear();
             self.background.clear();
-            self.you_see.clear();
+            self.name.clear();
             self.description.clear();
             self.health_overlay.clear();
 
@@ -73,8 +73,8 @@ impl DrawableKnowledgeCell {
                             self.background.insert(depth, tile);
                         }
                     });
-                    entity.you_see().map(|you_see| {
-                        self.you_see.insert(depth, you_see);
+                    entity.name().map(|name| {
+                        self.name.insert(depth, name);
                     });
                     entity.description().map(|description| {
                         self.description.insert(depth, description);

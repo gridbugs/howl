@@ -9,21 +9,25 @@ pub enum MessageType {
     PressAnyKey,
     YouDied,
     Action(ActionMessageType),
-    YouSee(Option<YouSeeMessageType>),
-    YouRemember(Option<YouSeeMessageType>),
+    Name(NameMessageType),
+    YouRemember(Option<NameMessageType>),
     Unseen,
     Description(DescriptionMessageType),
-    YouSeeDescription(YouSeeMessageType),
+    NameDescription(NameMessageType),
     NoDescription,
     Menu(MenuMessageType),
     ChooseDirection,
+    EmptyWeaponSlotMessage,
+    Front,
+    Rear,
+    Left,
+    Right,
     EmptyWeaponSlot,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub enum YouSeeMessageType {
-    Player,
-    Tree,
+pub enum NameMessageType {
+    Pistol,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

@@ -30,7 +30,6 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_should_render();
     entity.insert_message_log(MessageLog::new());
-    entity.insert_you_see(YouSeeMessageType::Player);
     entity.insert_description(DescriptionMessageType::Player);
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(10));
@@ -185,6 +184,7 @@ pub fn bloodstain<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
 
     entity.insert_gun_type(GunType::Pistol);
+    entity.insert_name(NameMessageType::Pistol);
 
     entity
 }

@@ -357,6 +357,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
         let input = BehaviourInput {
             entity: entity,
+            ecs: self.ecs,
             spatial_hash: self.spatial_hash,
             level_id: self.level_id,
             action_env: ActionEnv::new(self.ecs, *self.action_id),

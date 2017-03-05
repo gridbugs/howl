@@ -1,11 +1,12 @@
 use std::ops::Deref;
+use std::ops::DerefMut;
 use std::cmp;
 
 use game::*;
 use game::data::*;
 use ecs::*;
 use behaviour::LeafResolution;
-use direction::Direction;
+use direction::{self, Direction};
 
 pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(input_source: I) -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
@@ -91,7 +92,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
                     if let Some(weapon) = weapon_slots.get(direction) {
                         Some((*weapon, direction))
                     } else {
-                        message_log.add(MessageType::EmptyWeaponSlot);
+                        message_log.add(MessageType::EmptyWeaponSlotMessage);
                         should_clear_log = false;
                         None
                     }
@@ -111,6 +112,39 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     ret
 }
 
+fn direction_to_relative_message(direction: Direction) -> MessageType {
+    match direction {
+        Direction::East => MessageType::Front,
+        Direction::West => MessageType::Rear,
+        Direction::North => MessageType::Left,
+        Direction::South => MessageType::Right,
+        _ => panic!(),
+    }
+}
+
+fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+    let mut renderer = input.renderer.borrow_mut();
+    let weapon_slots = input.entity.weapon_slots_borrow().expect("Expected component weapon_slots");
+
+    let mut message = Message::new();
+
+    for d in direction::cardinal_direction_iter() {
+        let m = direction_to_relative_message(d);
+        input.language.translate(m, &mut message);
+        message.push(MessagePart::plain(": "));
+
+        if let Some(weapon_id) = weapon_slots.get(d) {
+            let name = input.ecs.name(*weapon_id).expect("Expected component name");
+            input.language.translate(MessageType::Name(name), &mut message);
+        } else {
+            input.language.translate(MessageType::EmptyWeaponSlot, &mut message);
+        }
+        message.push(MessagePart::Newline);
+    }
+
+    display_message_scrolling(renderer.deref_mut(), &mut input_source, &message, true);
+    renderer.publish_all_windows(input.entity, input.language);
+}
 
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
     input_source.next_input().and_then(|event| {
@@ -142,11 +176,9 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                         display_message_log(input, input_source, map);
                         None
                     }
-                    Control::Examine => {
+                    Control::Status => {
+                        display_status(input, input_source, map);
                         None
-                    }
-                    Control::Use => {
-                        Some(MetaAction::ActionArgs(ActionArgs::TryLevelSwitch(input.entity.id())))
                     }
                     _ => None,
                 }

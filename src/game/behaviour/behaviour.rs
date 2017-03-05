@@ -11,6 +11,7 @@ pub type BehaviourNodeIndex = NodeIndex;
 
 pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub entity: EntityRef<'a>,
+    pub ecs: &'a EcsCtx,
     pub spatial_hash: &'a SpatialHashTable,
     pub level_id: LevelId,
     pub action_env: ActionEnv<'a>,
@@ -23,6 +24,7 @@ impl<'a, R: KnowledgeRenderer> Clone for BehaviourInput<'a, R> {
     fn clone(&self) -> Self {
         BehaviourInput {
             entity: self.entity,
+            ecs: self.ecs,
             spatial_hash: self.spatial_hash,
             level_id: self.level_id,
             action_env: self.action_env,
