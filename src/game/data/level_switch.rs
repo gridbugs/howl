@@ -1,7 +1,7 @@
 use game::*;
 use ecs::*;
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum LevelSwitch {
     NewLevel(TerrainType),
     ExistingLevel(LevelExit),
@@ -9,7 +9,7 @@ pub enum LevelSwitch {
 }
 
 // the id of a level, and the id of an entity within that level
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct LevelExit {
     pub level_id: LevelId,
     pub exit_id: EntityId,

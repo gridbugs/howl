@@ -329,6 +329,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         true
     }
 
+    fn prepare_between_levels(&mut self, game_state: &mut GameState) {
+
+    }
+
     fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
         let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
 
@@ -392,6 +396,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 }
                 TurnResolution::LevelSwitch { entity_id, exit_id, level_switch } => {
                     self.switch_level(entity_id, exit_id, level_switch, game_state);
+                    if level_switch == LevelSwitch::LeaveLevel {
+                        self.prepare_between_levels(game_state);
+                    }
                     return Ok(ExitReason::BetweenLevels);
                 }
                 TurnResolution::GameOver(reason) => {
@@ -572,6 +579,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let new_level_id = game_state.levels.add_level(level);
         global_ids.level_id = new_level_id;
+
+        game_state.staging.clear();
     }
 
     fn switch_level(&mut self, entity_id: EntityId, exit_id: EntityId, level_switch: LevelSwitch, game_state: &mut GameState) {

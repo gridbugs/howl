@@ -15,7 +15,7 @@ pub struct ParentLevelCtx<'a> {
     pub exit_id: EntityId,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum TerrainType {
     DemoA,
 }
