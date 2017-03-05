@@ -63,6 +63,17 @@ pub enum BetweenLevelsSelection {
     NextDelivery,
     Shop,
     Garage,
+    Inventory,
+}
+
+pub enum ItemMenuSelection {
+    Back,
+    Remove,
+}
+
+enum BuyError {
+    CantAfford,
+    InventoryFull,
 }
 
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
@@ -294,6 +305,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             menu.push(SelectMenuItem::new(MenuMessageType::Shop, BetweenLevelsSelection::Shop));
             menu.push(SelectMenuItem::new(MenuMessageType::Garage, BetweenLevelsSelection::Garage));
+            menu.push(SelectMenuItem::new(MenuMessageType::Inventory, BetweenLevelsSelection::Inventory));
             menu.push(SelectMenuItem::new(MenuMessageType::NextDelivery, BetweenLevelsSelection::NextDelivery));
 
             let maybe_selection = SelectMenuOperation::new(
@@ -317,6 +329,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     }
                     BetweenLevelsSelection::Garage => {
                     }
+                    BetweenLevelsSelection::Inventory => {
+                        self.inventory_menu(game_state);
+                    }
                 }
             } else {
                 return BetwenLevelsResolution::Pause;
@@ -326,7 +341,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn shop_menu(&mut self, game_state: &mut GameState) {
         let GlobalIds { shop_id, pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
-        let mut insufficient_funds = false;
+        let mut buy_result = Ok(());
         loop {
             let mut menu = SelectMenu::new();
 
@@ -341,10 +356,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
 
-            let title = if insufficient_funds  {
-                MessageType::ShopTitleInsufficientFunds(bank)
-            } else {
-                MessageType::ShopTitle(bank)
+            let title = match buy_result {
+                Ok(()) => MessageType::ShopTitle(bank),
+                Err(BuyError::CantAfford) => MessageType::ShopTitleInsufficientFunds(bank),
+                Err(BuyError::InventoryFull) => MessageType::ShopTitleInventoryFull(bank),
             };
 
             let maybe_selection = SelectMenuOperation::new(
@@ -357,7 +372,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             if let Some((item_id, _)) = maybe_selection {
 
-                insufficient_funds = !self.buy_item(game_state, item_id);
+                buy_result = self.buy_item(game_state, item_id);
 
             } else {
                 break;
@@ -365,14 +380,109 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    fn buy_item(&mut self, game_state: &mut GameState, item_id: EntityId) -> bool {
+    fn inventory_menu(&mut self, game_state: &mut GameState) {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+        let mut current_menu_state = None;
+
+        loop {
+            let capacity = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
+            let size = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
+
+            let mut menu = SelectMenu::new();
+            for entity_id in game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").iter() {
+                let item = game_state.staging.entity(entity_id);
+                let name = item.name().expect("Missing component name");
+
+                let menu_message = MenuMessageType::Name(name);
+                menu.push(SelectMenuItem::new(menu_message, entity_id));
+            }
+
+            let maybe_selection = SelectMenuOperation::new(
+                self.renderer.borrow_mut().deref_mut(),
+                &mut self.input_source,
+                Some(MessageType::Inventory {
+                    capacity: capacity,
+                    size: size,
+                }),
+                &self.language,
+                menu,
+                current_menu_state).run_can_escape();
+
+            if let Some((item_id, menu_state)) = maybe_selection {
+                match self.item_menu(game_state, item_id) {
+                    Some(ItemMenuSelection::Remove) => {
+                        current_menu_state = None;
+                    }
+                    _ => {
+                        current_menu_state = Some(menu_state);
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn item_menu(&mut self, game_state: &mut GameState, item_id: EntityId) -> Option<ItemMenuSelection> {
+        let maybe_description = game_state.staging.description(item_id);
+        let name = game_state.staging.name(item_id).expect("Missing component name");
+
+        let title = if let Some(description) = maybe_description {
+            MessageType::NameAndDescription(name, description)
+        } else {
+            MessageType::Name(name)
+        };
+
+        let mut menu = SelectMenu::new();
+
+        menu.push(SelectMenuItem::new(MenuMessageType::Back, ItemMenuSelection::Back));
+        menu.push(SelectMenuItem::new(MenuMessageType::Remove, ItemMenuSelection::Remove));
+
+        let maybe_selection = SelectMenuOperation::new(
+            self.renderer.borrow_mut().deref_mut(),
+            &mut self.input_source,
+            Some(title),
+            &self.language,
+            menu,
+            None).run_can_escape();
+
+        if let Some((selection, _)) = maybe_selection {
+            match selection {
+                ItemMenuSelection::Back => {}
+                ItemMenuSelection::Remove => {
+                    self.remove_item(game_state, item_id);
+                }
+            }
+
+            return Some(selection);
+        } else {
+            return None;
+        }
+    }
+
+    fn remove_item(&mut self, game_state: &mut GameState, item_id: EntityId) {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+
+        let mut inventory = game_state.staging.inventory_borrow_mut(pc_id).expect("Expected component inventory");
+
+        inventory.remove(item_id);
+    }
+
+    fn buy_item(&mut self, game_state: &mut GameState, item_id: EntityId) -> Result<(), BuyError> {
         let GlobalIds { shop_id, pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
         let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
         let price = game_state.staging.price(item_id).expect("Missing component price");
 
         if price > bank {
-            return false;
+            return Err(BuyError::CantAfford);
+        }
+
+        let max_inventory = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
+        let current_inventory = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
+
+        if current_inventory == max_inventory {
+            return Err(BuyError::InventoryFull);
         }
 
         // commit the payment
@@ -385,7 +495,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         // add the item to the player's inventory
         game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").insert(item_id);
 
-        true
+        Ok(())
     }
 
     fn next_level_menu(&mut self, game_state: &mut GameState) -> bool {

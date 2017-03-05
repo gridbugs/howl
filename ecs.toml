@@ -20,7 +20,6 @@ imports = [
 
 [component.can_run_over]
 [component.can_be_run_over]
-[component.die_on_bump]
 [component.bloodstain_on_death]
 [component.destroy_when_stopped]
 
@@ -178,6 +177,10 @@ imports = [
 [component.inventory]
     type = "EntitySet"
     container = "RefCell"
+
+[component.inventory_capacity]
+    type = "usize"
+    copy = true
 
 [action_property.alternative_turn_time]
     type = "u64"

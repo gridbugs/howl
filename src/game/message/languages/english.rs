@@ -30,8 +30,11 @@ impl English {
 
     fn translate_description(&self, description: DescriptionMessageType, message: &mut Message) {
         match description {
-            DescriptionMessageType::Player => {
-                message.push(MessagePart::plain("I entered the forest in search of an ancient tome."));
+            DescriptionMessageType::Pistol => {
+                message.push(MessagePart::plain("Simple, reliable, accurate."));
+            }
+            DescriptionMessageType::Shotgun => {
+                message.push(MessagePart::plain("Reasonable chance to hit the target...as well as anything that happens to be nearby."));
             }
         }
     }
@@ -75,6 +78,9 @@ impl English {
             MenuMessageType::Garage => {
                 message.push(MessagePart::plain("Garage"));
             }
+            MenuMessageType::Inventory => {
+                message.push(MessagePart::plain("Inventory"));
+            }
             MenuMessageType::Name(name) => {
                 self.translate_name(name, message);
             }
@@ -82,6 +88,12 @@ impl English {
                 self.translate_name(name, message);
                 message.push(MessagePart::plain(": "));
                 message.push(MessagePart::Text(TextMessagePart::Plain(format!("{}", price))));
+            }
+            MenuMessageType::Back => {
+                message.push(MessagePart::plain("Back"));
+            }
+            MenuMessageType::Remove => {
+                message.push(MessagePart::plain("Remove"));
             }
         }
     }
@@ -167,6 +179,20 @@ impl Language for English {
                 message.push(MessagePart::Text(TextMessagePart::Plain(format!("Shop - Your balance: {}", balance))));
                 message.push(MessagePart::Newline);
                 message.push(MessagePart::plain("You can't afford that!"));
+            }
+            MessageType::ShopTitleInventoryFull(balance) => {
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Shop - Your balance: {}", balance))));
+                message.push(MessagePart::Newline);
+                message.push(MessagePart::plain("No space in inventory!"));
+            }
+            MessageType::Inventory { size, capacity } => {
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Inventory: {}/{}", size, capacity))));
+            }
+            MessageType::NameAndDescription(name, description) => {
+                self.translate_name(name, message);
+                message.push(MessagePart::Newline);
+                message.push(MessagePart::Newline);
+                self.translate_description(description, message);
             }
         }
 

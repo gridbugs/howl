@@ -64,7 +64,11 @@ impl<'a, 'b, 'c, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOp
                         state.select_prev(&self.menu);
                     }
                     InputEvent::Return => {
-                        return Some((state.confirm(self.menu), state));
+                        if self.menu.is_empty() {
+                            return None;
+                        } else {
+                            return Some((state.confirm(self.menu), state));
+                        }
                     }
                     InputEvent::Escape => {
                         return None;

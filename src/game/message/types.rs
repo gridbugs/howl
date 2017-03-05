@@ -26,6 +26,12 @@ pub enum MessageType {
     SurvivorCamp,
     ShopTitle(usize),
     ShopTitleInsufficientFunds(usize),
+    ShopTitleInventoryFull(usize),
+    Inventory {
+        size: usize,
+        capacity: usize,
+    },
+    NameAndDescription(NameMessageType, DescriptionMessageType),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -42,7 +48,8 @@ pub enum ActionMessageType {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum DescriptionMessageType {
-    Player,
+    Pistol,
+    Shotgun,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -58,6 +65,9 @@ pub enum MenuMessageType {
     NextDelivery,
     Shop,
     Garage,
+    Inventory,
     Name(NameMessageType),
     ShopItem(NameMessageType, usize),
+    Back,
+    Remove,
 }
