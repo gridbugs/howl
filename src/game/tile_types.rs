@@ -12,6 +12,8 @@ pub enum TileType {
     Acid0,
     Acid1,
     Bloodstain,
+    RailgunSlugHorizontal,
+    RailgunSlugVertical,
 }
 
 impl TileType {
@@ -42,6 +44,8 @@ impl TileType {
             "Acid0" => TileType::Acid0,
             "Acid1" => TileType::Acid1,
             "Bloodstain" => TileType::Bloodstain,
+            "RailgunSlugVertical" => TileType::RailgunSlugVertical,
+            "RailgunSlugHorizontal" => TileType::RailgunSlugHorizontal,
             _ => return None,
         };
 

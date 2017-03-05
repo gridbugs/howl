@@ -40,6 +40,8 @@ pub enum MessageType {
 pub enum NameMessageType {
     Pistol,
     Shotgun,
+    MachineGun,
+    Railgun,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -52,6 +54,8 @@ pub enum ActionMessageType {
 pub enum DescriptionMessageType {
     Pistol,
     Shotgun,
+    MachineGun,
+    Railgun,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

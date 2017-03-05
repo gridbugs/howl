@@ -207,6 +207,24 @@ pub fn shotgun<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
+pub fn machine_gun<E: EntityPopulate>(mut entity: E) -> E {
+
+    entity.insert_gun_type(GunType::MachineGun);
+    entity.insert_name(NameMessageType::MachineGun);
+    entity.insert_description(DescriptionMessageType::MachineGun);
+
+    entity
+}
+
+pub fn railgun<E: EntityPopulate>(mut entity: E) -> E {
+
+    entity.insert_gun_type(GunType::Railgun);
+    entity.insert_name(NameMessageType::Railgun);
+    entity.insert_description(DescriptionMessageType::Railgun);
+
+    entity
+}
+
 pub fn goal<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: LevelSwitch) -> E {
     entity.insert_position(position);
     entity.insert_level_switch(level_switch);

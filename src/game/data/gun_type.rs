@@ -2,4 +2,6 @@
 pub enum GunType {
     Pistol,
     Shotgun,
+    MachineGun,
+    Railgun,
 }

@@ -208,5 +208,5 @@ imports = [
 [action_property.realtime_delay]
 [action_property.start_realtime_move]
 [action_property.then]
-    type = "ActionArgs"
+    type = "Reaction"
     copy = true

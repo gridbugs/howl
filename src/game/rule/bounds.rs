@@ -1,7 +1,6 @@
 use game::*;
 use ecs::*;
 
-
 pub fn bounds(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
     for (entity_id, position) in action.position_profile().insertion_copy_iter() {
         if !env.spatial_hash.is_valid_coord(position) {

@@ -46,6 +46,17 @@ pub enum ActionArgs {
         shooter_id: EntityId,
         direction: Direction,
     },
+    FireBurst {
+        gun_id: EntityId,
+        shooter_id: EntityId,
+        direction: Direction,
+        remaining: usize,
+        speed: f64,
+        period: u64,
+        spread: usize,
+        range: usize,
+        bullet_type: BulletType,
+    }
 }
 
 impl ActionArgs {
@@ -99,6 +110,9 @@ impl ActionArgs {
             }
             ActionArgs::FireGun { gun_id, shooter_id, direction } => {
                 actions::fire_gun(action, ecs.entity(gun_id), ecs.entity(shooter_id), direction, entity_ids, r);
+            }
+            ActionArgs::FireBurst { gun_id, shooter_id, direction, remaining, speed, period, spread, range, bullet_type } => {
+                actions::fire_burst(action, ecs.entity(gun_id), ecs.entity(shooter_id), direction, remaining, speed, period, spread, range, bullet_type, entity_ids, r);
             }
         }
     }

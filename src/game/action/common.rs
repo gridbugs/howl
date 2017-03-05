@@ -133,6 +133,52 @@ pub fn become_bloodstain(action: &mut EcsAction, entity: EntityRef, ids: &Entity
     prototypes::bloodstain(action.entity_mut(ids.new_id()), position);
 }
 
+pub fn fire_burst<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, remaining: usize, speed: f64, period: u64, spread: usize, range: usize, bullet_type: BulletType, ids: &EntityIdReserver, r: &mut R) {
+
+    let shooter_position = shooter.position().expect("Missing component position");
+
+    let ideal_vector = direction.vector() * range as isize;
+    let x_spread = (r.gen::<usize>() % (spread * 2 + 1)) as isize - spread as isize;
+    let y_spread = (r.gen::<usize>() % (spread * 2 + 1)) as isize - spread as isize;
+    let vector = ideal_vector + Coord::new(x_spread, y_spread);
+    let mut velocity = RealtimeVelocity::new(vector, speed);
+
+    let bullet_position = shooter_position + velocity.step_in_place();
+
+    let bullet_id = ids.new_id();
+    prototypes::bullet(action.entity_mut(bullet_id), bullet_position, velocity, range);
+
+    match bullet_type {
+        BulletType::RailgunSlug => {
+            if direction == Direction::East || direction == Direction::West {
+                action.insert_tile(bullet_id, TileType::RailgunSlugHorizontal);
+            } else if direction == Direction::North || direction == Direction::South {
+                action.insert_tile(bullet_id, TileType::RailgunSlugVertical);
+            } else {
+                panic!("Invalid direction");
+            }
+        }
+        _ => {}
+    }
+
+    let next_remaining = remaining - 1;
+
+    if next_remaining > 0 {
+        action.set_then(Reaction::new(ActionArgs::FireBurst {
+            gun_id: gun.id(),
+            shooter_id: shooter.id(),
+            direction: direction,
+            remaining: next_remaining,
+            speed: speed,
+            period: period,
+            spread: spread,
+            range: range,
+            bullet_type: bullet_type,
+        }, period));
+    }
+    action.set_action_time_ms(period);
+}
+
 pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, ids: &EntityIdReserver, r: &mut R) {
     let gun_type = gun.gun_type().expect("Missing component gun_type");
     let shooter_position = shooter.position().expect("Missing component position");
@@ -147,13 +193,13 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
         }
         GunType::Shotgun => {
             const SPEED_CELLS_PER_SEC: f64 = 100.0;
-            const RANGE: usize = 10;
+            const RANGE: usize = 6;
             const NUM_SHOTS: usize = 10;
-            const SPREAD: usize = 6;
+            const SPREAD: usize = 3;
             let ideal_vector = direction.vector() * RANGE as isize;
             for _ in 0..NUM_SHOTS {
-                let x_spread = (r.gen::<usize>() % SPREAD) as isize - (SPREAD / 2) as isize;
-                let y_spread = (r.gen::<usize>() % SPREAD) as isize - (SPREAD / 2) as isize;
+                let x_spread = (r.gen::<usize>() % (SPREAD * 2)) as isize - SPREAD as isize;
+                let y_spread = (r.gen::<usize>() % (SPREAD * 2)) as isize - SPREAD as isize;
 
                 let vector = ideal_vector + Coord::new(x_spread, y_spread);
                 let mut velocity = RealtimeVelocity::new(vector, SPEED_CELLS_PER_SEC);
@@ -162,6 +208,32 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
                 prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, RANGE);
                 action.set_action_time_ms(velocity.ms_per_cell());
             }
+        }
+        GunType::MachineGun => {
+            action.set_then(Reaction::new(ActionArgs::FireBurst {
+                gun_id: gun.id(),
+                shooter_id: shooter.id(),
+                direction: direction,
+                remaining: 6,
+                speed: 100.0,
+                period: 20,
+                spread: 2,
+                range: 10,
+                bullet_type: BulletType::Bullet,
+            }, 0));
+        }
+        GunType::Railgun => {
+            action.set_then(Reaction::new(ActionArgs::FireBurst {
+                gun_id: gun.id(),
+                shooter_id: shooter.id(),
+                direction: direction,
+                remaining: 20,
+                speed: 200.0,
+                period: 1,
+                spread: 0,
+                range: 50,
+                bullet_type: BulletType::RailgunSlug,
+            }, 0));
         }
     }
 }

@@ -19,6 +19,7 @@ pub fn rule_consume(action_args: ActionArgs) -> RuleResult {
     Err(RuleResolution::Consume(action_args))
 }
 
+#[derive(Clone, Copy)]
 pub struct Reaction {
     pub action: ActionArgs,
     pub delay: u64,

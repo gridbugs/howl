@@ -187,6 +187,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::driving(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::then(rule_env, self.ecs_action, self.rule_reactions)?;
         }
 
         RULE_ACCEPT

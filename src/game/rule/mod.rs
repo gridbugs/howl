@@ -12,6 +12,7 @@ mod physics;
 mod driving;
 mod run_over;
 mod bounds;
+mod then;
 
 pub mod rules {
     pub use super::collision::*;
@@ -25,4 +26,5 @@ pub mod rules {
     pub use super::driving::*;
     pub use super::run_over::*;
     pub use super::bounds::*;
+    pub use super::then::*;
 }

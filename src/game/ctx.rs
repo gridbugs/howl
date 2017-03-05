@@ -651,16 +651,20 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let id_b = game_state.entity_ids.new_id();
         prototypes::shotgun(game_state.staging.entity_mut(id_b));
         let id_c = game_state.entity_ids.new_id();
-        prototypes::shotgun(game_state.staging.entity_mut(id_c));
+        prototypes::machine_gun(game_state.staging.entity_mut(id_c));
+        let id_d = game_state.entity_ids.new_id();
+        prototypes::railgun(game_state.staging.entity_mut(id_d));
 
-        game_state.staging.insert_price(id_a, 20);
-        game_state.staging.insert_price(id_b, 50);
-        game_state.staging.insert_price(id_c, 50);
+        game_state.staging.insert_price(id_a, 10);
+        game_state.staging.insert_price(id_b, 20);
+        game_state.staging.insert_price(id_c, 30);
+        game_state.staging.insert_price(id_d, 40);
 
         let mut inventory = EntitySet::new();
         inventory.insert(id_a);
         inventory.insert(id_b);
         inventory.insert(id_c);
+        inventory.insert(id_d);
         prototypes::shop(game_state.staging.entity_mut(shop_id), inventory);
 
 

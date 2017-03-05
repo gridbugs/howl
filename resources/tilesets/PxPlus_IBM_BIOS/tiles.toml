@@ -46,3 +46,9 @@ foreground = { x = 1, y = 3 }
 [tiles.Acid1]
 background = { x = 0, y = 3 }
 foreground = { x = 2, y = 3 }
+
+[tiles.RailgunSlugVertical]
+foreground = { x = 7, y = 0 }
+
+[tiles.RailgunSlugHorizontal]
+foreground = { x = 8, y = 0 }

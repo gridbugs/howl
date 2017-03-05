@@ -31,6 +31,12 @@ impl English {
             NameMessageType::Shotgun => {
                 message.push(MessagePart::plain("Shotgun"));
             }
+            NameMessageType::MachineGun => {
+                message.push(MessagePart::plain("Machine Gun"));
+            }
+            NameMessageType::Railgun => {
+                message.push(MessagePart::plain("Railgun"));
+            }
         }
     }
 
@@ -52,6 +58,12 @@ impl English {
             }
             DescriptionMessageType::Shotgun => {
                 message.push(MessagePart::plain("Reasonable chance to hit the target...as well as anything that happens to be next to the target."));
+            }
+            DescriptionMessageType::MachineGun => {
+                message.push(MessagePart::plain("Spray and pray!"));
+            }
+            DescriptionMessageType::Railgun => {
+                message.push(MessagePart::plain("Good if you want lots of things to die, provided that they're all standing in a line."));
             }
         }
     }
