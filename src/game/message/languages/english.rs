@@ -69,6 +69,12 @@ impl English {
             MenuMessageType::NextDelivery => {
                 message.push(MessagePart::plain("Next Delivery"));
             }
+            MenuMessageType::Shop => {
+                message.push(MessagePart::plain("Shop"));
+            }
+            MenuMessageType::Garage => {
+                message.push(MessagePart::plain("Garage"));
+            }
         }
     }
 

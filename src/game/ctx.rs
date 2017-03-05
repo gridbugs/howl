@@ -61,6 +61,8 @@ pub enum BetwenLevelsResolution {
 
 pub enum BetweenLevelsSelection {
     NextDelivery,
+    Shop,
+    Garage,
 }
 
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
@@ -274,14 +276,17 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn between_levels_menu(&mut self, game_state: &mut GameState) -> BetwenLevelsResolution {
-        let mut menu = SelectMenu::new();
         let mut current_menu_state = None;
         let mut renderer_borrow = self.renderer.borrow_mut();
         let mut renderer = renderer_borrow.deref_mut();
 
-        menu.push(SelectMenuItem::new(MenuMessageType::NextDelivery, BetweenLevelsSelection::NextDelivery));
-
         loop {
+            let mut menu = SelectMenu::new();
+
+            menu.push(SelectMenuItem::new(MenuMessageType::Shop, BetweenLevelsSelection::Shop));
+            menu.push(SelectMenuItem::new(MenuMessageType::Garage, BetweenLevelsSelection::Garage));
+            menu.push(SelectMenuItem::new(MenuMessageType::NextDelivery, BetweenLevelsSelection::NextDelivery));
+
             let maybe_selection = SelectMenuOperation::new(
                 renderer,
                 &mut self.input_source,
@@ -294,6 +299,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 current_menu_state = Some(menu_state.clone());
                 match selection {
                     BetweenLevelsSelection::NextDelivery => return BetwenLevelsResolution::Start,
+                    BetweenLevelsSelection::Shop => {
+                    }
+                    BetweenLevelsSelection::Garage => {
+                    }
                 }
             } else {
                 return BetwenLevelsResolution::Pause;

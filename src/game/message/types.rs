@@ -48,4 +48,6 @@ pub enum MenuMessageType {
     UnboundControl(Control),
     ControlBinding(Control),
     NextDelivery,
+    Shop,
+    Garage,
 }
