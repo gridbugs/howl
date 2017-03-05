@@ -92,7 +92,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
                     if let Some(weapon) = weapon_slots.get(direction) {
                         Some((*weapon, direction))
                     } else {
-                        message_log.add(MessageType::EmptyWeaponSlotMessage);
+                        message_log.add_temporary(MessageType::EmptyWeaponSlotMessage);
                         should_clear_log = false;
                         None
                     }
@@ -147,6 +147,10 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>
 }
 
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
+
+    // clear temporary messages from the log
+    input.entity.message_log_borrow_mut().expect("Expected component message_log").add_temporary(MessageType::Empty);
+
     input_source.next_input().and_then(|event| {
         if event == InputEvent::Quit {
             return Some(MetaAction::External(External::Quit));
