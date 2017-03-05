@@ -51,6 +51,16 @@ pub enum ExitReason {
     GameOver(GameOverReason),
     Pause,
     Quit,
+    BetweenLevels,
+}
+
+pub enum BetwenLevelsResolution {
+    Pause,
+    Start,
+}
+
+pub enum BetweenLevelsSelection {
+    NextDelivery,
 }
 
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
@@ -79,6 +89,7 @@ pub struct GameState {
     entity_ids: EntityIdReserver,
     turn_id: u64,
     action_id: ActionId,
+    between_levels: bool,
 }
 
 impl GameState {
@@ -89,6 +100,7 @@ impl GameState {
             entity_ids: EntityIdReserver::new(),
             turn_id: 0,
             action_id: 0,
+            between_levels: false,
         }
     }
 }
@@ -100,30 +112,33 @@ pub struct SerializableGameState {
     entity_ids: SerializableEntityIdReserver,
     turn_id: u64,
     action_id: ActionId,
+    between_levels: bool,
 }
 
 impl From<GameState> for SerializableGameState {
     fn from(game_state: GameState) -> Self {
-        let GameState { levels, global_ids, entity_ids, turn_id, action_id } = game_state;
+        let GameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels } = game_state;
         SerializableGameState {
             levels: SerializableLevelTable::from(levels),
             global_ids: global_ids,
             entity_ids: SerializableEntityIdReserver::from(entity_ids),
             turn_id: turn_id,
             action_id: action_id,
+            between_levels: between_levels,
         }
     }
 }
 
 impl From<SerializableGameState> for GameState {
     fn from(game_state: SerializableGameState) -> Self {
-        let SerializableGameState { levels, global_ids, entity_ids, turn_id, action_id } = game_state;
+        let SerializableGameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels } = game_state;
         GameState {
             levels: LevelTable::from(levels),
             global_ids: global_ids,
             entity_ids: EntityIdReserver::from(entity_ids),
             turn_id: turn_id,
             action_id: action_id,
+            between_levels: between_levels,
         }
     }
 }
@@ -220,26 +235,69 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             Self::install_control_map(&mut game_state, control_map);
 
-            match self.game_loop(&mut game_state)? {
-                ExitReason::Pause => {
-                    current_game_state = Some(game_state);
-                }
-                ExitReason::Quit => {
-                    save_file::save(args.user_path.as_path(), game_state);
-                    return Ok(());
-                }
-                ExitReason::GameOver(reason) => {
-                    match reason {
-                        GameOverReason::PlayerDied => {
-                            self.death_message(&game_state);
-                            self.input_source.next_input();
+            loop {
+                match self.game_loop(&mut game_state)? {
+                    ExitReason::Pause => {
+                        current_game_state = Some(game_state);
+                        break;
+                    }
+                    ExitReason::Quit => {
+                        save_file::save(args.user_path.as_path(), game_state);
+                        return Ok(());
+                    }
+                    ExitReason::GameOver(reason) => {
+                        match reason {
+                            GameOverReason::PlayerDied => {
+                                self.death_message(&game_state);
+                                self.input_source.next_input();
+                            }
+                        }
+                        current_game_state = None;
+                        save_file::delete(args.user_path.as_path());
+                        break;
+                    }
+                    ExitReason::BetweenLevels => {
+                        game_state.between_levels = true;
+                        match self.between_levels_menu(&mut game_state) {
+                            BetwenLevelsResolution::Pause => {
+                                current_game_state = Some(game_state);
+                                break;
+                            }
+                            BetwenLevelsResolution::Start => {
+                                game_state.between_levels = false;
+                            }
                         }
                     }
-                    current_game_state = None;
-                    save_file::delete(args.user_path.as_path());
                 }
             }
+        }
+    }
 
+    fn between_levels_menu(&mut self, game_state: &mut GameState) -> BetwenLevelsResolution {
+        let mut menu = SelectMenu::new();
+        let mut current_menu_state = None;
+        let mut renderer_borrow = self.renderer.borrow_mut();
+        let mut renderer = renderer_borrow.deref_mut();
+
+        menu.push(SelectMenuItem::new(MenuMessageType::NextDelivery, BetweenLevelsSelection::NextDelivery));
+
+        loop {
+            let maybe_selection = SelectMenuOperation::new(
+                renderer,
+                &mut self.input_source,
+                Some(MessageType::Title),
+                &self.language,
+                menu,
+                current_menu_state).run_can_escape();
+
+            if let Some((selection, menu_state)) = maybe_selection {
+                current_menu_state = Some(menu_state.clone());
+                match selection {
+                    BetweenLevelsSelection::NextDelivery => return BetwenLevelsResolution::Start,
+                }
+            } else {
+                return BetwenLevelsResolution::Pause;
+            }
         }
     }
 
@@ -251,6 +309,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn game_loop(&mut self, game_state: &mut GameState) -> GameResult<ExitReason> {
+
+        if game_state.between_levels {
+            return Ok(ExitReason::BetweenLevels);
+        }
+
         loop {
 
             let GlobalIds { pc_id, level_id } = game_state.global_ids.expect("Uninitialised game state");
@@ -301,6 +364,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 }
                 TurnResolution::LevelSwitch { entity_id, exit_id, level_switch } => {
                     self.switch_level(entity_id, exit_id, level_switch, game_state);
+                    return Ok(ExitReason::BetweenLevels);
                 }
                 TurnResolution::GameOver(reason) => {
                     return Ok(ExitReason::GameOver(reason));

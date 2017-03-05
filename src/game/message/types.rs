@@ -47,4 +47,5 @@ pub enum MenuMessageType {
     Control(InputEvent, Control),
     UnboundControl(Control),
     ControlBinding(Control),
+    NextDelivery,
 }

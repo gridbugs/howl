@@ -66,6 +66,9 @@ impl English {
                 message.push(MessagePart::Text(TextMessagePart::Plain(String::from(control))));
                 message.push(MessagePart::plain(": press a key..."));
             }
+            MenuMessageType::NextDelivery => {
+                message.push(MessagePart::plain("Next Delivery"));
+            }
         }
     }
 
