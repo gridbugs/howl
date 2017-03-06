@@ -32,6 +32,14 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
                 }
+                'c' => {
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    let id = ids.new_id();
+                    prototypes::car(g.entity_mut(id), coord);
+                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let ticket = schedule.schedule_turn(id, turn_offset);
+                    g.insert_schedule_ticket(id, ticket);
+                }
                 'Z' => {
                     prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
                     let id = ids.new_id();

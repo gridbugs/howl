@@ -5,4 +5,5 @@ pub enum BehaviourType {
     SimpleNpc,
     AcidAnimate,
     Physics,
+    Car,
 }

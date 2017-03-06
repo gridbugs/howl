@@ -52,3 +52,6 @@ foreground = { x = 7, y = 0 }
 
 [tiles.RailgunSlugHorizontal]
 foreground = { x = 8, y = 0 }
+
+[tiles.Car]
+foreground = { x = 9, y = 0 }

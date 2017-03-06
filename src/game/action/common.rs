@@ -43,6 +43,9 @@ pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocit
 }
 
 pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
+    if let Some(ticket) = entity.schedule_ticket() {
+        action.set_schedule_invalidate(ticket);
+    }
     action.remove_entity(entity);
 }
 

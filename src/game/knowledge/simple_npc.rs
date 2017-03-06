@@ -13,6 +13,7 @@ pub type SimpleNpcKnowledge = GameKnowledge<SimpleNpcKnowledgeLevel>;
 pub struct SimpleNpcKnowledgeCell {
     last_updated: u64,
     solid: bool,
+    acid: bool,
 }
 
 impl SimpleNpcKnowledgeCell {
@@ -20,6 +21,7 @@ impl SimpleNpcKnowledgeCell {
         SimpleNpcKnowledgeCell {
             last_updated: 0,
             solid: false,
+            acid: false,
         }
     }
 
@@ -30,6 +32,7 @@ impl SimpleNpcKnowledgeCell {
             changed = true;
 
             self.solid = world_cell.solid();
+            self.acid = world_cell.acid();
         }
 
         self.last_updated = action_env.id;
@@ -48,6 +51,8 @@ impl TraverseCost for SimpleNpcKnowledgeCell {
     fn traverse_cost(&self) -> Option<f64> {
         if self.solid {
             None
+        } else if self.acid {
+            Some(2.0)
         } else {
             Some(1.0)
         }

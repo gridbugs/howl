@@ -17,11 +17,13 @@ imports = [
 [component.projectile_collider]
 [component.bump_attackable]
 [component.acid_animation]
+[component.acid]
 
 [component.can_run_over]
 [component.can_be_run_over]
 [component.bloodstain_on_death]
 [component.destroy_when_stopped]
+[component.destroy_when_out_of_bounds]
 
 [component.bank]
     type = "usize"

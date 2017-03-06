@@ -71,7 +71,7 @@ pub fn zombie<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_vision_distance(8);
     entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
     entity.insert_path_traverse(PathTraverse::new());
-    entity.insert_turn_time(TURN_DURATION_BASE * 2);
+    entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_enemy();
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(2));
@@ -79,6 +79,33 @@ pub fn zombie<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
     entity.insert_can_be_run_over();
     entity.insert_bloodstain_on_death();
+
+    entity
+}
+
+pub fn car<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+    entity.insert_position(position);
+
+    entity.insert_tile(TileType::Car);
+
+    entity.insert_tile_depth(2);
+    entity.insert_collider();
+    entity.insert_behaviour_state(BehaviourState::new());
+    entity.insert_behaviour_type(BehaviourType::Car);
+    entity.insert_turn_offset(NPC_TURN_OFFSET);
+    entity.insert_vision_distance(20);
+    entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
+    entity.insert_turn_time(TURN_DURATION_BASE);
+    entity.insert_enemy();
+    entity.insert_projectile_collider();
+    entity.insert_hit_points(HitPoints::new(8));
+    entity.insert_bump_attacker(1);
+
+    entity.insert_current_speed(1);
+    entity.insert_max_speed(3);
+    entity.insert_facing(Direction::East);
+
+    entity.insert_destroy_when_out_of_bounds();
 
     entity
 }
@@ -138,6 +165,7 @@ pub fn acid<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) ->
 
     entity.insert_tile(*animation.choose(rng.inner_mut().deref_mut()));
     entity.insert_probabilistic_animation(animation);
+    entity.insert_acid();
     entity.insert_acid_animation();
     entity.insert_tile_depth(0);
     entity.insert_floor();

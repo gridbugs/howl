@@ -4,6 +4,7 @@ use game::behaviour::observation::*;
 use game::behaviour::search::*;
 use game::behaviour::acid_animation::*;
 use game::behaviour::physics::*;
+use game::behaviour::axis::*;
 
 use behaviour::{LeafResolution, CollectionNode};
 
@@ -13,6 +14,7 @@ pub struct BehaviourNodes {
     pub simple_npc: BehaviourNodeIndex,
     pub acid_animate: BehaviourNodeIndex,
     pub physics: BehaviourNodeIndex,
+    pub car: BehaviourNodeIndex,
 }
 
 pub struct BehaviourCtx<K: KnowledgeRenderer> {
@@ -28,6 +30,7 @@ impl BehaviourNodes {
             BehaviourType::SimpleNpc => self.simple_npc,
             BehaviourType::AcidAnimate => self.acid_animate,
             BehaviourType::Physics => self.physics,
+            BehaviourType::Car => self.car,
         }
     }
 }
@@ -52,12 +55,17 @@ impl<K: KnowledgeRenderer> BehaviourCtx<K> {
         let acid_animate_leaf = graph.add_leaf(acid_animate());
         let physics_leaf = graph.add_leaf(physics());
 
+        let car_leaf = graph.add_leaf(car_chace_axis());
+        let car_loop = graph.add_collection(CollectionNode::Forever(car_leaf));
+        let car = graph.add_switch(simple_npc_shadowcast(car_loop));
+
         let nodes = BehaviourNodes {
             null: graph.add_collection(CollectionNode::Forever(null_leaf)),
             player_input: graph.add_collection(CollectionNode::Forever(player_input_leaf)),
             simple_npc: graph.add_collection(CollectionNode::Forever(simple_npc)),
             acid_animate: graph.add_collection(CollectionNode::Forever(acid_animate_leaf)),
             physics: graph.add_collection(CollectionNode::Forever(physics_leaf)),
+            car: graph.add_collection(CollectionNode::Forever(car)),
         };
 
         BehaviourCtx {

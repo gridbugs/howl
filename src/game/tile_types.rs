@@ -1,6 +1,7 @@
 #[derive(Hash, Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TileType {
     Van,
+    Car,
     Zombie,
     Wreck0,
     Wreck1,
@@ -33,6 +34,7 @@ impl TileType {
     pub fn from_str(s: &str) -> Option<Self> {
         let tile = match s {
             "Van" => TileType::Van,
+            "Car" => TileType::Car,
             "Zombie" => TileType::Zombie,
             "Wreck0" => TileType::Wreck0,
             "Wreck1" => TileType::Wreck1,
