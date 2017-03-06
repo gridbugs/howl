@@ -8,3 +8,15 @@ y = 0
 [symbols.Speed]
 x = 1
 y = 0
+
+[symbols.Engine]
+x = 2
+y = 0
+
+[symbols.Tyres]
+x = 3
+y = 0
+
+[symbols.Armour]
+x = 4
+y = 0

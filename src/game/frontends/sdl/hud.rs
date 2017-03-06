@@ -14,6 +14,9 @@ pub type HudResult<T> = result::Result<T, HudError>;
 pub struct Hud {
     pub health: Rect,
     pub speed: Rect,
+    pub engine: Rect,
+    pub tyres: Rect,
+    pub armour: Rect,
 }
 
 impl Hud {
@@ -42,6 +45,9 @@ impl Hud {
         Ok(Hud {
             health: Self::get_rect(symbol_table, "Health", symbol_width, symbol_height)?,
             speed: Self::get_rect(symbol_table, "Speed", symbol_width, symbol_height)?,
+            engine: Self::get_rect(symbol_table, "Engine", symbol_width, symbol_height)?,
+            tyres: Self::get_rect(symbol_table, "Tyres", symbol_width, symbol_height)?,
+            armour: Self::get_rect(symbol_table, "Armour", symbol_width, symbol_height)?,
         })
     }
 }

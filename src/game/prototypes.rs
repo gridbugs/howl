@@ -40,10 +40,11 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
     entity.insert_current_speed(1);
     entity.insert_max_speed(3);
-    entity.insert_redline_speed(3);
-    entity.insert_num_tires(4);
-    entity.insert_max_tires(4);
     entity.insert_facing(Direction::East);
+    entity.insert_redline_speed(3);
+    entity.insert_tyre_health(HitPoints::new(4));
+    entity.insert_engine_health(HitPoints::new(8));
+    entity.insert_armour(1);
 
     entity.insert_inventory(EntitySet::new());
     entity.insert_inventory_capacity(8);

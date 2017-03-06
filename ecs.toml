@@ -57,15 +57,19 @@ imports = [
     type = "usize"
     copy = true
 
+[component.engine_health]
+    type = "HitPoints"
+    copy = true
+
 [component.steering]
     type = "SteerDirection"
     copy = true
 
-[component.num_tires]
-    type = "usize"
+[component.tyre_health]
+    type = "HitPoints"
     copy = true
 
-[component.max_tires]
+[component.armour]
     type = "usize"
     copy = true
 
