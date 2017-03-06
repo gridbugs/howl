@@ -1,24 +1,17 @@
 sudo: required
-
 language: rust
-
 rust:
 - stable
 - beta
 - nightly
-
 os:
 - osx
 - linux
-
 dist: trusty
-
 before_install:
-- "scripts/install.sh"
-
+- scripts/install.sh
 script:
-- "scripts/build.sh"
-
+- scripts/build.sh
 deploy:
   skip_cleanup: true
   provider: s3
@@ -33,4 +26,4 @@ deploy:
   on:
     all_branches: true
     repo: stevebob/apocalypse-post
-    condition: $TRAVIS_RUST_VERSION = stable
+    condition: "$TRAVIS_RUST_VERSION = stable"
