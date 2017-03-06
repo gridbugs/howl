@@ -4,7 +4,8 @@ use game::behaviour::observation::*;
 use game::behaviour::search::*;
 use game::behaviour::acid_animation::*;
 use game::behaviour::physics::*;
-use game::behaviour::axis::*;
+use game::behaviour::car::*;
+use game::behaviour::bike::*;
 
 use behaviour::{LeafResolution, CollectionNode};
 
@@ -15,6 +16,7 @@ pub struct BehaviourNodes {
     pub acid_animate: BehaviourNodeIndex,
     pub physics: BehaviourNodeIndex,
     pub car: BehaviourNodeIndex,
+    pub bike: BehaviourNodeIndex,
 }
 
 pub struct BehaviourCtx<K: KnowledgeRenderer> {
@@ -31,6 +33,7 @@ impl BehaviourNodes {
             BehaviourType::AcidAnimate => self.acid_animate,
             BehaviourType::Physics => self.physics,
             BehaviourType::Car => self.car,
+            BehaviourType::Bike => self.bike,
         }
     }
 }
@@ -55,9 +58,13 @@ impl<K: KnowledgeRenderer> BehaviourCtx<K> {
         let acid_animate_leaf = graph.add_leaf(acid_animate());
         let physics_leaf = graph.add_leaf(physics());
 
-        let car_leaf = graph.add_leaf(car_chace_axis());
+        let car_leaf = graph.add_leaf(car_chace());
         let car_loop = graph.add_collection(CollectionNode::Forever(car_leaf));
         let car = graph.add_switch(simple_npc_shadowcast(car_loop));
+
+        let bike_leaf = graph.add_leaf(bike_chace());
+        let bike_loop = graph.add_collection(CollectionNode::Forever(bike_leaf));
+        let bike = graph.add_switch(simple_npc_shadowcast(bike_loop));
 
         let nodes = BehaviourNodes {
             null: graph.add_collection(CollectionNode::Forever(null_leaf)),
@@ -66,6 +73,7 @@ impl<K: KnowledgeRenderer> BehaviourCtx<K> {
             acid_animate: graph.add_collection(CollectionNode::Forever(acid_animate_leaf)),
             physics: graph.add_collection(CollectionNode::Forever(physics_leaf)),
             car: graph.add_collection(CollectionNode::Forever(car)),
+            bike: graph.add_collection(CollectionNode::Forever(bike)),
         };
 
         BehaviourCtx {

@@ -37,6 +37,10 @@ imports = [
     type = "GunType"
     copy = true
 
+[component.gun_range]
+    type = "usize"
+    copy = true
+
 [component.weapon_slots]
     type = "DirectionTable<EntityId>"
     container = "RefCell"
@@ -51,6 +55,10 @@ imports = [
 
 [component.redline_speed]
     type = "usize"
+    copy = true
+
+[component.steering]
+    type = "SteerDirection"
     copy = true
 
 [component.num_tires]
@@ -206,7 +214,6 @@ imports = [
 [action_property.no_commit]
 [action_property.player_died]
 [action_property.physics]
-[action_property.steer]
 [action_property.realtime_delay]
 [action_property.start_realtime_move]
 [action_property.then]

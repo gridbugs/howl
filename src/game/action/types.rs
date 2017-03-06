@@ -39,6 +39,7 @@ pub enum ActionArgs {
     AcidAnimate,
     Physics,
     Steer(EntityId, SteerDirection),
+    RemoveSteer(EntityId),
     ChangeSpeed(EntityId, ChangeSpeed),
     BecomeBloodstain(EntityId),
     FireGun {
@@ -101,6 +102,9 @@ impl ActionArgs {
             }
             ActionArgs::Steer(entity_id, direction) => {
                 actions::steer(action, ecs.entity(entity_id), direction);
+            }
+            ActionArgs::RemoveSteer(entity_id) => {
+                actions::remove_steer(action, entity_id);
             }
             ActionArgs::ChangeSpeed(entity_id, change) => {
                 actions::change_speed(action, ecs.entity(entity_id), change);

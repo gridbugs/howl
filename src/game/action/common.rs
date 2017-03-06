@@ -104,10 +104,11 @@ pub fn physics(action: &mut EcsAction) {
 }
 
 pub fn steer(action: &mut EcsAction, entity: EntityRef, direction: SteerDirection) {
-    let current_position = entity.position().expect("Entity missing position");
-    let new_position = current_position + Direction::from(direction).vector();
-    action.insert_position(entity.id(), new_position);
-    action.set_steer();
+    action.insert_steering(entity.id(), direction);
+}
+
+pub fn remove_steer(action: &mut EcsAction, entity_id: EntityId) {
+    action.remove_steering(entity_id);
 }
 
 pub fn change_speed(action: &mut EcsAction, entity: EntityRef, change: ChangeSpeed) {
@@ -184,22 +185,21 @@ pub fn fire_burst<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: Entit
 
 pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, ids: &EntityIdReserver, r: &mut R) {
     let gun_type = gun.gun_type().expect("Missing component gun_type");
+    let range = gun.gun_range().expect("Missing component gun_range");
     let shooter_position = shooter.position().expect("Missing component position");
     match gun_type {
         GunType::Pistol => {
             const SPEED_CELLS_PER_SEC: f64 = 100.0;
-            const RANGE: usize = 20;
             let mut velocity = RealtimeVelocity::new(direction.vector(), SPEED_CELLS_PER_SEC);
             let bullet_position = shooter_position + velocity.step_in_place();
-            prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, RANGE);
+            prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, range);
             action.set_action_time_ms(velocity.ms_per_cell());
         }
         GunType::Shotgun => {
-            const SPEED_CELLS_PER_SEC: f64 = 100.0;
-            const RANGE: usize = 6;
-            const NUM_SHOTS: usize = 10;
-            const SPREAD: usize = 3;
-            let ideal_vector = direction.vector() * RANGE as isize;
+            const SPEED_CELLS_PER_SEC: f64 = 50.0;
+            const NUM_SHOTS: usize = 6;
+            const SPREAD: usize = 2;
+            let ideal_vector = direction.vector() * range as isize;
             for _ in 0..NUM_SHOTS {
                 let x_spread = (r.gen::<usize>() % (SPREAD * 2)) as isize - SPREAD as isize;
                 let y_spread = (r.gen::<usize>() % (SPREAD * 2)) as isize - SPREAD as isize;
@@ -208,7 +208,7 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
                 let mut velocity = RealtimeVelocity::new(vector, SPEED_CELLS_PER_SEC);
 
                 let bullet_position = shooter_position + velocity.step_in_place();
-                prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, RANGE);
+                prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, range);
                 action.set_action_time_ms(velocity.ms_per_cell());
             }
         }
@@ -220,8 +220,8 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
                 remaining: 6,
                 speed: 100.0,
                 period: 20,
-                spread: 2,
-                range: 10,
+                spread: 1,
+                range: range,
                 bullet_type: BulletType::Bullet,
             }, 0));
         }
@@ -234,7 +234,7 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
                 speed: 200.0,
                 period: 1,
                 spread: 0,
-                range: 50,
+                range: range,
                 bullet_type: BulletType::RailgunSlug,
             }, 0));
         }

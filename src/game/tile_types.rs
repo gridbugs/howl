@@ -2,6 +2,7 @@
 pub enum TileType {
     Van,
     Car,
+    Bike,
     Zombie,
     Wreck0,
     Wreck1,
@@ -35,6 +36,7 @@ impl TileType {
         let tile = match s {
             "Van" => TileType::Van,
             "Car" => TileType::Car,
+            "Bike" => TileType::Bike,
             "Zombie" => TileType::Zombie,
             "Wreck0" => TileType::Wreck0,
             "Wreck1" => TileType::Wreck1,

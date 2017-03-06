@@ -8,10 +8,8 @@ pub fn realtime_velocity_start(env: RuleEnv, action: &EcsAction, reactions: &mut
     }
 
     for (entity_id, velocity) in action.realtime_velocity_positive_iter(env.ecs) {
-        if env.ecs.realtime_velocity(entity_id).is_none() {
-            let delay = velocity.ms_per_cell();
-            reactions.push(Reaction::new(ActionArgs::RealtimeVelocityMove(entity_id, *velocity), delay));
-        }
+        let delay = velocity.ms_per_cell();
+        reactions.push(Reaction::new(ActionArgs::RealtimeVelocityMove(entity_id, *velocity), delay));
     }
 
     RULE_ACCEPT

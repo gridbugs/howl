@@ -10,9 +10,17 @@ pub fn bump_attack(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reactio
             let victim = env.ecs.entity(victim_id);
             let attacker = env.ecs.entity(attacker_id);
 
+            if attacker.contains_can_run_over() && victim.contains_can_be_run_over() {
+                // they are run over instead
+                continue;
+            }
+
             if let Some(damage) = attacker.bump_attacker() {
                 if victim.contains_hit_points() {
                     reactions.push(Reaction::new(ActionArgs::Damage(victim_id, damage), 0));
+                }
+                if attacker.realtime_velocity().is_some() {
+                    reactions.push(Reaction::new(ActionArgs::RealtimeVelocityStop(attacker_id), 0));
                 }
                 return RULE_REJECT;
             }

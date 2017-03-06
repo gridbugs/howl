@@ -254,6 +254,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         while let Some(action_event) = self.action_schedule.next() {
 
+
             // render the scene if time has passed
             if action_event.time_delta != 0 {
                 if self.pc_render(action_description.as_ref(), Some(ForceRender::IgnoreShouldRender)) && realtime_delay {

@@ -98,17 +98,52 @@ pub fn car<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_turn_time(TURN_DURATION_BASE);
     entity.insert_enemy();
     entity.insert_projectile_collider();
-    entity.insert_hit_points(HitPoints::new(8));
+    entity.insert_hit_points(HitPoints::new(5));
     entity.insert_bump_attacker(1);
 
     entity.insert_current_speed(1);
-    entity.insert_max_speed(3);
+    entity.insert_max_speed(4);
     entity.insert_facing(Direction::East);
 
     entity.insert_destroy_when_out_of_bounds();
 
+    entity.insert_weapon_slots(DirectionTable::new());
+    entity.insert_can_run_over();
+
     entity
 }
+
+pub fn bike<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+    entity.insert_position(position);
+
+    entity.insert_tile(TileType::Bike);
+
+    entity.insert_tile_depth(2);
+    entity.insert_collider();
+    entity.insert_behaviour_state(BehaviourState::new());
+    entity.insert_behaviour_type(BehaviourType::Bike);
+    entity.insert_turn_offset(NPC_TURN_OFFSET);
+    entity.insert_vision_distance(20);
+    entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
+    entity.insert_turn_time(TURN_DURATION_BASE);
+    entity.insert_enemy();
+    entity.insert_projectile_collider();
+    entity.insert_hit_points(HitPoints::new(3));
+    entity.insert_bump_attacker(1);
+
+    entity.insert_current_speed(1);
+    entity.insert_max_speed(4);
+    entity.insert_facing(Direction::East);
+
+    entity.insert_destroy_when_out_of_bounds();
+
+    entity.insert_weapon_slots(DirectionTable::new());
+    entity.insert_can_run_over();
+
+    entity
+}
+
+
 
 pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: RealtimeVelocity, range: usize) -> E {
 
@@ -222,6 +257,7 @@ pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::Pistol);
     entity.insert_name(NameMessageType::Pistol);
     entity.insert_description(DescriptionMessageType::Pistol);
+    entity.insert_gun_range(8);
 
     entity
 }
@@ -231,6 +267,7 @@ pub fn shotgun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::Shotgun);
     entity.insert_name(NameMessageType::Shotgun);
     entity.insert_description(DescriptionMessageType::Shotgun);
+    entity.insert_gun_range(4);
 
     entity
 }
@@ -240,6 +277,7 @@ pub fn machine_gun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::MachineGun);
     entity.insert_name(NameMessageType::MachineGun);
     entity.insert_description(DescriptionMessageType::MachineGun);
+    entity.insert_gun_range(6);
 
     entity
 }
@@ -249,6 +287,7 @@ pub fn railgun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::Railgun);
     entity.insert_name(NameMessageType::Railgun);
     entity.insert_description(DescriptionMessageType::Railgun);
+    entity.insert_gun_range(20);
 
     entity
 }

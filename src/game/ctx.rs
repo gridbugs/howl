@@ -695,6 +695,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 let level = game_state.levels.level_mut(level_id);
                 if let Some(turn_event) = level.turn_schedule.next() {
 
+
                     TurnEnv {
                         turn_id: game_state.turn_id,
                         action_id: &mut game_state.action_id,

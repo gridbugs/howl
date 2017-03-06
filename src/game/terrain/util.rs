@@ -2,6 +2,7 @@ use ecs::*;
 use game::*;
 use game::data::*;
 use coord::Coord;
+use direction::Direction;
 
 pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                                                   level_switch: Option<LevelSwitch>,
@@ -39,6 +40,28 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
                     let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
+
+
+                    let gun_id = ids.new_id();
+                    prototypes::shotgun(g.entity_mut(gun_id));
+                    g.weapon_slots_mut(id).unwrap().insert(Direction::North, gun_id);
+                    g.weapon_slots_mut(id).unwrap().insert(Direction::South, gun_id);
+                }
+                'b' => {
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    let id = ids.new_id();
+                    prototypes::bike(g.entity_mut(id), coord);
+                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let ticket = schedule.schedule_turn(id, turn_offset);
+                    g.insert_schedule_ticket(id, ticket);
+
+
+                    let gun_id = ids.new_id();
+                    prototypes::pistol(g.entity_mut(gun_id));
+                    g.weapon_slots_mut(id).unwrap().insert(Direction::North, gun_id);
+                    g.weapon_slots_mut(id).unwrap().insert(Direction::South, gun_id);
+                    g.weapon_slots_mut(id).unwrap().insert(Direction::East, gun_id);
+                    g.weapon_slots_mut(id).unwrap().insert(Direction::West, gun_id);
                 }
                 'Z' => {
                     prototypes::road(g.entity_mut(ids.new_id()), coord, rng);

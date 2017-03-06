@@ -8,7 +8,11 @@ pub fn enemy_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Rea
             continue;
         }
 
-        if env.spatial_hash.get(position).enemy() {
+        if let Some(enemy_id) = env.spatial_hash.get(position).any_enemy() {
+            if env.ecs.contains_can_run_over(entity_id) && env.ecs.contains_can_be_run_over(enemy_id) {
+                continue;
+            }
+
             reactions.push(Reaction::new(ActionArgs::Null, 0));
             return RULE_REJECT;
         }

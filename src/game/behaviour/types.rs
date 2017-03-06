@@ -6,4 +6,5 @@ pub enum BehaviourType {
     AcidAnimate,
     Physics,
     Car,
+    Bike,
 }

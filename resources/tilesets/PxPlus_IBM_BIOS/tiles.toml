@@ -55,3 +55,6 @@ foreground = { x = 8, y = 0 }
 
 [tiles.Car]
 foreground = { x = 9, y = 0 }
+
+[tiles.Bike]
+foreground = { x = 10, y = 0 }

@@ -39,6 +39,8 @@ impl SimpleNpcKnowledgeCell {
 
         changed
     }
+
+    pub fn solid(&self) -> bool { self.solid }
 }
 
 impl Default for SimpleNpcKnowledgeCell {
@@ -82,6 +84,13 @@ impl SimpleNpcKnowledgeLevel {
 
     pub fn contains_target(&self, coord: Coord) -> bool {
         self.targets.contains(&coord)
+    }
+
+    pub fn any_target(&self) -> Option<Coord> {
+        for target in self.targets.iter() {
+            return Some(*target);
+        }
+        None
     }
 }
 
