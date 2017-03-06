@@ -5,7 +5,7 @@ use direction::Direction;
 use coord::Coord;
 
 const X_RANGE: isize = 2;
-const Y_RANGE: isize = 6;
+const Y_RANGE: isize = 3;
 
 pub fn car_chace<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {

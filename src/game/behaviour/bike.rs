@@ -4,7 +4,7 @@ use behaviour::LeafResolution;
 use direction::Direction;
 use coord::Coord;
 
-const RANGE: isize = 8;
+const RANGE: isize = 5;
 
 pub fn bike_chace<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {

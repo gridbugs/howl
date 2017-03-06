@@ -21,7 +21,7 @@ use coord::Coord;
 use colour::{Rgb24, Rgba32};
 
 const RENDERING_FAILED_MSG: &'static str = "Rendering failed";
-const MESSAGE_LOG_NUM_LINES: usize = 4;
+const MESSAGE_LOG_NUM_LINES: usize = 1;
 const MESSAGE_LOG_LINE_HEIGHT_PX: usize = 16;
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MESSAGE_LOG_PADDING_PX: usize = 4;
@@ -43,6 +43,9 @@ const HEALTH_BAR_HEIGHT_PX: usize = 2;
 
 const MENU_SELECTED_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MENU_DESELECTED_COLOUR: Rgb24 = Rgb24 { red: 127, green: 127, blue: 127 };
+
+const BOTTOM_PADDING_PX: usize = 10;
+const LEFT_PADDING_PX: usize = 10;
 
 fn rgb24_to_sdl_colour(rgb24: Rgb24) -> Color {
     Color::RGB(rgb24.red, rgb24.green, rgb24.blue)
@@ -119,6 +122,7 @@ pub struct SdlKnowledgeRendererInternal<'a, 'b> {
     hud_position: Coord,
     hud_rect: Rect,
     scale: usize,
+    zoom: usize,
 }
 
 pub struct SdlKnowledgeRenderer<'a, 'b> {
@@ -158,11 +162,12 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
         hud_path: P,
         hud: Hud,
         font: Font<'a, 'b>,
-        scale: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
+        scale: usize,
+        zoom: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
 
 
-        let tile_width_px = tileset.tile_width() * scale;
-        let tile_height_px = tileset.tile_height() * scale;
+        let tile_width_px = tileset.tile_width() * scale * zoom;
+        let tile_height_px = tileset.tile_height() * scale * zoom;
 
         let game_width_px = game_width * tile_width_px;
         let game_height_px = game_height * tile_height_px;
@@ -177,7 +182,7 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
         let hud_height_px = HUD_TOTAL_HEIGHT_PX * scale;
 
         let total_width_px = game_width_px;
-        let total_height_px = game_height_px + message_log_height_px + hud_height_px;
+        let total_height_px = game_height_px + message_log_height_px + hud_height_px + BOTTOM_PADDING_PX;
 
         let window = video.window(title, total_width_px as u32, total_height_px as u32)
             .build()
@@ -224,6 +229,7 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
             hud: hud,
             hud_rect: Rect::new(hud_position.x as i32, hud_position.y as i32, hud_width_px as u32, hud_height_px as u32),
             scale: scale,
+            zoom: zoom,
         })
     }
 
@@ -240,15 +246,15 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
     }
 
     fn tile_width_px(&self) -> usize {
-        self.tileset.tile_width() * self.scale
+        self.tileset.tile_width() * self.scale * self.zoom
     }
 
     fn tile_height_px(&self) -> usize {
-        self.tileset.tile_height() * self.scale
+        self.tileset.tile_height() * self.scale * self.zoom
     }
 
     fn health_bar_height_px(&self) -> usize {
-        HEALTH_BAR_HEIGHT_PX * self.scale
+        HEALTH_BAR_HEIGHT_PX * self.scale * self.zoom
     }
 
     fn scroll_bar_width_px(&self) -> usize {
@@ -519,10 +525,11 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
         hud_path: Q,
         hud: Hud,
         font: Font<'a, 'b>,
-        scale: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
+        scale: usize,
+        zoom: usize) -> result::Result<Self, SdlKnowledgeRendererError> {
 
         let renderer = SdlKnowledgeRendererInternal::new(video, title, game_width, game_height,
-                                                         tileset, hud_path, hud, font, scale)?;
+                                                         tileset, hud_path, hud, font, scale, zoom)?;
 
         let buffers = RendererBuffers::new(game_width, game_height, MESSAGE_LOG_NUM_LINES);
 
@@ -537,7 +544,7 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
 
     fn draw_message_log_internal(&mut self) {
         self.renderer.clear_message_log();
-        let mut cursor = self.renderer.message_log_position + Coord::new(MESSAGE_LOG_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
+        let mut cursor = self.renderer.message_log_position + Coord::new(LEFT_PADDING_PX as isize, MESSAGE_LOG_PADDING_PX as isize);
 
         for line in &self.buffers.message_log {
             cursor = self.renderer.render_message(line, cursor);
@@ -637,7 +644,7 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
     fn draw_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
         self.renderer.clear_hud();
         let sdl_colour = rgb24_to_sdl_colour(HUD_TEXT_COLOUR);
-        let mut cursor = HUD_TOP_PADDING_PX;
+        let mut cursor = LEFT_PADDING_PX;
 
         let health_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
                                     (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,

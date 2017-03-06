@@ -1,7 +1,7 @@
 use game::*;
 
-pub const GAME_WIDTH: usize = 41;
-pub const GAME_HEIGHT: usize = 26;
+pub const GAME_WIDTH: usize = 20;
+pub const GAME_HEIGHT: usize = 15;
 
 pub fn launch(args: Arguments) -> ExternalResult<()> {
 

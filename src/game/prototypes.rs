@@ -257,7 +257,7 @@ pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::Pistol);
     entity.insert_name(NameMessageType::Pistol);
     entity.insert_description(DescriptionMessageType::Pistol);
-    entity.insert_gun_range(8);
+    entity.insert_gun_range(6);
 
     entity
 }
@@ -267,7 +267,7 @@ pub fn shotgun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::Shotgun);
     entity.insert_name(NameMessageType::Shotgun);
     entity.insert_description(DescriptionMessageType::Shotgun);
-    entity.insert_gun_range(4);
+    entity.insert_gun_range(3);
 
     entity
 }
@@ -277,7 +277,7 @@ pub fn machine_gun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::MachineGun);
     entity.insert_name(NameMessageType::MachineGun);
     entity.insert_description(DescriptionMessageType::MachineGun);
-    entity.insert_gun_range(6);
+    entity.insert_gun_range(5);
 
     entity
 }
@@ -287,7 +287,7 @@ pub fn railgun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_gun_type(GunType::Railgun);
     entity.insert_name(NameMessageType::Railgun);
     entity.insert_description(DescriptionMessageType::Railgun);
-    entity.insert_gun_range(20);
+    entity.insert_gun_range(10);
 
     entity
 }

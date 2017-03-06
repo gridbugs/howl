@@ -10,6 +10,8 @@ use game::frontends::sdl::SdlKnowledgeRendererError;
 
 use debug;
 
+const ZOOM: usize = 3;
+
 const TILESET_NAME: &'static str = "PxPlus_IBM_BIOS";
 const FONT_NAME: &'static str = "PxPlus_IBM_BIOS";
 const FONT_SIZE: u16 = 48;
@@ -65,7 +67,8 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         hud_path,
         hud,
         font,
-        scale) {
+        scale,
+        ZOOM) {
         Ok(r) => r,
         Err(SdlKnowledgeRendererError::WindowCreationFailure) => return Err("Failed to create window".to_string()),
         Err(SdlKnowledgeRendererError::RendererInitialisationFailure) => return Err("Failed to initialise renderer".to_string()),
