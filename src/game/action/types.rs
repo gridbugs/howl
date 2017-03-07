@@ -61,6 +61,7 @@ pub enum ActionArgs {
     },
     Bump(EntityId, EntityId),
     AcidDamage(EntityId),
+    TakeLetter(EntityId, EntityId),
 }
 
 impl ActionArgs {
@@ -129,6 +130,9 @@ impl ActionArgs {
             }
             ActionArgs::AcidDamage(entity_id) => {
                 actions::acid_damage(action, ecs.entity(entity_id), r);
+            }
+            ActionArgs::TakeLetter(entity_id, letter_id) => {
+                actions::take_letter(action, ecs.entity(entity_id), ecs.entity(letter_id));
             }
         }
     }

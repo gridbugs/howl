@@ -327,3 +327,9 @@ pub fn acid_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, rng: &mut 
         action.insert_tyre_health(entity.id(), tyres);
     }
 }
+
+pub fn take_letter(action: &mut EcsAction, entity: EntityRef, letter: EntityRef) {
+    let letter_count = entity.letter_count().expect("Entity missing letter_count");
+    action.insert_letter_count(entity.id(), letter_count + 1);
+    action.remove_entity(letter);
+}

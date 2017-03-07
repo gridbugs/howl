@@ -49,6 +49,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
     entity.insert_inventory(EntitySet::new());
     entity.insert_inventory_capacity(8);
+    entity.insert_letter_count(0);
 
     entity
 }
@@ -318,6 +319,7 @@ pub fn letter<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Letter);
     entity.insert_tile_depth(1);
+    entity.insert_letter();
 
     entity
 }
@@ -325,6 +327,14 @@ pub fn letter<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 pub fn barrel<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Barrel);
+    entity.insert_tile_depth(1);
+
+    entity
+}
+
+pub fn explosion<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+    entity.insert_position(position);
+    entity.insert_tile(TileType::Explosion);
     entity.insert_tile_depth(1);
 
     entity

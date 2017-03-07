@@ -20,3 +20,7 @@ y = 0
 [symbols.Armour]
 x = 4
 y = 0
+
+[symbols.Letter]
+x = 5
+y = 0

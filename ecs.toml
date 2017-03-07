@@ -27,6 +27,11 @@ imports = [
 [component.health_bar]
 [component.complex_damage]
 [component.bullet]
+[component.letter]
+
+[component.letter_count]
+    type = "usize"
+    copy = true
 
 [component.shooter_id]
     type = "EntityId"

@@ -18,6 +18,7 @@ pub enum TileType {
     RailgunSlugVertical,
     Letter,
     Barrel,
+    Explosion,
 }
 
 impl TileType {
@@ -27,7 +28,8 @@ impl TileType {
             TileType::Dirt0 |
             TileType::Dirt1 |
             TileType::Acid0 |
-            TileType::Acid1 => true,
+            TileType::Acid1 |
+            TileType::Explosion => true,
             _ => false,
         }
     }
@@ -54,6 +56,7 @@ impl TileType {
             "RailgunSlugHorizontal" => TileType::RailgunSlugHorizontal,
             "Letter" => TileType::Letter,
             "Barrel" => TileType::Barrel,
+            "Explosion" => TileType::Explosion,
             _ => return None,
         };
 

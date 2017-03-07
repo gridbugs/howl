@@ -174,6 +174,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         } else {
             rules::bounds(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::letter(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::acid(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::run_over(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;

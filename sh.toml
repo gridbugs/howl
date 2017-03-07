@@ -10,6 +10,9 @@
 [field.acid]
     type = "count_bool"
 
+[field.letter]
+    type = "any"
+
 [field.enemy]
     type = "any"
 

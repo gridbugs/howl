@@ -699,7 +699,12 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
         let armour = entity.armour().expect("Entity missing armour");
         let armour_text = format!("{}", armour);
         let armour_symbol = self.renderer.hud.armour;
-        self.draw_hud_component(armour_symbol, armour_text, cursor);
+        cursor = self.draw_hud_component(armour_symbol, armour_text, cursor);
+
+        let letters = entity.letter_count().expect("Entity missing armour");
+        let letters_text = format!("{}", letters);
+        let letters_symbol = self.renderer.hud.letter;
+        self.draw_hud_component(letters_symbol, letters_text, cursor);
     }
 
     fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState, language: &Box<Language>) {

@@ -17,6 +17,7 @@ pub struct Hud {
     pub engine: Rect,
     pub tyres: Rect,
     pub armour: Rect,
+    pub letter: Rect,
 }
 
 impl Hud {
@@ -48,6 +49,7 @@ impl Hud {
             engine: Self::get_rect(symbol_table, "Engine", symbol_width, symbol_height)?,
             tyres: Self::get_rect(symbol_table, "Tyres", symbol_width, symbol_height)?,
             armour: Self::get_rect(symbol_table, "Armour", symbol_width, symbol_height)?,
+            letter: Self::get_rect(symbol_table, "Letter", symbol_width, symbol_height)?,
         })
     }
 }

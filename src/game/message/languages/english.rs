@@ -91,7 +91,7 @@ impl English {
                 message.push(MessagePart::plain("You're already going at your top speed."));
             }
             ActionMessageType::TyreAcidDamage => {
-                message.push(MessagePart::plain("A tyre disolves in the acid."));
+                message.push(MessagePart::plain("A tyre dissolves in the acid."));
             }
         }
     }
