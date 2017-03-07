@@ -37,8 +37,8 @@ const HUD_SPEED_LEN: usize = 3;
 const SCROLL_BAR_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const SCROLL_BAR_WIDTH_PX: usize = 16;
 
-const HEALTH_BAR_GREEN: Rgba32 = Rgba32 { red: 0, green: 255, blue: 0, alpha: 255 };
-const HEALTH_BAR_RED: Rgba32 = Rgba32 { red: 255, green: 0, blue: 0, alpha: 255 };
+const HEALTH_BAR_GREEN: Rgba32 = Rgba32 { red: 0, green: 127, blue: 0, alpha: 255 };
+const HEALTH_BAR_RED: Rgba32 = Rgba32 { red: 127, green: 0, blue: 0, alpha: 255 };
 const HEALTH_BAR_HEIGHT_PX: usize = 2;
 
 const MENU_SELECTED_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
