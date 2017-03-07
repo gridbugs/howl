@@ -53,7 +53,8 @@ impl<K: KnowledgeRenderer> BehaviourCtx<K> {
                                                                        simple_npc_update_path_leaf,
                                                                        follow_path_loop]));
 
-        let simple_npc = graph.add_switch(simple_npc_shadowcast(simple_npc_loop));
+        let simple_npc_a = graph.add_switch(simple_npc_coherence(simple_npc_loop));
+        let simple_npc = graph.add_switch(simple_npc_shadowcast(simple_npc_a));
 
         let acid_animate_leaf = graph.add_leaf(acid_animate());
         let physics_leaf = graph.add_leaf(physics());

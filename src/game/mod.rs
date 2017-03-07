@@ -25,6 +25,7 @@ mod menu;
 mod config;
 mod renderer_buffers;
 mod control_spec;
+mod entity;
 
 pub use self::knowledge::*;
 pub use self::behaviour::*;
@@ -52,6 +53,7 @@ pub use self::menu::*;
 pub use self::config::*;
 pub use self::renderer_buffers::*;
 pub use self::control_spec::*;
+pub use self::entity::*;
 
 pub mod data;
 pub mod prototypes;

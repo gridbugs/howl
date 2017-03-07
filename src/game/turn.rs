@@ -96,7 +96,7 @@ impl<'game> ActionEnv<'game> {
 impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer> {
     pub fn turn(&mut self) -> GameResult<TurnResolution> {
 
-        self.pc_render(None, Some(ForceRender::IgnoreChange));
+        self.pc_render(Some(ForceRender::IgnoreChange));
 
         let resolution = self.take_turn()?;
 
@@ -174,6 +174,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         } else {
             rules::bounds(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::acid(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::run_over(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
@@ -198,7 +199,31 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         self.ecs.commit(self.ecs_action);
     }
 
-    fn pc_render(&mut self, action_description: Option<&ActionDescription>, force: Option<ForceRender>) -> bool {
+    fn add_description(&mut self, action_description: &ActionDescription) {
+
+        let entity = self.ecs.entity(self.pc_id);
+
+        let mut knowledge = entity.drawable_knowledge_borrow_mut()
+            .expect("PC missing drawable_knowledge");
+
+        let level_knowledge = knowledge.level_mut_or_insert_size(self.level_id,
+                                                                 self.spatial_hash.width(),
+                                                                 self.spatial_hash.height());
+        let position = entity.position().expect("PC missing position");
+        let vision_distance = entity.vision_distance().expect("PC missing vision_distance");
+
+        let mut message_log = entity.message_log_borrow_mut().expect("PC missing message_log");
+
+        let action_env = ActionEnv::new(self.ecs, *self.action_id);
+
+        self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env);
+
+        if level_knowledge.can_see(action_description.coord, action_env) {
+            message_log.add(MessageType::Action(action_description.message));
+        }
+    }
+
+    fn pc_render(&mut self, force: Option<ForceRender>) -> bool {
 
         let entity = self.ecs.entity(self.pc_id);
 
@@ -214,19 +239,12 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                                                                  self.spatial_hash.height());
         let position = entity.position().expect("PC missing position");
         let vision_distance = entity.vision_distance().expect("PC missing vision_distance");
-        let mut message_log = entity.message_log_borrow_mut().expect("PC missing message_log");
+        let message_log = entity.message_log_borrow().expect("PC missing message_log");
 
 
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
 
-        let mut changed = self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env);
-
-        if let Some(action_description) = action_description {
-            if level_knowledge.can_see(action_description.coord, action_env) {
-                message_log.add(MessageType::Action(action_description.message));
-                changed = true;
-            }
-        }
+        let changed = self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env);
 
         if force == Some(ForceRender::IgnoreChange) || changed {
             let mut renderer = self.renderer.borrow_mut();
@@ -254,10 +272,11 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         while let Some(action_event) = self.action_schedule.next() {
 
+            action_description.as_ref().map(|d| self.add_description(d));
 
             // render the scene if time has passed
             if action_event.time_delta != 0 {
-                if self.pc_render(action_description.as_ref(), Some(ForceRender::IgnoreShouldRender)) && realtime_delay {
+                if self.pc_render(Some(ForceRender::IgnoreShouldRender)) && realtime_delay {
                     // if the change in scene was visible, add a delay
                     thread::sleep(Duration::from_millis(action_event.time_delta));
                 }
@@ -276,6 +295,8 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 match self.check_rules_wrapper() {
                     RuleResolution::Accept => {
 
+                        action_description = self.ecs_action.clear_action_description();
+
                         if self.ecs_action.contains_no_commit() {
                             self.ecs_action.clear();
                             break;
@@ -291,7 +312,6 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                         if action_time != 0 {
                             realtime_delay = true;
                         }
-                        action_description = self.ecs_action.clear_action_description();
 
                         if let Some(level_switch_action) = self.ecs_action.level_switch_action() {
                             level_switch = Some(level_switch_action);
@@ -327,16 +347,18 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         }
 
         if let Some(game_over_reason) = game_over_reason {
-            self.pc_render(None, Some(ForceRender::IgnoreShouldRender));
+            self.pc_render(Some(ForceRender::IgnoreShouldRender));
             return Ok(Some(CommitResolution::GameOver(game_over_reason)));
+        }
+
+
+        if let Some(ref action_description) = action_description {
+            self.add_description(action_description);
+            self.pc_render(None);
         }
 
         if first {
             return Ok(None);
-        }
-
-        if action_description.is_some() {
-            self.pc_render(action_description.as_ref(), None);
         }
 
         if let Some(level_switch) = level_switch {

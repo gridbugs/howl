@@ -35,6 +35,7 @@ pub enum ActionArgs {
     TryLevelSwitch(EntityId),
     ProjectileCollision(ProjectileCollision),
     Damage(EntityId, usize),
+    ComplexDamage(EntityId, usize),
     Die(EntityId),
     AcidAnimate,
     Physics,
@@ -57,7 +58,9 @@ pub enum ActionArgs {
         spread: usize,
         range: usize,
         bullet_type: BulletType,
-    }
+    },
+    Bump(EntityId, EntityId),
+    AcidDamage(EntityId),
 }
 
 impl ActionArgs {
@@ -83,7 +86,7 @@ impl ActionArgs {
                 actions::level_switch(action, entity_id, exit_id, level_switch);
             }
             ActionArgs::ProjectileCollision(projectile_collision) => {
-                actions::projectile_collision(action, projectile_collision);
+                actions::projectile_collision(action, projectile_collision, ecs);
             }
             ActionArgs::Damage(entity_id, amount) => {
                 actions::damage(action, ecs.entity(entity_id), amount);
@@ -101,7 +104,7 @@ impl ActionArgs {
                 actions::physics(action);
             }
             ActionArgs::Steer(entity_id, direction) => {
-                actions::steer(action, ecs.entity(entity_id), direction);
+                actions::steer(action, ecs.entity(entity_id), direction, r);
             }
             ActionArgs::RemoveSteer(entity_id) => {
                 actions::remove_steer(action, entity_id);
@@ -117,6 +120,15 @@ impl ActionArgs {
             }
             ActionArgs::FireBurst { gun_id, shooter_id, direction, remaining, speed, period, spread, range, bullet_type } => {
                 actions::fire_burst(action, ecs.entity(gun_id), ecs.entity(shooter_id), direction, remaining, speed, period, spread, range, bullet_type, entity_ids, r);
+            }
+            ActionArgs::ComplexDamage(entity_id, damage) => {
+                actions::complex_damage(action, ecs.entity(entity_id), damage, r);
+            }
+            ActionArgs::Bump(victim_id, attacker_id) => {
+                actions::bump(action, ecs.entity(victim_id), ecs.entity(attacker_id));
+            }
+            ActionArgs::AcidDamage(entity_id) => {
+                actions::acid_damage(action, ecs.entity(entity_id), r);
             }
         }
     }

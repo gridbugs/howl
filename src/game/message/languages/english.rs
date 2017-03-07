@@ -37,16 +37,61 @@ impl English {
             NameMessageType::Railgun => {
                 message.push(MessagePart::plain("Railgun"));
             }
+            NameMessageType::Car => {
+                message.push(MessagePart::plain("car"));
+            }
+            NameMessageType::Bike => {
+                message.push(MessagePart::plain("bike"));
+            }
+            NameMessageType::Zombie => {
+                message.push(MessagePart::plain("zombie"));
+            }
         }
     }
 
     fn translate_action(&self, action: ActionMessageType, message: &mut Message) {
         match action {
-            ActionMessageType::PlayerOpenDoor => {
-                message.push(MessagePart::plain("I open the door."));
+            ActionMessageType::TyreDamage => {
+                message.push(MessagePart::plain("A tyre bursts."));
             }
-            ActionMessageType::PlayerCloseDoor => {
-                message.push(MessagePart::plain("I close the door."));
+            ActionMessageType::EngineDamage => {
+                message.push(MessagePart::plain("The engine is damaged."));
+            }
+            ActionMessageType::ArmourDamage => {
+                message.push(MessagePart::plain("Some armour plating falls off."));
+            }
+            ActionMessageType::ArmourDeflect => {
+                message.push(MessagePart::plain("The armour absorbs the damage."));
+            }
+            ActionMessageType::PersonalDamage => {
+                message.push(MessagePart::plain("You take damage."));
+            }
+            ActionMessageType::Shot => {
+                message.push(MessagePart::plain("You are shot."));
+            }
+            ActionMessageType::ShotBy(name) => {
+                message.push(MessagePart::plain("You are shot by the "));
+                self.translate_name(name, message);
+                message.push(MessagePart::plain("."));
+            }
+            ActionMessageType::BumpedBy(name, verb) => {
+                message.push(MessagePart::plain("You are "));
+                match verb {
+                    VerbMessageType::Ram => message.push(MessagePart::plain("rammed")),
+                    VerbMessageType::Claw => message.push(MessagePart::plain("clawed")),
+                }
+                message.push(MessagePart::plain(" by the "));
+                self.translate_name(name, message);
+                message.push(MessagePart::plain("."));
+            }
+            ActionMessageType::FailToTurn => {
+                message.push(MessagePart::plain("You fail to steer due to damaged tyres."));
+            }
+            ActionMessageType::FailToAccelerate => {
+                message.push(MessagePart::plain("You're already going at your top speed."));
+            }
+            ActionMessageType::TyreAcidDamage => {
+                message.push(MessagePart::plain("A tyre disolves in the acid."));
             }
         }
     }

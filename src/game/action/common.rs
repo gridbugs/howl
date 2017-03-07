@@ -1,4 +1,3 @@
-use std::cmp;
 use rand::Rng;
 use ecs::*;
 use game::*;
@@ -61,18 +60,26 @@ pub fn try_level_switch(action: &mut EcsAction, entity_id: EntityId) {
     action.set_try_level_switch(entity_id);
 }
 
-pub fn projectile_collision(action: &mut EcsAction, projectile_collision: ProjectileCollision) {
+pub fn projectile_collision(action: &mut EcsAction, projectile_collision: ProjectileCollision, ecs: &EcsCtx) {
+    if ecs.contains_pc(projectile_collision.collider_id) && ecs.contains_bullet(projectile_collision.projectile_id) {
+        let position = ecs.position(projectile_collision.collider_id).expect("Missing component position");
+        let message = if let Some(name) = ecs.shooter_id(projectile_collision.projectile_id).and_then(|id| ecs.name(id)) {
+            ActionMessageType::ShotBy(name)
+        } else {
+            ActionMessageType::Shot
+        };
+        action.set_action_description(ActionDescription::new(position, message));
+    }
     action.set_projectile_collision(projectile_collision);
     action.set_no_commit();
 }
 
 pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) {
 
-    let mut hit_points = to_damage.hit_points().expect("Entity missing hit_points");
-
-    hit_points.dec(amount);
-
-    action.insert_hit_points(to_damage.id(), hit_points);
+    if let Some(mut hit_points) = to_damage.hit_points() {
+        hit_points.dec(amount);
+        action.insert_hit_points(to_damage.id(), hit_points);
+    }
 }
 
 pub fn die(action: &mut EcsAction, entity: EntityRef) {
@@ -103,8 +110,17 @@ pub fn physics(action: &mut EcsAction) {
     action.set_physics();
 }
 
-pub fn steer(action: &mut EcsAction, entity: EntityRef, direction: SteerDirection) {
-    action.insert_steering(entity.id(), direction);
+pub fn steer<R: Rng>(action: &mut EcsAction, entity: EntityRef, direction: SteerDirection, rng: &mut R) {
+    if entity.contains_pc() {
+        if entity.steer_check(rng).expect("Expected components for steer check") {
+            action.insert_steering(entity.id(), direction);
+        } else {
+            let position = entity.position().expect("Entity missing position");
+            action.set_action_description(ActionDescription::new(position, ActionMessageType::FailToTurn));
+        }
+    } else {
+        action.insert_steering(entity.id(), direction);
+    }
 }
 
 pub fn remove_steer(action: &mut EcsAction, entity_id: EntityId) {
@@ -113,10 +129,18 @@ pub fn remove_steer(action: &mut EcsAction, entity_id: EntityId) {
 
 pub fn change_speed(action: &mut EcsAction, entity: EntityRef, change: ChangeSpeed) {
     let current_speed = entity.current_speed().expect("Entity missing current_speed");
-    let max_speed = entity.max_speed().expect("Entity missing max_speed");
+    let max_speed = entity.general_max_speed().expect("Entity missing max_speed");
 
     let new_speed = match change {
-        ChangeSpeed::Accelerate => cmp::min(current_speed + 1, max_speed),
+        ChangeSpeed::Accelerate => {
+            if current_speed < max_speed {
+                current_speed + 1
+            } else {
+                let position = entity.position().expect("Entity missing position");
+                action.set_action_description(ActionDescription::new(position, ActionMessageType::FailToAccelerate));
+                current_speed
+            }
+        }
         ChangeSpeed::Decelerate => {
             if current_speed == 0 {
                 0
@@ -192,7 +216,9 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
             const SPEED_CELLS_PER_SEC: f64 = 100.0;
             let mut velocity = RealtimeVelocity::new(direction.vector(), SPEED_CELLS_PER_SEC);
             let bullet_position = shooter_position + velocity.step_in_place();
-            prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, range);
+            let id = ids.new_id();
+            prototypes::bullet(action.entity_mut(id), bullet_position, velocity, range);
+            action.insert_shooter_id(id, shooter.id());
             action.set_action_time_ms(velocity.ms_per_cell());
         }
         GunType::Shotgun => {
@@ -208,7 +234,9 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
                 let mut velocity = RealtimeVelocity::new(vector, SPEED_CELLS_PER_SEC);
 
                 let bullet_position = shooter_position + velocity.step_in_place();
-                prototypes::bullet(action.entity_mut(ids.new_id()), bullet_position, velocity, range);
+                let id = ids.new_id();
+                prototypes::bullet(action.entity_mut(id), bullet_position, velocity, range);
+                action.insert_shooter_id(id, shooter.id());
                 action.set_action_time_ms(velocity.ms_per_cell());
             }
         }
@@ -238,5 +266,64 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
                 bullet_type: BulletType::RailgunSlug,
             }, 0));
         }
+    }
+}
+
+pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage: usize, rng: &mut R) {
+    let position = entity.position().expect("Entity missing position");
+    for _ in 0..damage {
+        match entity.damage_type(rng).expect("Missing complex damage components") {
+            DamageType::Health => {
+                let mut hit_points = entity.hit_points().expect("Entity missing hit_points");
+                hit_points.dec(1);
+                action.insert_hit_points(entity.id(), hit_points);
+                action.set_action_description(ActionDescription::new(position, ActionMessageType::PersonalDamage));
+            }
+            DamageType::Engine => {
+                let mut engine = entity.engine_health().expect("Entity missing engine_health");
+                engine.dec(1);
+                action.insert_engine_health(entity.id(), engine);
+                action.set_action_description(ActionDescription::new(position, ActionMessageType::EngineDamage));
+            }
+            DamageType::Tyres => {
+                let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");
+                tyres.dec(1);
+                action.insert_tyre_health(entity.id(), tyres);
+                action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreDamage));
+            }
+            DamageType::Armour => {
+                let armour = entity.armour().expect("Entity missing armour");
+                action.insert_armour(entity.id(), armour - 1);
+                action.set_action_description(ActionDescription::new(position, ActionMessageType::ArmourDamage));
+            }
+            DamageType::Deflect => {
+                action.set_action_description(ActionDescription::new(position, ActionMessageType::ArmourDeflect));
+            }
+        }
+    }
+}
+
+pub fn bump(action: &mut EcsAction, victim: EntityRef, attacker: EntityRef) {
+    if victim.contains_pc() {
+        let position = victim.position().expect("Entity missing position");
+        if let Some(name) = attacker.name() {
+            if let Some(verb) = attacker.bump_verb() {
+                action.set_action_description(ActionDescription::new(position, ActionMessageType::BumpedBy(name, verb)));
+            }
+        }
+    }
+}
+
+pub fn acid_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, rng: &mut R) {
+    const CHANCE_TO_DAMAGE: f64 = 0.25;
+
+    if rng.next_f64() < CHANCE_TO_DAMAGE {
+        let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");
+        if tyres.current() > 0 {
+            let position = entity.position().expect("Entity missing position");
+            action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreAcidDamage));
+        }
+        tyres.dec(1);
+        action.insert_tyre_health(entity.id(), tyres);
     }
 }

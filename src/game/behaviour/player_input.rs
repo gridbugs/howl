@@ -148,9 +148,6 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>
 
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
 
-    // clear temporary messages from the log
-    input.entity.message_log_borrow_mut().expect("Expected component message_log").add_temporary(MessageType::Empty);
-
     input_source.next_input().and_then(|event| {
         if event == InputEvent::Quit {
             return Some(MetaAction::External(External::Quit));

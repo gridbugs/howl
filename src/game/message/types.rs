@@ -37,17 +37,35 @@ pub enum MessageType {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub enum VerbMessageType {
+    Ram,
+    Claw,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum NameMessageType {
     Pistol,
     Shotgun,
     MachineGun,
     Railgun,
+    Car,
+    Bike,
+    Zombie,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum ActionMessageType {
-    PlayerOpenDoor,
-    PlayerCloseDoor,
+    TyreDamage,
+    EngineDamage,
+    ArmourDamage,
+    ArmourDeflect,
+    PersonalDamage,
+    Shot,
+    ShotBy(NameMessageType),
+    BumpedBy(NameMessageType, VerbMessageType),
+    FailToTurn,
+    FailToAccelerate,
+    TyreAcidDamage,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

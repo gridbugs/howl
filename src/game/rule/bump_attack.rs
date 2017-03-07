@@ -16,7 +16,10 @@ pub fn bump_attack(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reactio
             }
 
             if let Some(damage) = attacker.bump_attacker() {
-                if victim.contains_hit_points() {
+                if victim.contains_complex_damage() {
+                    reactions.push(Reaction::new(ActionArgs::Bump(victim_id, attacker_id), 0));
+                    reactions.push(Reaction::new(ActionArgs::ComplexDamage(victim_id, damage), 0));
+                } else if victim.contains_hit_points() {
                     reactions.push(Reaction::new(ActionArgs::Damage(victim_id, damage), 0));
                 }
                 if attacker.realtime_velocity().is_some() {

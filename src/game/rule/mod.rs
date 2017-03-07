@@ -13,6 +13,7 @@ mod driving;
 mod run_over;
 mod bounds;
 mod then;
+mod acid;
 
 pub mod rules {
     pub use super::collision::*;
@@ -27,4 +28,5 @@ pub mod rules {
     pub use super::run_over::*;
     pub use super::bounds::*;
     pub use super::then::*;
+    pub use super::acid::*;
 }

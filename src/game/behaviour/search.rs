@@ -1,5 +1,5 @@
 use game::*;
-use behaviour::LeafResolution;
+use behaviour::{LeafResolution, SwitchResolution};
 use search::{GridSearchCfg, GridSearchCtx};
 
 pub fn follow_path_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
@@ -35,5 +35,16 @@ pub fn simple_npc_update_path<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
 
         path_traverse.reset();
         LeafResolution::Return(true)
+    })
+}
+
+pub fn simple_npc_coherence<K: KnowledgeRenderer>(child: BehaviourNodeIndex) -> BehaviourSwitch<K> {
+    BehaviourSwitch::new_returning(move |input| {
+        let path_traverse = input.entity.path_traverse_borrow_mut().unwrap();
+        if path_traverse.is_complete() {
+            return SwitchResolution::Reset(child);
+        } else {
+            return SwitchResolution::Select(child);
+        }
     })
 }

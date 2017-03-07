@@ -12,6 +12,7 @@ mod direction_table;
 mod gun_type;
 mod relative_direction;
 mod bullet_type;
+mod damage_type;
 
 pub use self::speed::*;
 pub use self::path_traverse::*;
@@ -27,3 +28,4 @@ pub use self::direction_table::*;
 pub use self::gun_type::*;
 pub use self::relative_direction::*;
 pub use self::bullet_type::*;
+pub use self::damage_type::*;

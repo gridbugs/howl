@@ -34,7 +34,9 @@ pub fn projectile_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Ve
         let projectile = env.ecs.post_action_entity(projectile_id, action);
 
         if let Some(damage) = projectile.projectile_damage() {
-            if env.ecs.contains_hit_points(collider_id) {
+            if env.ecs.contains_complex_damage(collider_id) {
+                reactions.push(Reaction::new(ActionArgs::ComplexDamage(collider_id, damage), 0));
+            } else if env.ecs.contains_hit_points(collider_id) {
                 reactions.push(Reaction::new(ActionArgs::Damage(collider_id, damage), 0));
             }
         }

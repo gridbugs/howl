@@ -31,20 +31,21 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_should_render();
     entity.insert_message_log(MessageLog::new());
     entity.insert_projectile_collider();
-    entity.insert_hit_points(HitPoints::new(10));
     entity.insert_bump_attackable();
     entity.insert_weapon_slots(DirectionTable::new());
     entity.insert_bank(0);
 
     entity.insert_can_run_over();
 
+    entity.insert_hit_points(HitPoints::new(8));
     entity.insert_current_speed(1);
-    entity.insert_max_speed(3);
     entity.insert_facing(Direction::East);
     entity.insert_redline_speed(3);
     entity.insert_tyre_health(HitPoints::new(4));
     entity.insert_engine_health(HitPoints::new(8));
     entity.insert_armour(1);
+
+    entity.insert_complex_damage();
 
     entity.insert_inventory(EntitySet::new());
     entity.insert_inventory_capacity(8);
@@ -76,10 +77,14 @@ pub fn zombie<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_enemy();
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(2));
+    entity.insert_health_bar();
     entity.insert_bump_attacker(1);
 
     entity.insert_can_be_run_over();
     entity.insert_bloodstain_on_death();
+
+    entity.insert_name(NameMessageType::Zombie);
+    entity.insert_bump_verb(VerbMessageType::Claw);
 
     entity
 }
@@ -100,6 +105,7 @@ pub fn car<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_enemy();
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(5));
+    entity.insert_health_bar();
     entity.insert_bump_attacker(1);
 
     entity.insert_current_speed(1);
@@ -110,6 +116,9 @@ pub fn car<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
     entity.insert_weapon_slots(DirectionTable::new());
     entity.insert_can_run_over();
+
+    entity.insert_name(NameMessageType::Car);
+    entity.insert_bump_verb(VerbMessageType::Ram);
 
     entity
 }
@@ -130,6 +139,7 @@ pub fn bike<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_enemy();
     entity.insert_projectile_collider();
     entity.insert_hit_points(HitPoints::new(3));
+    entity.insert_health_bar();
     entity.insert_bump_attacker(1);
 
     entity.insert_current_speed(1);
@@ -140,6 +150,8 @@ pub fn bike<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
     entity.insert_weapon_slots(DirectionTable::new());
     entity.insert_can_run_over();
+    entity.insert_name(NameMessageType::Bike);
+    entity.insert_bump_verb(VerbMessageType::Ram);
 
     entity
 }
@@ -156,6 +168,7 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
     entity.insert_collider();
     entity.insert_projectile_damage(1);
     entity.insert_destroy_when_stopped();
+    entity.insert_bullet();
 
     entity.insert_tile(TileType::Bullet);
 

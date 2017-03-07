@@ -21,7 +21,7 @@ use coord::Coord;
 use colour::{Rgb24, Rgba32};
 
 const RENDERING_FAILED_MSG: &'static str = "Rendering failed";
-const MESSAGE_LOG_NUM_LINES: usize = 1;
+const MESSAGE_LOG_NUM_LINES: usize = 4;
 const MESSAGE_LOG_LINE_HEIGHT_PX: usize = 16;
 const MESSAGE_LOG_PLAIN_COLOUR: Rgb24 = Rgb24 { red: 255, green: 255, blue: 255 };
 const MESSAGE_LOG_PADDING_PX: usize = 4;
@@ -675,8 +675,13 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
         self.renderer.clear_hud();
         let mut cursor = LEFT_PADDING_PX;
 
+        let hit_points = entity.hit_points().expect("Entity missing hit_points");
+        let hit_points_text = format!("{}/{}", hit_points.current(), hit_points.max());
+        let hit_points_symbol = self.renderer.hud.health;
+        cursor = self.draw_hud_component(hit_points_symbol, hit_points_text, cursor);
+
         let speed = entity.current_speed().expect("Entity missing current_speed");
-        let max_speed = entity.max_speed().expect("Entity missing max_speed");
+        let max_speed = entity.player_max_speed().expect("Entity missing max_speed");
         let speed_text = format!("{}/{}", speed, max_speed);
         let speed_symbol = self.renderer.hud.speed;
         cursor = self.draw_hud_component(speed_symbol, speed_text, cursor);

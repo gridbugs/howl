@@ -79,9 +79,11 @@ impl DrawableKnowledgeCell {
                     entity.description().map(|description| {
                         self.description.insert(depth, description);
                     });
-                    entity.hit_points().map(|hit_points| {
-                        self.health_overlay.insert(depth, hit_points);
-                    });
+                    if entity.contains_health_bar() {
+                        entity.hit_points().map(|hit_points| {
+                            self.health_overlay.insert(depth, hit_points);
+                        });
+                    }
                 });
             }
 

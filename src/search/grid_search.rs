@@ -205,13 +205,13 @@ impl GridSearchCfg {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GridPathNode {
     pub coord: Coord,
     pub direction_to: Direction,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GridPath {
     start: Coord,
     nodes: VecDeque<GridPathNode>,

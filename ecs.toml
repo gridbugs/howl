@@ -24,6 +24,17 @@ imports = [
 [component.bloodstain_on_death]
 [component.destroy_when_stopped]
 [component.destroy_when_out_of_bounds]
+[component.health_bar]
+[component.complex_damage]
+[component.bullet]
+
+[component.shooter_id]
+    type = "EntityId"
+    copy = true
+
+[component.bump_verb]
+    type = "VerbMessageType"
+    copy = true
 
 [component.bank]
     type = "usize"
