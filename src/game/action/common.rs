@@ -282,8 +282,21 @@ pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage:
             DamageType::Engine => {
                 let mut engine = entity.engine_health().expect("Entity missing engine_health");
                 engine.dec(1);
+                let new_max_speed = (engine.ucurrent() + 1) / 2;
+                let max_speed = entity.general_max_speed().expect("Entity missing general_max_speed components");
+                let current_speed = entity.current_speed().expect("Entity missing current_speed");
+
+                if new_max_speed < max_speed {
+                    action.set_action_description(ActionDescription::new(position, ActionMessageType::MaxSpeedDecreased));
+                } else {
+                    action.set_action_description(ActionDescription::new(position, ActionMessageType::EngineDamage));
+                }
+
                 action.insert_engine_health(entity.id(), engine);
-                action.set_action_description(ActionDescription::new(position, ActionMessageType::EngineDamage));
+
+                if current_speed > new_max_speed {
+                    action.insert_current_speed(entity.id(), new_max_speed);
+                }
             }
             DamageType::Tyres => {
                 let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");

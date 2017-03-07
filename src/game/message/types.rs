@@ -66,6 +66,7 @@ pub enum ActionMessageType {
     FailToTurn,
     FailToAccelerate,
     TyreAcidDamage,
+    MaxSpeedDecreased,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

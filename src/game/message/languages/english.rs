@@ -93,6 +93,9 @@ impl English {
             ActionMessageType::TyreAcidDamage => {
                 message.push(MessagePart::plain("A tyre dissolves in the acid."));
             }
+            ActionMessageType::MaxSpeedDecreased => {
+                message.push(MessagePart::plain("The engine is damaged. Maximum speed decreased."));
+            }
         }
     }
 
