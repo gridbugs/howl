@@ -680,12 +680,6 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
         let hit_points_symbol = self.renderer.hud.health;
         cursor = self.draw_hud_component(hit_points_symbol, hit_points_text, cursor);
 
-        let speed = entity.current_speed().expect("Entity missing current_speed");
-        let max_speed = entity.player_max_speed().expect("Entity missing max_speed");
-        let speed_text = format!("{}/{}", speed, max_speed);
-        let speed_symbol = self.renderer.hud.speed;
-        cursor = self.draw_hud_component(speed_symbol, speed_text, cursor);
-
         let engine = entity.engine_health().expect("Entity missing engine_health");
         let engine_text = format!("{}/{}", engine.current(), engine.max());
         let engine_symbol = self.renderer.hud.engine;
@@ -700,6 +694,12 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
         let armour_text = format!("{}", armour);
         let armour_symbol = self.renderer.hud.armour;
         cursor = self.draw_hud_component(armour_symbol, armour_text, cursor);
+
+        let speed = entity.current_speed().expect("Entity missing current_speed");
+        let max_speed = entity.player_max_speed().expect("Entity missing max_speed");
+        let speed_text = format!("{}/{}", speed, max_speed);
+        let speed_symbol = self.renderer.hud.speed;
+        cursor = self.draw_hud_component(speed_symbol, speed_text, cursor);
 
         let letters = entity.letter_count().expect("Entity missing armour");
         let letters_text = format!("{}", letters);
