@@ -22,6 +22,14 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                 '.' => {
                     prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
                 }
+                '#' => {
+                    prototypes::barrel(g.entity_mut(ids.new_id()), coord);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                }
+                '&' => {
+                    prototypes::letter(g.entity_mut(ids.new_id()), coord);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                }
                 ',' => {
                     prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
                 }

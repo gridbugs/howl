@@ -313,3 +313,19 @@ pub fn goal<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: Lev
 
     entity
 }
+
+pub fn letter<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+    entity.insert_position(position);
+    entity.insert_tile(TileType::Letter);
+    entity.insert_tile_depth(1);
+
+    entity
+}
+
+pub fn barrel<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+    entity.insert_position(position);
+    entity.insert_tile(TileType::Barrel);
+    entity.insert_tile_depth(1);
+
+    entity
+}

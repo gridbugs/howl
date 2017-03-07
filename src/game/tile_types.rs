@@ -16,6 +16,8 @@ pub enum TileType {
     Bloodstain,
     RailgunSlugHorizontal,
     RailgunSlugVertical,
+    Letter,
+    Barrel,
 }
 
 impl TileType {
@@ -50,6 +52,8 @@ impl TileType {
             "Bloodstain" => TileType::Bloodstain,
             "RailgunSlugVertical" => TileType::RailgunSlugVertical,
             "RailgunSlugHorizontal" => TileType::RailgunSlugHorizontal,
+            "Letter" => TileType::Letter,
+            "Barrel" => TileType::Barrel,
             _ => return None,
         };
 
