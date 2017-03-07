@@ -96,7 +96,7 @@ pub fn acid_animate<R: Rng>(action: &mut EcsAction, ecs: &EcsCtx, r: &mut R) {
     for id in ecs.acid_animation_id_iter() {
 
         // don't always change every tile
-        if r.next_f64() > 0.1 {
+        if r.next_f64() > 0.5 {
             continue;
         }
 
