@@ -38,6 +38,8 @@ pub fn projectile_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Ve
                 reactions.push(Reaction::new(ActionArgs::ComplexDamage(collider_id, damage), 0));
             } else if env.ecs.contains_hit_points(collider_id) {
                 reactions.push(Reaction::new(ActionArgs::Damage(collider_id, damage), 0));
+            } else if env.ecs.contains_explode_on_collision(collider_id) {
+                reactions.push(Reaction::new(ActionArgs::Explode(collider_id), 0));
             }
         }
     }

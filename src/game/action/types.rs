@@ -4,6 +4,7 @@ use game::*;
 use game::data::*;
 use spatial_hash::*;
 use direction::Direction;
+use coord::Coord;
 
 pub type ActionId = u64;
 
@@ -62,6 +63,8 @@ pub enum ActionArgs {
     Bump(EntityId, EntityId),
     AcidDamage(EntityId),
     TakeLetter(EntityId, EntityId),
+    Explode(EntityId),
+    ExplodeSpawn(Coord),
 }
 
 impl ActionArgs {
@@ -133,6 +136,12 @@ impl ActionArgs {
             }
             ActionArgs::TakeLetter(entity_id, letter_id) => {
                 actions::take_letter(action, ecs.entity(entity_id), ecs.entity(letter_id));
+            }
+            ActionArgs::Explode(entity_id) => {
+                actions::explode(action, ecs.entity(entity_id));
+            }
+            ActionArgs::ExplodeSpawn(coord) => {
+                actions::explode_spawn(action, coord, entity_ids);
             }
         }
     }

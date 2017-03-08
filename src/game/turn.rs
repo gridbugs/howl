@@ -178,8 +178,8 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::acid(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::run_over(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::enemy_collision(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::pc_collision(rule_env, self.ecs_action, self.rule_reactions)?;

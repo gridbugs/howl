@@ -1,9 +1,11 @@
+use std::f64;
 use rand::Rng;
 use ecs::*;
 use game::*;
 use game::data::*;
 use direction::Direction;
 use coord::Coord;
+use math::Vector2;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
     let current_position = entity.position().expect("Entity missing position");
@@ -38,7 +40,10 @@ pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocit
         }
     }
 
-    action.set_action_time_ms(velocity.ms_per_cell());
+    let length = (offset.length_squared() as f64).sqrt();
+    let delay = (velocity.ms_per_cell() as f64 * length) as u64;
+
+    action.set_action_time_ms(delay);
 }
 
 pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
@@ -345,4 +350,24 @@ pub fn take_letter(action: &mut EcsAction, entity: EntityRef, letter: EntityRef)
     let letter_count = entity.letter_count().expect("Entity missing letter_count");
     action.insert_letter_count(entity.id(), letter_count + 1);
     action.remove_entity(letter);
+}
+
+pub fn explode(action: &mut EcsAction, entity: EntityRef) {
+    let position = entity.position().expect("Entity missing position");
+    action.remove_entity(entity);
+    action.set_then(Reaction::new(ActionArgs::ExplodeSpawn(position), 0));
+}
+
+pub fn explode_spawn(action: &mut EcsAction, coord: Coord, ids: &EntityIdReserver) {
+    const SPEED_CELLS_PER_SEC: f64 = 20.0;
+    const RANGE: usize = 6;
+    const COUNT: usize = 32;
+    const STEP: f64 = 2.0 * f64::consts::PI / COUNT as f64;
+    let mut angle = 0.0;
+    for _ in 0..COUNT {
+        let v = Vector2::from_radial(10.0, angle);
+        let velocity = RealtimeVelocity::new(Coord::new(v.x as isize, v.y as isize), SPEED_CELLS_PER_SEC);
+        prototypes::explosion(action.entity_mut(ids.new_id()), coord, velocity, RANGE);
+        angle += STEP;
+    }
 }

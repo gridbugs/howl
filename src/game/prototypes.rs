@@ -328,14 +328,24 @@ pub fn barrel<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Barrel);
     entity.insert_tile_depth(1);
+    entity.insert_explode_on_collision();
+    entity.insert_projectile_collider();
+    entity.insert_collider();
+    entity.insert_solid();
 
     entity
 }
 
-pub fn explosion<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn explosion<E: EntityPopulate>(mut entity: E, position: Coord, velocity: RealtimeVelocity, range: usize) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Explosion);
     entity.insert_tile_depth(1);
+    entity.insert_realtime_velocity(velocity);
+    entity.insert_realtime_moves_remaining(range);
+    entity.insert_destroy_when_stopped();
+    entity.insert_destroy_on_collision();
+    entity.insert_projectile_damage(1);
+    entity.insert_projectile();
 
     entity
 }
