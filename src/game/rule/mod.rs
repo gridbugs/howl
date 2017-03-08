@@ -15,6 +15,7 @@ mod bounds;
 mod then;
 mod acid;
 mod letter;
+mod explosion;
 
 pub mod rules {
     pub use super::collision::*;
@@ -31,4 +32,5 @@ pub mod rules {
     pub use super::then::*;
     pub use super::acid::*;
     pub use super::letter::*;
+    pub use super::explosion::*;
 }

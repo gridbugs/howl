@@ -190,6 +190,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::then(rule_env, self.ecs_action, self.rule_reactions)?;
+            rules::explosion_destroy(rule_env, self.ecs_action, self.rule_reactions)?;
         }
 
         RULE_ACCEPT

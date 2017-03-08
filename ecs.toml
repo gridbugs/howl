@@ -29,6 +29,8 @@ imports = [
 [component.bullet]
 [component.letter]
 [component.explode_on_collision]
+[component.explosion]
+[component.destroyed_by_explosion]
 
 [component.letter_count]
     type = "usize"

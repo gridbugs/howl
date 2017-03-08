@@ -36,3 +36,6 @@
 [field.tile]
     type = "void"
     component_has_type = true
+
+[field.destroyed_by_explosion]
+    type = "set"

@@ -320,6 +320,7 @@ pub fn letter<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_tile(TileType::Letter);
     entity.insert_tile_depth(1);
     entity.insert_letter();
+    entity.insert_destroyed_by_explosion();
 
     entity
 }
@@ -346,6 +347,7 @@ pub fn explosion<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Re
     entity.insert_destroy_on_collision();
     entity.insert_projectile_damage(1);
     entity.insert_projectile();
+    entity.insert_explosion();
 
     entity
 }
