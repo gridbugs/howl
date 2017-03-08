@@ -305,9 +305,11 @@ pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage:
             }
             DamageType::Tyres => {
                 let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");
-                tyres.dec(1);
-                action.insert_tyre_health(entity.id(), tyres);
-                action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreDamage));
+                if tyres.ucurrent() > 0 {
+                    tyres.dec(1);
+                    action.insert_tyre_health(entity.id(), tyres);
+                    action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreDamage));
+                }
             }
             DamageType::Armour => {
                 let armour = entity.armour().expect("Entity missing armour");
@@ -353,9 +355,10 @@ pub fn take_letter(action: &mut EcsAction, entity: EntityRef, letter: EntityRef)
 }
 
 pub fn explode(action: &mut EcsAction, entity: EntityRef) {
-    let position = entity.position().expect("Entity missing position");
-    action.remove_entity(entity);
-    action.set_then(Reaction::new(ActionArgs::ExplodeSpawn(position), 0));
+    if let Some(position) = entity.position() {
+        action.remove_entity(entity);
+        action.set_then(Reaction::new(ActionArgs::ExplodeSpawn(position), 0));
+    }
 }
 
 pub fn explode_spawn(action: &mut EcsAction, coord: Coord, ids: &EntityIdReserver) {

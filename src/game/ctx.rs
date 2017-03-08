@@ -637,7 +637,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn next_level_menu(&mut self, game_state: &mut GameState) -> bool {
 
-        self.unstage(TerrainType::DemoA, game_state);
+        self.unstage(TerrainType::Road, game_state);
 
         true
     }
@@ -734,6 +734,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     let ticket = level.turn_schedule.insert(entity_id, delay);
                     level.ecs.insert_schedule_ticket(entity_id, ticket);
                 }
+                TurnResolution::NoSchedule => {}
                 TurnResolution::LevelSwitch { entity_id, exit_id, level_switch } => {
                     self.switch_level(entity_id, exit_id, level_switch, game_state);
                     if level_switch == LevelSwitch::LeaveLevel {
@@ -846,13 +847,14 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             .insert(Direction::East, pistol_id);
 
         // throw away connections in the first level a they would have nothing to connect to anyway
-        let (level, _) = Level::new_with_entity(TerrainType::DemoA,
+        let (level, _) = Level::new_with_entity(TerrainType::Road,
                                                 pc_id,
                                                 &mut action,
                                                 &game_state.entity_ids,
                                                 &self.rng,
                                                 game_state.action_id,
-                                                None);
+                                                None,
+                                                0);
 
         game_state.action_id += 1;
 
@@ -894,7 +896,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                                 &game_state.entity_ids,
                                                 &self.rng,
                                                 game_state.action_id,
-                                                None);
+                                                None,
+                                                global_ids.level_id + 1);
         game_state.action_id += 1;
 
         let new_level_id = game_state.levels.add_level(level);
@@ -938,7 +941,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                            &game_state.entity_ids,
                                            &self.rng,
                                            game_state.action_id,
-                                           Some(parent_ctx))
+                                           Some(parent_ctx),
+                                           global_ids.level_id + 1)
                 };
 
                 game_state.action_id += 1;

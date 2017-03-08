@@ -31,6 +31,7 @@ pub struct Turn<'game> {
 pub enum TurnResolution {
     Exit(ExitReason, EntityId),
     Schedule(EntityId, u64),
+    NoSchedule,
     LevelSwitch {
         entity_id: EntityId,
         exit_id: EntityId,
@@ -123,14 +124,16 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 MetaAction::ActionArgs(action_args) => {
                     if let Some(resolution) = self.try_commit_action(action_args)? {
 
-                        self.declare_action_return(true)?;
+                        if !self.declare_action_return(true)? {
+                            return Ok(TurnResolution::NoSchedule); // entity died on their turn
+                        }
                         match resolution {
                             CommitResolution::Reschedule(delay) => {
                                 return Ok(TurnResolution::Schedule(self.entity_id, delay));
                             }
                             CommitResolution::LevelSwitch { entity_id, exit_id, level_switch } => {
                                 return Ok(TurnResolution::LevelSwitch {
-                                    entity_id: entity_id, 
+                                    entity_id: entity_id,
                                     exit_id: exit_id,
                                     level_switch: level_switch,
                                 });
@@ -140,7 +143,9 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                             }
                         }
                     } else {
-                        self.declare_action_return(false)?;
+                        if !self.declare_action_return(false)? {
+                            return Ok(TurnResolution::NoSchedule); // entity died on their turn
+                        }
                         if self.is_pc_turn() {
                             continue;
                         } else {
@@ -394,10 +399,13 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
     }
 
-    fn declare_action_return(&self, value: bool) -> GameResult<()> {
+    fn declare_action_return(&self, value: bool) -> GameResult<bool> {
         let entity = self.ecs.entity(self.entity_id);
-        let mut behaviour_state = entity.behaviour_state_borrow_mut().expect("Entity missing behaviour_state");
-        behaviour_state.declare_return(value)?;
-        Ok(())
+        if let Some(mut behaviour_state) = entity.behaviour_state_borrow_mut() {
+            behaviour_state.declare_return(value)?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }

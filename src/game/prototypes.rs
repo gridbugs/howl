@@ -235,7 +235,7 @@ pub fn wreck<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -
     let tile = *rng.select_uniform(&tiles);
 
     entity.insert_tile(tile);
-    entity.insert_tile_depth(0);
+    entity.insert_tile_depth(2);
     entity.insert_solid();
 
     entity

@@ -48,13 +48,14 @@ impl Level {
                        ids: &EntityIdReserver,
                        rng: &GameRng,
                        action_id: ActionId,
-                       parent: Option<ParentLevelCtx>) -> (Self, LevelConnectionReport) {
+                       parent: Option<ParentLevelCtx>,
+                       difficulty: usize) -> (Self, LevelConnectionReport) {
 
         let mut schedule = TurnSchedule::new();
 
         // generate the level's contents
         let TerrainMetadata { width, height, start_coord, connection_report } =
-            terrain.generate(ids, rng, &mut schedule, action, parent);
+            terrain.generate(ids, rng, &mut schedule, action, parent, difficulty);
 
         // compose a level object
         let mut level = Level {
