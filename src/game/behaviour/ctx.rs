@@ -1,18 +1,18 @@
 use game::*;
 use game::behaviour::player_input::*;
 use game::behaviour::observation::*;
-use game::behaviour::search::*;
 use game::behaviour::acid_animation::*;
 use game::behaviour::physics::*;
 use game::behaviour::car::*;
 use game::behaviour::bike::*;
+use game::behaviour::zombie::*;
 
 use behaviour::{LeafResolution, CollectionNode};
 
 pub struct BehaviourNodes {
     pub null: BehaviourNodeIndex,
     pub player_input: BehaviourNodeIndex,
-    pub simple_npc: BehaviourNodeIndex,
+    pub zombie: BehaviourNodeIndex,
     pub acid_animate: BehaviourNodeIndex,
     pub physics: BehaviourNodeIndex,
     pub car: BehaviourNodeIndex,
@@ -29,7 +29,7 @@ impl BehaviourNodes {
         match behaviour_type {
             BehaviourType::Null => self.null,
             BehaviourType::PlayerInput => self.player_input,
-            BehaviourType::SimpleNpc => self.simple_npc,
+            BehaviourType::Zombie => self.zombie,
             BehaviourType::AcidAnimate => self.acid_animate,
             BehaviourType::Physics => self.physics,
             BehaviourType::Car => self.car,
@@ -46,15 +46,9 @@ impl<K: KnowledgeRenderer> BehaviourCtx<K> {
 
         let player_input_leaf = graph.add_leaf(player_input(input_source));
 
-        let simple_npc_update_path_leaf = graph.add_leaf(simple_npc_update_path());
-        let follow_path_step_leaf = graph.add_leaf(follow_path_step());
-        let follow_path_loop = graph.add_collection(CollectionNode::Forever(follow_path_step_leaf));
-        let simple_npc_loop = graph.add_collection(CollectionNode::All(vec![
-                                                                       simple_npc_update_path_leaf,
-                                                                       follow_path_loop]));
-
-        let simple_npc_a = graph.add_switch(simple_npc_coherence(simple_npc_loop));
-        let simple_npc = graph.add_switch(simple_npc_shadowcast(simple_npc_a));
+        let zombie_leaf = graph.add_leaf(zombie_step());
+        let zombie_loop = graph.add_collection(CollectionNode::Forever(zombie_leaf));
+        let zombie = graph.add_switch(simple_npc_shadowcast(zombie_loop));
 
         let acid_animate_leaf = graph.add_leaf(acid_animate());
         let physics_leaf = graph.add_leaf(physics());
@@ -70,7 +64,7 @@ impl<K: KnowledgeRenderer> BehaviourCtx<K> {
         let nodes = BehaviourNodes {
             null: graph.add_collection(CollectionNode::Forever(null_leaf)),
             player_input: graph.add_collection(CollectionNode::Forever(player_input_leaf)),
-            simple_npc: graph.add_collection(CollectionNode::Forever(simple_npc)),
+            zombie: graph.add_collection(CollectionNode::Forever(zombie)),
             acid_animate: graph.add_collection(CollectionNode::Forever(acid_animate_leaf)),
             physics: graph.add_collection(CollectionNode::Forever(physics_leaf)),
             car: graph.add_collection(CollectionNode::Forever(car)),

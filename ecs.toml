@@ -31,6 +31,15 @@ imports = [
 [component.explode_on_collision]
 [component.explosion]
 [component.destroyed_by_explosion]
+[component.triggers_explosion]
+
+[component.armour_upgrade]
+    type = "usize"
+    copy = true
+
+[component.repair_type]
+    type = "RepairType"
+    copy = true
 
 [component.letter_count]
     type = "usize"

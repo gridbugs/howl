@@ -1,3 +1,4 @@
+use std::cmp;
 use std::ops::DerefMut;
 use rand::Rng;
 use ecs::*;
@@ -10,7 +11,8 @@ use perlin::*;
 use math::*;
 use direction::*;
 
-const MAP_WIDTH: usize = 100;
+const MAP_WIDTH_MAX: usize = 120;
+const MAP_WIDTH_MIN: usize = 60;
 const MAP_HEIGHT: usize = 30;
 const ROAD_HEIGHT: usize = 6;
 const ROAD_TOP: usize = (MAP_HEIGHT + ROAD_HEIGHT) / 2;
@@ -44,8 +46,8 @@ const RANDOM_ENTITY_TYPES: [EntityType; 6] = [
     EntityType::Car,
     EntityType::Bike,
 ];
-const RANDOM_ENTITY_DIRT_WEIGHTS: [usize; 6] = [5, 10, 2, 10, 2, 4];
-const RANDOM_ENTITY_ROAD_WEIGHTS: [usize; 6] = [10, 10, 4, 5, 3, 1];
+const RANDOM_ENTITY_DIRT_WEIGHTS: [usize; 6] = [5, 10, 2, 40, 0, 0];
+const RANDOM_ENTITY_ROAD_WEIGHTS: [usize; 6] = [10, 10, 4, 5, 0, 0];
 const RANDOM_ENTITY_TOTAL: usize = 1000;
 
 fn choose_random_entity<R: Rng>(types: &[EntityType], weights: &[usize], total: usize, rng: &mut R) -> Option<EntityType> {
@@ -64,12 +66,32 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                   rng: &GameRng,
                                   schedule: &mut S,
                                   g: &mut EcsAction,
-                                  _difficulty: usize) -> TerrainMetadata {
+                                  difficulty: usize) -> TerrainMetadata {
 
-    let perlin = PerlinGrid::new(MAP_WIDTH / PERLIN_ZOOM, MAP_HEIGHT / PERLIN_ZOOM,
+
+    let map_width = rng.gen_usize() % (MAP_WIDTH_MAX - MAP_WIDTH_MIN) + MAP_WIDTH_MIN;
+    let mut grid: StaticGrid<Vec<EntityType>> = StaticGrid::new_default(map_width, MAP_HEIGHT);
+
+    let perlin = PerlinGrid::new(map_width / PERLIN_ZOOM, MAP_HEIGHT / PERLIN_ZOOM,
                                  PerlinWrapType::Repeat, rng.inner_mut().deref_mut());
 
-    let mut grid: StaticGrid<Vec<EntityType>> = StaticGrid::new_default(MAP_WIDTH, MAP_HEIGHT);
+    let random_entity_dirt_weights = [
+        5, /* Wreck */
+        10, /* Barrrel */
+        3, /* Letter */
+        20 + cmp::min(difficulty * 10, 60), /* Zombie */
+        cmp::min(difficulty / 4, 4), /* Car */
+        1 + cmp::min(difficulty / 2, 8), /* Bike */
+    ];
+
+    let random_entity_road_weights = [
+        5, /* Wreck */
+        10, /* Barrrel */
+        3, /* Letter */
+        10 + cmp::min(difficulty * 5, 30), /* Zombie */
+        1 + cmp::min(difficulty / 3, 6), /* Car */
+        cmp::min(difficulty / 3, 6), /* Bike */
+    ];
 
     for (coord, cell_mut) in izip!(grid.coord_iter(), grid.iter_mut()) {
 
@@ -86,7 +108,7 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
         } else if coord.y > ROAD_BOTTOM as isize && coord.y <= ROAD_TOP as isize {
             cell_mut.push(EntityType::Road);
             if let Some(entity_type) = choose_random_entity(&RANDOM_ENTITY_TYPES,
-                                                            &RANDOM_ENTITY_ROAD_WEIGHTS,
+                                                            &random_entity_road_weights,
                                                             RANDOM_ENTITY_TOTAL,
                                                             rng.inner_mut().deref_mut()) {
                 cell_mut.push(entity_type);
@@ -94,14 +116,14 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
         } else {
             cell_mut.push(EntityType::Dirt);
             if let Some(entity_type) = choose_random_entity(&RANDOM_ENTITY_TYPES,
-                                                            &RANDOM_ENTITY_DIRT_WEIGHTS,
+                                                            &random_entity_dirt_weights,
                                                             RANDOM_ENTITY_TOTAL,
                                                             rng.inner_mut().deref_mut()) {
                 cell_mut.push(entity_type);
             }
         }
 
-        if coord.x == MAP_WIDTH as isize - 1 {
+        if coord.x == map_width as isize - 1 {
             cell_mut.push(EntityType::Goal);
         }
     }
@@ -173,7 +195,7 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
     util::add_management_entities(ids, schedule, g);
 
     TerrainMetadata {
-        width: MAP_WIDTH,
+        width: map_width,
         height: MAP_HEIGHT,
         start_coord: START_COORD,
         connection_report: LevelConnectionReport::new(),

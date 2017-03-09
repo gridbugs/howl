@@ -163,7 +163,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
     fn check_rules_wrapper(&mut self) -> RuleResolution {
         match self.check_rules() {
-            Ok(res) => res,
+            Ok(()) => RuleResolution::Accept,
             Err(res) => res,
         }
     }

@@ -51,6 +51,9 @@ pub enum NameMessageType {
     Car,
     Bike,
     Zombie,
+    EngineRepair,
+    TyresRepair,
+    ArmourUpgrade(usize),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

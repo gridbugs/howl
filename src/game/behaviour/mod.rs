@@ -14,3 +14,4 @@ mod acid_animation;
 mod physics;
 mod car;
 mod bike;
+mod zombie;

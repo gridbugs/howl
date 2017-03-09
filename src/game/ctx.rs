@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::ops::DerefMut;
+use rand::Rng;
 
 use game::*;
 use game::data::*;
@@ -171,6 +172,33 @@ impl From<SerializableGameState> for GameState {
     }
 }
 
+#[derive(Clone, Copy)]
+enum ShopItemType {
+    Pistol,
+    Shotgun,
+    MachineGun,
+    Railgun,
+    EngineRepair,
+    TyresRepair,
+    Armour(usize),
+}
+
+const RANDOM_SHOP_ITEM_TYPES: [ShopItemType; 10] = [
+    ShopItemType::Pistol,
+    ShopItemType::Shotgun,
+    ShopItemType::MachineGun,
+    ShopItemType::Railgun,
+    ShopItemType::EngineRepair,
+    ShopItemType::TyresRepair,
+    ShopItemType::Armour(1),
+    ShopItemType::Armour(2),
+    ShopItemType::Armour(3),
+    ShopItemType::Armour(4),
+];
+const RANDOM_SHOP_ITEM_WEIGHTS: [usize; 10] = [4, 3, 2, 1, 5, 4, 4, 3, 2, 1];
+const SHOP_MAX_ITEMS: usize = 12;
+const SHOP_MIN_ITEMS: usize = 6;
+
 impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<Renderer, Input> {
     pub fn new(renderer: Renderer, input_source: Input, seed: usize, width: usize, height: usize) -> Self {
         GameCtx {
@@ -223,7 +251,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     Some(MessageType::Title),
                     &self.language,
                     menu,
-                    current_menu_state);
+                    current_menu_state,
+                    None);
 
                 if current_game_state.is_some() {
                     menu_op.run_can_escape().unwrap_or((MainMenuSelection::Continue, SelectMenuState::new()))
@@ -262,6 +291,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             Self::install_control_map(&mut game_state, control_map);
 
             loop {
+                self.renderer.borrow_mut().reset_buffers();
                 match self.game_loop(&mut game_state)? {
                     ExitReason::Pause => {
                         current_game_state = Some(game_state);
@@ -300,6 +330,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn between_levels_menu(&mut self, game_state: &mut GameState) -> BetwenLevelsResolution {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
         let mut current_menu_state = None;
 
         loop {
@@ -316,7 +347,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 Some(MessageType::SurvivorCamp),
                 &self.language,
                 menu,
-                current_menu_state).run_can_escape();
+                current_menu_state,
+                Some(game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((selection, menu_state)) = maybe_selection {
                 current_menu_state = Some(menu_state.clone());
@@ -371,7 +403,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 Some(title),
                 &self.language,
                 menu,
-                None).run_can_escape();
+                None,
+                Some(game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((item_id, _)) = maybe_selection {
 
@@ -409,7 +442,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 }),
                 &self.language,
                 menu,
-                current_menu_state).run_can_escape();
+                current_menu_state,
+                Some(game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((item_id, menu_state)) = maybe_selection {
                 match self.item_menu(game_state, item_id) {
@@ -427,6 +461,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     }
 
     fn item_menu(&mut self, game_state: &mut GameState, item_id: EntityId) -> Option<ItemMenuSelection> {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
         let maybe_description = game_state.staging.description(item_id);
         let name = game_state.staging.name(item_id).expect("Missing component name");
 
@@ -447,7 +482,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             Some(title),
             &self.language,
             menu,
-            None).run_can_escape();
+            None,
+            Some(game_state.staging.entity(pc_id))).run_can_escape();
 
         if let Some((selection, _)) = maybe_selection {
             match selection {
@@ -501,7 +537,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 Some(title),
                 &self.language,
                 menu,
-                None).run_can_escape();
+                None,
+                Some(game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((selection, _)) = maybe_selection {
                 result = self.weapon_slot_menu(game_state, selection);
@@ -546,7 +583,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             Some(title),
             &self.language,
             menu,
-            None).run_can_escape();
+            None,
+            Some(game_state.staging.entity(pc_id))).run_can_escape();
 
         if let Some((selection, _)) = maybe_selection {
             if let Some(weapon_id) = selection {
@@ -629,10 +667,29 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         // remove the item from the shop
         game_state.staging.inventory_borrow_mut(shop_id).expect("Missing component inventory").remove(item_id);
 
-        // add the item to the player's inventory
-        game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").insert(item_id);
+        self.add_item_to_player(game_state, item_id);
 
         Ok(())
+    }
+
+    fn add_item_to_player(&mut self, game_state: &mut GameState, item_id: EntityId) {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+
+        if let Some(repair_type) = game_state.staging.repair_type(item_id) {
+            match repair_type {
+                RepairType::Engine => {
+                    game_state.staging.engine_health_mut(pc_id).expect("Missing component engine_health").inc(1);
+                }
+                RepairType::Tyres => {
+                    game_state.staging.tyre_health_mut(pc_id).expect("Missing component tyre_health").inc(1);
+                }
+            }
+        } else if let Some(amount) = game_state.staging.armour_upgrade(item_id) {
+            game_state.staging.insert_armour(pc_id, amount);
+        } else {
+            // add the item to the player's inventory
+            game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").insert(item_id);
+        }
     }
 
     fn next_level_menu(&mut self, game_state: &mut GameState) -> bool {
@@ -645,31 +702,61 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn prepare_between_levels(&mut self, game_state: &mut GameState) {
         let GlobalIds { pc_id, shop_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
+        let mut rng_borrow = self.rng.inner_mut();
+        let mut rng = rng_borrow.deref_mut();
 
-        let id_a = game_state.entity_ids.new_id();
-        prototypes::pistol(game_state.staging.entity_mut(id_a));
-        let id_b = game_state.entity_ids.new_id();
-        prototypes::shotgun(game_state.staging.entity_mut(id_b));
-        let id_c = game_state.entity_ids.new_id();
-        prototypes::machine_gun(game_state.staging.entity_mut(id_c));
-        let id_d = game_state.entity_ids.new_id();
-        prototypes::railgun(game_state.staging.entity_mut(id_d));
-
-        game_state.staging.insert_price(id_a, 10);
-        game_state.staging.insert_price(id_b, 20);
-        game_state.staging.insert_price(id_c, 30);
-        game_state.staging.insert_price(id_d, 40);
-
+        let total_shop_roll = RANDOM_SHOP_ITEM_WEIGHTS.iter().fold(0, |acc, &x| acc + x);
+        let num_shop_items = rng.gen::<usize>() % (SHOP_MAX_ITEMS - SHOP_MIN_ITEMS) + SHOP_MIN_ITEMS;
         let mut inventory = EntitySet::new();
-        inventory.insert(id_a);
-        inventory.insert(id_b);
-        inventory.insert(id_c);
-        inventory.insert(id_d);
+
+        for _ in 0..num_shop_items {
+            let mut roll = rng.gen::<usize>() % total_shop_roll;
+            for (weight, item_type) in izip!(RANDOM_SHOP_ITEM_WEIGHTS.iter(), RANDOM_SHOP_ITEM_TYPES.iter()) {
+                if roll < *weight {
+                    let id = game_state.entity_ids.new_id();
+                    inventory.insert(id);
+
+                    match *item_type {
+                        ShopItemType::Pistol => {
+                            prototypes::pistol(game_state.staging.entity_mut(id));
+                        }
+                        ShopItemType::Shotgun => {
+                            prototypes::shotgun(game_state.staging.entity_mut(id));
+                        }
+                        ShopItemType::MachineGun => {
+                            prototypes::machine_gun(game_state.staging.entity_mut(id));
+                        }
+                        ShopItemType::Railgun => {
+                            prototypes::railgun(game_state.staging.entity_mut(id));
+                        }
+                        ShopItemType::EngineRepair => {
+                            prototypes::engine_repair(game_state.staging.entity_mut(id));
+                        }
+                        ShopItemType::TyresRepair => {
+                            prototypes::tyres_repair(game_state.staging.entity_mut(id));
+                        }
+                        ShopItemType::Armour(amount) => {
+                            prototypes::armour_upgrade(game_state.staging.entity_mut(id), amount);
+                        }
+                    }
+
+                    break;
+                }
+
+                roll -= *weight;
+            }
+        }
+
         prototypes::shop(game_state.staging.entity_mut(shop_id), inventory);
 
-
         let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
-        game_state.staging.insert_bank(pc_id, bank + 100);
+        let letter_count = game_state.staging.letter_count(pc_id).expect("Missing component letter_count");
+        game_state.staging.insert_bank(pc_id, bank + 20 + letter_count * 40);
+        game_state.staging.insert_letter_count(pc_id, 0);
+        let mut hit_points = game_state.staging.hit_points(pc_id).expect("Missing component hit_points");
+        hit_points.fill();
+        game_state.staging.insert_hit_points(pc_id, hit_points);
+        game_state.staging.insert_message_log(pc_id, MessageLog::new());
     }
 
     fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
@@ -794,7 +881,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 None,
                 &self.language,
                 menu,
-                current_menu_state).run_can_escape() {
+                current_menu_state,
+                None).run_can_escape() {
 
                 current_menu_state = Some(menu_state.clone());
                 let mut menu = SelectMenu::new();
@@ -818,7 +906,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     None,
                     &self.language,
                     menu,
-                    Some(menu_state)).publish();
+                    Some(menu_state),
+                    None).publish();
 
                 if let Some(input) = self.input_source.next_input() {
                     ControlSpec::from(&*control_map).get(control_to_change).map(|input| {
@@ -899,6 +988,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                                 None,
                                                 global_ids.level_id + 1);
         game_state.action_id += 1;
+
+        // can't go back to previous levels
+        game_state.levels.level_mut(global_ids.level_id).clear();
 
         let new_level_id = game_state.levels.add_level(level);
         global_ids.level_id = new_level_id;

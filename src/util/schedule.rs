@@ -186,4 +186,8 @@ impl<T> Schedule<T> {
     pub fn invalidate(&mut self, ticket: ScheduleTicket) {
         self.invalid.insert(ticket.seq);
     }
+
+    pub fn len(&self) -> usize {
+        self.heap.len()
+    }
 }

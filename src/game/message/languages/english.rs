@@ -46,6 +46,15 @@ impl English {
             NameMessageType::Zombie => {
                 message.push(MessagePart::plain("zombie"));
             }
+            NameMessageType::TyresRepair => {
+                message.push(MessagePart::plain("Change Tyre"));
+            }
+            NameMessageType::EngineRepair => {
+                message.push(MessagePart::plain("Repair Engine"));
+            }
+            NameMessageType::ArmourUpgrade(amount) => {
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Armour {}", amount))));
+            }
         }
     }
 

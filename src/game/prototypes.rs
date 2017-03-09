@@ -1,5 +1,6 @@
 use std::ops::DerefMut;
 use std::cmp;
+use num::PrimInt;
 
 use coord::Coord;
 use direction::Direction;
@@ -50,6 +51,7 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_inventory(EntitySet::new());
     entity.insert_inventory_capacity(8);
     entity.insert_letter_count(0);
+    entity.insert_triggers_explosion();
 
     entity
 }
@@ -69,7 +71,7 @@ pub fn zombie<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity.insert_tile_depth(2);
     entity.insert_collider();
     entity.insert_behaviour_state(BehaviourState::new());
-    entity.insert_behaviour_type(BehaviourType::SimpleNpc);
+    entity.insert_behaviour_type(BehaviourType::Zombie);
     entity.insert_turn_offset(NPC_TURN_OFFSET);
     entity.insert_vision_distance(8);
     entity.insert_simple_npc_knowledge(SimpleNpcKnowledge::new());
@@ -273,6 +275,7 @@ pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_name(NameMessageType::Pistol);
     entity.insert_description(DescriptionMessageType::Pistol);
     entity.insert_gun_range(6);
+    entity.insert_price(10);
 
     entity
 }
@@ -283,6 +286,7 @@ pub fn shotgun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_name(NameMessageType::Shotgun);
     entity.insert_description(DescriptionMessageType::Shotgun);
     entity.insert_gun_range(3);
+    entity.insert_price(20);
 
     entity
 }
@@ -293,6 +297,7 @@ pub fn machine_gun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_name(NameMessageType::MachineGun);
     entity.insert_description(DescriptionMessageType::MachineGun);
     entity.insert_gun_range(5);
+    entity.insert_price(30);
 
     entity
 }
@@ -303,6 +308,7 @@ pub fn railgun<E: EntityPopulate>(mut entity: E) -> E {
     entity.insert_name(NameMessageType::Railgun);
     entity.insert_description(DescriptionMessageType::Railgun);
     entity.insert_gun_range(10);
+    entity.insert_price(100);
 
     entity
 }
@@ -348,6 +354,33 @@ pub fn explosion<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Re
     entity.insert_projectile_damage(1);
     entity.insert_projectile();
     entity.insert_explosion();
+
+    entity
+}
+
+pub fn engine_repair<E: EntityPopulate>(mut entity: E) -> E {
+
+    entity.insert_repair_type(RepairType::Engine);
+    entity.insert_name(NameMessageType::EngineRepair);
+    entity.insert_price(10);
+
+    entity
+}
+
+pub fn tyres_repair<E: EntityPopulate>(mut entity: E) -> E {
+
+    entity.insert_repair_type(RepairType::Tyres);
+    entity.insert_name(NameMessageType::TyresRepair);
+    entity.insert_price(10);
+
+    entity
+}
+
+pub fn armour_upgrade<E: EntityPopulate>(mut entity: E, amount: usize) -> E {
+
+    entity.insert_name(NameMessageType::ArmourUpgrade(amount));
+    entity.insert_armour_upgrade(amount);
+    entity.insert_price(10 * 2.pow(amount as u32 - 1));
 
     entity
 }

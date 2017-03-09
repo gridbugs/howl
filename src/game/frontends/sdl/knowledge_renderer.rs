@@ -568,9 +568,8 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
         }
     }
 
-    fn draw_hud_component(&mut self, symbol: Rect, text: String, mut cursor: usize) -> usize {
-        let symbol_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
-                                    (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+    fn draw_hud_component(&mut self, symbol: Rect, text: String, mut x: usize, y: usize) -> usize {
+        let symbol_rect = Rect::new(x as i32, y as i32,
                                     self.renderer.hud_height_px() as u32,
                                     self.renderer.hud_height_px() as u32);
 
@@ -578,24 +577,63 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
                                         Some(symbol),
                                         Some(symbol_rect)).expect("Failed to render symbol");
 
-        cursor += self.renderer.hud_padded_height_px();
+        x += self.renderer.hud_padded_height_px();
 
         let sdl_colour = rgb24_to_sdl_colour(HUD_TEXT_COLOUR);
         let surface = self.renderer.font.render(text.as_ref()).solid(sdl_colour).expect("Failed to create text surface");
         let texture = self.renderer.sdl_renderer.create_texture_from_surface(&surface).expect("Failed to create text texture");
         let text_width = text.len() * self.renderer.hud_height_px(); // square fonts
 
-        let text_rect = Rect::new((self.renderer.hud_position.x + cursor as isize) as i32,
-                                  (self.renderer.hud_position.y + HUD_TOP_PADDING_PX as isize) as i32,
+        let text_rect = Rect::new(x as i32, y as i32,
                                   text_width as u32,
                                   self.renderer.hud_height_px() as u32);
 
         self.renderer.sdl_renderer.copy(&texture, None, Some(text_rect)).expect("Failed to render text");
 
-        cursor += text_width + self.renderer.hud_height_px();
-
-        cursor
+        x + text_width + self.renderer.hud_height_px()
     }
+
+    fn draw_hud_internal(&mut self, entity: EntityRef, y: usize) {
+        let mut cursor = LEFT_PADDING_PX;
+
+        let hit_points = entity.hit_points().expect("Entity missing hit_points");
+        let hit_points_text = format!("{}/{}", hit_points.current(), hit_points.max());
+        let hit_points_symbol = self.renderer.hud.health;
+        cursor = self.draw_hud_component(hit_points_symbol, hit_points_text, cursor, y);
+
+        let engine = entity.engine_health().expect("Entity missing engine_health");
+        let engine_text = format!("{}/{}", engine.current(), engine.max());
+        let engine_symbol = self.renderer.hud.engine;
+        cursor = self.draw_hud_component(engine_symbol, engine_text, cursor, y);
+
+        let tyres = entity.tyre_health().expect("Entity missing tyre_health");
+        let tyres_text = format!("{}/{}", tyres.current(), tyres.max());
+        let tyre_symbol = self.renderer.hud.tyres;
+        cursor = self.draw_hud_component(tyre_symbol, tyres_text, cursor, y);
+
+        let armour = entity.armour().expect("Entity missing armour");
+        let armour_text = format!("{}", armour);
+        let armour_symbol = self.renderer.hud.armour;
+        cursor = self.draw_hud_component(armour_symbol, armour_text, cursor, y);
+
+        let speed = entity.current_speed().expect("Entity missing current_speed");
+        let max_speed = entity.player_max_speed().expect("Entity missing max_speed");
+        let speed_text = format!("{}/{}", speed, max_speed);
+        let speed_symbol = self.renderer.hud.speed;
+        cursor = self.draw_hud_component(speed_symbol, speed_text, cursor, y);
+
+        let letters = entity.letter_count().expect("Entity missing letter_count");
+        let letters_text = format!("{}", letters);
+        let letters_symbol = self.renderer.hud.letter;
+        cursor = self.draw_hud_component(letters_symbol, letters_text, cursor, y);
+
+        let bank = entity.bank().expect("Entity missing bank");
+        let bank_text = format!("{}", bank);
+        let bank_symbol = self.renderer.hud.money;
+        self.draw_hud_component(bank_symbol, bank_text, cursor, y);
+    }
+
+
 }
 
 impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
@@ -671,40 +709,15 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
     }
 
 
+    fn draw_hud_bottom(&mut self, entity: EntityRef, _language: &Box<Language>) {
+        let y = self.renderer.total_height_px - self.renderer.hud_height_px() - HUD_TOP_PADDING_PX - BOTTOM_PADDING_PX;
+        self.draw_hud_internal(entity, y);
+    }
+
     fn draw_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
         self.renderer.clear_hud();
-        let mut cursor = LEFT_PADDING_PX;
-
-        let hit_points = entity.hit_points().expect("Entity missing hit_points");
-        let hit_points_text = format!("{}/{}", hit_points.current(), hit_points.max());
-        let hit_points_symbol = self.renderer.hud.health;
-        cursor = self.draw_hud_component(hit_points_symbol, hit_points_text, cursor);
-
-        let engine = entity.engine_health().expect("Entity missing engine_health");
-        let engine_text = format!("{}/{}", engine.current(), engine.max());
-        let engine_symbol = self.renderer.hud.engine;
-        cursor = self.draw_hud_component(engine_symbol, engine_text, cursor);
-
-        let tyres = entity.tyre_health().expect("Entity missing tyre_health");
-        let tyres_text = format!("{}/{}", tyres.current(), tyres.max());
-        let tyre_symbol = self.renderer.hud.tyres;
-        cursor = self.draw_hud_component(tyre_symbol, tyres_text, cursor);
-
-        let armour = entity.armour().expect("Entity missing armour");
-        let armour_text = format!("{}", armour);
-        let armour_symbol = self.renderer.hud.armour;
-        cursor = self.draw_hud_component(armour_symbol, armour_text, cursor);
-
-        let speed = entity.current_speed().expect("Entity missing current_speed");
-        let max_speed = entity.player_max_speed().expect("Entity missing max_speed");
-        let speed_text = format!("{}/{}", speed, max_speed);
-        let speed_symbol = self.renderer.hud.speed;
-        cursor = self.draw_hud_component(speed_symbol, speed_text, cursor);
-
-        let letters = entity.letter_count().expect("Entity missing armour");
-        let letters_text = format!("{}", letters);
-        let letters_symbol = self.renderer.hud.letter;
-        self.draw_hud_component(letters_symbol, letters_text, cursor);
+        let y = self.renderer.hud_position.y as usize + HUD_TOP_PADDING_PX;
+        self.draw_hud_internal(entity, y);
     }
 
     fn fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState, language: &Box<Language>) {

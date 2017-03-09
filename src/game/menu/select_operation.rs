@@ -1,21 +1,24 @@
 use game::*;
+use ecs::*;
 
-pub struct SelectMenuOperation<'a, 'b, 'c, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> {
+pub struct SelectMenuOperation<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> {
     renderer: &'a mut R,
     input: &'b mut I,
     prelude: Option<MessageType>,
     language: &'c Box<Language>,
     menu: SelectMenu<T>,
     initial_state: Option<SelectMenuState>,
+    hud_entity: Option<EntityRef<'d>>,
 }
 
-impl<'a, 'b, 'c, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOperation<'a, 'b, 'c, R, I, T> {
+impl<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOperation<'a, 'b, 'c, 'd, R, I, T> {
     pub fn new(renderer: &'a mut R,
                input: &'b mut I,
                prelude: Option<MessageType>,
                language: &'c Box<Language>,
                menu: SelectMenu<T>,
-               initial_state: Option<SelectMenuState>) -> Self {
+               initial_state: Option<SelectMenuState>,
+               hud_entity: Option<EntityRef<'d>>) -> Self {
         SelectMenuOperation {
             renderer: renderer,
             input: input,
@@ -23,6 +26,7 @@ impl<'a, 'b, 'c, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOp
             language: language,
             menu: menu,
             initial_state: initial_state,
+            hud_entity: hud_entity,
         }
     }
 
@@ -30,7 +34,11 @@ impl<'a, 'b, 'c, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOp
         let mut state = self.initial_state.unwrap_or_default();
 
         loop {
-            self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
+            if let Some(entity) = self.hud_entity {
+                self.renderer.publish_fullscreen_menu_with_hud(self.prelude, &self.menu, &state, self.language, entity);
+            } else {
+                self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
+            }
 
             if let Some(event) = self.input.next_input() {
                 match event {
@@ -53,7 +61,11 @@ impl<'a, 'b, 'c, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOp
         let mut state = self.initial_state.unwrap_or_default();
 
         loop {
-            self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
+            if let Some(entity) = self.hud_entity {
+                self.renderer.publish_fullscreen_menu_with_hud(self.prelude, &self.menu, &state, self.language, entity);
+            } else {
+                self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
+            }
 
             if let Some(event) = self.input.next_input() {
                 match event {
@@ -81,6 +93,10 @@ impl<'a, 'b, 'c, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOp
 
     pub fn publish(self) {
         let state = self.initial_state.unwrap_or_default();
-        self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
+        if let Some(entity) = self.hud_entity {
+            self.renderer.publish_fullscreen_menu_with_hud(self.prelude, &self.menu, &state, self.language, entity);
+        } else {
+            self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
+        }
     }
 }

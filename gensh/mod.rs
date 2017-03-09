@@ -219,6 +219,10 @@ impl SpatialHashTable {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.grid.reset_all();
+    }
+
     pub fn cell_iter(&self) -> SpatialHashCellIter {
         self.grid.iter()
     }

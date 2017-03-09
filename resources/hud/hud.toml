@@ -24,3 +24,7 @@ y = 0
 [symbols.Letter]
 x = 5
 y = 0
+
+[symbols.Money]
+x = 6
+y = 0

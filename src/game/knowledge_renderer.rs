@@ -60,6 +60,7 @@ pub trait KnowledgeRenderer {
     fn draw_log(&mut self);
 
     /// Updates the hud based on a specified entity
+    fn draw_hud_bottom(&mut self, entity: EntityRef, language: &Box<Language>);
     fn draw_hud(&mut self, entity: EntityRef, language: &Box<Language>);
 
     /// Updates the game window with the contents of the internal buffer
@@ -198,6 +199,13 @@ pub trait KnowledgeRenderer {
 
     fn publish_fullscreen_menu<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState, language: &Box<Language>) {
         self.fullscreen_menu(prelude, menu, state, language);
+        self.publish();
+    }
+
+    fn publish_fullscreen_menu_with_hud<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState,
+                                           language: &Box<Language>, entity: EntityRef) {
+        self.fullscreen_menu(prelude, menu, state, language);
+        self.draw_hud_bottom(entity, language);
         self.publish();
     }
 

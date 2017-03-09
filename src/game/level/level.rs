@@ -140,6 +140,12 @@ impl Level {
             self.ecs.insert_level_switch(original, LevelSwitch::ExistingLevel(exit));
         }
     }
+
+    pub fn clear(&mut self) {
+        self.ecs.clear();
+        self.spatial_hash.clear();
+        self.turn_schedule.reset();
+    }
 }
 
 pub struct LevelConnectionReport {

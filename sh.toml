@@ -2,7 +2,7 @@
     type = "sum_f64"
 
 [field.solid]
-    type = "count_bool"
+    type = "any"
 
 [field.pc]
     type = "count_bool"

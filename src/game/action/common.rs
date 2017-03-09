@@ -26,24 +26,25 @@ pub fn realtime_velocity_stop(action: &mut EcsAction, entity_id: EntityId) {
 
 pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity) {
 
-    let current_position = entity.position().expect("Entity missing position");
-    let current_velocity = entity.realtime_velocity().expect("Entity missing realtime_velocity");
+    if let Some(current_position) = entity.position() {
+        let current_velocity = entity.realtime_velocity().expect("Entity missing realtime_velocity");
 
-    let (new_velocity, offset) = current_velocity.step();
+        let (new_velocity, offset) = current_velocity.step();
 
-    action.insert_realtime_velocity(entity.id(), new_velocity);
-    action.insert_position(entity.id(), current_position + offset);
+        action.insert_realtime_velocity(entity.id(), new_velocity);
+        action.insert_position(entity.id(), current_position + offset);
 
-    if let Some(remaining) = entity.realtime_moves_remaining() {
-        if remaining > 0 {
-            action.insert_realtime_moves_remaining(entity.id(), remaining - 1);
+        if let Some(remaining) = entity.realtime_moves_remaining() {
+            if remaining > 0 {
+                action.insert_realtime_moves_remaining(entity.id(), remaining - 1);
+            }
         }
+
+        let length = (offset.length_squared() as f64).sqrt();
+        let delay = (velocity.ms_per_cell() as f64 * length) as u64;
+
+        action.set_action_time_ms(delay);
     }
-
-    let length = (offset.length_squared() as f64).sqrt();
-    let delay = (velocity.ms_per_cell() as f64 * length) as u64;
-
-    action.set_action_time_ms(delay);
 }
 
 pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
