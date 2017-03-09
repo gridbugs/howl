@@ -11,8 +11,8 @@ use perlin::*;
 use math::*;
 use direction::*;
 
-const MAP_WIDTH_MAX: usize = 21;
-const MAP_WIDTH_MIN: usize = 20;
+const MAP_WIDTH_MAX: usize = 120;
+const MAP_WIDTH_MIN: usize = 60;
 const MAP_HEIGHT: usize = 30;
 const ROAD_HEIGHT: usize = 6;
 const ROAD_TOP: usize = (MAP_HEIGHT + ROAD_HEIGHT) / 2;
