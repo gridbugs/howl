@@ -96,12 +96,13 @@ impl<'a> From<&'a StringControlSpec> for ControlMap {
 impl<'a> From<&'a String> for Control {
     fn from(s: &'a String) -> Self {
         match s.as_ref() {
-            "North" => Control::Direction(Direction::North),
-            "South" => Control::Direction(Direction::South),
-            "East" => Control::Direction(Direction::East),
-            "West" => Control::Direction(Direction::West),
+            "SteerUp" => Control::Direction(Direction::North),
+            "SteerDown" => Control::Direction(Direction::South),
+            "Accelerate" => Control::Direction(Direction::East),
+            "Decelerate" => Control::Direction(Direction::West),
             "Wait" => Control::Wait,
             "Fire" => Control::Fire,
+            "Inventory" => Control::Inventory,
             "Status" => Control::Status,
             "DisplayMessageLog" => Control::DisplayMessageLog,
             "Pause" => Control::Pause,
@@ -113,12 +114,13 @@ impl<'a> From<&'a String> for Control {
 impl From<Control> for String {
     fn from(control: Control) -> Self {
         match control {
-            Control::Direction(Direction::North) => "North",
-            Control::Direction(Direction::South) => "South",
-            Control::Direction(Direction::East) => "East",
-            Control::Direction(Direction::West) => "West",
+            Control::Direction(Direction::North) => "SteerUp",
+            Control::Direction(Direction::South) => "SteerDown",
+            Control::Direction(Direction::East) => "Accelerate",
+            Control::Direction(Direction::West) => "Decelerate",
             Control::Wait => "Wait",
             Control::Fire => "Fire",
+            Control::Inventory => "Inventory",
             Control::Status => "Status",
             Control::DisplayMessageLog => "DisplayMessageLog",
             Control::Pause => "Pause",

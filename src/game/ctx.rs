@@ -181,9 +181,11 @@ enum ShopItemType {
     EngineRepair,
     TyresRepair,
     Armour(usize),
+    SpareTyre,
+    EngineRepairKit,
 }
 
-const RANDOM_SHOP_ITEM_TYPES: [ShopItemType; 10] = [
+const RANDOM_SHOP_ITEM_TYPES: [ShopItemType; 12] = [
     ShopItemType::Pistol,
     ShopItemType::Shotgun,
     ShopItemType::MachineGun,
@@ -194,8 +196,10 @@ const RANDOM_SHOP_ITEM_TYPES: [ShopItemType; 10] = [
     ShopItemType::Armour(2),
     ShopItemType::Armour(3),
     ShopItemType::Armour(4),
+    ShopItemType::SpareTyre,
+    ShopItemType::EngineRepairKit,
 ];
-const RANDOM_SHOP_ITEM_WEIGHTS: [usize; 10] = [4, 3, 2, 1, 5, 4, 4, 3, 2, 1];
+const RANDOM_SHOP_ITEM_WEIGHTS: [usize; 12] = [4, 3, 2, 1, 5, 4, 4, 3, 2, 1, 100, 100];
 const SHOP_MAX_ITEMS: usize = 12;
 const SHOP_MIN_ITEMS: usize = 6;
 
@@ -684,8 +688,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     game_state.staging.tyre_health_mut(pc_id).expect("Missing component tyre_health").inc(1);
                 }
             }
-        } else if let Some(amount) = game_state.staging.armour_upgrade(item_id) {
-            game_state.staging.insert_armour(pc_id, amount);
+        } else if let Some(new_armour) = game_state.staging.armour_upgrade(item_id) {
+            let current_armour = game_state.staging.armour(pc_id).expect("Missing component armour");
+            if new_armour > current_armour {
+                game_state.staging.insert_armour(pc_id, new_armour);
+            }
         } else {
             // add the item to the player's inventory
             game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").insert(item_id);
@@ -737,6 +744,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         }
                         ShopItemType::Armour(amount) => {
                             prototypes::armour_upgrade(game_state.staging.entity_mut(id), amount);
+                        }
+                        ShopItemType::SpareTyre => {
+                            prototypes::spare_tyre(game_state.staging.entity_mut(id));
+                        }
+                        ShopItemType::EngineRepairKit => {
+                            prototypes::engine_repair_kit(game_state.staging.entity_mut(id));
                         }
                     }
 

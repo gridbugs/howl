@@ -375,3 +375,44 @@ pub fn explode_spawn(action: &mut EcsAction, coord: Coord, ids: &EntityIdReserve
         angle += STEP;
     }
 }
+
+pub fn repair_tyre(action: &mut EcsAction, entity: EntityRef, amount: usize) {
+    let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");
+    tyres.inc(amount);
+    action.insert_tyre_health(entity.id(), tyres);
+    let position = entity.position().expect("Entity missing position");
+    action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreReplaced));
+}
+
+pub fn repair_engine(action: &mut EcsAction, entity: EntityRef, amount: usize) {
+    let mut engine = entity.engine_health().expect("Entity missing engine_health");
+    engine.inc(amount);
+    action.insert_engine_health(entity.id(), engine);
+    let position = entity.position().expect("Entity missing position");
+    action.set_action_description(ActionDescription::new(position, ActionMessageType::EngineRepaired));
+}
+
+pub fn consume(action: &mut EcsAction, entity: EntityRef, item: EntityRef) {
+    let mut used = false;
+    match item.consumable_type().expect("Entity missing consumable_type") {
+        ConsumableType::EngineRepairKit => {
+            let engine = entity.engine_health().expect("Entity missing engine_health");
+            if !engine.is_full() {
+                action.set_then(Reaction::new(ActionArgs::RepairEngine(entity.id(), 1), 0));
+                used = true;
+            }
+        }
+        ConsumableType::SpareTyre => {
+            let tyres = entity.tyre_health().expect("Entity missing tyre_health");
+            if !tyres.is_full() {
+                action.set_then(Reaction::new(ActionArgs::RepairTyre(entity.id(), 1), 0));
+                used = true;
+            }
+        }
+    }
+
+    if used {
+        entity.inventory_borrow_mut().expect("Entity missing inventory").remove(item.id());
+        action.remove_entity(item);
+    }
+}

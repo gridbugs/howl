@@ -9,13 +9,14 @@ use direction::Direction;
 pub enum Control {
     Direction(Direction),
     Fire,
+    Inventory,
     Wait,
     DisplayMessageLog,
     Pause,
     Status,
 }
 
-const NUM_CONTROLS: usize = 9;
+const NUM_CONTROLS: usize = 10;
 const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
     Control::Direction(Direction::North),
     Control::Direction(Direction::South),
@@ -23,6 +24,7 @@ const CONTROL_ORDER: [Control; NUM_CONTROLS] = [
     Control::Direction(Direction::West),
     Control::Wait,
     Control::Fire,
+    Control::Inventory,
     Control::Status,
     Control::DisplayMessageLog,
     Control::Pause,

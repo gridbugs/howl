@@ -34,6 +34,7 @@ pub enum MessageType {
     Garage,
     GarageInventoryFull,
     WeaponSlotTitle(RelativeDirection, Option<NameMessageType>),
+    MustBeStopped,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -54,6 +55,8 @@ pub enum NameMessageType {
     EngineRepair,
     TyresRepair,
     ArmourUpgrade(usize),
+    EngineRepairKit,
+    SpareTyre,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -70,6 +73,8 @@ pub enum ActionMessageType {
     FailToAccelerate,
     TyreAcidDamage,
     MaxSpeedDecreased,
+    EngineRepaired,
+    TyreReplaced,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

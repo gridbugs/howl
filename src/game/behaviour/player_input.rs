@@ -112,6 +112,51 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     ret
 }
 
+fn inventory<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<EntityId> {
+
+    let mut menu = SelectMenu::new();
+    for entity_id in input.entity.inventory_borrow().expect("Missing component inventory").iter() {
+        let name = input.ecs.name(entity_id).expect("Missing component name");
+        let menu_message = MenuMessageType::Name(name);
+        menu.push(SelectMenuItem::new(menu_message, entity_id));
+    }
+
+    let capacity = input.entity.inventory_capacity().expect("Missing component inventory_capacity");
+    let size = input.entity.inventory_borrow().expect("Missing component inventory").len();
+
+    let ret = SelectMenuOperation::new(
+        input.renderer.borrow_mut().deref_mut(),
+        &mut input_source,
+        Some(MessageType::Inventory {
+            capacity: capacity,
+            size: size,
+        }),
+        input.language,
+        menu,
+        None,
+        Some(input.entity)).run_can_escape().map(|(id, _)| id);
+
+    input.renderer.borrow_mut().publish_all_windows(input.entity, input.language);
+
+    ret
+}
+
+fn try_consume_item<K: KnowledgeRenderer>(input: BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
+    let speed = input.entity.current_speed().expect("Missing component current_speed");
+    if speed == 0 {
+        let mut inv = input.entity.inventory_borrow_mut().expect("Missing component inventory");
+        inv.remove(item_id);
+        return Some(ActionArgs::Consume(input.entity.id(), item_id));
+    }
+    let mut message_log = input.entity.message_log_borrow_mut().expect("Expected component message_log");
+    message_log.add_temporary(MessageType::MustBeStopped);
+    let mut renderer = input.renderer.borrow_mut();
+    renderer.update_log_buffer(message_log.deref(), input.language);
+    renderer.draw_log();
+    renderer.publish_all_windows(input.entity, input.language);
+    None
+}
+
 fn direction_to_relative_message(direction: Direction) -> MessageType {
     match direction {
         Direction::East => MessageType::Front,
@@ -168,6 +213,9 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
                                 direction: direction,
                             })
                         })
+                    }
+                    Control::Inventory => {
+                        inventory(input, input_source).and_then(|item| try_consume_item(input, item)).map(MetaAction::ActionArgs)
                     }
                     Control::Wait => {
                         Some(MetaAction::ActionArgs(ActionArgs::Null))

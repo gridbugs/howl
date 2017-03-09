@@ -53,7 +53,13 @@ impl English {
                 message.push(MessagePart::plain("Repair Engine"));
             }
             NameMessageType::ArmourUpgrade(amount) => {
-                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Armour {}", amount))));
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Armour Level {}", amount))));
+            }
+            NameMessageType::EngineRepairKit => {
+                message.push(MessagePart::plain("Engine Repair Kit"));
+            }
+            NameMessageType::SpareTyre => {
+                message.push(MessagePart::plain("Spare Tyre"));
             }
         }
     }
@@ -104,6 +110,12 @@ impl English {
             }
             ActionMessageType::MaxSpeedDecreased => {
                 message.push(MessagePart::plain("The engine is damaged. Maximum speed decreased."));
+            }
+            ActionMessageType::EngineRepaired => {
+                message.push(MessagePart::plain("Engine repaired."));
+            }
+            ActionMessageType::TyreReplaced => {
+                message.push(MessagePart::plain("Tyre replaced."));
             }
         }
     }
@@ -296,6 +308,9 @@ impl Language for English {
                 message.push(MessagePart::plain("Garage"));
                 message.push(MessagePart::Newline);
                 message.push(MessagePart::plain("No space in inventory!"));
+            }
+            MessageType::MustBeStopped => {
+                message.push(MessagePart::plain("Can't do this while moving."));
             }
         }
 

@@ -65,6 +65,9 @@ pub enum ActionArgs {
     TakeLetter(EntityId, EntityId),
     Explode(EntityId),
     ExplodeSpawn(Coord),
+    RepairTyre(EntityId, usize),
+    RepairEngine(EntityId, usize),
+    Consume(EntityId, EntityId),
 }
 
 impl ActionArgs {
@@ -142,6 +145,15 @@ impl ActionArgs {
             }
             ActionArgs::ExplodeSpawn(coord) => {
                 actions::explode_spawn(action, coord, entity_ids);
+            }
+            ActionArgs::RepairTyre(entity_id, amount) => {
+                actions::repair_tyre(action, ecs.entity(entity_id), amount);
+            }
+            ActionArgs::RepairEngine(entity_id, amount) => {
+                actions::repair_engine(action, ecs.entity(entity_id), amount);
+            }
+            ActionArgs::Consume(entity_id, item_id) => {
+                actions::consume(action, ecs.entity(entity_id), ecs.entity(item_id));
             }
         }
     }

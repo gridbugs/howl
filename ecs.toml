@@ -33,6 +33,10 @@ imports = [
 [component.destroyed_by_explosion]
 [component.triggers_explosion]
 
+[component.consumable_type]
+    type = "ConsumableType"
+    copy = true
+
 [component.armour_upgrade]
     type = "usize"
     copy = true
