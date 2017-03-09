@@ -269,6 +269,9 @@ impl Language for English {
             }
             MessageType::SurvivorCamp => {
                 message.push(MessagePart::plain("Survivor Camp"));
+                message.push(MessagePart::Newline);
+                message.push(MessagePart::Newline);
+                message.push(MessagePart::plain("You arrive at a camp. The survivors are grateful for their mail being delivered in these troubled times. They heal your wounds, pay you for your service, and give you new mail to deliver."));
             }
             MessageType::ShopTitle(balance) => {
                 message.push(MessagePart::Text(TextMessagePart::Plain(format!("Shop - Your balance: {}", balance))));
