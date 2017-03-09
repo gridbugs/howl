@@ -199,7 +199,7 @@ const RANDOM_SHOP_ITEM_TYPES: [ShopItemType; 12] = [
     ShopItemType::SpareTyre,
     ShopItemType::EngineRepairKit,
 ];
-const RANDOM_SHOP_ITEM_WEIGHTS: [usize; 12] = [4, 3, 2, 1, 5, 4, 4, 3, 2, 1, 100, 100];
+const RANDOM_SHOP_ITEM_WEIGHTS: [usize; 12] = [4, 3, 2, 1, 5, 4, 4, 3, 2, 1, 4, 4];
 const SHOP_MAX_ITEMS: usize = 12;
 const SHOP_MIN_ITEMS: usize = 6;
 
