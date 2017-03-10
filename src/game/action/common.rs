@@ -278,7 +278,7 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
 pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage: usize, rng: &mut R) {
     let position = entity.position().expect("Entity missing position");
     for _ in 0..damage {
-        match entity.damage_type(rng).expect("Missing complex damage components") {
+        entity.damage_type(rng).map(|damage_type| match damage_type {
             DamageType::Health => {
                 let mut hit_points = entity.hit_points().expect("Entity missing hit_points");
                 hit_points.dec(1);
@@ -320,7 +320,7 @@ pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage:
             DamageType::Deflect => {
                 action.set_action_description(ActionDescription::new(position, ActionMessageType::ArmourDeflect));
             }
-        }
+        });
     }
 }
 
