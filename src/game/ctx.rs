@@ -975,7 +975,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         prototypes::pc(action.entity_mut(pc_id), Coord::new(0, 0));
 
         let pistol_id = game_state.entity_ids.new_id();
-        prototypes::railgun(action.entity_mut(pistol_id));
+        prototypes::pistol(action.entity_mut(pistol_id));
 
         action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
             .insert(Direction::East, pistol_id);
