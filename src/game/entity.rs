@@ -42,17 +42,20 @@ impl<'a> EntityExtra for EntityRef<'a> {
                     Some(DamageType::Deflect)
                 }
             } else {
-                self.engine_health().and_then(|engine| self.tyre_health().and_then(|tyres| self.hit_points().map(|health| {
+                self.engine_health().and_then(|engine| self.tyre_health().and_then(|tyres| self.hit_points().and_then(|health| {
                     let total = engine.ucurrent() + tyres.ucurrent() + health.ucurrent();
+                    if total == 0 {
+                        return None;
+                    }
                     let mut roll = r.gen::<usize>() % total;
                     if roll < engine.ucurrent() {
-                        return DamageType::Engine;
+                        return Some(DamageType::Engine);
                     }
                     roll -= engine.ucurrent();
                     if roll < tyres.ucurrent() {
-                        return DamageType::Tyres;
+                        return Some(DamageType::Tyres);
                     }
-                    DamageType::Health
+                    Some(DamageType::Health)
                 })))
             }
         })
