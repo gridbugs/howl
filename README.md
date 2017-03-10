@@ -26,7 +26,7 @@ Configure graphics scaling in `user/config.toml`.
 
 ## macOS
 
-Drag the AppocalypsePost app into your `Applications` folder or elsewhere before running.
+Drag the ApocalypsePost app into your `Applications` folder or elsewhere before running.
 
 ## Source
 

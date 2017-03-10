@@ -4,7 +4,7 @@ set -e
 
 
 MACOS_BIN_NAME=apocalypse-post-bin
-MACOS_APP_NAME=apocalypse-post
+MACOS_APP_NAME=ApocalypsePost
 MACOS_APP_DIR=$MACOS_APP_NAME.app
 
 echo "Creating app directory structure"
@@ -46,6 +46,7 @@ echo "Creating dmg"
 mkdir $MACOS_APP_NAME
 mv $MACOS_APP_DIR $MACOS_APP_NAME
 ln -s /Applications $MACOS_APP_NAME/Applications
+cp README.md $MACOS_APP_NAME/README.txt
 rm -rf $MACOS_APP_NAME/.Trashes
 
 FULL_NAME=$APP_NAME-$OS-$MACHINE-$SUFFIX

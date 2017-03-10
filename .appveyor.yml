@@ -52,6 +52,8 @@ build_script:
     copy sdl_image\SDL2_image-2.0.1\lib\x64\*.dll   tmp\%FULL_NAME% &
     copy sdl_ttf\SDL2_ttf-2.0.14\lib\x64\*.dll      tmp\%FULL_NAME%
 
+    copy README.md tmp\%FULL_NAME%\README.txt
+
     tmp\%FULL_NAME%\%NAME% --help
 
     powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('tmp', '%FULL_NAME%.zip'); }"
