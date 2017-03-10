@@ -75,6 +75,7 @@ pub enum ItemMenuSelection {
 enum BuyError {
     CantAfford,
     InventoryFull,
+    NoEffect,
 }
 
 enum WeaponMenuError {
@@ -199,7 +200,7 @@ const RANDOM_SHOP_ITEM_TYPES: [ShopItemType; 12] = [
     ShopItemType::SpareTyre,
     ShopItemType::EngineRepairKit,
 ];
-const RANDOM_SHOP_ITEM_WEIGHTS: [usize; 12] = [4, 3, 2, 1, 5, 4, 4, 3, 2, 1, 4, 4];
+const RANDOM_SHOP_ITEM_WEIGHTS: [usize; 12] = [2, 2, 2, 1, 3, 3, 3, 2, 1, 1, 2, 2];
 const SHOP_MAX_ITEMS: usize = 12;
 const SHOP_MIN_ITEMS: usize = 6;
 
@@ -399,6 +400,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 Ok(()) => MessageType::ShopTitle(bank),
                 Err(BuyError::CantAfford) => MessageType::ShopTitleInsufficientFunds(bank),
                 Err(BuyError::InventoryFull) => MessageType::ShopTitleInventoryFull(bank),
+                Err(BuyError::NoEffect) => MessageType::ShopTitleNoEffect(bank),
             };
 
             let maybe_selection = SelectMenuOperation::new(
@@ -657,12 +659,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             return Err(BuyError::CantAfford);
         }
 
-        let max_inventory = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
-        let current_inventory = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
-
-        if current_inventory >= max_inventory {
-            return Err(BuyError::InventoryFull);
-        }
+        self.pre_add_item_to_player(game_state, item_id)?;
 
         // commit the payment
         let remaining_bank = bank - price;
@@ -672,6 +669,41 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         game_state.staging.inventory_borrow_mut(shop_id).expect("Missing component inventory").remove(item_id);
 
         self.add_item_to_player(game_state, item_id);
+
+        Ok(())
+    }
+
+    fn pre_add_item_to_player(&self, game_state: &GameState, item_id: EntityId) -> Result<(), BuyError> {
+        let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
+
+        let max_inventory = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
+        let current_inventory = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
+
+        if current_inventory >= max_inventory {
+            return Err(BuyError::InventoryFull);
+        }
+
+        if let Some(repair_type) = game_state.staging.repair_type(item_id) {
+            match repair_type {
+                RepairType::Engine => {
+                    let engine = game_state.staging.engine_health(pc_id).expect("Missing component engine_health");
+                    if engine.is_full() {
+                        return Err(BuyError::NoEffect);
+                    }
+                }
+                RepairType::Tyres => {
+                    let tyres = game_state.staging.tyre_health(pc_id).expect("Missing component tyre_health");
+                    if tyres.is_full() {
+                        return Err(BuyError::NoEffect);
+                    }
+                }
+            }
+        } else if let Some(new_armour) = game_state.staging.armour_upgrade(item_id) {
+            let current_armour = game_state.staging.armour(pc_id).expect("Missing component armour");
+            if new_armour <= current_armour {
+                return Err(BuyError::NoEffect);
+            }
+        }
 
         Ok(())
     }

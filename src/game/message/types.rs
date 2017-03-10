@@ -26,6 +26,7 @@ pub enum MessageType {
     ShopTitle(usize),
     ShopTitleInsufficientFunds(usize),
     ShopTitleInventoryFull(usize),
+    ShopTitleNoEffect(usize),
     Inventory {
         size: usize,
         capacity: usize,

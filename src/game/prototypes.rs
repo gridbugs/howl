@@ -389,7 +389,7 @@ pub fn engine_repair_kit<E: EntityPopulate>(mut entity: E) -> E {
 
     entity.insert_name(NameMessageType::EngineRepairKit);
     entity.insert_consumable_type(ConsumableType::EngineRepairKit);
-    entity.insert_price(20);
+    entity.insert_price(10);
 
     entity
 }
@@ -398,7 +398,7 @@ pub fn spare_tyre<E: EntityPopulate>(mut entity: E) -> E {
 
     entity.insert_name(NameMessageType::SpareTyre);
     entity.insert_consumable_type(ConsumableType::SpareTyre);
-    entity.insert_price(20);
+    entity.insert_price(10);
 
     entity
 }

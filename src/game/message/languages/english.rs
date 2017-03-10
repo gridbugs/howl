@@ -281,6 +281,11 @@ impl Language for English {
                 message.push(MessagePart::Newline);
                 message.push(MessagePart::plain("You can't afford that!"));
             }
+            MessageType::ShopTitleNoEffect(balance) => {
+                message.push(MessagePart::Text(TextMessagePart::Plain(format!("Shop - Your balance: {}", balance))));
+                message.push(MessagePart::Newline);
+                message.push(MessagePart::plain("That would have no effect!"));
+            }
             MessageType::ShopTitleInventoryFull(balance) => {
                 message.push(MessagePart::Text(TextMessagePart::Plain(format!("Shop - Your balance: {}", balance))));
                 message.push(MessagePart::Newline);
