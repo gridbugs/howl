@@ -28,6 +28,10 @@ Configure graphics scaling in `user/config.toml`.
 
 Drag the ApocalypsePost app into your `Applications` folder or elsewhere before running.
 
+To configure graphics scaling, right click the ApocalypsePost app and choose "Show Package Contents".
+Navigate to Contents->MacOS->user, and modify config.toml.
+
+
 ## Source
 
 Get the source code or submit issues at https://github.com/stevebob/apocalypse-post
