@@ -46,8 +46,6 @@ const RANDOM_ENTITY_TYPES: [EntityType; 6] = [
     EntityType::Car,
     EntityType::Bike,
 ];
-const RANDOM_ENTITY_DIRT_WEIGHTS: [usize; 6] = [5, 10, 2, 40, 0, 0];
-const RANDOM_ENTITY_ROAD_WEIGHTS: [usize; 6] = [10, 10, 4, 5, 0, 0];
 const RANDOM_ENTITY_TOTAL: usize = 1000;
 
 fn choose_random_entity<R: Rng>(types: &[EntityType], weights: &[usize], total: usize, rng: &mut R) -> Option<EntityType> {
