@@ -178,6 +178,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         if self.ecs_action.contains_no_commit() {
             rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         } else {
+            rules::then(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::bounds(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::letter(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::acid(rule_env, self.ecs_action, self.rule_reactions)?;
@@ -194,7 +195,6 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rules::driving(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::then(rule_env, self.ecs_action, self.rule_reactions)?;
             rules::explosion_destroy(rule_env, self.ecs_action, self.rule_reactions)?;
         }
 
