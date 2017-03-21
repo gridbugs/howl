@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use bincode::{self, SizeLimit};
+use bincode::{self, Infinite};
 use game::*;
 
 const SAVE_FILE: &'static str = "save";
@@ -9,7 +9,7 @@ const SAVE_FILE: &'static str = "save";
 pub fn save<P: AsRef<Path>>(user_path: P, game_state: GameState) -> GameState {
     let serializable = SerializableGameState::from(game_state);
 
-    let encoded = bincode::serialize(&serializable, SizeLimit::Infinite).expect("Failed to serialize game state");
+    let encoded: Vec<u8> = bincode::serialize(&serializable, Infinite).expect("Failed to serialize game state");
 
     File::create(user_path.as_ref().join(SAVE_FILE))
         .and_then(|mut f| f.write_all(&encoded))
