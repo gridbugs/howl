@@ -74,7 +74,7 @@ impl Level {
     }
 
     pub fn schedule_from_action(&mut self, action: &mut EcsAction, entity_id: EntityId) {
-        let turn_offset = action.turn_offset(entity_id).expect("Missing component turn_offset");
+        let turn_offset = action.get_copy_turn_offset(entity_id).expect("Missing component turn_offset");
         let ticket = self.turn_schedule.insert(entity_id, turn_offset);
         action.insert_schedule_ticket(entity_id, ticket);
     }
@@ -88,7 +88,7 @@ impl Level {
                                             entity_id: EntityId, exit_id: EntityId, action_id: ActionId) {
 
         // find the position of the exit
-        let position = self.ecs.position(exit_id).expect("Missing position component");
+        let position = self.ecs.get_copy_position(exit_id).expect("Missing position component");
 
         // move the character to that position in the action that will insert them
         action.insert_position(entity_id, position);
@@ -112,19 +112,19 @@ impl Level {
         let mut entity_remove = EcsAction::new();
         let mut entity_insert = EcsAction::new();
 
-        if let Some(weapon_slots) = self.ecs.weapon_slots_borrow(entity_id) {
+        if let Some(weapon_slots) = self.ecs.borrow_weapon_slots(entity_id) {
             for (_, id) in weapon_slots.iter() {
-                entity_remove.remove_entity_by_id(*id, &self.ecs);
+                entity_remove.entity_delete_by_id(*id, &self.ecs);
             }
         }
 
-        if let Some(inventory) = self.ecs.inventory_borrow(entity_id) {
+        if let Some(inventory) = self.ecs.borrow_inventory(entity_id) {
             for id in inventory.iter() {
-                entity_remove.remove_entity_by_id(id, &self.ecs);
+                entity_remove.entity_delete_by_id(id, &self.ecs);
             }
         }
 
-        entity_remove.remove_entity_by_id(entity_id, &self.ecs);
+        entity_remove.entity_delete_by_id(entity_id, &self.ecs);
         self.commit_into(&mut entity_remove, &mut entity_insert, action_id);
 
         entity_insert

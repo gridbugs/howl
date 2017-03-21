@@ -68,21 +68,21 @@ impl DrawableKnowledgeCell {
             self.health_overlay.clear();
 
             for entity in action_env.ecs.entity_iter(world_cell.entity_id_iter()) {
-                entity.tile_depth().map(|depth| {
-                    entity.tile().map(|tile| {
+                entity.copy_tile_depth().map(|depth| {
+                    entity.copy_tile().map(|tile| {
                         self.foreground.insert(depth, tile);
                         if tile.opaque_bg() {
                             self.background.insert(depth, tile);
                         }
                     });
-                    entity.name().map(|name| {
+                    entity.copy_name().map(|name| {
                         self.name.insert(depth, name);
                     });
-                    entity.description().map(|description| {
+                    entity.copy_description().map(|description| {
                         self.description.insert(depth, description);
                     });
                     if entity.contains_health_bar() {
-                        entity.hit_points().map(|hit_points| {
+                        entity.copy_hit_points().map(|hit_points| {
                             self.health_overlay.insert(depth, hit_points);
                         });
                     }

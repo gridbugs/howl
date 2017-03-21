@@ -51,7 +51,7 @@ pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
     if let Some(ticket) = entity.schedule_ticket() {
         action.set_schedule_invalidate(ticket);
     }
-    action.remove_entity(entity);
+    action.entity_delete(entity);
 }
 
 pub fn level_switch(action: &mut EcsAction, entity_id: EntityId, exit_id: EntityId, level_switch: LevelSwitch) {
@@ -94,7 +94,7 @@ pub fn die(action: &mut EcsAction, entity: EntityRef) {
     } else {
         let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
         action.set_schedule_invalidate(ticket);
-        action.remove_entity(entity);
+        action.entity_delete(entity);
     }
 }
 
@@ -163,7 +163,7 @@ pub fn become_bloodstain(action: &mut EcsAction, entity: EntityRef, ids: &Entity
     let position = entity.position().expect("Missing component position");
     let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
     action.set_schedule_invalidate(ticket);
-    action.remove_entity(entity);
+    action.entity_delete(entity);
     prototypes::bloodstain(action.entity_mut(ids.new_id()), position);
 }
 
@@ -352,12 +352,12 @@ pub fn acid_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, rng: &mut 
 pub fn take_letter(action: &mut EcsAction, entity: EntityRef, letter: EntityRef) {
     let letter_count = entity.letter_count().expect("Entity missing letter_count");
     action.insert_letter_count(entity.id(), letter_count + 1);
-    action.remove_entity(letter);
+    action.entity_delete(letter);
 }
 
 pub fn explode(action: &mut EcsAction, entity: EntityRef) {
     if let Some(position) = entity.position() {
-        action.remove_entity(entity);
+        action.entity_delete(entity);
         action.set_then(Reaction::new(ActionArgs::ExplodeSpawn(position), 0));
     }
 }
@@ -413,6 +413,6 @@ pub fn consume(action: &mut EcsAction, entity: EntityRef, item: EntityRef) {
 
     if used {
         entity.inventory_borrow_mut().expect("Entity missing inventory").remove(item.id());
-        action.remove_entity(item);
+        action.entity_delete(item);
     }
 }

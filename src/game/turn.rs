@@ -103,7 +103,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         match resolution {
             TurnResolution::Schedule(id, ..) => {
-                let delay = self.ecs.turn_time(self.entity_id).expect("Expected turn_time component");
+                let delay = self.ecs.get_copy_turn_time(self.entity_id).expect("Expected turn_time component");
                 Ok(TurnResolution::Schedule(id, delay))
             }
             other => Ok(other),
@@ -175,7 +175,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             spatial_hash: self.spatial_hash,
         };
 
-        if self.ecs_action.contains_no_commit() {
+        if self.ecs_action.contains_property_no_commit() {
             rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
         } else {
             rules::then(rule_env, self.ecs_action, self.rule_reactions)?;
@@ -210,16 +210,16 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         let entity = self.ecs.entity(self.pc_id);
 
-        let mut knowledge = entity.drawable_knowledge_borrow_mut()
+        let mut knowledge = entity.borrow_mut_drawable_knowledge()
             .expect("PC missing drawable_knowledge");
 
         let level_knowledge = knowledge.level_mut_or_insert_size(self.level_id,
                                                                  self.spatial_hash.width(),
                                                                  self.spatial_hash.height());
-        let position = entity.position().expect("PC missing position");
-        let vision_distance = entity.vision_distance().expect("PC missing vision_distance");
+        let position = entity.copy_position().expect("PC missing position");
+        let vision_distance = entity.copy_vision_distance().expect("PC missing vision_distance");
 
-        let mut message_log = entity.message_log_borrow_mut().expect("PC missing message_log");
+        let mut message_log = entity.borrow_mut_message_log().expect("PC missing message_log");
 
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
 
@@ -238,15 +238,15 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             return false;
         }
 
-        let mut knowledge = entity.drawable_knowledge_borrow_mut()
+        let mut knowledge = entity.borrow_mut_drawable_knowledge()
             .expect("PC missing drawable_knowledge");
 
         let level_knowledge = knowledge.level_mut_or_insert_size(self.level_id,
                                                                  self.spatial_hash.width(),
                                                                  self.spatial_hash.height());
-        let position = entity.position().expect("PC missing position");
-        let vision_distance = entity.vision_distance().expect("PC missing vision_distance");
-        let message_log = entity.message_log_borrow().expect("PC missing message_log");
+        let position = entity.copy_position().expect("PC missing position");
+        let vision_distance = entity.copy_vision_distance().expect("PC missing vision_distance");
+        let message_log = entity.borrow_message_log().expect("PC missing message_log");
 
 
         let action_env = ActionEnv::new(self.ecs, *self.action_id);
@@ -268,7 +268,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
     fn try_commit_action(&mut self, action: ActionArgs) -> GameResult<Option<CommitResolution>> {
 
-        let mut turn_time = self.ecs.turn_time(self.entity_id);
+        let mut turn_time = self.ecs.get_copy_turn_time(self.entity_id);
         let mut first = true;
         let mut action_description = None;
         let mut level_switch = None;
@@ -302,33 +302,33 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 match self.check_rules_wrapper() {
                     RuleResolution::Accept => {
 
-                        action_description = self.ecs_action.clear_action_description();
+                        action_description = self.ecs_action.remove_property_action_description();
 
-                        if self.ecs_action.contains_no_commit() {
+                        if self.ecs_action.contains_property_no_commit() {
                             self.ecs_action.clear();
                             break;
                         }
 
                         if first {
                             first = false;
-                            if let Some(alternative_turn_time) = self.ecs_action.alternative_turn_time() {
+                            if let Some(alternative_turn_time) = self.ecs_action.get_property_copy_alternative_turn_time() {
                                 turn_time = Some(alternative_turn_time);
                             }
                         }
-                        action_time = self.ecs_action.action_time_ms().unwrap_or(0);
+                        action_time = self.ecs_action.get_property_copy_action_time_ms().unwrap_or(0);
                         if action_time != 0 {
                             realtime_delay = true;
                         }
 
-                        if let Some(level_switch_action) = self.ecs_action.level_switch_action() {
+                        if let Some(level_switch_action) = self.ecs_action.get_property_copy_level_switch_action() {
                             level_switch = Some(level_switch_action);
                         }
 
-                        if let Some(ticket) = self.ecs_action.schedule_invalidate() {
+                        if let Some(ticket) = self.ecs_action.get_property_copy_schedule_invalidate() {
                             self.turn_schedule.invalidate(ticket);
                         }
 
-                        if self.ecs_action.contains_player_died() {
+                        if self.ecs_action.contains_property_player_died() {
                             game_over_reason = Some(GameOverReason::PlayerDied);
                         }
 
@@ -381,9 +381,9 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
     fn get_meta_action(&self) -> GameResult<MetaAction> {
         let entity = self.ecs.entity(self.entity_id);
-        let mut behaviour_state = entity.behaviour_state_borrow_mut().expect("Entity missing behaviour_state");
+        let mut behaviour_state = entity.borrow_mut_behaviour_state().expect("Entity missing behaviour_state");
         if !behaviour_state.is_initialised() {
-            let behaviour_type = entity.behaviour_type().expect("Entity missing behaviour_type");
+            let behaviour_type = entity.copy_behaviour_type().expect("Entity missing behaviour_type");
             behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
         }
         let input = BehaviourInput {
@@ -401,7 +401,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
     fn declare_action_return(&self, value: bool) -> GameResult<bool> {
         let entity = self.ecs.entity(self.entity_id);
-        if let Some(mut behaviour_state) = entity.behaviour_state_borrow_mut() {
+        if let Some(mut behaviour_state) = entity.borrow_mut_behaviour_state() {
             behaviour_state.declare_return(value)?;
             Ok(true)
         } else {

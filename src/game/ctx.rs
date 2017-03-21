@@ -385,16 +385,16 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         loop {
             let mut menu = SelectMenu::new();
 
-            for entity_id in game_state.staging.inventory_borrow(shop_id).expect("Missing component inventory").iter() {
+            for entity_id in game_state.staging.borrow_inventory(shop_id).expect("Missing component inventory").iter() {
                 let item = game_state.staging.entity(entity_id);
-                let name = item.name().expect("Missing component name");
-                let price = item.price().expect("Missing component price");
+                let name = item.copy_name().expect("Missing component name");
+                let price = item.copy_price().expect("Missing component price");
 
                 let menu_message = MenuMessageType::ShopItem(name, price);
                 menu.push(SelectMenuItem::new(menu_message, entity_id));
             }
 
-            let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
+            let bank = game_state.staging.get_copy_bank(pc_id).expect("Missing component bank");
 
             let title = match buy_result {
                 Ok(()) => MessageType::ShopTitle(bank),
@@ -427,13 +427,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let mut current_menu_state = None;
 
         loop {
-            let capacity = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
-            let size = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
+            let capacity = game_state.staging.get_copy_inventory_capacity(pc_id).expect("Missing component inventory_capacity");
+            let size = game_state.staging.borrow_inventory(pc_id).expect("Missing component inventory").len();
 
             let mut menu = SelectMenu::new();
-            for entity_id in game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").iter() {
+            for entity_id in game_state.staging.borrow_inventory(pc_id).expect("Missing component inventory").iter() {
                 let item = game_state.staging.entity(entity_id);
-                let name = item.name().expect("Missing component name");
+                let name = item.copy_name().expect("Missing component name");
 
                 let menu_message = MenuMessageType::Name(name);
                 menu.push(SelectMenuItem::new(menu_message, entity_id));
@@ -468,8 +468,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn item_menu(&mut self, game_state: &mut GameState, item_id: EntityId) -> Option<ItemMenuSelection> {
         let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
-        let maybe_description = game_state.staging.description(item_id);
-        let name = game_state.staging.name(item_id).expect("Missing component name");
+        let maybe_description = game_state.staging.get_copy_description(item_id);
+        let name = game_state.staging.get_copy_name(item_id).expect("Missing component name");
 
         let title = if let Some(description) = maybe_description {
             MessageType::NameAndDescription(name, description)
@@ -508,7 +508,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn remove_item(&mut self, game_state: &mut GameState, item_id: EntityId) {
         let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
-        let mut inventory = game_state.staging.inventory_borrow_mut(pc_id).expect("Expected component inventory");
+        let mut inventory = game_state.staging.borrow_mut_inventory(pc_id).expect("Expected component inventory");
 
         inventory.remove(item_id);
     }
@@ -521,10 +521,10 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             let menu = {
                 let mut menu = SelectMenu::new();
 
-                let weapon_slots = game_state.staging.weapon_slots_borrow(pc_id).expect("Expected component weapon_slots");
+                let weapon_slots = game_state.staging.borrow_weapon_slots(pc_id).expect("Expected component weapon_slots");
 
                 for d in DIRECTIONS.iter() {
-                    let maybe_name = weapon_slots.get(*d).and_then(|id| game_state.staging.name(*id));
+                    let maybe_name = weapon_slots.get(*d).and_then(|id| game_state.staging.get_copy_name(*id));
                     let message = MenuMessageType::WeaponSlot(RelativeDirection::from(*d), maybe_name);
                     menu.push(SelectMenuItem::new(message, *d));
                 }
@@ -561,13 +561,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
             let mut menu = SelectMenu::new();
 
-            let inventory = game_state.staging.inventory_borrow(pc_id).expect("Expected component inventory");
+            let inventory = game_state.staging.borrow_inventory(pc_id).expect("Expected component inventory");
 
             menu.push(SelectMenuItem::new(MenuMessageType::Empty, None));
 
             for entity_id in inventory.iter() {
                 if game_state.staging.contains_gun_type(entity_id) {
-                    let name = game_state.staging.name(entity_id).expect("Expected component name");
+                    let name = game_state.staging.get_copy_name(entity_id).expect("Expected component name");
                     menu.push(SelectMenuItem::new(MenuMessageType::Name(name), Some(entity_id)));
                 }
             }
@@ -577,9 +577,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let title = {
             let direction = RelativeDirection::from(slot);
-            let weapon_slots = game_state.staging.weapon_slots_borrow(pc_id).expect("Expected component weapon_slots");
+            let weapon_slots = game_state.staging.borrow_weapon_slots(pc_id).expect("Expected component weapon_slots");
             let current = weapon_slots.get(slot);
-            let maybe_name = current.map(|id| game_state.staging.name(*id).expect("Expected component name"));
+            let maybe_name = current.map(|id| game_state.staging.get_copy_name(*id).expect("Expected component name"));
             MessageType::WeaponSlotTitle(direction, maybe_name)
         };
 
@@ -607,13 +607,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
         let maybe_to_unequip = {
-            let mut weapon_slots = game_state.staging.weapon_slots_borrow_mut(pc_id).expect("Expected component weapon_slots");
+            let mut weapon_slots = game_state.staging.borrow_mut_weapon_slots(pc_id).expect("Expected component weapon_slots");
             let maybe_to_unequip = weapon_slots.remove(slot);
             weapon_slots.insert(slot, to_equip);
             maybe_to_unequip
         };
 
-        let mut inventory = game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory");
+        let mut inventory = game_state.staging.borrow_mut_inventory(pc_id).expect("Missing component inventory");
 
         inventory.remove(to_equip);
         if let Some(to_unequip) = maybe_to_unequip {
@@ -627,11 +627,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
         let maybe_weapon_id = {
-            let mut weapon_slots = game_state.staging.weapon_slots_borrow_mut(pc_id).expect("Expected component weapon_slots");
+            let mut weapon_slots = game_state.staging.borrow_mut_weapon_slots(pc_id).expect("Expected component weapon_slots");
 
             if weapon_slots.get(slot).is_some() {
-                let max_inventory = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
-                let current_inventory = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
+                let max_inventory = game_state.staging.get_copy_inventory_capacity(pc_id).expect("Missing component inventory_capacity");
+                let current_inventory = game_state.staging.borrow_inventory(pc_id).expect("Missing component inventory").len();
 
                 if current_inventory >= max_inventory {
                     return Err(WeaponMenuError::InventoryFull);
@@ -642,7 +642,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         };
 
         if let Some(weapon_id) = maybe_weapon_id {
-            let mut inventory = game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory");
+            let mut inventory = game_state.staging.borrow_mut_inventory(pc_id).expect("Missing component inventory");
             inventory.insert(weapon_id);
         }
 
@@ -652,8 +652,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn buy_item(&mut self, game_state: &mut GameState, item_id: EntityId) -> Result<(), BuyError> {
         let GlobalIds { shop_id, pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
-        let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
-        let price = game_state.staging.price(item_id).expect("Missing component price");
+        let bank = game_state.staging.get_copy_bank(pc_id).expect("Missing component bank");
+        let price = game_state.staging.get_copy_price(item_id).expect("Missing component price");
 
         if price > bank {
             return Err(BuyError::CantAfford);
@@ -666,7 +666,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         game_state.staging.insert_bank(pc_id, remaining_bank);
 
         // remove the item from the shop
-        game_state.staging.inventory_borrow_mut(shop_id).expect("Missing component inventory").remove(item_id);
+        game_state.staging.borrow_mut_inventory(shop_id).expect("Missing component inventory").remove(item_id);
 
         self.add_item_to_player(game_state, item_id);
 
@@ -676,30 +676,30 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn pre_add_item_to_player(&self, game_state: &GameState, item_id: EntityId) -> Result<(), BuyError> {
         let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
-        let max_inventory = game_state.staging.inventory_capacity(pc_id).expect("Missing component inventory_capacity");
-        let current_inventory = game_state.staging.inventory_borrow(pc_id).expect("Missing component inventory").len();
+        let max_inventory = game_state.staging.get_copy_inventory_capacity(pc_id).expect("Missing component inventory_capacity");
+        let current_inventory = game_state.staging.borrow_inventory(pc_id).expect("Missing component inventory").len();
 
         if current_inventory >= max_inventory {
             return Err(BuyError::InventoryFull);
         }
 
-        if let Some(repair_type) = game_state.staging.repair_type(item_id) {
+        if let Some(repair_type) = game_state.staging.get_copy_repair_type(item_id) {
             match repair_type {
                 RepairType::Engine => {
-                    let engine = game_state.staging.engine_health(pc_id).expect("Missing component engine_health");
+                    let engine = game_state.staging.get_copy_engine_health(pc_id).expect("Missing component engine_health");
                     if engine.is_full() {
                         return Err(BuyError::NoEffect);
                     }
                 }
                 RepairType::Tyres => {
-                    let tyres = game_state.staging.tyre_health(pc_id).expect("Missing component tyre_health");
+                    let tyres = game_state.staging.get_copy_tyre_health(pc_id).expect("Missing component tyre_health");
                     if tyres.is_full() {
                         return Err(BuyError::NoEffect);
                     }
                 }
             }
-        } else if let Some(new_armour) = game_state.staging.armour_upgrade(item_id) {
-            let current_armour = game_state.staging.armour(pc_id).expect("Missing component armour");
+        } else if let Some(new_armour) = game_state.staging.get_copy_armour_upgrade(item_id) {
+            let current_armour = game_state.staging.get_copy_armour(pc_id).expect("Missing component armour");
             if new_armour <= current_armour {
                 return Err(BuyError::NoEffect);
             }
@@ -711,23 +711,23 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn add_item_to_player(&mut self, game_state: &mut GameState, item_id: EntityId) {
         let GlobalIds { pc_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
-        if let Some(repair_type) = game_state.staging.repair_type(item_id) {
+        if let Some(repair_type) = game_state.staging.get_copy_repair_type(item_id) {
             match repair_type {
                 RepairType::Engine => {
-                    game_state.staging.engine_health_mut(pc_id).expect("Missing component engine_health").inc(1);
+                    game_state.staging.get_mut_engine_health(pc_id).expect("Missing component engine_health").inc(1);
                 }
                 RepairType::Tyres => {
-                    game_state.staging.tyre_health_mut(pc_id).expect("Missing component tyre_health").inc(1);
+                    game_state.staging.get_mut_tyre_health(pc_id).expect("Missing component tyre_health").inc(1);
                 }
             }
-        } else if let Some(new_armour) = game_state.staging.armour_upgrade(item_id) {
-            let current_armour = game_state.staging.armour(pc_id).expect("Missing component armour");
+        } else if let Some(new_armour) = game_state.staging.get_copy_armour_upgrade(item_id) {
+            let current_armour = game_state.staging.get_copy_armour(pc_id).expect("Missing component armour");
             if new_armour > current_armour {
                 game_state.staging.insert_armour(pc_id, new_armour);
             }
         } else {
             // add the item to the player's inventory
-            game_state.staging.inventory_borrow_mut(pc_id).expect("Missing component inventory").insert(item_id);
+            game_state.staging.borrow_mut_inventory(pc_id).expect("Missing component inventory").insert(item_id);
         }
     }
 
@@ -794,11 +794,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         prototypes::shop(game_state.staging.entity_mut(shop_id), inventory);
 
-        let bank = game_state.staging.bank(pc_id).expect("Missing component bank");
-        let letter_count = game_state.staging.letter_count(pc_id).expect("Missing component letter_count");
+        let bank = game_state.staging.get_copy_bank(pc_id).expect("Missing component bank");
+        let letter_count = game_state.staging.get_copy_letter_count(pc_id).expect("Missing component letter_count");
         game_state.staging.insert_bank(pc_id, bank + 20 + letter_count * 40);
         game_state.staging.insert_letter_count(pc_id, 0);
-        let mut hit_points = game_state.staging.hit_points(pc_id).expect("Missing component hit_points");
+        let mut hit_points = game_state.staging.get_copy_hit_points(pc_id).expect("Missing component hit_points");
         hit_points.fill();
         game_state.staging.insert_hit_points(pc_id, hit_points);
         game_state.staging.insert_message_log(pc_id, MessageLog::new());
@@ -856,7 +856,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             match resolution {
                 TurnResolution::Exit(reason, entity_id) => {
                     let level = game_state.levels.level_mut(level_id);
-                    let old_ticket = level.ecs.schedule_ticket(entity_id).expect("Expected schedule_ticket component");
+                    let old_ticket = level.ecs.get_copy_schedule_ticket(entity_id).expect("Expected schedule_ticket component");
                     let new_ticket = level.turn_schedule.insert_with_ticket(entity_id, 0, old_ticket);
                     level.ecs.insert_schedule_ticket(entity_id, new_ticket);
                     return Ok(reason);
@@ -897,7 +897,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Unitialised game state");
 
         let ref ecs = game_state.levels.level(level_id).ecs;
-        ecs.message_log_borrow_mut(pc_id).expect("Expected message log component").add(message);
+        ecs.borrow_mut_message_log(pc_id).expect("Expected message log component").add(message);
     }
 
     fn configure_controls(&mut self, control_map: &mut ControlMap) {
@@ -977,7 +977,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let pistol_id = game_state.entity_ids.new_id();
         prototypes::pistol(action.entity_mut(pistol_id));
 
-        action.weapon_slots_mut(pc_id).expect("Missing component weapon_slots")
+        action.borrow_mut_weapon_slots(pc_id).expect("Missing component weapon_slots")
             .insert(Direction::East, pistol_id);
 
         // throw away connections in the first level a they would have nothing to connect to anyway
@@ -1008,19 +1008,19 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         let mut entity_remove = EcsAction::new();
         let mut entity_insert = EcsAction::new();
 
-        if let Some(weapon_slots) = game_state.staging.weapon_slots_borrow(entity_id) {
+        if let Some(weapon_slots) = game_state.staging.borrow_weapon_slots(entity_id) {
             for (_, id) in weapon_slots.iter() {
-                entity_remove.remove_entity_by_id(*id, &game_state.staging);
+                entity_remove.entity_delete_by_id(*id, &game_state.staging);
             }
         }
 
-        if let Some(inventory) = game_state.staging.inventory_borrow(entity_id) {
+        if let Some(inventory) = game_state.staging.borrow_inventory(entity_id) {
             for id in inventory.iter() {
-                entity_remove.remove_entity_by_id(id, &game_state.staging);
+                entity_remove.entity_delete_by_id(id, &game_state.staging);
             }
         }
 
-        entity_remove.remove_entity_by_id(entity_id, &game_state.staging);
+        entity_remove.entity_delete_by_id(entity_id, &game_state.staging);
         game_state.staging.commit_into(&mut entity_remove, &mut entity_insert);
         game_state.action_id += 1;
 
@@ -1116,9 +1116,9 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn pc_observe_from_action(&self, action: &mut EcsAction, entity_id: EntityId,
                               level_id: LevelId, level: &Level, action_id: ActionId) {
 
-        let position = action.position(entity_id).expect("Missing component position");
-        let vision_distance = action.vision_distance(entity_id).expect("Missing component vision_distance");
-        let knowledge = action.drawable_knowledge_mut(entity_id).expect("Missing component drawable_knowledge");
+        let position = action.get_copy_position(entity_id).expect("Missing component position");
+        let vision_distance = action.get_copy_vision_distance(entity_id).expect("Missing component vision_distance");
+        let knowledge = action.borrow_mut_drawable_knowledge(entity_id).expect("Missing component drawable_knowledge");
         let level_knowledge = knowledge.level_mut_or_insert_size(level_id,
                                                                  level.spatial_hash.width(),
                                                                  level.spatial_hash.height());

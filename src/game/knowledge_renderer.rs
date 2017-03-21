@@ -170,12 +170,12 @@ pub trait KnowledgeRenderer {
                                                  level_id: LevelId,
                                                  entity: EntityRef,
                                                  language: &Box<Language>) {
-        let knowledge = entity.drawable_knowledge_borrow().expect("Expected drawable_knowledge component");
+        let knowledge = entity.borrow_drawable_knowledge().expect("Expected drawable_knowledge component");
         let knowledge_level = knowledge.level(level_id);
         self.update_and_publish_all_windows(turn_id,
                                             knowledge_level,
-                                            entity.position().expect("Expected position component"),
-                                            entity.message_log_borrow().expect("Expected message_log component").deref(),
+                                            entity.copy_position().expect("Expected position component"),
+                                            entity.borrow_message_log().expect("Expected message_log component").deref(),
                                             entity,
                                             language);
     }
@@ -186,12 +186,12 @@ pub trait KnowledgeRenderer {
                                                               entity: EntityRef,
                                                               language: &Box<Language>,
                                                               overlay: &RenderOverlay) {
-        let knowledge = entity.drawable_knowledge_borrow().expect("Expected drawable_knowledge component");
+        let knowledge = entity.borrow_drawable_knowledge().expect("Expected drawable_knowledge component");
         let knowledge_level = knowledge.level(level_id);
         self.update_and_publish_all_windows_with_overlay(turn_id,
                                                          knowledge_level,
-                                                         entity.position().expect("Expected position component"),
-                                                         entity.message_log_borrow().expect("Expected message_log component").deref(),
+                                                         entity.copy_position().expect("Expected position component"),
+                                                         entity.borrow_message_log().expect("Expected message_log component").deref(),
                                                          entity,
                                                          language,
                                                          overlay);
