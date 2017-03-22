@@ -17,6 +17,8 @@ fn main() {
 
     cfg.combine_flag_set = false;
     cfg.component_bookkeeping = true;
+    cfg.ecs_ctx_hash_collections = true;
+    cfg.ecs_action_hash_collections = true;
 
     statecs::generate("ecs.toml", Path::new("src").join("ecs").join("generated.rs"), cfg);
 
