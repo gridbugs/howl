@@ -6,252 +6,103 @@ imports = [
     "direction::Direction",
 ]
 
-[component.solid]
-[component.collider]
-[component.destroy_on_collision]
-[component.pc]
-[component.floor]
-[component.should_render]
-[component.enemy]
-[component.projectile]
-[component.projectile_collider]
-[component.bump_attackable]
-[component.acid_animation]
-[component.acid]
+flags = [
+    { name = 'solid' },
+    { name = 'collider' },
+    { name = 'destroy_on_collision' },
+    { name = 'pc' },
+    { name = 'floor' },
+    { name = 'should_render' },
+    { name = 'enemy' },
+    { name = 'projectile' },
+    { name = 'projectile_collider' },
+    { name = 'bump_attackable' },
+    { name = 'acid_animation' },
+    { name = 'acid' },
+    { name = 'can_run_over' },
+    { name = 'can_be_run_over' },
+    { name = 'bloodstain_on_death' },
+    { name = 'destroy_when_stopped' },
+    { name = 'destroy_when_out_of_bounds' },
+    { name = 'health_bar' },
+    { name = 'complex_damage' },
+    { name = 'bullet' },
+    { name = 'letter' },
+    { name = 'explode_on_collision' },
+    { name = 'explosion' },
+    { name = 'destroyed_by_explosion' },
+    { name = 'triggers_explosion' },
+    { name = 'level_switch_auto' },
+]
 
-[component.can_run_over]
-[component.can_be_run_over]
-[component.bloodstain_on_death]
-[component.destroy_when_stopped]
-[component.destroy_when_out_of_bounds]
-[component.health_bar]
-[component.complex_damage]
-[component.bullet]
-[component.letter]
-[component.explode_on_collision]
-[component.explosion]
-[component.destroyed_by_explosion]
-[component.triggers_explosion]
+data = [
+    { name = 'consumable_type', type = 'ConsumableType', copy = true },
+    { name = 'armour_upgrade', type = 'usize', copy = true },
+    { name = 'repair_type', type = 'RepairType', copy = true },
+    { name = 'letter_count', type = 'usize', copy = true },
+    { name = 'shooter_id', type = 'EntityId', copy = true },
+    { name = 'bump_verb', type = 'VerbMessageType', copy = true },
+    { name = 'bank', type = 'usize', copy = true },
+    { name = 'price', type = 'usize', copy = true },
+    { name = 'gun_type', type = 'GunType', copy = true },
+    { name = 'gun_range', type = 'usize', copy = true },
+    { name = 'current_speed', type = 'usize', copy = true },
+    { name = 'max_speed', type = 'usize', copy = true },
+    { name = 'redline_speed', type = 'usize', copy = true },
+    { name = 'engine_health', type = 'HitPoints', copy = true },
+    { name = 'steering', type = 'SteerDirection', copy = true },
+    { name = 'tyre_health', type = 'HitPoints', copy = true },
+    { name = 'armour', type = 'usize', copy = true },
+    { name = 'facing', type = 'Direction', copy = true },
+    { name = 'bump_attacker', type = 'usize', copy = true },
+    { name = 'projectile_damage', type = 'usize', copy = true },
+    { name = 'hit_points', type = 'HitPoints', copy = true },
+    { name = 'realtime_moves_remaining', type = 'usize', copy = true },
+    { name = 'tile', type = 'TileType', copy = true },
+    { name = 'position', type = 'Coord', copy = true },
+    { name = 'opacity', type = 'f64', copy = true },
+    { name = 'vision_distance', type = 'usize', copy = true },
+    { name = 'inventory_capacity', type = 'usize', copy = true },
+    { name = 'tile_depth', type = 'isize', copy = true },
+    { name = 'name', type = 'NameMessageType', copy = true },
+    { name = 'description', type = 'DescriptionMessageType', copy = true },
+    { name = 'behaviour_type', type = 'BehaviourType', copy = true },
+    { name = 'turn_offset', type = 'u64', copy = true },
+    { name = 'turn_time', type = 'u64', copy = true },
+    { name = 'shadow_entity', type = 'EntityId', copy = true },
+    { name = 'schedule_ticket', type = 'ScheduleTicket', copy = true },
+    { name = 'level_switch', type = 'LevelSwitch', copy = true },
+    { name = 'level_switch_group', type = 'usize', copy = true },
+    { name = 'probabilistic_animation', type = 'FirstWeightedProbabilisticChoice<TileType>' },
+    { name = 'realtime_velocity', type = 'RealtimeVelocity' },
+]
 
-[component.consumable_type]
-    type = "ConsumableType"
-    copy = true
+cells = [
+    { name = 'control_map', type = 'ControlMap' },
+    { name = 'message_log', type = 'MessageLog' },
+    { name = 'behaviour_state', type = 'BehaviourState' },
+    { name = 'drawable_knowledge', type = 'DrawableKnowledge' },
+    { name = 'simple_npc_knowledge', type = 'SimpleNpcKnowledge' },
+    { name = 'path_traverse', type = 'PathTraverse' },
+    { name = 'inventory', type = 'EntitySet' },
+    { name = 'weapon_slots', type = 'DirectionTable<EntityId>' },
+]
 
-[component.armour_upgrade]
-    type = "usize"
-    copy = true
+action_flags = [
+    { name = 'no_commit' },
+    { name = 'player_died' },
+    { name = 'physics' },
+    { name = 'realtime_delay' },
+    { name = 'start_realtime_move' },
+]
 
-[component.repair_type]
-    type = "RepairType"
-    copy = true
-
-[component.letter_count]
-    type = "usize"
-    copy = true
-
-[component.shooter_id]
-    type = "EntityId"
-    copy = true
-
-[component.bump_verb]
-    type = "VerbMessageType"
-    copy = true
-
-[component.bank]
-    type = "usize"
-    copy = true
-
-[component.price]
-    type = "usize"
-    copy = true
-
-[component.gun_type]
-    type = "GunType"
-    copy = true
-
-[component.gun_range]
-    type = "usize"
-    copy = true
-
-[component.weapon_slots]
-    type = "DirectionTable<EntityId>"
-    container = "RefCell"
-
-[component.current_speed]
-    type = "usize"
-    copy = true
-
-[component.max_speed]
-    type = "usize"
-    copy = true
-
-[component.redline_speed]
-    type = "usize"
-    copy = true
-
-[component.engine_health]
-    type = "HitPoints"
-    copy = true
-
-[component.steering]
-    type = "SteerDirection"
-    copy = true
-
-[component.tyre_health]
-    type = "HitPoints"
-    copy = true
-
-[component.armour]
-    type = "usize"
-    copy = true
-
-[component.facing]
-    type = "Direction"
-    copy = true
-
-[component.bump_attacker]
-    type = "usize"
-    copy = true
-
-[component.projectile_damage]
-    type = "usize"
-    copy = true
-
-[component.hit_points]
-    type = "HitPoints"
-    copy = true
-
-[component.realtime_velocity]
-    type = "RealtimeVelocity"
-
-[component.realtime_moves_remaining]
-    type = "usize"
-    copy = true
-
-[component.tile]
-    type = "TileType"
-    copy = true
-
-[component.position]
-    type = "Coord"
-    copy = true
-
-[component.opacity]
-    type = "f64"
-    copy = true
-
-[component.vision_distance]
-    type = "usize"
-    copy = true
-
-[component.control_map]
-    type = "ControlMap"
-    container = "RefCell"
-
-[component.tile_depth]
-    type = "isize"
-    copy = true
-
-[component.message_log]
-    type = "MessageLog"
-    container = "RefCell"
-
-[component.name]
-    type = "NameMessageType"
-    copy = true
-
-[component.description]
-    type = "DescriptionMessageType"
-    copy = true
-
-[component.behaviour_type]
-    type = "BehaviourType"
-    copy = true
-
-[component.behaviour_state]
-    type = "BehaviourState"
-    container = "RefCell"
-
-[component.turn_offset]
-    type = "u64"
-    copy = true
-
-[component.drawable_knowledge]
-    type = "DrawableKnowledge"
-    container = "RefCell"
-
-[component.simple_npc_knowledge]
-    type = "SimpleNpcKnowledge"
-    container = "RefCell"
-
-[component.path_traverse]
-    type = "PathTraverse"
-    container = "RefCell"
-
-[component.turn_time]
-    type = "u64"
-    copy = true
-
-[component.shadow_entity]
-    type = "EntityId"
-    copy = true
-
-[component.schedule_ticket]
-    type = "ScheduleTicket"
-    copy = true
-
-[component.level_switch]
-    type = "LevelSwitch"
-    copy = true
-
-[component.level_switch_auto]
-[component.level_switch_group]
-    type = "usize"
-    copy = true
-
-[component.probabilistic_animation]
-    type = "FirstWeightedProbabilisticChoice<TileType>"
-
-[component.inventory]
-    type = "EntitySet"
-    container = "RefCell"
-
-[component.inventory_capacity]
-    type = "usize"
-    copy = true
-
-[action_property.alternative_turn_time]
-    type = "u64"
-    copy = true
-
-[action_property.action_time_ms]
-    type = "u64"
-    copy = true
-
-[action_property.action_description]
-    type = "ActionDescription"
-
-[action_property.level_switch_action]
-    type = "LevelSwitchAction"
-    copy = true
-
-[action_property.try_level_switch]
-    type = "EntityId"
-    copy = true
-
-[action_property.projectile_collision]
-    type = "ProjectileCollision"
-    copy = true
-
-[action_property.schedule_invalidate]
-    type = "ScheduleTicket"
-    copy = true
-
-[action_property.no_commit]
-[action_property.player_died]
-[action_property.physics]
-[action_property.realtime_delay]
-[action_property.start_realtime_move]
-[action_property.then]
-    type = "Reaction"
-    copy = true
+action_data = [
+    { name = 'then', type = "Reaction", copy = true },
+    { name = 'alternative_turn_time', type = "u64", copy = true },
+    { name = 'action_time_ms', type = "u64", copy = true },
+    { name = 'level_switch_action', type = "LevelSwitchAction", copy = true },
+    { name = 'try_level_switch', type = "EntityId", copy = true },
+    { name = 'projectile_collision', type = "ProjectileCollision", copy = true },
+    { name = 'schedule_invalidate', type = "ScheduleTicket", copy = true },
+    { name = 'action_description', type = 'ActionDescription' },
+]

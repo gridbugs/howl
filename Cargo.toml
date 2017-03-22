@@ -29,4 +29,4 @@ copy_dir = "0.1"
 handlebars = "0.22"
 tomson = "0.1"
 rustc-serialize = "0.3"
-genecs = { git = "https://github.com/stevebob/genecs.git", rev = "529123f" }
+statecs = { git = "https://github.com/stevebob/statecs.git" }

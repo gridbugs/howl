@@ -2,7 +2,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-extern crate genecs;
+extern crate statecs;
 extern crate copy_dir;
 extern crate tomson;
 extern crate handlebars;
@@ -12,7 +12,10 @@ mod gensh;
 
 fn main() {
     gensh::generate_spatial_hash("sh.toml", Path::new("src").join("spatial_hash").join("generated.rs"));
-    genecs::generate_ecs("ecs.toml", Path::new("src").join("ecs").join("generated.rs"));
+
+    let mut cfg = statecs::Config::new();
+    cfg.combine_flag_set = false;
+    statecs::generate("ecs.toml", Path::new("src").join("ecs").join("generated.rs"), cfg);
 
     copy_resources("resources");
     copy_resources("user");

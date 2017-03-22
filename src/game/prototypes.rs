@@ -15,7 +15,7 @@ pub const PC_TURN_OFFSET: u64 = 2;
 pub const PHYSICS_TURN_OFFSET: u64 = 3;
 pub const ANIMATION_TURN_OFFSET: u64 = 4;
 
-pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn pc<E: EntityMut>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
 
     entity.insert_tile(TileType::Van);
@@ -56,14 +56,14 @@ pub fn pc<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
-pub fn shop<E: EntityPopulate>(mut entity: E, inventory: EntitySet) -> E {
+pub fn shop<E: EntityMut>(mut entity: E, inventory: EntitySet) -> E {
 
     entity.insert_inventory(inventory);
 
     entity
 }
 
-pub fn zombie<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn zombie<E: EntityMut>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
 
     entity.insert_tile(TileType::Zombie);
@@ -92,7 +92,7 @@ pub fn zombie<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
-pub fn car<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn car<E: EntityMut>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
 
     entity.insert_tile(TileType::Car);
@@ -126,7 +126,7 @@ pub fn car<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
-pub fn bike<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn bike<E: EntityMut>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
 
     entity.insert_tile(TileType::Bike);
@@ -161,7 +161,7 @@ pub fn bike<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
 
 
 
-pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: RealtimeVelocity, range: usize) -> E {
+pub fn bullet<E: EntityMut>(mut entity: E, position: Coord, velocity: RealtimeVelocity, range: usize) -> E {
 
     entity.insert_position(position);
     entity.insert_realtime_velocity(velocity);
@@ -180,7 +180,7 @@ pub fn bullet<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Realt
     entity
 }
 
-pub fn road<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn road<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity.insert_position(position);
 
     let rest_tiles = [];
@@ -194,7 +194,7 @@ pub fn road<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) ->
     entity
 }
 
-pub fn dirt<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn dirt<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity.insert_position(position);
 
     let rest_tiles = [
@@ -210,7 +210,7 @@ pub fn dirt<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) ->
     entity
 }
 
-pub fn acid<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn acid<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity.insert_position(position);
 
     let animation = FirstWeightedProbabilisticChoice::new(0.90, TileType::Acid0, vec![TileType::Acid1]);
@@ -225,7 +225,7 @@ pub fn acid<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) ->
     entity
 }
 
-pub fn wreck<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn wreck<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity.insert_position(position);
 
     let tiles = [
@@ -243,7 +243,7 @@ pub fn wreck<E: EntityPopulate>(mut entity: E, position: Coord, rng: &GameRng) -
     entity
 }
 
-pub fn acid_animator<E: EntityPopulate>(mut entity: E) -> E {
+pub fn acid_animator<E: EntityMut>(mut entity: E) -> E {
     entity.insert_behaviour_type(BehaviourType::AcidAnimate);
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_turn_time(TURN_DURATION_BASE);
@@ -252,7 +252,7 @@ pub fn acid_animator<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn physics<E: EntityPopulate>(mut entity: E) -> E {
+pub fn physics<E: EntityMut>(mut entity: E) -> E {
     entity.insert_behaviour_type(BehaviourType::Physics);
     entity.insert_behaviour_state(BehaviourState::new());
     entity.insert_turn_time(TURN_DURATION_BASE);
@@ -261,7 +261,7 @@ pub fn physics<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn bloodstain<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn bloodstain<E: EntityMut>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Bloodstain);
     entity.insert_tile_depth(1);
@@ -269,7 +269,7 @@ pub fn bloodstain<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
-pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
+pub fn pistol<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_gun_type(GunType::Pistol);
     entity.insert_name(NameMessageType::Pistol);
@@ -280,7 +280,7 @@ pub fn pistol<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn shotgun<E: EntityPopulate>(mut entity: E) -> E {
+pub fn shotgun<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_gun_type(GunType::Shotgun);
     entity.insert_name(NameMessageType::Shotgun);
@@ -291,7 +291,7 @@ pub fn shotgun<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn machine_gun<E: EntityPopulate>(mut entity: E) -> E {
+pub fn machine_gun<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_gun_type(GunType::MachineGun);
     entity.insert_name(NameMessageType::MachineGun);
@@ -302,7 +302,7 @@ pub fn machine_gun<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn railgun<E: EntityPopulate>(mut entity: E) -> E {
+pub fn railgun<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_gun_type(GunType::Railgun);
     entity.insert_name(NameMessageType::Railgun);
@@ -313,7 +313,7 @@ pub fn railgun<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn goal<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: LevelSwitch) -> E {
+pub fn goal<E: EntityMut>(mut entity: E, position: Coord, level_switch: LevelSwitch) -> E {
     entity.insert_position(position);
     entity.insert_level_switch(level_switch);
     entity.insert_level_switch_auto();
@@ -321,7 +321,7 @@ pub fn goal<E: EntityPopulate>(mut entity: E, position: Coord, level_switch: Lev
     entity
 }
 
-pub fn letter<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn letter<E: EntityMut>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Letter);
     entity.insert_tile_depth(1);
@@ -331,7 +331,7 @@ pub fn letter<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
-pub fn barrel<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
+pub fn barrel<E: EntityMut>(mut entity: E, position: Coord) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Barrel);
     entity.insert_tile_depth(1);
@@ -343,7 +343,7 @@ pub fn barrel<E: EntityPopulate>(mut entity: E, position: Coord) -> E {
     entity
 }
 
-pub fn explosion<E: EntityPopulate>(mut entity: E, position: Coord, velocity: RealtimeVelocity, range: usize) -> E {
+pub fn explosion<E: EntityMut>(mut entity: E, position: Coord, velocity: RealtimeVelocity, range: usize) -> E {
     entity.insert_position(position);
     entity.insert_tile(TileType::Explosion);
     entity.insert_tile_depth(1);
@@ -358,7 +358,7 @@ pub fn explosion<E: EntityPopulate>(mut entity: E, position: Coord, velocity: Re
     entity
 }
 
-pub fn engine_repair<E: EntityPopulate>(mut entity: E) -> E {
+pub fn engine_repair<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_repair_type(RepairType::Engine);
     entity.insert_name(NameMessageType::EngineRepair);
@@ -367,7 +367,7 @@ pub fn engine_repair<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn tyres_repair<E: EntityPopulate>(mut entity: E) -> E {
+pub fn tyres_repair<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_repair_type(RepairType::Tyres);
     entity.insert_name(NameMessageType::TyresRepair);
@@ -376,7 +376,7 @@ pub fn tyres_repair<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn armour_upgrade<E: EntityPopulate>(mut entity: E, amount: usize) -> E {
+pub fn armour_upgrade<E: EntityMut>(mut entity: E, amount: usize) -> E {
 
     entity.insert_name(NameMessageType::ArmourUpgrade(amount));
     entity.insert_armour_upgrade(amount);
@@ -385,7 +385,7 @@ pub fn armour_upgrade<E: EntityPopulate>(mut entity: E, amount: usize) -> E {
     entity
 }
 
-pub fn engine_repair_kit<E: EntityPopulate>(mut entity: E) -> E {
+pub fn engine_repair_kit<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_name(NameMessageType::EngineRepairKit);
     entity.insert_consumable_type(ConsumableType::EngineRepairKit);
@@ -394,7 +394,7 @@ pub fn engine_repair_kit<E: EntityPopulate>(mut entity: E) -> E {
     entity
 }
 
-pub fn spare_tyre<E: EntityPopulate>(mut entity: E) -> E {
+pub fn spare_tyre<E: EntityMut>(mut entity: E) -> E {
 
     entity.insert_name(NameMessageType::SpareTyre);
     entity.insert_consumable_type(ConsumableType::SpareTyre);
