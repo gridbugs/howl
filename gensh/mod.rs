@@ -52,9 +52,9 @@ fn generate_code(mut toml: String) -> String {
                 field_obj.insert("struct_field_cons".to_string(), Json::String("0.0".to_string()));
                 field_obj.insert("getter_type".to_string(), Json::String("f64".to_string()));
                 field_obj.insert("getter_expr".to_string(), Json::String(format!("self.{}", field_name)));
-                field_obj.insert("remove_entity".to_string(), Json::String(format!("if let Some(v) = entity.{}() {{ cell.{} -= v; }}",
+                field_obj.insert("remove_entity".to_string(), Json::String(format!("if let Some(v) = entity.copy_{}() {{ cell.{} -= v; }}",
                                                                                    component_name, field_name)));
-                field_obj.insert("insert_entity".to_string(), Json::String(format!("if let Some(v) = entity.{}() {{ cell.{} += v; }}",
+                field_obj.insert("insert_entity".to_string(), Json::String(format!("if let Some(v) = entity.copy_{}() {{ cell.{} += v; }}",
                                                                                    component_name, field_name)));
             }
             "count_bool" => {
@@ -86,7 +86,7 @@ fn generate_code(mut toml: String) -> String {
                 field_obj.insert("struct_field_cons".to_string(), Json::String("EntitySet::new()".to_string()));
                 field_obj.insert("getter_type".to_string(), Json::String("bool".to_string()));
                 field_obj.insert("getter_expr".to_string(), Json::String(format!("!self.{}.is_empty()", field_name)));
-                field_obj.insert("iter_name".to_string(), Json::String(format!("{}_iter", field_name)));
+                field_obj.insert("iter_name".to_string(), Json::String(format!("iter_{}", field_name)));
                 field_obj.insert("iter_type".to_string(), Json::String("EntitySetIter".to_string()));
                 field_obj.insert("iter_expr".to_string(), Json::String(format!("self.{}.iter()", field_name)));
                 field_obj.insert("remove_entity".to_string(), Json::String(format!("if entity.contains_{}() {{ cell.{}.remove(entity.id()); }}",
@@ -288,23 +288,23 @@ impl SpatialHashTable {
 
     pub fn update(&mut self, ecs: &EcsCtx, action: &EcsAction, action_id: u64) {
 
-        for (entity_id, new_position) in action.position_positive_iter(ecs) {
+        for (entity_id, new_position) in action.positive_copy_iter_position(ecs) {
             let entity = ecs.entity(entity_id);
             // Add and remove tracked components based on the current data stored about the
             // entity, ignoring any component changes in the current action. These will be
             // applied later.
-            if let Some(current_position) = entity.position() {
+            if let Some(current_position) = entity.copy_position() {
                 // the entity is changing position
-                self.change_entity_position(entity, current_position, *new_position, action_id);
+                self.change_entity_position(entity, current_position, new_position, action_id);
             } else {
                 // the entity is gaining a position
-                self.add_entity_position(entity, *new_position, action_id);
+                self.add_entity_position(entity, new_position, action_id);
             }
         }
 
-        for entity_id in action.position_negative_iter(ecs) {
+        for entity_id in action.negative_iter_position(ecs) {
             let entity = ecs.entity(entity_id);
-            if let Some(position) = entity.position() {
+            if let Some(position) = entity.copy_position() {
                 self.remove_entity_position(entity, position, action_id);
             }
         }
@@ -320,9 +320,9 @@ impl SpatialHashTable {
 {{#each field}}
     fn update_{{ struct_field_name }}(&mut self, ecs: &EcsCtx, action: &EcsAction, action_id: u64) {
     {{#if count_bool}}
-        for entity_id in action.{{ component_name }}_positive_iter(ecs) {
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
+        for entity_id in action.positive_iter_{{ component_name }}(ecs) {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
                 if !entity.current_contains_{{ component_name }}() {
                     let cell = self.get_mut(position);
                     cell.{{ struct_field_name }} += 1;
@@ -331,9 +331,9 @@ impl SpatialHashTable {
             }
         }
 
-        for entity_id in action.{{ component_name }}_negative_iter(ecs) {
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
+        for entity_id in action.negative_iter_{{ component_name }}(ecs) {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
                 if entity.current_contains_{{ component_name }}() {
                     let cell = self.get_mut(position);
                     cell.{{ struct_field_name }} -= 1;
@@ -343,20 +343,20 @@ impl SpatialHashTable {
         }
     {{/if}}
     {{#if sum_f64}}
-        for (entity_id, new) in action.{{ component_name }}_positive_iter(ecs) {
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                let current = entity.current_{{ component_name }}().unwrap_or(0.0);
+        for (entity_id, new) in action.positive_iter_{{ component_name }}(ecs) {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
+                let current = entity.current_copy_{{ component_name }}().unwrap_or(0.0);
                 let increase = new - current;
                 let cell = self.get_mut(position);
                 cell.{{ struct_field_name }} += increase;
                 cell.last_updated = action_id;
             }
         }
-        for entity_id in action.{{ component_name }}_negative_iter(ecs) {
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
-                if let Some(value) = entity.current_{{ component_name }}() {
+        for entity_id in action.negative_iter_{{ component_name }}(ecs) {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
+                if let Some(value) = entity.current_copy_{{ component_name }}() {
                     let cell = self.get_mut(position);
                     cell.{{ struct_field_name }} -= value;
                     cell.last_updated = action_id;
@@ -366,12 +366,12 @@ impl SpatialHashTable {
     {{/if}}
     {{#if is_set_type}}
         {{#if component_has_type}}
-        for (entity_id, _) in action.{{ component_name }}_positive_iter(ecs) {
+        for (entity_id, _) in action.positive_iter_{{ component_name }}(ecs) {
         {{else}}
-        for entity_id in action.{{ component_name }}_positive_iter(ecs) {
+        for entity_id in action.positive_iter_{{ component_name }}(ecs) {
         {{/if}}
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
                 let cell = self.get_mut(position);
         {{#if component_has_type}}
                 if entity.current_{{ component_name }}().is_none() {
@@ -383,9 +383,9 @@ impl SpatialHashTable {
                 cell.last_updated = action_id;
             }
         }
-        for entity_id in action.{{ component_name }}_negative_iter(ecs) {
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
+        for entity_id in action.negative_iter_{{ component_name }}(ecs) {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
         {{#if component_has_type}}
                 if entity.current_{{ component_name }}().is_some() {
         {{else}}
@@ -403,20 +403,20 @@ impl SpatialHashTable {
 {{#each void}}
     fn update_{{ @key }}(&mut self, ecs: &EcsCtx, action: &EcsAction, action_id: u64) {
     {{#if component_has_type}}
-        for (entity_id, _) in action.{{ @key }}_positive_iter(ecs) {
+        for (entity_id, _) in action.positive_iter_{{ @key }}(ecs) {
     {{else}}
-        for entity_id in action.{{ @key }}_positive_iter(ecs) {
+        for entity_id in action.positive_iter_{{ @key }}(ecs) {
     {{/if}}
 
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
                 self.get_mut(position).last_updated = action_id;
             }
         }
 
-        for entity_id in action.{{ @key }}_negative_iter(ecs) {
-            let entity = ecs.post_action_entity(entity_id, action);
-            if let Some(position) = entity.position() {
+        for entity_id in action.negative_iter_{{ @key }}(ecs) {
+            let entity = ecs.post_entity(action, entity_id);
+            if let Some(position) = entity.copy_position() {
                 self.get_mut(position).last_updated = action_id;
             }
         }
