@@ -366,7 +366,7 @@ impl SpatialHashTable {
     {{/if}}
     {{#if is_set_type}}
         {{#if component_has_type}}
-        for (entity_id, _) in action.positive_iter_{{ component_name }}(ecs) {
+        for entity_id in action.positive_id_iter_{{ component_name }}(ecs) {
         {{else}}
         for entity_id in action.positive_iter_{{ component_name }}(ecs) {
         {{/if}}
@@ -403,7 +403,7 @@ impl SpatialHashTable {
 {{#each void}}
     fn update_{{ @key }}(&mut self, ecs: &EcsCtx, action: &EcsAction, action_id: u64) {
     {{#if component_has_type}}
-        for (entity_id, _) in action.positive_iter_{{ @key }}(ecs) {
+        for entity_id in action.positive_id_iter_{{ @key }}(ecs) {
     {{else}}
         for entity_id in action.positive_iter_{{ @key }}(ecs) {
     {{/if}}

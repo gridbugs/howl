@@ -8,7 +8,7 @@ use coord::Coord;
 use math::Vector2;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
-    let current_position = entity.position().expect("Entity missing position");
+    let current_position = entity.copy_position().expect("Entity missing position");
     let new_position = current_position + direction.vector();
     action.insert_position(entity.id(), new_position);
 }
@@ -16,17 +16,17 @@ pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {
 pub fn realtime_velocity_start(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity, moves: usize) {
     action.insert_realtime_velocity(entity.id(), velocity);
     action.insert_realtime_moves_remaining(entity.id(), moves);
-    action.set_start_realtime_move();
+    action.insert_property_start_realtime_move();
 }
 
 pub fn realtime_velocity_stop(action: &mut EcsAction, entity_id: EntityId) {
-    action.remove_realtime_velocity(entity_id);
-    action.remove_realtime_moves_remaining(entity_id);
+    action.delete_realtime_velocity(entity_id);
+    action.delete_realtime_moves_remaining(entity_id);
 }
 
 pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocity: RealtimeVelocity) {
 
-    if let Some(current_position) = entity.position() {
+    if let Some(current_position) = entity.copy_position() {
         let current_velocity = entity.realtime_velocity().expect("Entity missing realtime_velocity");
 
         let (new_velocity, offset) = current_velocity.step();
@@ -34,7 +34,7 @@ pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocit
         action.insert_realtime_velocity(entity.id(), new_velocity);
         action.insert_position(entity.id(), current_position + offset);
 
-        if let Some(remaining) = entity.realtime_moves_remaining() {
+        if let Some(remaining) = entity.copy_realtime_moves_remaining() {
             if remaining > 0 {
                 action.insert_realtime_moves_remaining(entity.id(), remaining - 1);
             }
@@ -43,19 +43,19 @@ pub fn realtime_velocity_move(action: &mut EcsAction, entity: EntityRef, velocit
         let length = (offset.length_squared() as f64).sqrt();
         let delay = (velocity.ms_per_cell() as f64 * length) as u64;
 
-        action.set_action_time_ms(delay);
+        action.insert_property_action_time_ms(delay);
     }
 }
 
 pub fn destroy(action: &mut EcsAction, entity: EntityRef) {
-    if let Some(ticket) = entity.schedule_ticket() {
-        action.set_schedule_invalidate(ticket);
+    if let Some(ticket) = entity.copy_schedule_ticket() {
+        action.insert_property_schedule_invalidate(ticket);
     }
     action.entity_delete(entity);
 }
 
 pub fn level_switch(action: &mut EcsAction, entity_id: EntityId, exit_id: EntityId, level_switch: LevelSwitch) {
-    action.set_level_switch_action(LevelSwitchAction {
+    action.insert_property_level_switch_action(LevelSwitchAction {
         entity_id: entity_id,
         exit_id: exit_id,
         level_switch: level_switch,
@@ -63,26 +63,26 @@ pub fn level_switch(action: &mut EcsAction, entity_id: EntityId, exit_id: Entity
 }
 
 pub fn try_level_switch(action: &mut EcsAction, entity_id: EntityId) {
-    action.set_try_level_switch(entity_id);
+    action.insert_property_try_level_switch(entity_id);
 }
 
 pub fn projectile_collision(action: &mut EcsAction, projectile_collision: ProjectileCollision, ecs: &EcsCtx) {
     if ecs.contains_pc(projectile_collision.collider_id) && ecs.contains_bullet(projectile_collision.projectile_id) {
-        let position = ecs.position(projectile_collision.collider_id).expect("Missing component position");
-        let message = if let Some(name) = ecs.shooter_id(projectile_collision.projectile_id).and_then(|id| ecs.name(id)) {
+        let position = ecs.get_copy_position(projectile_collision.collider_id).expect("Missing component position");
+        let message = if let Some(name) = ecs.get_copy_shooter_id(projectile_collision.projectile_id).and_then(|id| ecs.get_copy_name(id)) {
             ActionMessageType::ShotBy(name)
         } else {
             ActionMessageType::Shot
         };
-        action.set_action_description(ActionDescription::new(position, message));
+        action.insert_property_action_description(ActionDescription::new(position, message));
     }
-    action.set_projectile_collision(projectile_collision);
-    action.set_no_commit();
+    action.insert_property_projectile_collision(projectile_collision);
+    action.insert_property_no_commit();
 }
 
 pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) {
 
-    if let Some(mut hit_points) = to_damage.hit_points() {
+    if let Some(mut hit_points) = to_damage.copy_hit_points() {
         hit_points.dec(amount);
         action.insert_hit_points(to_damage.id(), hit_points);
     }
@@ -90,30 +90,30 @@ pub fn damage(action: &mut EcsAction, to_damage: EntityRef, amount: usize) {
 
 pub fn die(action: &mut EcsAction, entity: EntityRef) {
     if entity.contains_pc() {
-        action.set_player_died();
+        action.insert_property_player_died();
     } else {
-        let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
-        action.set_schedule_invalidate(ticket);
+        let ticket = entity.copy_schedule_ticket().expect("Entity missing schedule_ticket");
+        action.insert_property_schedule_invalidate(ticket);
         action.entity_delete(entity);
     }
 }
 
 pub fn acid_animate<R: Rng>(action: &mut EcsAction, ecs: &EcsCtx, r: &mut R) {
-    for id in ecs.acid_animation_id_iter() {
+    for id in ecs.id_iter_acid_animation() {
 
         // don't always change every tile
         if r.next_f64() > 0.5 {
             continue;
         }
 
-        let animation = ecs.probabilistic_animation(id).expect("Entity missing probabilistic_animation");
+        let animation = ecs.get_probabilistic_animation(id).expect("Entity missing probabilistic_animation");
         let tile = *animation.choose(r);
         action.insert_tile(id, tile);
     }
 }
 
 pub fn physics(action: &mut EcsAction) {
-    action.set_physics();
+    action.insert_property_physics();
 }
 
 pub fn steer<R: Rng>(action: &mut EcsAction, entity: EntityRef, direction: SteerDirection, rng: &mut R) {
@@ -121,8 +121,8 @@ pub fn steer<R: Rng>(action: &mut EcsAction, entity: EntityRef, direction: Steer
         if entity.steer_check(rng).expect("Expected components for steer check") {
             action.insert_steering(entity.id(), direction);
         } else {
-            let position = entity.position().expect("Entity missing position");
-            action.set_action_description(ActionDescription::new(position, ActionMessageType::FailToTurn));
+            let position = entity.copy_position().expect("Entity missing position");
+            action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::FailToTurn));
         }
     } else {
         action.insert_steering(entity.id(), direction);
@@ -130,11 +130,11 @@ pub fn steer<R: Rng>(action: &mut EcsAction, entity: EntityRef, direction: Steer
 }
 
 pub fn remove_steer(action: &mut EcsAction, entity_id: EntityId) {
-    action.remove_steering(entity_id);
+    action.delete_steering(entity_id);
 }
 
 pub fn change_speed(action: &mut EcsAction, entity: EntityRef, change: ChangeSpeed) {
-    let current_speed = entity.current_speed().expect("Entity missing current_speed");
+    let current_speed = entity.copy_current_speed().expect("Entity missing current_speed");
     let max_speed = entity.general_max_speed().expect("Entity missing max_speed");
 
     let new_speed = match change {
@@ -142,8 +142,8 @@ pub fn change_speed(action: &mut EcsAction, entity: EntityRef, change: ChangeSpe
             if current_speed < max_speed {
                 current_speed + 1
             } else {
-                let position = entity.position().expect("Entity missing position");
-                action.set_action_description(ActionDescription::new(position, ActionMessageType::FailToAccelerate));
+                let position = entity.copy_position().expect("Entity missing position");
+                action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::FailToAccelerate));
                 current_speed
             }
         }
@@ -160,16 +160,16 @@ pub fn change_speed(action: &mut EcsAction, entity: EntityRef, change: ChangeSpe
 }
 
 pub fn become_bloodstain(action: &mut EcsAction, entity: EntityRef, ids: &EntityIdReserver) {
-    let position = entity.position().expect("Missing component position");
-    let ticket = entity.schedule_ticket().expect("Entity missing schedule_ticket");
-    action.set_schedule_invalidate(ticket);
+    let position = entity.copy_position().expect("Missing component position");
+    let ticket = entity.copy_schedule_ticket().expect("Entity missing schedule_ticket");
+    action.insert_property_schedule_invalidate(ticket);
     action.entity_delete(entity);
     prototypes::bloodstain(action.entity_mut(ids.new_id()), position);
 }
 
 pub fn fire_burst<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, remaining: usize, speed: f64, period: u64, spread: usize, range: usize, bullet_type: BulletType, ids: &EntityIdReserver, r: &mut R) {
 
-    let shooter_position = shooter.position().expect("Missing component position");
+    let shooter_position = shooter.copy_position().expect("Missing component position");
 
     let ideal_vector = direction.vector() * range as isize;
     let x_spread = (r.gen::<usize>() % (spread * 2 + 1)) as isize - spread as isize;
@@ -198,7 +198,7 @@ pub fn fire_burst<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: Entit
     let next_remaining = remaining - 1;
 
     if next_remaining > 0 {
-        action.set_then(Reaction::new(ActionArgs::FireBurst {
+        action.insert_property_then(Reaction::new(ActionArgs::FireBurst {
             gun_id: gun.id(),
             shooter_id: shooter.id(),
             direction: direction,
@@ -210,13 +210,13 @@ pub fn fire_burst<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: Entit
             bullet_type: bullet_type,
         }, period));
     }
-    action.set_action_time_ms(period);
+    action.insert_property_action_time_ms(period);
 }
 
 pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityRef, direction: Direction, ids: &EntityIdReserver, r: &mut R) {
-    let gun_type = gun.gun_type().expect("Missing component gun_type");
-    let range = gun.gun_range().expect("Missing component gun_range");
-    let shooter_position = shooter.position().expect("Missing component position");
+    let gun_type = gun.copy_gun_type().expect("Missing component gun_type");
+    let range = gun.copy_gun_range().expect("Missing component gun_range");
+    let shooter_position = shooter.copy_position().expect("Missing component position");
     match gun_type {
         GunType::Pistol => {
             const SPEED_CELLS_PER_SEC: f64 = 100.0;
@@ -225,7 +225,7 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
             let id = ids.new_id();
             prototypes::bullet(action.entity_mut(id), bullet_position, velocity, range);
             action.insert_shooter_id(id, shooter.id());
-            action.set_action_time_ms(velocity.ms_per_cell());
+            action.insert_property_action_time_ms(velocity.ms_per_cell());
         }
         GunType::Shotgun => {
             const SPEED_CELLS_PER_SEC: f64 = 50.0;
@@ -243,11 +243,11 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
                 let id = ids.new_id();
                 prototypes::bullet(action.entity_mut(id), bullet_position, velocity, range);
                 action.insert_shooter_id(id, shooter.id());
-                action.set_action_time_ms(velocity.ms_per_cell());
+                action.insert_property_action_time_ms(velocity.ms_per_cell());
             }
         }
         GunType::MachineGun => {
-            action.set_then(Reaction::new(ActionArgs::FireBurst {
+            action.insert_property_then(Reaction::new(ActionArgs::FireBurst {
                 gun_id: gun.id(),
                 shooter_id: shooter.id(),
                 direction: direction,
@@ -260,7 +260,7 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
             }, 0));
         }
         GunType::Railgun => {
-            action.set_then(Reaction::new(ActionArgs::FireBurst {
+            action.insert_property_then(Reaction::new(ActionArgs::FireBurst {
                 gun_id: gun.id(),
                 shooter_id: shooter.id(),
                 direction: direction,
@@ -276,26 +276,26 @@ pub fn fire_gun<R: Rng>(action: &mut EcsAction, gun: EntityRef, shooter: EntityR
 }
 
 pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage: usize, rng: &mut R) {
-    let position = entity.position().expect("Entity missing position");
+    let position = entity.copy_position().expect("Entity missing position");
     for _ in 0..damage {
         entity.damage_type(rng).map(|damage_type| match damage_type {
             DamageType::Health => {
-                let mut hit_points = entity.hit_points().expect("Entity missing hit_points");
+                let mut hit_points = entity.copy_hit_points().expect("Entity missing hit_points");
                 hit_points.dec(1);
                 action.insert_hit_points(entity.id(), hit_points);
-                action.set_action_description(ActionDescription::new(position, ActionMessageType::PersonalDamage));
+                action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::PersonalDamage));
             }
             DamageType::Engine => {
-                let mut engine = entity.engine_health().expect("Entity missing engine_health");
+                let mut engine = entity.copy_engine_health().expect("Entity missing engine_health");
                 engine.dec(1);
                 let new_max_speed = (engine.ucurrent() + 1) / 2;
                 let max_speed = entity.general_max_speed().expect("Entity missing general_max_speed components");
-                let current_speed = entity.current_speed().expect("Entity missing current_speed");
+                let current_speed = entity.copy_current_speed().expect("Entity missing current_speed");
 
                 if new_max_speed < max_speed {
-                    action.set_action_description(ActionDescription::new(position, ActionMessageType::MaxSpeedDecreased));
+                    action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::MaxSpeedDecreased));
                 } else {
-                    action.set_action_description(ActionDescription::new(position, ActionMessageType::EngineDamage));
+                    action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::EngineDamage));
                 }
 
                 action.insert_engine_health(entity.id(), engine);
@@ -305,20 +305,20 @@ pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage:
                 }
             }
             DamageType::Tyres => {
-                let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");
+                let mut tyres = entity.copy_tyre_health().expect("Entity missing tyre_health");
                 if tyres.ucurrent() > 0 {
                     tyres.dec(1);
                     action.insert_tyre_health(entity.id(), tyres);
-                    action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreDamage));
+                    action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::TyreDamage));
                 }
             }
             DamageType::Armour => {
-                let armour = entity.armour().expect("Entity missing armour");
+                let armour = entity.copy_armour().expect("Entity missing armour");
                 action.insert_armour(entity.id(), armour - 1);
-                action.set_action_description(ActionDescription::new(position, ActionMessageType::ArmourDamage));
+                action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::ArmourDamage));
             }
             DamageType::Deflect => {
-                action.set_action_description(ActionDescription::new(position, ActionMessageType::ArmourDeflect));
+                action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::ArmourDeflect));
             }
         });
     }
@@ -326,10 +326,10 @@ pub fn complex_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, damage:
 
 pub fn bump(action: &mut EcsAction, victim: EntityRef, attacker: EntityRef) {
     if victim.contains_pc() {
-        let position = victim.position().expect("Entity missing position");
-        if let Some(name) = attacker.name() {
-            if let Some(verb) = attacker.bump_verb() {
-                action.set_action_description(ActionDescription::new(position, ActionMessageType::BumpedBy(name, verb)));
+        let position = victim.copy_position().expect("Entity missing position");
+        if let Some(name) = attacker.copy_name() {
+            if let Some(verb) = attacker.copy_bump_verb() {
+                action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::BumpedBy(name, verb)));
             }
         }
     }
@@ -339,10 +339,10 @@ pub fn acid_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, rng: &mut 
     const CHANCE_TO_DAMAGE: f64 = 0.25;
 
     if rng.next_f64() < CHANCE_TO_DAMAGE {
-        let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");
+        let mut tyres = entity.copy_tyre_health().expect("Entity missing tyre_health");
         if tyres.current() > 0 {
-            let position = entity.position().expect("Entity missing position");
-            action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreAcidDamage));
+            let position = entity.copy_position().expect("Entity missing position");
+            action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::TyreAcidDamage));
         }
         tyres.dec(1);
         action.insert_tyre_health(entity.id(), tyres);
@@ -350,15 +350,15 @@ pub fn acid_damage<R: Rng>(action: &mut EcsAction, entity: EntityRef, rng: &mut 
 }
 
 pub fn take_letter(action: &mut EcsAction, entity: EntityRef, letter: EntityRef) {
-    let letter_count = entity.letter_count().expect("Entity missing letter_count");
+    let letter_count = entity.copy_letter_count().expect("Entity missing letter_count");
     action.insert_letter_count(entity.id(), letter_count + 1);
     action.entity_delete(letter);
 }
 
 pub fn explode(action: &mut EcsAction, entity: EntityRef) {
-    if let Some(position) = entity.position() {
+    if let Some(position) = entity.copy_position() {
         action.entity_delete(entity);
-        action.set_then(Reaction::new(ActionArgs::ExplodeSpawn(position), 0));
+        action.insert_property_then(Reaction::new(ActionArgs::ExplodeSpawn(position), 0));
     }
 }
 
@@ -377,42 +377,42 @@ pub fn explode_spawn(action: &mut EcsAction, coord: Coord, ids: &EntityIdReserve
 }
 
 pub fn repair_tyre(action: &mut EcsAction, entity: EntityRef, amount: usize) {
-    let mut tyres = entity.tyre_health().expect("Entity missing tyre_health");
+    let mut tyres = entity.copy_tyre_health().expect("Entity missing tyre_health");
     tyres.inc(amount);
     action.insert_tyre_health(entity.id(), tyres);
-    let position = entity.position().expect("Entity missing position");
-    action.set_action_description(ActionDescription::new(position, ActionMessageType::TyreReplaced));
+    let position = entity.copy_position().expect("Entity missing position");
+    action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::TyreReplaced));
 }
 
 pub fn repair_engine(action: &mut EcsAction, entity: EntityRef, amount: usize) {
-    let mut engine = entity.engine_health().expect("Entity missing engine_health");
+    let mut engine = entity.copy_engine_health().expect("Entity missing engine_health");
     engine.inc(amount);
     action.insert_engine_health(entity.id(), engine);
-    let position = entity.position().expect("Entity missing position");
-    action.set_action_description(ActionDescription::new(position, ActionMessageType::EngineRepaired));
+    let position = entity.copy_position().expect("Entity missing position");
+    action.insert_property_action_description(ActionDescription::new(position, ActionMessageType::EngineRepaired));
 }
 
 pub fn consume(action: &mut EcsAction, entity: EntityRef, item: EntityRef) {
     let mut used = false;
-    match item.consumable_type().expect("Entity missing consumable_type") {
+    match item.copy_consumable_type().expect("Entity missing consumable_type") {
         ConsumableType::EngineRepairKit => {
             let engine = entity.engine_health().expect("Entity missing engine_health");
             if !engine.is_full() {
-                action.set_then(Reaction::new(ActionArgs::RepairEngine(entity.id(), 1), 0));
+                action.insert_property_then(Reaction::new(ActionArgs::RepairEngine(entity.id(), 1), 0));
                 used = true;
             }
         }
         ConsumableType::SpareTyre => {
             let tyres = entity.tyre_health().expect("Entity missing tyre_health");
             if !tyres.is_full() {
-                action.set_then(Reaction::new(ActionArgs::RepairTyre(entity.id(), 1), 0));
+                action.insert_property_then(Reaction::new(ActionArgs::RepairTyre(entity.id(), 1), 0));
                 used = true;
             }
         }
     }
 
     if used {
-        entity.inventory_borrow_mut().expect("Entity missing inventory").remove(item.id());
+        entity.borrow_mut_inventory().expect("Entity missing inventory").remove(item.id());
         action.entity_delete(item);
     }
 }

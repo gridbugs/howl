@@ -14,7 +14,10 @@ fn main() {
     gensh::generate_spatial_hash("sh.toml", Path::new("src").join("spatial_hash").join("generated.rs"));
 
     let mut cfg = statecs::Config::new();
+
     cfg.combine_flag_set = false;
+    cfg.component_bookkeeping = true;
+
     statecs::generate("ecs.toml", Path::new("src").join("ecs").join("generated.rs"), cfg);
 
     copy_resources("resources");

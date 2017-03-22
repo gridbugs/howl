@@ -122,7 +122,7 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut
         menu.push(SelectMenuItem::new(menu_message, entity_id));
     }
 
-    let capacity = input.entity.inventory_capacity().expect("Missing component inventory_capacity");
+    let capacity = input.entity.copy_inventory_capacity().expect("Missing component inventory_capacity");
     let size = input.entity.borrow_inventory().expect("Missing component inventory").len();
 
     let ret = SelectMenuOperation::new(
@@ -143,13 +143,13 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut
 }
 
 fn try_consume_item<K: KnowledgeRenderer>(input: BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
-    let speed = input.entity.current_speed().expect("Missing component current_speed");
+    let speed = input.entity.copy_current_speed().expect("Missing component current_speed");
     if speed == 0 {
         let mut inv = input.entity.borrow_mut_inventory().expect("Missing component inventory");
         inv.remove(item_id);
         return Some(ActionArgs::Consume(input.entity.id(), item_id));
     }
-    let mut message_log = input.entity.borrow_mut_message().expect("Expected component message_log");
+    let mut message_log = input.entity.borrow_mut_message_log().expect("Expected component message_log");
     message_log.add_temporary(MessageType::MustBeStopped);
     let mut renderer = input.renderer.borrow_mut();
     renderer.update_log_buffer(message_log.deref(), input.language);

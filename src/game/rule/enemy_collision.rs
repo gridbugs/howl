@@ -3,7 +3,7 @@ use ecs::*;
 
 pub fn enemy_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (entity_id, position) in action.position_profile().insertion_copy_iter() {
+    for (entity_id, position) in action.copy_iter_position() {
         if !env.ecs.contains_enemy(entity_id) {
             continue;
         }
@@ -29,7 +29,7 @@ pub fn enemy_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Rea
 
 pub fn pc_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (entity_id, position) in action.position_profile().insertion_copy_iter() {
+    for (entity_id, position) in action.copy_iter_position() {
         if !env.ecs.contains_pc(entity_id) {
             continue;
         }

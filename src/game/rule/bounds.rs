@@ -2,7 +2,7 @@ use game::*;
 use ecs::*;
 
 pub fn bounds(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
-    for (entity_id, position) in action.position_profile().insertion_copy_iter() {
+    for (entity_id, position) in action.copy_iter_position() {
         if !env.spatial_hash.is_valid_coord(position) {
             if env.ecs.contains_realtime_velocity(entity_id) {
                 reactions.push(Reaction::new(ActionArgs::RealtimeVelocityStop(entity_id), 0));

@@ -37,7 +37,7 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
                     let id = ids.new_id();
                     prototypes::zombie(g.entity_mut(id), coord);
-                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
                     let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
                 }
@@ -45,37 +45,37 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
                     let id = ids.new_id();
                     prototypes::car(g.entity_mut(id), coord);
-                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
                     let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
 
 
                     let gun_id = ids.new_id();
                     prototypes::shotgun(g.entity_mut(gun_id));
-                    g.weapon_slots_mut(id).unwrap().insert(Direction::North, gun_id);
-                    g.weapon_slots_mut(id).unwrap().insert(Direction::South, gun_id);
+                    g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::North, gun_id);
+                    g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::South, gun_id);
                 }
                 'b' => {
                     prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
                     let id = ids.new_id();
                     prototypes::bike(g.entity_mut(id), coord);
-                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
                     let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
 
 
                     let gun_id = ids.new_id();
                     prototypes::pistol(g.entity_mut(gun_id));
-                    g.weapon_slots_mut(id).unwrap().insert(Direction::North, gun_id);
-                    g.weapon_slots_mut(id).unwrap().insert(Direction::South, gun_id);
-                    g.weapon_slots_mut(id).unwrap().insert(Direction::East, gun_id);
-                    g.weapon_slots_mut(id).unwrap().insert(Direction::West, gun_id);
+                    g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::North, gun_id);
+                    g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::South, gun_id);
+                    g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::East, gun_id);
+                    g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::West, gun_id);
                 }
                 'Z' => {
                     prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
                     let id = ids.new_id();
                     prototypes::zombie(g.entity_mut(id), coord);
-                    let turn_offset = g.turn_offset(id).expect("Expected component turn_offset");
+                    let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
                     let ticket = schedule.schedule_turn(id, turn_offset);
                     g.insert_schedule_ticket(id, ticket);
                 }
@@ -112,13 +112,13 @@ pub fn add_management_entities<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                                      g: &mut EcsAction) {
     let acid_animator_id = ids.new_id();
     prototypes::acid_animator(g.entity_mut(acid_animator_id));
-    let turn_offset = g.turn_offset(acid_animator_id).expect("Expected component turn_offset");
+    let turn_offset = g.get_copy_turn_offset(acid_animator_id).expect("Expected component turn_offset");
     let ticket = schedule.schedule_turn(acid_animator_id, turn_offset);
     g.insert_schedule_ticket(acid_animator_id, ticket);
 
     let physics_id = ids.new_id();
     prototypes::physics(g.entity_mut(physics_id));
-    let turn_offset = g.turn_offset(physics_id).expect("Expected component turn_offset");
+    let turn_offset = g.get_copy_turn_offset(physics_id).expect("Expected component turn_offset");
     let ticket = schedule.schedule_turn(physics_id, turn_offset);
     g.insert_schedule_ticket(physics_id, ticket);
 }

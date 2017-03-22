@@ -6,8 +6,8 @@ use direction::Direction;
 
 pub fn zombie_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
-        let position = input.entity.position().unwrap();
-        let knowledge = input.entity.simple_npc_knowledge_borrow().unwrap();
+        let position = input.entity.copy_position().unwrap();
+        let knowledge = input.entity.borrow_simple_npc_knowledge().unwrap();
         let level_knowledge = knowledge.level(input.level_id);
 
         let action = if let Some(target) = level_knowledge.any_target() {

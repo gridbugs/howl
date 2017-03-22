@@ -4,11 +4,11 @@ use ecs::*;
 
 pub fn projectile_collision_trigger(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (projectile_id, position) in action.position_profile().insertion_copy_iter() {
+    for (projectile_id, position) in action.copy_iter_position() {
 
         if let Some(collider_id) = env.spatial_hash.get(position).any_projectile_collider() {
 
-            let projectile = env.ecs.post_action_entity(projectile_id, action);
+            let projectile = env.ecs.post_entity(action, projectile_id);
 
             if projectile.contains_projectile() {
 
@@ -29,11 +29,11 @@ pub fn projectile_collision_trigger(env: RuleEnv, action: &EcsAction, reactions:
 
 pub fn projectile_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    if let Some(ProjectileCollision { projectile_id, collider_id }) = action.projectile_collision() {
+    if let Some(ProjectileCollision { projectile_id, collider_id }) = action.get_property_copy_projectile_collision() {
 
-        let projectile = env.ecs.post_action_entity(projectile_id, action);
+        let projectile = env.ecs.post_entity(action, projectile_id);
 
-        if let Some(damage) = projectile.projectile_damage() {
+        if let Some(damage) = projectile.copy_projectile_damage() {
             if env.ecs.contains_complex_damage(collider_id) {
                 reactions.push(Reaction::new(ActionArgs::ComplexDamage(collider_id, damage), 0));
             } else if env.ecs.contains_hit_points(collider_id) {

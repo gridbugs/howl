@@ -1118,7 +1118,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         let position = action.get_copy_position(entity_id).expect("Missing component position");
         let vision_distance = action.get_copy_vision_distance(entity_id).expect("Missing component vision_distance");
-        let knowledge = action.borrow_mut_drawable_knowledge(entity_id).expect("Missing component drawable_knowledge");
+        let mut knowledge = action.borrow_mut_drawable_knowledge(entity_id).expect("Missing component drawable_knowledge");
         let level_knowledge = knowledge.level_mut_or_insert_size(level_id,
                                                                  level.spatial_hash.width(),
                                                                  level.spatial_hash.height());

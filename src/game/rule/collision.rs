@@ -3,11 +3,11 @@ use ecs::*;
 
 pub fn collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (entity_id, position) in action.position_profile().insertion_copy_iter() {
+    for (entity_id, position) in action.copy_iter_position() {
 
         if let Some(solid_id) = env.spatial_hash.get(position).any_solid() {
 
-            let entity = env.ecs.post_action_entity(entity_id, action);
+            let entity = env.ecs.post_entity(action, entity_id);
 
             if entity.contains_collider() {
                 if env.ecs.contains_explode_on_collision(solid_id) && entity.contains_triggers_explosion() {

@@ -11,12 +11,12 @@ const RANGE: isize = 5;
 pub fn bike_chace<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
 
-        let position = input.entity.position().unwrap();
-        let knowledge = input.entity.simple_npc_knowledge_borrow().unwrap();
+        let position = input.entity.copy_position().unwrap();
+        let knowledge = input.entity.borrow_simple_npc_knowledge().unwrap();
         let level_knowledge = knowledge.level(input.level_id);
-        let speed = input.entity.current_speed().unwrap();
-        let max_speed = input.entity.max_speed().unwrap();
-        let weapon_slots = input.entity.weapon_slots_borrow().unwrap();
+        let speed = input.entity.copy_current_speed().unwrap();
+        let max_speed = input.entity.copy_max_speed().unwrap();
+        let weapon_slots = input.entity.borrow_weapon_slots().unwrap();
 
         let target = if let Some(t) = level_knowledge.any_target() {
             t
@@ -110,7 +110,7 @@ pub fn bike_chace<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
                 return LeafResolution::Yield(MetaAction::ActionArgs(ActionArgs::Steer(input.entity.id(), SteerDirection::Down)))
             }
 
-            let weapon_slots = input.entity.weapon_slots_borrow().unwrap();
+            let weapon_slots = input.entity.borrow_weapon_slots().unwrap();
 
             if position.y > target.y + 1 {
                 let gun_id = *weapon_slots.get(Direction::North).unwrap();

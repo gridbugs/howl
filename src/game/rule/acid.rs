@@ -3,7 +3,7 @@ use ecs::*;
 
 pub fn acid(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (entity_id, position) in action.position_profile().insertion_copy_iter() {
+    for (entity_id, position) in action.copy_iter_position() {
 
         if env.spatial_hash.get(position).acid() {
 

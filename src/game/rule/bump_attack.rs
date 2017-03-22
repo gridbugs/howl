@@ -3,7 +3,7 @@ use ecs::*;
 
 pub fn bump_attack(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 
-    for (attacker_id, position) in action.position_profile().insertion_copy_iter() {
+    for (attacker_id, position) in action.copy_iter_position() {
 
         if let Some(victim_id) = env.spatial_hash.get(position).any_bump_attackable() {
 
@@ -15,7 +15,7 @@ pub fn bump_attack(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reactio
                 continue;
             }
 
-            if let Some(damage) = attacker.bump_attacker() {
+            if let Some(damage) = attacker.copy_bump_attacker() {
                 if victim.contains_complex_damage() {
                     reactions.push(Reaction::new(ActionArgs::Bump(victim_id, attacker_id), 0));
                     reactions.push(Reaction::new(ActionArgs::ComplexDamage(victim_id, damage), 0));

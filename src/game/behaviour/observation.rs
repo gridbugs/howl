@@ -1,4 +1,6 @@
 use game::*;
+use ecs::Entity;
+
 use behaviour::SwitchResolution;
 
 pub fn simple_npc_shadowcast<K: KnowledgeRenderer>(child: BehaviourNodeIndex) -> BehaviourSwitch<K> {
@@ -7,9 +9,9 @@ pub fn simple_npc_shadowcast<K: KnowledgeRenderer>(child: BehaviourNodeIndex) ->
 
     BehaviourSwitch::new_returning(move |input| {
 
-        let eye = input.entity.position().unwrap();
-        let vision_distance = input.entity.vision_distance().unwrap();
-        let mut knowledge = input.entity.simple_npc_knowledge_borrow_mut().unwrap();
+        let eye = input.entity.copy_position().unwrap();
+        let vision_distance = input.entity.copy_vision_distance().unwrap();
+        let mut knowledge = input.entity.borrow_mut_simple_npc_knowledge().unwrap();
         let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
                                                                  input.spatial_hash.width(),
                                                                  input.spatial_hash.height());
