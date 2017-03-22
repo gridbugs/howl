@@ -1,5 +1,7 @@
 use game::*;
 use game::data::*;
+use ecs::Entity;
+
 use spatial_hash::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
 use util::{BestMap, TwoDimensionalCons};

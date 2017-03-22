@@ -5,6 +5,7 @@ use std::cmp;
 use game::*;
 use game::data::*;
 use ecs::*;
+
 use behaviour::LeafResolution;
 use direction::{self, Direction};
 
@@ -36,7 +37,7 @@ fn control_to_direction(control: Control) -> Option<Direction> {
 fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
 
     let mut renderer = input.renderer.borrow_mut();
-    let message_log = input.entity.message_log_borrow().unwrap();
+    let message_log = input.entity.borrow_message_log().unwrap();
 
     let mut offset = 0;
     let num_lines = renderer.fullscreen_log_num_rows();
@@ -75,7 +76,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
 fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<(EntityId, Direction)> {
 
     let mut renderer = input.renderer.borrow_mut();
-    let mut message_log = input.entity.message_log_borrow_mut().expect("Expected component message_log");
+    let mut message_log = input.entity.borrow_mut_message_log().expect("Expected component message_log");
 
     message_log.add_temporary(MessageType::ChooseDirection);
     renderer.update_log_buffer(message_log.deref(), input.language);
@@ -88,7 +89,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
         map.get(event).and_then(|control| {
             match control {
                 Control::Direction(direction) => {
-                    let weapon_slots = input.entity.weapon_slots_borrow().expect("Expected component weapon_slots");
+                    let weapon_slots = input.entity.borrow_weapon_slots().expect("Expected component weapon_slots");
                     if let Some(weapon) = weapon_slots.get(direction) {
                         Some((*weapon, direction))
                     } else {
@@ -115,14 +116,14 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
 fn inventory<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<EntityId> {
 
     let mut menu = SelectMenu::new();
-    for entity_id in input.entity.inventory_borrow().expect("Missing component inventory").iter() {
-        let name = input.ecs.name(entity_id).expect("Missing component name");
+    for entity_id in input.entity.borrow_inventory().expect("Missing component inventory").iter() {
+        let name = input.ecs.get_copy_name(entity_id).expect("Missing component name");
         let menu_message = MenuMessageType::Name(name);
         menu.push(SelectMenuItem::new(menu_message, entity_id));
     }
 
     let capacity = input.entity.inventory_capacity().expect("Missing component inventory_capacity");
-    let size = input.entity.inventory_borrow().expect("Missing component inventory").len();
+    let size = input.entity.borrow_inventory().expect("Missing component inventory").len();
 
     let ret = SelectMenuOperation::new(
         input.renderer.borrow_mut().deref_mut(),
@@ -144,11 +145,11 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut
 fn try_consume_item<K: KnowledgeRenderer>(input: BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
     let speed = input.entity.current_speed().expect("Missing component current_speed");
     if speed == 0 {
-        let mut inv = input.entity.inventory_borrow_mut().expect("Missing component inventory");
+        let mut inv = input.entity.borrow_mut_inventory().expect("Missing component inventory");
         inv.remove(item_id);
         return Some(ActionArgs::Consume(input.entity.id(), item_id));
     }
-    let mut message_log = input.entity.message_log_borrow_mut().expect("Expected component message_log");
+    let mut message_log = input.entity.borrow_mut_message().expect("Expected component message_log");
     message_log.add_temporary(MessageType::MustBeStopped);
     let mut renderer = input.renderer.borrow_mut();
     renderer.update_log_buffer(message_log.deref(), input.language);
@@ -169,7 +170,7 @@ fn direction_to_relative_message(direction: Direction) -> MessageType {
 
 fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) {
     let mut renderer = input.renderer.borrow_mut();
-    let weapon_slots = input.entity.weapon_slots_borrow().expect("Expected component weapon_slots");
+    let weapon_slots = input.entity.borrow_weapon_slots().expect("Expected component weapon_slots");
 
     let mut message = Message::new();
 
@@ -179,7 +180,7 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>
         message.push(MessagePart::plain(": "));
 
         if let Some(weapon_id) = weapon_slots.get(d) {
-            let name = input.ecs.name(*weapon_id).expect("Expected component name");
+            let name = input.ecs.get_copy_name(*weapon_id).expect("Expected component name");
             input.language.translate(MessageType::Name(name), &mut message);
         } else {
             input.language.translate(MessageType::EmptyWeaponSlot, &mut message);
@@ -197,7 +198,7 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K
         if event == InputEvent::Quit {
             return Some(MetaAction::External(External::Quit));
         }
-        input.entity.control_map_borrow().and_then(|map_ref| {
+        input.entity.borrow_control_map().and_then(|map_ref| {
             let map = map_ref.deref();
             map.get(event).and_then(|control| {
                 match control {

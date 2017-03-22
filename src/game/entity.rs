@@ -16,13 +16,13 @@ pub trait EntityExtra {
 
 impl<'a> EntityExtra for EntityRef<'a> {
     fn player_max_speed(&self) -> Option<usize> {
-        self.engine_health().map(|hp| (hp.ucurrent() + 1) / 2)
+        self.copy_engine_health().map(|hp| (hp.ucurrent() + 1) / 2)
     }
     fn general_max_speed(&self) -> Option<usize> {
-        self.max_speed().or_else(|| self.player_max_speed())
+        self.copy_max_speed().or_else(|| self.player_max_speed())
     }
     fn armour_hit_chance(&self) -> Option<Option<f64>> {
-        self.armour().map(|a| {
+        self.copy_armour().map(|a| {
             if a != 0 {
                 Some(1.0 / (a + 1) as f64)
             } else {

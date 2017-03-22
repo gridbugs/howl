@@ -1,4 +1,6 @@
 use game::*;
+use ecs::Entity;
+
 use behaviour::{LeafResolution, SwitchResolution};
 use search::{GridSearchCfg, GridSearchCtx};
 

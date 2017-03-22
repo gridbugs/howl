@@ -1,5 +1,7 @@
 use game::*;
 use game::data::*;
+use ecs::Entity;
+
 use behaviour::LeafResolution;
 use direction::Direction;
 use coord::Coord;
