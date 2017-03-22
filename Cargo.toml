@@ -29,4 +29,4 @@ copy_dir = "0.1"
 handlebars = "0.22"
 tomson = "0.1"
 rustc-serialize = "0.3"
-statecs = { path = "/home/steve/src/statecs" }
+statecs = { git = "https://github.com/stevebob/statecs.git", rev="03b3b91" }
