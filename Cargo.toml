@@ -17,6 +17,7 @@ toml = "0.3"
 serde = "0.9"
 serde_derive = "0.9"
 bincode = "1.0.0-alpha6"
+fnv = "1.0"
 
 [dependencies.sdl2]
 version = "0.29"
@@ -29,4 +30,4 @@ copy_dir = "0.1"
 handlebars = "0.22"
 tomson = "0.1"
 rustc-serialize = "0.3"
-statecs = { git = "https://github.com/stevebob/statecs.git", rev="03b3b91" }
+statecs = { git = "https://github.com/stevebob/statecs.git", rev="78d8051" }

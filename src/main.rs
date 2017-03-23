@@ -10,6 +10,7 @@ extern crate toml;
 extern crate serde_derive;
 extern crate serde;
 extern crate bincode;
+extern crate fnv;
 
 #[cfg(feature = "sdl2")]
 extern crate sdl2;
