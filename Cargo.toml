@@ -31,3 +31,4 @@ handlebars = "0.22"
 tomson = "0.1"
 rustc-serialize = "0.3"
 statecs = { git = "https://github.com/stevebob/statecs.git", rev="562e6e6" }
+statecs-spatial-hash = {git = "https://github.com/stevebob/statecs-spatial-hash.git", rev="4b72377" }
