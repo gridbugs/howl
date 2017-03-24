@@ -17,7 +17,7 @@ pub fn enemy_collision(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Rea
             return RULE_REJECT;
         }
 
-        if env.spatial_hash.get(position).pc() {
+        if env.spatial_hash.get(position).is_pc() {
             // TODO damage the player here
             reactions.push(Reaction::new(ActionArgs::Null, 0));
             return RULE_REJECT;

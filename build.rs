@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 extern crate statecs;
+extern crate statecs_spatial_hash;
 extern crate copy_dir;
 extern crate tomson;
 extern crate handlebars;
@@ -11,7 +12,6 @@ extern crate rustc_serialize;
 mod gensh;
 
 fn main() {
-    gensh::generate_spatial_hash("sh.toml", Path::new("src").join("spatial_hash").join("generated.rs"));
 
     let mut cfg = statecs::Config::new();
 
@@ -23,6 +23,7 @@ fn main() {
     cfg.fnv_hasher = true;
 
     statecs::generate("ecs.toml", Path::new("src").join("ecs").join("generated.rs"), cfg);
+    statecs_spatial_hash::generate("sh.toml", Path::new("src").join("spatial_hash").join("generated.rs"));
 
     copy_resources("resources");
     copy_resources("user");

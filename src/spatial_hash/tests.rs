@@ -34,16 +34,16 @@ fn insert_remove() {
         entity.id()
     };
 
-    assert!(!env.sh.get(coord).solid());
+    assert!(!env.sh.get(coord).is_solid());
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action); // this resets the action so it can be reused
-    assert!(env.sh.get(coord).solid());
+    assert!(env.sh.get(coord).is_solid());
 
-    action.entity_mut(id).remove_solid();
+    action.delete_solid(id);
 
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
-    assert!(!env.sh.get(coord).solid());
+    assert!(!env.sh.get(coord).is_solid());
 }
 
 #[test]
@@ -70,8 +70,8 @@ fn insert_move() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(!env.sh.get(start_coord).solid());
-    assert!(env.sh.get(end_coord).solid());
+    assert!(!env.sh.get(start_coord).is_solid());
+    assert!(env.sh.get(end_coord).is_solid());
 }
 
 #[test]
@@ -92,12 +92,12 @@ fn remove_position() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    action.entity_mut(id).remove_position();
+    action.delete_position(id);
 
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(!env.sh.get(start_coord).solid());
+    assert!(!env.sh.get(start_coord).is_solid());
 }
 
 #[test]
@@ -119,12 +119,12 @@ fn insert_solid() {
 
     action.entity_mut(id).insert_solid();
 
-    assert!(!env.sh.get(start_coord).solid());
+    assert!(!env.sh.get(start_coord).is_solid());
 
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(env.sh.get(start_coord).solid());
+    assert!(env.sh.get(start_coord).is_solid());
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn track_opacity() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(start_coord).get_opacity() * 10.0).round(),
         0.0 * 10.0);
 
     // add an opacity of 0.5
@@ -155,7 +155,7 @@ fn track_opacity() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(start_coord).get_opacity() * 10.0).round(),
         (0.5_f64 * 10.0).round());
 
     // decrease opacity to 0.2
@@ -164,15 +164,15 @@ fn track_opacity() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.2 * 10.0);
+    assert_eq!((env.sh.get(start_coord).get_opacity() * 10.0).round(), 0.2 * 10.0);
 
     // move the entity
     action.entity_mut(id).insert_position(end_coord);
 
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
-    assert_eq!((env.sh.get(start_coord).opacity() * 10.0).round(), 0.0 * 10.0);
-    assert_eq!((env.sh.get(end_coord).opacity() * 10.0).round(), 0.2 * 10.0);
+    assert_eq!((env.sh.get(start_coord).get_opacity() * 10.0).round(), 0.0 * 10.0);
+    assert_eq!((env.sh.get(end_coord).get_opacity() * 10.0).round(), 0.2 * 10.0);
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn insert_move_multiple() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(env.sh.get(start_coord).solid());
+    assert!(env.sh.get(start_coord).is_solid());
 
     // add second solid entity in same cell
     let id_b = {
@@ -209,7 +209,7 @@ fn insert_move_multiple() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(env.sh.get(start_coord).solid());
+    assert!(env.sh.get(start_coord).is_solid());
 
     // move original entity
     action.entity_mut(id_a).insert_position(end_coord);
@@ -217,8 +217,8 @@ fn insert_move_multiple() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(env.sh.get(start_coord).solid());
-    assert!(env.sh.get(end_coord).solid());
+    assert!(env.sh.get(start_coord).is_solid());
+    assert!(env.sh.get(end_coord).is_solid());
 
     // move second entity
     action.entity_mut(id_b).insert_position(end_coord);
@@ -226,8 +226,8 @@ fn insert_move_multiple() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(!env.sh.get(start_coord).solid());
-    assert!(env.sh.get(end_coord).solid());
+    assert!(!env.sh.get(start_coord).is_solid());
+    assert!(env.sh.get(end_coord).is_solid());
 
     // move both entities in single action
     action.entity_mut(id_a).insert_position(start_coord);
@@ -236,8 +236,8 @@ fn insert_move_multiple() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert!(env.sh.get(start_coord).solid());
-    assert!(!env.sh.get(end_coord).solid());
+    assert!(env.sh.get(start_coord).is_solid());
+    assert!(!env.sh.get(end_coord).is_solid());
 }
 
 #[test]
@@ -361,9 +361,9 @@ fn component_swap() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_a).get_opacity() * 10.0).round(),
         (1.0_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_b).get_opacity() * 10.0).round(),
         (0.5_f64 * 10.0).round());
 
     action.swap_opacity(id_b, id_a);
@@ -371,9 +371,9 @@ fn component_swap() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_a).get_opacity() * 10.0).round(),
         (0.5_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_b).get_opacity() * 10.0).round(),
         (1.0_f64 * 10.0).round());
 }
 
@@ -402,9 +402,9 @@ fn component_empty_swap() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_a).get_opacity() * 10.0).round(),
         (0.0_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_b).get_opacity() * 10.0).round(),
         (0.5_f64 * 10.0).round());
 
     action.swap_opacity(id_b, id_a);
@@ -412,9 +412,9 @@ fn component_empty_swap() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_a).get_opacity() * 10.0).round(),
         (0.5_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_b).get_opacity() * 10.0).round(),
         (0_f64 * 10.0).round());
 }
 
@@ -444,9 +444,9 @@ fn component_position_swap() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_a).get_opacity() * 10.0).round(),
         (1.0_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_b).get_opacity() * 10.0).round(),
         (0.5_f64 * 10.0).round());
 
     action.swap_position(id_b, id_a);
@@ -454,8 +454,8 @@ fn component_position_swap() {
     env.sh.update(&env.ctx, &action, 0);
     env.ctx.commit(&mut action);
 
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_a).get_opacity() * 10.0).round(),
         (0.5_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
+    assert_eq!((env.sh.get(coord_b).get_opacity() * 10.0).round(),
         (1.0_f64 * 10.0).round());
 }

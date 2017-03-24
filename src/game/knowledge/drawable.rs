@@ -156,7 +156,7 @@ impl LevelKnowledge for DrawableKnowledgeLevel {
                 self.last_action_id = action_env.id;
             }
 
-            if world_cell.enemy() {
+            if world_cell.has_enemy() {
                 self.targets.push(coord);
             }
 

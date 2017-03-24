@@ -190,10 +190,10 @@ impl Limits {
     fn new(eye: Coord, world: &SpatialHashTable, octant: &Octant) -> Self {
         let eye_centre = eye.cell_centre();
         Limits {
-            depth_min: world.limits_min().get(octant.depth_idx),
-            depth_max: world.limits_max().get(octant.depth_idx),
-            lateral_min: world.limits_min().get(octant.lateral_idx),
-            lateral_max: world.limits_max().get(octant.lateral_idx),
+            depth_min: Coord::from(world.limits_min()).get(octant.depth_idx),
+            depth_max: Coord::from(world.limits_max()).get(octant.depth_idx),
+            lateral_min: Coord::from(world.limits_min()).get(octant.lateral_idx),
+            lateral_max: Coord::from(world.limits_max()).get(octant.lateral_idx),
             eye_centre: eye_centre,
             eye_lateral_pos: eye_centre.get(octant.lateral_idx),
             eye_depth_idx: eye.get(octant.depth_idx),
@@ -364,7 +364,7 @@ impl Shadowcast {
             }
 
             // compute current visibility
-            let current_visibility = (scan.frame.visibility - cell.opacity()).max(0.0);
+            let current_visibility = (scan.frame.visibility - cell.get_opacity()).max(0.0);
             let current_opaque = current_visibility == 0.0;
 
             // process changes in visibility

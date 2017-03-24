@@ -5,7 +5,7 @@ pub fn acid(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> 
 
     for (entity_id, position) in action.copy_iter_position() {
 
-        if env.spatial_hash.get(position).acid() {
+        if env.spatial_hash.get(position).is_acid() {
 
             let entity = env.ecs.entity(entity_id);
 

@@ -1,41 +1,19 @@
-[field.opacity]
-    type = "sum_f64"
+ecs_namespace = "ecs"
 
-[field.solid]
-    type = "any"
+position = 'position'
 
-[field.pc]
-    type = "count_bool"
-
-[field.acid]
-    type = "count_bool"
-
-[field.letter]
-    type = "any"
-
-[field.enemy]
-    type = "any"
-
-[field.level_switch]
-    type = "any"
-    component_has_type = true
-
-[field.floor]
-    type = "any"
-
-[field.bump_attackable]
-    type = "any"
-
-[field.projectile_collider]
-    type = "any"
-
-[field.hit_points]
-    type = "void"
-    component_has_type = true
-
-[field.tile]
-    type = "void"
-    component_has_type = true
-
-[field.destroyed_by_explosion]
-    type = "set"
+fields = [
+    { name = 'opacity', aggregate = 'sum_f64' },
+    { name = 'solid', aggregate = 'any' },
+    { name = 'pc', aggregate = 'count_bool' },
+    { name = 'acid', aggregate = 'count_bool' },
+    { name = 'letter', aggregate = 'any' },
+    { name = 'enemy', aggregate = 'any' },
+    { name = 'level_switch', aggregate = 'any' },
+    { name = 'floor', aggregate = 'any' },
+    { name = 'bump_attackable', aggregate = 'any' },
+    { name = 'projectile_collider', aggregate = 'any' },
+    { name = 'hit_points', aggregate = 'void' },
+    { name = 'tile', aggregate = 'void' },
+    { name = 'destroyed_by_explosion', aggregate = 'set' },
+]

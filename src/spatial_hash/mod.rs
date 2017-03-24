@@ -1,4 +1,5 @@
 mod generated;
+mod coord;
 
 pub use self::generated::*;
 

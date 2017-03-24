@@ -191,3 +191,9 @@ impl From<Vector2<usize>> for Vector2<isize> {
         Vector2::new(v.x as isize, v.y as isize)
     }
 }
+
+impl From<(isize, isize)> for Vector2<isize> {
+    fn from((x, y): (isize, isize)) -> Self {
+        Vector2::new(x, y)
+    }
+}
