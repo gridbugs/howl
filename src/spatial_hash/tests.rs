@@ -289,53 +289,6 @@ fn entity_set() {
 }
 
 #[test]
-fn component_move() {
-
-    let mut env = Env::new();
-    let mut action = EcsAction::new();
-
-    let coord_a = Coord::new(1, 2);
-    let coord_b = Coord::new(1, 3);
-
-    let id_a = {
-        let mut entity = action.entity_mut(env.ids.reserve());
-        entity.insert_position(coord_a);
-        entity.insert_solid();
-        entity.id()
-    };
-
-    let id_b = {
-        let mut entity = action.entity_mut(env.ids.reserve());
-        entity.insert_position(coord_b);
-        entity.insert_opacity(0.5);
-        entity.id()
-    };
-
-    env.sh.update(&env.ctx, &action, 0);
-    env.ctx.commit(&mut action);
-
-    assert!(env.sh.get(coord_a).solid());
-    assert!(!env.sh.get(coord_b).solid());
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
-        (0_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
-        (0.5_f64 * 10.0).round());
-
-    action.move_solid(id_a, id_b);
-    action.move_opacity(id_b, id_a);
-
-    env.sh.update(&env.ctx, &action, 0);
-    env.ctx.commit(&mut action);
-
-    assert!(!env.sh.get(coord_a).solid());
-    assert!(env.sh.get(coord_b).solid());
-    assert_eq!((env.sh.get(coord_a).opacity() * 10.0).round(),
-        (0.5_f64 * 10.0).round());
-    assert_eq!((env.sh.get(coord_b).opacity() * 10.0).round(),
-        (0_f64 * 10.0).round());
-}
-
-#[test]
 fn component_swap() {
 
     let mut env = Env::new();
