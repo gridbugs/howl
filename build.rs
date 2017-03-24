@@ -9,8 +9,6 @@ extern crate tomson;
 extern crate handlebars;
 extern crate rustc_serialize;
 
-mod gensh;
-
 fn main() {
 
     let mut cfg = statecs::Config::new();
