@@ -1,5 +1,6 @@
-use std::ops::DerefMut;
 use std::cmp;
+
+use rand::Rng;
 use num::PrimInt;
 
 use coord::Coord;
@@ -180,12 +181,12 @@ pub fn bullet<E: EntityMut>(mut entity: E, position: Coord, velocity: RealtimeVe
     entity
 }
 
-pub fn road<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn road<E: EntityMut, R: Rng>(mut entity: E, position: Coord, r: &mut R) -> E {
     entity.insert_position(position);
 
     let rest_tiles = [];
 
-    let tile = *rng.select_or_select_uniform(0.95, &TileType::Road0, &rest_tiles);
+    let tile = *select_or_select_uniform(0.95, &TileType::Road0, &rest_tiles, r);
 
     entity.insert_tile(tile);
     entity.insert_tile_depth(0);
@@ -194,14 +195,14 @@ pub fn road<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity
 }
 
-pub fn dirt<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn dirt<E: EntityMut, R: Rng>(mut entity: E, position: Coord, r: &mut R) -> E {
     entity.insert_position(position);
 
     let rest_tiles = [
         TileType::Dirt1,
     ];
 
-    let tile = *rng.select_or_select_uniform(0.95, &TileType::Dirt0, &rest_tiles);
+    let tile = *select_or_select_uniform(0.95, &TileType::Dirt0, &rest_tiles, r);
 
     entity.insert_tile(tile);
     entity.insert_tile_depth(0);
@@ -210,12 +211,12 @@ pub fn dirt<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity
 }
 
-pub fn acid<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn acid<E: EntityMut, R: Rng>(mut entity: E, position: Coord, r: &mut R) -> E {
     entity.insert_position(position);
 
     let animation = FirstWeightedProbabilisticChoice::new(0.90, TileType::Acid0, vec![TileType::Acid1]);
 
-    entity.insert_tile(*animation.choose(rng.inner_mut().deref_mut()));
+    entity.insert_tile(*animation.choose(r));
     entity.insert_probabilistic_animation(animation);
     entity.insert_acid();
     entity.insert_acid_animation();
@@ -225,7 +226,7 @@ pub fn acid<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
     entity
 }
 
-pub fn wreck<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
+pub fn wreck<E: EntityMut, R: Rng>(mut entity: E, position: Coord, r: &mut R) -> E {
     entity.insert_position(position);
 
     let tiles = [
@@ -234,7 +235,7 @@ pub fn wreck<E: EntityMut>(mut entity: E, position: Coord, rng: &GameRng) -> E {
         TileType::Wreck2,
     ];
 
-    let tile = *rng.select_uniform(&tiles);
+    let tile = *select_uniform(&tiles, r);
 
     entity.insert_tile(tile);
     entity.insert_tile_depth(2);

@@ -5,6 +5,8 @@ use std::cell::RefCell;
 use std::ops::Deref;
 use std::ops::DerefMut;
 
+use rand::StdRng;
+
 use game::*;
 use game::data::*;
 use ecs::*;
@@ -72,7 +74,7 @@ pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub turn_schedule: &'game mut TurnSchedule,
     pub pc_observer: &'game Shadowcast,
     pub entity_ids: &'game EntityIdReserver,
-    pub rng: &'game GameRng,
+    pub rng: &'game RefCell<StdRng>,
     pub language: &'game Box<Language>,
 }
 
@@ -293,7 +295,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             *self.action_id += 1;
 
             // construct an action from the action args
-            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.inner_mut().deref_mut());
+            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
 
             let mut action_time = 0;
             self.rule_reactions.clear();
@@ -343,7 +345,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                     }
                     RuleResolution::Consume(action_args) => {
                         // modify the current action with the new action args and retry
-                        action_args.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.inner_mut().deref_mut());
+                        action_args.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
                     }
                 }
             }

@@ -1,15 +1,17 @@
+use rand::Rng;
+
 use ecs::*;
 use game::*;
 use game::data::*;
 use coord::Coord;
 use direction::Direction;
 
-pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
-                                                  level_switch: Option<LevelSwitch>,
-                                                  ids: &EntityIdReserver,
-                                                  schedule: &mut S,
-                                                  g: &mut EcsAction,
-                                                  rng: &GameRng) -> (usize, usize) {
+pub fn terrain_from_strings<S: TurnScheduleQueue, R: Rng>(strings: &[&str],
+                                                          level_switch: Option<LevelSwitch>,
+                                                          ids: &EntityIdReserver,
+                                                          schedule: &mut S,
+                                                          g: &mut EcsAction,
+                                                          r: &mut R) -> (usize, usize) {
     let width = strings[0].len();
     let height = strings.len();
 
@@ -20,21 +22,21 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
             let coord = Coord::new(x, y);
             match ch {
                 '.' => {
-                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, r);
                 }
                 '#' => {
                     prototypes::barrel(g.entity_mut(ids.new_id()), coord);
-                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, r);
                 }
                 '&' => {
                     prototypes::letter(g.entity_mut(ids.new_id()), coord);
-                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, r);
                 }
                 ',' => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                 }
                 'z' => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                     let id = ids.new_id();
                     prototypes::zombie(g.entity_mut(id), coord);
                     let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
@@ -42,7 +44,7 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     g.insert_schedule_ticket(id, ticket);
                 }
                 'c' => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                     let id = ids.new_id();
                     prototypes::car(g.entity_mut(id), coord);
                     let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
@@ -56,7 +58,7 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::South, gun_id);
                 }
                 'b' => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                     let id = ids.new_id();
                     prototypes::bike(g.entity_mut(id), coord);
                     let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
@@ -72,7 +74,7 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::West, gun_id);
                 }
                 'Z' => {
-                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, r);
                     let id = ids.new_id();
                     prototypes::zombie(g.entity_mut(id), coord);
                     let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
@@ -80,15 +82,15 @@ pub fn terrain_from_strings<S: TurnScheduleQueue>(strings: &[&str],
                     g.insert_schedule_ticket(id, ticket);
                 }
                 '%' => {
-                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, rng);
-                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, r);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, r);
                 }
                 '$' => {
-                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, rng);
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, r);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                 }
                 '~' => {
-                    prototypes::acid(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::acid(g.entity_mut(ids.new_id()), coord, r);
                 }
                 _ => panic!(),
             }

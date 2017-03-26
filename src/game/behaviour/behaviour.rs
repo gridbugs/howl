@@ -1,5 +1,7 @@
 use std::cell::RefCell;
 
+use rand::StdRng;
+
 use game::*;
 use ecs::*;
 use spatial_hash::*;
@@ -16,7 +18,7 @@ pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub level_id: LevelId,
     pub action_env: ActionEnv<'a>,
     pub renderer: &'a RefCell<R>,
-    pub rng: &'a GameRng,
+    pub rng: &'a RefCell<StdRng>,
     pub language: &'a Box<Language>,
 }
 

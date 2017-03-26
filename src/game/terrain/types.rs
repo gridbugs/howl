@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use ecs::*;
 use game::*;
 use coord::Coord;
@@ -22,16 +24,16 @@ pub enum TerrainType {
 }
 
 impl TerrainType {
-    pub fn generate<S: TurnScheduleQueue>(self,
+    pub fn generate<S: TurnScheduleQueue, R: Rng>(self,
                                           ids: &EntityIdReserver,
-                                          rng: &GameRng,
+                                          r: &mut R,
                                           schedule: &mut S,
                                           action: &mut EcsAction,
                                           _parent: Option<ParentLevelCtx>,
                                           difficulty: usize) -> TerrainMetadata {
         match self {
-            TerrainType::DemoA => generators::demo_a(ids, rng, schedule, action),
-            TerrainType::Road => generators::road(ids, rng, schedule, action, difficulty),
+            TerrainType::DemoA => generators::demo_a(ids, r, schedule, action),
+            TerrainType::Road => generators::road(ids, r, schedule, action, difficulty),
         }
     }
 }

@@ -1,5 +1,7 @@
 use std::slice;
 
+use rand::Rng;
+
 use game::*;
 use game::data::*;
 use ecs::*;
@@ -42,11 +44,11 @@ impl From<SerializableLevel> for Level {
 }
 
 impl Level {
-    pub fn new_with_entity(terrain: TerrainType,
+    pub fn new_with_entity<R: Rng>(terrain: TerrainType,
                        entity_id: EntityId,
                        action: &mut EcsAction,
                        ids: &EntityIdReserver,
-                       rng: &GameRng,
+                       r: &mut R,
                        action_id: ActionId,
                        parent: Option<ParentLevelCtx>,
                        difficulty: usize) -> (Self, LevelConnectionReport) {
@@ -55,7 +57,7 @@ impl Level {
 
         // generate the level's contents
         let TerrainMetadata { width, height, start_coord, connection_report } =
-            terrain.generate(ids, rng, &mut schedule, action, parent, difficulty);
+            terrain.generate(ids, r, &mut schedule, action, parent, difficulty);
 
         // compose a level object
         let mut level = Level {

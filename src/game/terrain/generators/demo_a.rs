@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use ecs::*;
 use game::*;
 use game::data::*;
@@ -6,14 +8,14 @@ use coord::Coord;
 
 const START_COORD: Coord = Coord { x: 0, y: 14 };
 
-pub fn demo_a<S: TurnScheduleQueue>(ids: &EntityIdReserver,
-                                  rng: &GameRng,
-                                  schedule: &mut S,
-                                  g: &mut EcsAction) -> TerrainMetadata {
+pub fn demo_a<S: TurnScheduleQueue, R: Rng>(ids: &EntityIdReserver,
+                                           r: &mut R,
+                                           schedule: &mut S,
+                                           g: &mut EcsAction) -> TerrainMetadata {
 
     let level_switch = LevelSwitch::LeaveLevel;
 
-    let (width, height) = util::terrain_from_strings(&level_str(), Some(level_switch), ids, schedule, g, rng);
+    let (width, height) = util::terrain_from_strings(&level_str(), Some(level_switch), ids, schedule, g, r);
 
     TerrainMetadata {
         width: width,

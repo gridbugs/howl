@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::ops::DerefMut;
-use rand::Rng;
+use rand::{Rng, StdRng, SeedableRng};
 
 use game::*;
 use game::data::*;
@@ -92,7 +92,7 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     action_schedule: Schedule<ActionArgs>,
     width: usize,
     height: usize,
-    rng: GameRng,
+    rng: RefCell<StdRng>,
     language: Box<Language>,
 }
 
@@ -216,7 +216,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             action_schedule: Schedule::new(),
             width: width,
             height: height,
-            rng: GameRng::new(seed),
+            rng: RefCell::new(StdRng::from_seed(&[seed])),
             language: Box::new(languages::English),
         }
     }
@@ -741,7 +741,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn prepare_between_levels(&mut self, game_state: &mut GameState) {
         let GlobalIds { pc_id, shop_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
-        let mut rng_borrow = self.rng.inner_mut();
+        let mut rng_borrow = self.rng.borrow_mut();
         let mut rng = rng_borrow.deref_mut();
 
         let total_shop_roll = RANDOM_SHOP_ITEM_WEIGHTS.iter().fold(0, |acc, &x| acc + x);
@@ -985,7 +985,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                                 pc_id,
                                                 &mut action,
                                                 &game_state.entity_ids,
-                                                &self.rng,
+                                                self.rng.borrow_mut().deref_mut(),
                                                 game_state.action_id,
                                                 None,
                                                 0);
@@ -1028,7 +1028,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                                 entity_id,
                                                 &mut entity_insert,
                                                 &game_state.entity_ids,
-                                                &self.rng,
+                                                self.rng.borrow_mut().deref_mut(),
                                                 game_state.action_id,
                                                 None,
                                                 global_ids.level_id + 1);
@@ -1076,7 +1076,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                            entity_id,
                                            &mut entity_insert,
                                            &game_state.entity_ids,
-                                           &self.rng,
+                                            self.rng.borrow_mut().deref_mut(),
                                            game_state.action_id,
                                            Some(parent_ctx),
                                            global_ids.level_id + 1)

@@ -1,5 +1,4 @@
 use std::cmp;
-use std::ops::DerefMut;
 use rand::Rng;
 use ecs::*;
 use game::*;
@@ -60,18 +59,18 @@ fn choose_random_entity<R: Rng>(types: &[EntityType], weights: &[usize], total: 
     None
 }
 
-pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
-                                  rng: &GameRng,
-                                  schedule: &mut S,
-                                  g: &mut EcsAction,
-                                  difficulty: usize) -> TerrainMetadata {
+pub fn road<S: TurnScheduleQueue, R: Rng>(ids: &EntityIdReserver,
+                                          r: &mut R,
+                                          schedule: &mut S,
+                                          g: &mut EcsAction,
+                                          difficulty: usize) -> TerrainMetadata {
 
 
-    let map_width = rng.gen_usize() % (MAP_WIDTH_MAX - MAP_WIDTH_MIN) + MAP_WIDTH_MIN;
+    let map_width = r.gen::<usize>() % (MAP_WIDTH_MAX - MAP_WIDTH_MIN) + MAP_WIDTH_MIN;
     let mut grid: StaticGrid<Vec<EntityType>> = StaticGrid::new_default(map_width, MAP_HEIGHT);
 
     let perlin = PerlinGrid::new(map_width / PERLIN_ZOOM, MAP_HEIGHT / PERLIN_ZOOM,
-                                 PerlinWrapType::Repeat, rng.inner_mut().deref_mut());
+                                 PerlinWrapType::Repeat, r);
 
     let random_entity_dirt_weights = [
         5, /* Wreck */
@@ -108,7 +107,7 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
             if let Some(entity_type) = choose_random_entity(&RANDOM_ENTITY_TYPES,
                                                             &random_entity_road_weights,
                                                             RANDOM_ENTITY_TOTAL,
-                                                            rng.inner_mut().deref_mut()) {
+                                                            r) {
                 cell_mut.push(entity_type);
             }
         } else {
@@ -116,7 +115,7 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
             if let Some(entity_type) = choose_random_entity(&RANDOM_ENTITY_TYPES,
                                                             &random_entity_dirt_weights,
                                                             RANDOM_ENTITY_TOTAL,
-                                                            rng.inner_mut().deref_mut()) {
+                                                            r) {
                 cell_mut.push(entity_type);
             }
         }
@@ -130,19 +129,19 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
         for entity_type in cell.iter() {
             match *entity_type {
                 EntityType::Dirt => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                 }
                 EntityType::Road => {
-                    prototypes::road(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::road(g.entity_mut(ids.new_id()), coord, r);
                 }
                 EntityType::Acid => {
-                    prototypes::acid(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::acid(g.entity_mut(ids.new_id()), coord, r);
                 }
                 EntityType::Goal => {
                     prototypes::goal(g.entity_mut(ids.new_id()), coord, LevelSwitch::LeaveLevel);
                 }
                 EntityType::Wreck => {
-                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::wreck(g.entity_mut(ids.new_id()), coord, r);
                 }
                 EntityType::Barrel => {
                     prototypes::barrel(g.entity_mut(ids.new_id()), coord);
@@ -151,7 +150,7 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                     prototypes::letter(g.entity_mut(ids.new_id()), coord);
                 }
                 EntityType::Zombie => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                     let id = ids.new_id();
                     prototypes::zombie(g.entity_mut(id), coord);
                     let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
@@ -159,7 +158,7 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                     g.insert_schedule_ticket(id, ticket);
                 }
                 EntityType::Car => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                     let id = ids.new_id();
                     prototypes::car(g.entity_mut(id), coord);
                     let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
@@ -172,7 +171,7 @@ pub fn road<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                     g.borrow_mut_weapon_slots(id).unwrap().insert(Direction::South, gun_id);
                 }
                 EntityType::Bike => {
-                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, rng);
+                    prototypes::dirt(g.entity_mut(ids.new_id()), coord, r);
                     let id = ids.new_id();
                     prototypes::bike(g.entity_mut(id), coord);
                     let turn_offset = g.get_copy_turn_offset(id).expect("Expected component turn_offset");
