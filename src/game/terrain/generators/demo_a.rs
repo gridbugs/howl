@@ -1,10 +1,10 @@
 use rand::Rng;
 
-use ecs::*;
+use ecs_content::*;
 use game::*;
 use game::data::*;
 use game::terrain::util;
-use coord::Coord;
+use math::Coord;
 
 const START_COORD: Coord = Coord { x: 0, y: 14 };
 

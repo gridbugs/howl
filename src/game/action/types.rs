@@ -1,10 +1,11 @@
 use rand::Rng;
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 use game::*;
 use game::data::*;
 use spatial_hash::*;
-use direction::Direction;
-use coord::Coord;
+use math::Direction;
+use math::Coord;
 
 pub type ActionId = u64;
 

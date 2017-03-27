@@ -1,5 +1,5 @@
 use game::*;
-use ecs::*;
+use ecs_content::*;
 
 pub fn bounds(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
     for (entity_id, position) in action.copy_iter_position() {

@@ -4,10 +4,11 @@ use rand::{Rng, StdRng, SeedableRng};
 
 use game::*;
 use game::data::*;
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 use util::{LeakyReserver, Schedule};
-use coord::Coord;
-use direction::Direction;
+use math::Coord;
+use math::Direction;
 
 pub struct EntityIdReserver(RefCell<LeakyReserver<EntityId>>);
 

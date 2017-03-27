@@ -1,10 +1,10 @@
 use rand::Rng;
 
-use ecs::*;
+use ecs_content::*;
 use game::*;
 use game::data::*;
-use coord::Coord;
-use direction::Direction;
+use math::Coord;
+use math::Direction;
 
 pub fn terrain_from_strings<S: TurnScheduleQueue, R: Rng>(strings: &[&str],
                                                           level_switch: Option<LevelSwitch>,

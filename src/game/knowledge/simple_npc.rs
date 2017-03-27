@@ -3,9 +3,9 @@ use std::collections::HashSet;
 use game::*;
 use spatial_hash::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
-use coord::Coord;
+use math::Coord;
 use search::TraverseCost;
-use util::TwoDimensionalCons;
+use game::knowledge::dimension_constructor::TwoDimensionalCons;
 
 pub type SimpleNpcKnowledge = GameKnowledge<SimpleNpcKnowledgeLevel>;
 

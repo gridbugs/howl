@@ -1,6 +1,6 @@
 /// Dummy vision system that sees only the cell containing the eye
 
-use coord::Coord;
+use math::Coord;
 use game::*;
 use spatial_hash::*;
 

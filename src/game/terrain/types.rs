@@ -1,8 +1,9 @@
 use rand::Rng;
 
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 use game::*;
-use coord::Coord;
+use math::Coord;
 
 pub struct TerrainMetadata {
     pub width: usize,

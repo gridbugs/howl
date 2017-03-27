@@ -1,10 +1,10 @@
 use game::*;
 use game::data::*;
-use ecs::Entity;
+use ecs_content::Entity;
 
 use behaviour::LeafResolution;
-use direction::Direction;
-use coord::Coord;
+use math::Direction;
+use math::Coord;
 
 const X_RANGE: isize = 2;
 const Y_RANGE: isize = 3;

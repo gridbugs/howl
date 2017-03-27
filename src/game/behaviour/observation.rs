@@ -1,5 +1,5 @@
 use game::*;
-use ecs::Entity;
+use ecs_content::Entity;
 
 use behaviour::SwitchResolution;
 

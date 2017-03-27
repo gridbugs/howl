@@ -15,6 +15,7 @@ mod bullet_type;
 mod damage_type;
 mod repair_type;
 mod consumable_type;
+mod messages;
 
 pub use self::speed::*;
 pub use self::path_traverse::*;
@@ -33,3 +34,4 @@ pub use self::bullet_type::*;
 pub use self::damage_type::*;
 pub use self::repair_type::*;
 pub use self::consumable_type::*;
+pub use self::messages::*;

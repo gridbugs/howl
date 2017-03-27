@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use rand::StdRng;
 
 use game::*;
-use ecs::*;
+use ecs_content::*;
 use spatial_hash::*;
 use behaviour::{State, NodeIndex, Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
 

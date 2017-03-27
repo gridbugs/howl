@@ -15,20 +15,21 @@ extern crate fnv;
 #[cfg(feature = "sdl2")]
 extern crate sdl2;
 
+extern crate behaviour;
+extern crate ecs_core;
+extern crate grid;
+extern crate line;
+extern crate math;
+extern crate perlin;
+extern crate search;
+extern crate util;
+
 use std::env;
 
 #[macro_use]
 mod debug;
-mod ecs;
-mod math;
+mod ecs_content;
 mod game;
-mod util;
-mod direction;
-mod grid;
-mod behaviour;
-mod search;
-mod perlin;
-mod coord;
 mod colour;
 mod spatial_hash;
 

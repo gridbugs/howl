@@ -3,10 +3,11 @@ use std::cmp;
 use rand::Rng;
 use num::PrimInt;
 
-use coord::Coord;
-use direction::Direction;
+use math::Coord;
+use math::Direction;
 
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 use game::*;
 use game::data::*;
 

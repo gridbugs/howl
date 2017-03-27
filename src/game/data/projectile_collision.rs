@@ -1,4 +1,4 @@
-use ecs::*;
+use ecs_core::*;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ProjectileCollision {

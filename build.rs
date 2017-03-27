@@ -20,7 +20,10 @@ fn main() {
     cfg.ecs_action_hash_collections = true;
     cfg.fnv_hasher = true;
 
-    statecs::generate("ecs.toml", Path::new("src").join("ecs").join("generated.rs"), cfg);
+    statecs::generate_content("ecs.toml",
+                              Path::new("src").join("ecs_content").join("generated.rs"),
+                              cfg);
+
     statecs_spatial_hash::generate("sh.toml", Path::new("src").join("spatial_hash").join("generated.rs"));
 
     copy_resources("resources");

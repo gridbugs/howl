@@ -1,5 +1,5 @@
 use search::GridPath;
-use direction::Direction;
+use math::Direction;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PathTraverse {

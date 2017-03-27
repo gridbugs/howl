@@ -12,12 +12,12 @@ use sdl2::pixels::Color;
 use sdl2::ttf::Font;
 use sdl2::surface::Surface;
 
-use ecs::*;
+use ecs_content::*;
 use game::*;
 use game::data::*;
 use game::frontends::sdl::{Tileset, Hud};
 
-use coord::Coord;
+use math::Coord;
 use colour::{Rgb24, Rgba32};
 
 const RENDERING_FAILED_MSG: &'static str = "Rendering failed";

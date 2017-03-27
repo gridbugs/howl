@@ -1,11 +1,12 @@
 use game::*;
 use game::data::*;
-use ecs::Entity;
+use ecs_content::Entity;
 
 use spatial_hash::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
-use util::{BestMap, TwoDimensionalCons};
-use coord::Coord;
+use util::BestMap;
+use game::knowledge::dimension_constructor::TwoDimensionalCons;
+use math::Coord;
 
 pub type DrawableKnowledge = GameKnowledge<DrawableKnowledgeLevel>;
 

@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use game::data::*;
-use ecs::*;
+use ecs_content::*;
 
 pub trait EntityExtra {
     fn player_max_speed(&self) -> Option<usize>;

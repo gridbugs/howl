@@ -1,4 +1,4 @@
-use direction::Direction;
+use math::Direction;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum SteerDirection {

@@ -1,5 +1,5 @@
 use game::*;
-use ecs::*;
+use ecs_core::*;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum LevelSwitch {

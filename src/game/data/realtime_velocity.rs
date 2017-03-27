@@ -1,5 +1,6 @@
-use game::data::*;
-use coord::{InfiniteLineState, Coord};
+use game::data::RealtimeSpeed;
+use line::InfiniteLineState;
+use math::Coord;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct RealtimeVelocity {

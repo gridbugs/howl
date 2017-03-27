@@ -1,8 +1,8 @@
 use game::*;
-use ecs::Entity;
+use ecs_content::Entity;
 
 use behaviour::LeafResolution;
-use direction::Direction;
+use math::Direction;
 
 pub fn zombie_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {

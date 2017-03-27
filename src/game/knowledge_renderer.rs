@@ -1,7 +1,7 @@
 use std::ops::Deref;
-use ecs::*;
+use ecs_content::*;
 use game::*;
-use coord::Coord;
+use math::Coord;
 
 pub trait KnowledgeRenderer {
 
@@ -36,7 +36,8 @@ pub trait KnowledgeRenderer {
     /// Returns true iff the given coordinate in world-space corresponds to a cell in
     /// the game window
     fn contains_world_coord(&self, coord: Coord) -> bool {
-        coord >= self.world_offset() && coord < self.world_limit()
+        coord.x >= self.world_offset().x && coord.y >= self.world_offset().y &&
+            coord.x < self.world_limit().x && coord.y < self.world_limit().y
     }
 
     /// Update the contents of internal buffer of the contents of the game window.

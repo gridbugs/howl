@@ -1,10 +1,11 @@
 use std::f64;
 use rand::Rng;
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 use game::*;
 use game::data::*;
-use direction::Direction;
-use coord::Coord;
+use math::Direction;
+use math::Coord;
 use math::Vector2;
 
 pub fn walk(action: &mut EcsAction, entity: EntityRef, direction: Direction) {

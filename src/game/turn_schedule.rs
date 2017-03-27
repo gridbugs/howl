@@ -1,4 +1,4 @@
-use ecs::*;
+use ecs_core::*;
 use util::{Schedule, ScheduleTicket};
 pub type TurnSchedule = Schedule<EntityId>;
 

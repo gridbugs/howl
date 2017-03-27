@@ -1,14 +1,13 @@
 use std::cmp;
 use rand::Rng;
-use ecs::*;
+use ecs_content::*;
 use game::*;
 use game::data::*;
 use game::terrain::util;
-use coord::Coord;
+use math::Coord;
 use grid::*;
 use perlin::*;
 use math::*;
-use direction::*;
 
 const MAP_WIDTH_MAX: usize = 120;
 const MAP_WIDTH_MIN: usize = 60;

@@ -1,7 +1,7 @@
 use game::*;
 use grid::{Grid, DefaultGrid, StaticGrid, CoordIterGrid, IterGrid};
-use coord::Coord;
-use direction::Direction;
+use math::Coord;
+use math::Direction;
 
 pub type TileBufferCoordIter = <StaticGrid<CellDrawInfo> as CoordIterGrid>::CoordIter;
 pub type TileBufferIter<'a> = <StaticGrid<CellDrawInfo> as IterGrid<'a>>::Iter;

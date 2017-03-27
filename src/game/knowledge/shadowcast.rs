@@ -4,8 +4,8 @@ use std::cell::UnsafeCell;
 use std::cmp;
 
 use math::{Vector2, Vector2Index};
-use coord::Coord;
-use direction::{Direction, CardinalDirection, OrdinalDirection, SubDirection};
+use math::Coord;
+use math::{Direction, CardinalDirection, OrdinalDirection, SubDirection};
 
 use game::*;
 use spatial_hash::*;

@@ -1,7 +1,7 @@
 use std::result;
 
 use game::*;
-use ecs::*;
+use ecs_content::*;
 use spatial_hash::*;
 
 pub type RuleResult = result::Result<(), RuleResolution>;

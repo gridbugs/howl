@@ -3,6 +3,7 @@ mod blind;
 mod shadowcast;
 mod simple_npc;
 mod drawable;
+mod dimension_constructor;
 
 pub use self::knowledge::*;
 pub use self::blind::*;

@@ -1,7 +1,8 @@
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 use spatial_hash::*;
 use util::LeakyReserver;
-use coord::Coord;
+use math::Coord;
 
 struct Env {
     sh: SpatialHashTable,

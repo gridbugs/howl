@@ -4,10 +4,11 @@ use std::cmp;
 
 use game::*;
 use game::data::*;
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 
 use behaviour::LeafResolution;
-use direction::{self, Direction};
+use math::{self, Direction};
 
 pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(input_source: I) -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
@@ -174,7 +175,7 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>
 
     let mut message = Message::new();
 
-    for d in direction::cardinal_direction_iter() {
+    for d in math::cardinal_direction_iter() {
         let m = direction_to_relative_message(d);
         input.language.translate(m, &mut message);
         message.push(MessagePart::plain(": "));

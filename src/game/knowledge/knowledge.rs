@@ -2,8 +2,8 @@ use std::collections::BTreeMap;
 
 use game::*;
 use spatial_hash::*;
-use coord::Coord;
-use util::TwoDimensionalCons;
+use math::Coord;
+use game::knowledge::dimension_constructor::TwoDimensionalCons;
 
 /// Trait implemented by representations of knowledge about a level
 pub trait LevelKnowledge {

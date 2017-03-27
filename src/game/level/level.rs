@@ -4,7 +4,8 @@ use rand::Rng;
 
 use game::*;
 use game::data::*;
-use ecs::*;
+use ecs_core::*;
+use ecs_content::*;
 use spatial_hash::*;
 use util::*;
 

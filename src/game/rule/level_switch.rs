@@ -1,5 +1,5 @@
 use game::*;
-use ecs::*;
+use ecs_content::*;
 
 pub fn level_switch(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 

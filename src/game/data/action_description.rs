@@ -1,5 +1,5 @@
-use game::*;
-use coord::Coord;
+use game::data::*;
+use math::Coord;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ActionDescription {

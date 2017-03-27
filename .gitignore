@@ -4,5 +4,6 @@ target
 *.bk
 
 # Generated source files
-src/ecs/generated.rs
+crates/ecs_core/src/generated.rs
+src/ecs_content/generated.rs
 src/spatial_hash/generated.rs

@@ -9,6 +9,14 @@ default = ["sdl2"]
 use_sdl2_mac_framework = ["sdl2/use_mac_framework"]
 
 [dependencies]
+behaviour = { path = "crates/behaviour" }
+ecs_core = { path = "crates/ecs_core" }
+grid = { path = "crates/grid" }
+line = { path = "crates/line" }
+math = { path = "crates/math" }
+perlin = { path = "crates/perlin" }
+search = { path = "crates/search" }
+util = { path = "crates/util" }
 rand = "0.3"
 num = "0.1"
 itertools = "0.5"
@@ -30,5 +38,7 @@ copy_dir = "0.1"
 handlebars = "0.22"
 tomson = "0.1"
 rustc-serialize = "0.3"
-statecs = { git = "https://github.com/stevebob/statecs.git", rev="562e6e6" }
-statecs-spatial-hash = {git = "https://github.com/stevebob/statecs-spatial-hash.git", rev="4b72377" }
+#statecs = { git = "https://github.com/stevebob/statecs.git", rev="562e6e6" }
+statecs = { path = "/home/steve/src/statecs" }
+#statecs-spatial-hash = { git = "https://github.com/stevebob/statecs-spatial-hash.git", rev="4b72377" }
+statecs-spatial-hash = { path = "/home/steve/src/statecs-spatial-hash" }

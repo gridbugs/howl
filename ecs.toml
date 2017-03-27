@@ -1,9 +1,10 @@
 imports = [
-    "coord::Coord",
+    "ecs_core::*",
+    "math::Coord",
     "game::*",
     "game::data::*",
     "util::ScheduleTicket",
-    "direction::Direction",
+    "math::Direction",
 ]
 
 flags = [

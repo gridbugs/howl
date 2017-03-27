@@ -3,7 +3,7 @@ use std::slice;
 
 use game::InputEvent;
 use game::control_spec::ControlSpec;
-use direction::Direction;
+use math::Direction;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Control {

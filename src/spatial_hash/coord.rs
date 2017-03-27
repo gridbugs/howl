@@ -1,4 +1,4 @@
-use coord::Coord;
+use math::Coord;
 use spatial_hash::generated::SpatialHashTableCoord;
 
 impl SpatialHashTableCoord for Coord {

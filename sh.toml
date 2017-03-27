@@ -1,4 +1,5 @@
-ecs_namespace = "ecs"
+ecs_core_namespace = "ecs_core"
+ecs_content_namespace = "ecs_content"
 
 position = 'position'
 
