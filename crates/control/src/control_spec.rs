@@ -1,5 +1,6 @@
 use std::collections::{hash_map, HashMap};
-use game::*;
+use control::{Control, ControlMap};
+use input::InputEvent;
 use math::*;
 
 pub struct ControlSpec {

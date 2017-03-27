@@ -1,4 +1,4 @@
-use game::*;
+use message::*;
 
 #[derive(Debug)]
 pub struct SelectMenuItem<T> {

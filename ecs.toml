@@ -1,8 +1,11 @@
 imports = [
     "ecs_core::*",
     "math::Coord",
-    "game::*",
-    "game::data::*",
+    "game::{SimpleNpcKnowledge, DrawableKnowledge}",
+    "control::*",
+    "engine_defs::*",
+    "message::*",
+    "content_types::*",
     "util::ScheduleTicket",
     "math::Direction",
 ]

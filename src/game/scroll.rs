@@ -1,6 +1,8 @@
 use std::cmp;
 
+use control::*;
 use game::*;
+use message::*;
 
 pub fn display_message_scrolling<R: KnowledgeRenderer, I: InputSource>(renderer: &mut R,
                                                                        input_source: &mut I,

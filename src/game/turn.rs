@@ -6,9 +6,11 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 
 use rand::StdRng;
+use engine_defs::*;
 
 use game::*;
-use game::data::*;
+use message::*;
+use content_types::*;
 use ecs_core::*;
 use ecs_content::*;
 use spatial_hash::*;
@@ -296,7 +298,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             *self.action_id += 1;
 
             // construct an action from the action args
-            action_event.event.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
+            args_to_action(action_event.event, &mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
 
             let mut action_time = 0;
             self.rule_reactions.clear();
@@ -346,7 +348,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                     }
                     RuleResolution::Consume(action_args) => {
                         // modify the current action with the new action args and retry
-                        action_args.to_action(&mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
+                        args_to_action(action_args, &mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
                     }
                 }
             }

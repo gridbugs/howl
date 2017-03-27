@@ -1,5 +1,6 @@
 use game::*;
 use ecs_content::*;
+use content_types::Reaction;
 
 pub fn driving(env: RuleEnv, action: &EcsAction, _reactions: &mut Vec<Reaction>) -> RuleResult {
 

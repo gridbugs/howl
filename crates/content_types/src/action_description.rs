@@ -1,4 +1,4 @@
-use game::data::*;
+use messages::ActionMessageType;
 use math::Coord;
 
 #[derive(Clone, Copy, Debug)]

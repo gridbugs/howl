@@ -1,5 +1,5 @@
 use game::*;
-use game::data::*;
+use content_types::*;
 use ecs_content::*;
 
 pub fn projectile_collision_trigger(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {

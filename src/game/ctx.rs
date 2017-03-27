@@ -1,41 +1,18 @@
 use std::cell::RefCell;
 use std::ops::DerefMut;
+
 use rand::{Rng, StdRng, SeedableRng};
+use engine_defs::*;
+use control::*;
 
 use game::*;
-use game::data::*;
+use message::*;
+use content_types::*;
 use ecs_core::*;
 use ecs_content::*;
-use util::{LeakyReserver, Schedule};
+use util::Schedule;
 use math::Coord;
 use math::Direction;
-
-pub struct EntityIdReserver(RefCell<LeakyReserver<EntityId>>);
-
-impl EntityIdReserver {
-    pub fn new() -> Self {
-        EntityIdReserver(RefCell::new(LeakyReserver::new()))
-    }
-
-    pub fn new_id(&self) -> EntityId {
-        self.0.borrow_mut().reserve()
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SerializableEntityIdReserver(LeakyReserver<EntityId>);
-
-impl From<EntityIdReserver> for SerializableEntityIdReserver {
-    fn from(r: EntityIdReserver) -> Self {
-        SerializableEntityIdReserver(r.0.into_inner())
-    }
-}
-
-impl From<SerializableEntityIdReserver> for EntityIdReserver {
-    fn from(r: SerializableEntityIdReserver) -> Self {
-        EntityIdReserver(RefCell::new(r.0))
-    }
-}
 
 enum MainMenuSelection {
     NewGame,

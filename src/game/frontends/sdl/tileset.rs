@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::result;
 
+use content_types::TileType;
 use sdl2::rect::Rect;
 use toml;
-
-use game::*;
 
 #[derive(Debug)]
 pub enum TilesetError {

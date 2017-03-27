@@ -1,7 +1,8 @@
 use std::iter::IntoIterator;
-use game::*;
 
-pub type LevelId = usize;
+use engine_defs::LevelId;
+
+use game::*;
 
 pub struct LevelTable {
     levels: Vec<Level>,

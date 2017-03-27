@@ -13,8 +13,9 @@ use sdl2::ttf::Font;
 use sdl2::surface::Surface;
 
 use ecs_content::*;
+use message::*;
 use game::*;
-use game::data::*;
+use content_types::*;
 use game::frontends::sdl::{Tileset, Hud};
 
 use math::Coord;

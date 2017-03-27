@@ -1,5 +1,5 @@
 use game::*;
-use game::data::*;
+use content_types::*;
 use ecs_content::Entity;
 
 use behaviour::LeafResolution;

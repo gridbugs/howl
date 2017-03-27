@@ -1,0 +1,9 @@
+[package]
+name = "control"
+version = "0.1.0"
+authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+
+[dependencies]
+math = { path = "../math" }
+serde = "0.9"
+serde_derive = "0.9"

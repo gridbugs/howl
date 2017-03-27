@@ -2,7 +2,7 @@ use sdl2::Sdl;
 use sdl2::event::Event;
 use sdl2::keyboard::{self, Keycode, Mod};
 
-use game::*;
+use control::*;
 
 #[derive(Clone)]
 pub struct SdlInputSource {

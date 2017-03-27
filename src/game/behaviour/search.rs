@@ -1,8 +1,10 @@
 use game::*;
 use ecs_content::Entity;
 
+use engine_defs::*;
 use behaviour::{LeafResolution, SwitchResolution};
 use search::{GridSearchCfg, GridSearchCtx};
+use content_types::ActionArgs;
 
 pub fn follow_path_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {

@@ -9,7 +9,9 @@ use math::Direction;
 use ecs_core::*;
 use ecs_content::*;
 use game::*;
-use game::data::*;
+use content_types::*;
+use message::*;
+use engine_defs::*;
 
 pub const ENV_TURN_OFFSET: u64 = 0;
 pub const NPC_TURN_OFFSET: u64 = 1;

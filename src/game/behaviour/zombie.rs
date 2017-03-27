@@ -3,6 +3,7 @@ use ecs_content::Entity;
 
 use behaviour::LeafResolution;
 use math::Direction;
+use content_types::ActionArgs;
 
 pub fn zombie_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {

@@ -1,9 +1,10 @@
 use std::slice;
 
 use rand::Rng;
+use engine_defs::*;
 
 use game::*;
-use game::data::*;
+use content_types::*;
 use ecs_core::*;
 use ecs_content::*;
 use spatial_hash::*;
@@ -58,7 +59,7 @@ impl Level {
 
         // generate the level's contents
         let TerrainMetadata { width, height, start_coord, connection_report } =
-            terrain.generate(ids, r, &mut schedule, action, parent, difficulty);
+            generate_terrain(terrain, ids, r, &mut schedule, action, parent, difficulty);
 
         // compose a level object
         let mut level = Level {

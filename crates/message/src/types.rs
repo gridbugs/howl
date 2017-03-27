@@ -1,5 +1,5 @@
-use game::*;
-use game::data::*;
+use control::*;
+use content_types::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum MessageType {

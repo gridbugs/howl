@@ -1,8 +1,8 @@
 use std::collections::{hash_map, HashMap};
 use std::slice;
 
-use game::InputEvent;
-use game::control_spec::ControlSpec;
+use input::InputEvent;
+use control_spec::ControlSpec;
 use math::Direction;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use game::data::*;
+use content_types::*;
 use ecs_content::*;
 
 pub trait EntityExtra {

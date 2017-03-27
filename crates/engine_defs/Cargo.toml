@@ -1,0 +1,11 @@
+[package]
+name = "engine_defs"
+version = "0.1.0"
+authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+
+[dependencies]
+util = { path = "../util" }
+ecs_core = { path = "../ecs_core" }
+behaviour = { path = "../behaviour" }
+serde = "0.9"
+serde_derive = "0.9"

@@ -1,0 +1,14 @@
+[package]
+name = "content_types"
+version = "0.1.0"
+authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+
+[dependencies]
+math = { path = "../math" }
+line = { path = "../line" }
+search = { path = "../search" }
+ecs_core = { path = "../ecs_core" }
+engine_defs = { path = "../engine_defs" }
+serde = "0.9"
+serde_derive = "0.9"
+rand = "0.3"

@@ -1,5 +1,7 @@
-use game::*;
-use game::data::*;
+use parts::*;
+use types::*;
+use language::*;
+use content_types::*;
 use colour::*;
 
 const DARK_YELLOW: Rgb24 = Rgb24 { red: 0xa0, green: 0x60, blue: 0 };

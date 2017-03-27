@@ -1,0 +1,11 @@
+[package]
+name = "message"
+version = "0.1.0"
+authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+
+[dependencies]
+colour = { path = "../colour" }
+content_types = { path = "../content_types" }
+control = { path = "../control" }
+serde = "0.9"
+serde_derive = "0.9"

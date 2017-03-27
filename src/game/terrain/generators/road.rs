@@ -1,8 +1,9 @@
 use std::cmp;
+use engine_defs::*;
 use rand::Rng;
 use ecs_content::*;
 use game::*;
-use game::data::*;
+use content_types::*;
 use game::terrain::util;
 use math::Coord;
 use grid::*;

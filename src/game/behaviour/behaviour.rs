@@ -1,15 +1,13 @@
 use std::cell::RefCell;
 
 use rand::StdRng;
+use engine_defs::*;
 
 use game::*;
+use message::*;
 use ecs_content::*;
 use spatial_hash::*;
-use behaviour::{State, NodeIndex, Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
-
-
-pub type BehaviourState = State;
-pub type BehaviourNodeIndex = NodeIndex;
+use behaviour::{Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
 
 pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub entity: EntityRef<'a>,

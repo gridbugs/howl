@@ -1,4 +1,4 @@
-use game::data::RealtimeSpeed;
+use speed::RealtimeSpeed;
 use line::InfiniteLineState;
 use math::Coord;
 

@@ -1,4 +1,5 @@
-use game::{MessageType, Message};
+use types::MessageType;
+use parts::Message;
 
 pub trait Language {
     fn translate_repeated(&self, message_type: MessageType, repeated: usize, message: &mut Message);

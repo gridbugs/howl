@@ -1,4 +1,5 @@
 use game::*;
+use message::*;
 
 pub struct RendererBuffers {
     pub tiles: TileBuffer,

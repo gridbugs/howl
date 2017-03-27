@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use control::*;
 use game::*;
 
 pub fn from_file<P: AsRef<Path>>(path: P) -> Option<ControlMap> {

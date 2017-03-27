@@ -7,7 +7,11 @@ use game::behaviour::car::*;
 use game::behaviour::bike::*;
 use game::behaviour::zombie::*;
 
+use engine_defs::*;
+use control::*;
+use content_types::BehaviourType;
 use behaviour::{LeafResolution, CollectionNode};
+use content_types::ActionArgs;
 
 pub struct BehaviourNodes {
     pub null: BehaviourNodeIndex,

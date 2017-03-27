@@ -1,4 +1,5 @@
-use game::*;
+use terrain_type::TerrainType;
+use engine_defs::LevelId;
 use ecs_core::*;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]

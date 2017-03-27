@@ -1,7 +1,7 @@
 use game::*;
 use ecs_content::*;
 
-use game::data::*;
+use content_types::*;
 use math::Direction;
 
 const SPEED_CELLS_PER_SEC: f64 = 20.0;

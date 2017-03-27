@@ -16,10 +16,15 @@ extern crate fnv;
 extern crate sdl2;
 
 extern crate behaviour;
+extern crate colour;
+extern crate content_types;
+extern crate control;
 extern crate ecs_core;
+extern crate engine_defs;
 extern crate grid;
 extern crate line;
 extern crate math;
+extern crate message;
 extern crate perlin;
 extern crate search;
 extern crate util;
@@ -30,7 +35,6 @@ use std::env;
 mod debug;
 mod ecs_content;
 mod game;
-mod colour;
 mod spatial_hash;
 
 fn print_usage(program: &str, opts: getopts::Options) {

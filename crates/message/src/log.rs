@@ -1,6 +1,6 @@
 use std::cmp;
 
-use game::*;
+use types::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MessageLogEntry {

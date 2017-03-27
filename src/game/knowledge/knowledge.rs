@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+use engine_defs::LevelId;
+
 use game::*;
 use spatial_hash::*;
 use math::Coord;

@@ -1,8 +1,8 @@
 use std::result;
 
-use game::*;
 use ecs_content::*;
 use spatial_hash::*;
+use content_types::ActionArgs;
 
 pub type RuleResult = result::Result<(), RuleResolution>;
 
@@ -21,22 +21,7 @@ pub fn rule_consume(action_args: ActionArgs) -> RuleResult {
 }
 
 #[derive(Clone, Copy)]
-pub struct Reaction {
-    pub action: ActionArgs,
-    pub delay: u64,
-}
-
-#[derive(Clone, Copy)]
 pub struct RuleEnv<'a> {
     pub ecs: &'a EcsCtx,
     pub spatial_hash: &'a SpatialHashTable,
-}
-
-impl Reaction {
-    pub fn new(action: ActionArgs, delay: u64) -> Self {
-        Reaction {
-            action: action,
-            delay: delay,
-        }
-    }
 }

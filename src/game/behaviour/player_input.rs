@@ -2,8 +2,10 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 use std::cmp;
 
+use control::*;
 use game::*;
-use game::data::*;
+use message::*;
+use content_types::*;
 use ecs_core::*;
 use ecs_content::*;
 

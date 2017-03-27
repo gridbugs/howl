@@ -1,5 +1,6 @@
 use game::*;
 use ecs_content::*;
+use content_types::{ActionArgs, Reaction};
 
 pub fn acid(env: RuleEnv, action: &EcsAction, reactions: &mut Vec<Reaction>) -> RuleResult {
 

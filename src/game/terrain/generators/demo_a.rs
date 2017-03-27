@@ -1,8 +1,8 @@
 use rand::Rng;
-
+use engine_defs::*;
 use ecs_content::*;
 use game::*;
-use game::data::*;
+use content_types::*;
 use game::terrain::util;
 use math::Coord;
 

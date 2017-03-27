@@ -1,7 +1,9 @@
 use std::ops::Deref;
 use ecs_content::*;
+use engine_defs::LevelId;
 use game::*;
 use math::Coord;
+use message::*;
 
 pub trait KnowledgeRenderer {
 

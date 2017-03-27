@@ -1,5 +1,7 @@
+use control::*;
 use game::*;
 use ecs_content::*;
+use message::*;
 
 pub struct SelectMenuOperation<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> {
     renderer: &'a mut R,
