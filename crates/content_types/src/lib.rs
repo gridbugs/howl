@@ -5,7 +5,9 @@ extern crate serde_derive;
 extern crate serde;
 
 extern crate math;
+extern crate grid;
 extern crate line;
+extern crate util;
 extern crate search;
 extern crate ecs_core;
 extern crate engine_defs;
@@ -32,6 +34,10 @@ mod terrain_type;
 mod tile_types;
 mod behaviour_types;
 mod action_types;
+mod dimension_constructor;
+mod drawable_knowledge;
+mod simple_npc_knowledge;
+mod knowledge;
 
 pub use speed::*;
 pub use path_traverse::*;
@@ -55,3 +61,7 @@ pub use terrain_type::*;
 pub use tile_types::*;
 pub use behaviour_types::*;
 pub use action_types::*;
+pub use dimension_constructor::*;
+pub use drawable_knowledge::*;
+pub use simple_npc_knowledge::*;
+pub use knowledge::*;

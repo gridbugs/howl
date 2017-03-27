@@ -4,6 +4,7 @@ use engine_defs::LevelId;
 use game::*;
 use math::Coord;
 use message::*;
+use content_types::*;
 
 pub trait KnowledgeRenderer {
 

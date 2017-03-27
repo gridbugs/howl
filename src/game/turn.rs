@@ -230,7 +230,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
         self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env);
 
-        if level_knowledge.can_see(action_description.coord, action_env) {
+        if level_knowledge.can_see(action_description.coord, action_env.id) {
             message_log.add(MessageType::Action(action_description.message));
         }
     }

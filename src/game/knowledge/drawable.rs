@@ -3,60 +3,39 @@ use content_types::*;
 use ecs_content::Entity;
 
 use spatial_hash::*;
-use grid::{Grid, StaticGrid, DefaultGrid};
-use util::BestMap;
-use game::knowledge::dimension_constructor::TwoDimensionalCons;
+use grid::Grid;
 use math::Coord;
 
-pub type DrawableKnowledge = GameKnowledge<DrawableKnowledgeLevel>;
+impl LevelKnowledge for DrawableKnowledgeLevel {
+    fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool {
 
-#[derive(Serialize, Deserialize)]
-pub struct DrawableKnowledgeCell {
-    last_updated: u64,
-    foreground: BestMap<isize, TileType>,
-    background: BestMap<isize, TileType>,
-    name: BestMap<isize, NameMessageType>,
-    description: BestMap<isize, DescriptionMessageType>,
-    health_overlay: BestMap<isize, HitPoints>,
-}
+        if let Some(knowledge_cell) = self.grid.get_mut(coord) {
 
-impl DrawableKnowledgeCell {
-    fn new() -> Self {
-        DrawableKnowledgeCell {
-            last_updated: 0,
-            foreground: BestMap::new(),
-            background: BestMap::new(),
-            name: BestMap::new(),
-            description: BestMap::new(),
-            health_overlay: BestMap::new(),
+            if knowledge_cell.last_updated == action_env.id {
+                // this cell has already been updated
+                return false;
+            }
+
+            let change = knowledge_cell.update(world_cell, accuracy, action_env);
+
+            if self.last_action_id != action_env.id {
+                self.targets.clear();
+                self.last_action_id = action_env.id;
+            }
+
+            if world_cell.has_enemy() {
+                self.targets.push(coord);
+            }
+
+            change
+        } else {
+            false
         }
     }
+}
 
-    pub fn foreground(&self) -> Option<TileType> {
-        self.foreground.value()
-    }
-
-    pub fn background(&self) -> Option<TileType> {
-        self.background.value()
-    }
-
-    pub fn name(&self) -> Option<NameMessageType> {
-        self.name.value()
-    }
-
-    pub fn description(&self) -> Option<DescriptionMessageType> {
-        self.description.value()
-    }
-
-    pub fn health_overlay(&self) -> Option<HitPoints> {
-        self.health_overlay.value()
-    }
-
-    pub fn last_updated(&self) -> u64 {
-        self.last_updated
-    }
-
-    pub fn update(&mut self, world_cell: &SpatialHashCell, _accuracy: f64, action_env: ActionEnv) -> bool {
+impl KnowledgeCell for DrawableKnowledgeCell {
+    fn update(&mut self, world_cell: &SpatialHashCell, _accuracy: f64, action_env: ActionEnv) -> bool {
 
         let mut changed = false;
 
@@ -96,86 +75,6 @@ impl DrawableKnowledgeCell {
         self.last_updated = action_env.id;
 
         changed
-    }
-}
-
-impl Default for DrawableKnowledgeCell {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DrawableKnowledgeLevel {
-    grid: StaticGrid<DrawableKnowledgeCell>,
-    default: DrawableKnowledgeCell,
-    targets: Vec<Coord>,
-    last_action_id: u64,
-}
-
-impl DrawableKnowledgeLevel {
-    pub fn get_with_default(&self, coord: Coord) -> &DrawableKnowledgeCell {
-        self.grid.get(coord).unwrap_or_else(|| &self.default)
-    }
-
-    pub fn sort_targets(&mut self, position: Coord) -> &[Coord] {
-        self.targets.sort_by(|a, b| a.squared_distance(position).cmp(&b.squared_distance(position)));
-        self.targets.as_slice()
-    }
-
-    pub fn can_see(&self, coord: Coord, action_env: ActionEnv) -> bool {
-        self.get_with_default(coord).last_updated == action_env.id
-    }
-
-    pub fn can_remember(&self, coord: Coord) -> bool {
-        self.get_with_default(coord).last_updated == 0
-    }
-
-    pub fn width(&self) -> usize {
-        self.grid.width()
-    }
-
-    pub fn height(&self) -> usize {
-        self.grid.height()
-    }
-}
-
-impl LevelKnowledge for DrawableKnowledgeLevel {
-    fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool {
-
-        if let Some(knowledge_cell) = self.grid.get_mut(coord) {
-
-            if knowledge_cell.last_updated == action_env.id {
-                // this cell has already been updated
-                return false;
-            }
-
-            let change = knowledge_cell.update(world_cell, accuracy, action_env);
-
-            if self.last_action_id != action_env.id {
-                self.targets.clear();
-                self.last_action_id = action_env.id;
-            }
-
-            if world_cell.has_enemy() {
-                self.targets.push(coord);
-            }
-
-            change
-        } else {
-            false
-        }
-    }
-}
-
-impl TwoDimensionalCons for DrawableKnowledgeLevel {
-    fn new(width: usize, height: usize) -> Self {
-        DrawableKnowledgeLevel {
-            grid: StaticGrid::new_default(width, height),
-            default: DrawableKnowledgeCell::new(),
-            targets: Vec::new(),
-            last_action_id: 0,
-        }
     }
 }
 

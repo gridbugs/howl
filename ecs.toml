@@ -1,7 +1,6 @@
 imports = [
     "ecs_core::*",
     "math::Coord",
-    "game::{SimpleNpcKnowledge, DrawableKnowledge}",
     "control::*",
     "engine_defs::*",
     "message::*",

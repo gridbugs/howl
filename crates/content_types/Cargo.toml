@@ -6,6 +6,8 @@ authors = ["Stephen Sherratt <stephen@sherra.tt>"]
 [dependencies]
 math = { path = "../math" }
 line = { path = "../line" }
+grid = { path = "../grid" }
+util = { path = "../util" }
 search = { path = "../search" }
 ecs_core = { path = "../ecs_core" }
 engine_defs = { path = "../engine_defs" }
