@@ -9,4 +9,4 @@ serde_derive = "0.9"
 fnv = "1.0"
 
 [build-dependencies]
-statecs = { path = "/home/steve/src/statecs" }
+statecs = { git = "https://github.com/stevebob/statecs.git", rev="8ca95ff" }
