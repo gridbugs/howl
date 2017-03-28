@@ -37,7 +37,7 @@ fn control_to_direction(control: Control) -> Option<Direction> {
     }
 }
 
-fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
 
     let mut renderer = input.renderer.borrow_mut();
     let message_log = input.entity.borrow_message_log().unwrap();
@@ -76,7 +76,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInp
     renderer.publish_all_windows(input.entity, input.language);
 }
 
-fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<(EntityId, Direction)> {
+fn aim<R: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<(EntityId, Direction)> {
 
     let mut renderer = input.renderer.borrow_mut();
     let mut message_log = input.entity.borrow_mut_message_log().expect("Expected component message_log");
@@ -116,7 +116,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<R>, map: &Con
     ret
 }
 
-fn inventory<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<EntityId> {
+fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I) -> Option<EntityId> {
 
     let mut menu = SelectMenu::new();
     for entity_id in input.entity.borrow_inventory().expect("Missing component inventory").iter() {
@@ -145,7 +145,7 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut
     ret
 }
 
-fn try_consume_item<K: KnowledgeRenderer>(input: BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
+fn try_consume_item<K: KnowledgeRenderer>(input: &BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
     let speed = input.entity.copy_current_speed().expect("Missing component current_speed");
     if speed == 0 {
         let mut inv = input.entity.borrow_mut_inventory().expect("Missing component inventory");
@@ -171,7 +171,7 @@ fn direction_to_relative_message(direction: Direction) -> MessageType {
     }
 }
 
-fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) {
+fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I) {
     let mut renderer = input.renderer.borrow_mut();
     let weapon_slots = input.entity.borrow_weapon_slots().expect("Expected component weapon_slots");
 
@@ -195,7 +195,7 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>
     renderer.publish_all_windows(input.entity, input.language);
 }
 
-fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
+fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
 
     input_source.next_input().and_then(|event| {
         if event == InputEvent::Quit {

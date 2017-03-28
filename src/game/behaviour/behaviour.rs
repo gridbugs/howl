@@ -38,23 +38,23 @@ impl<'a, R: KnowledgeRenderer> Clone for BehaviourInput<'a, R> {
 impl<'a, R: KnowledgeRenderer> Copy for BehaviourInput<'a, R> {}
 
 
-pub struct BehaviourLeaf<R: KnowledgeRenderer>(Box<Fn(BehaviourInput<R>) -> LeafResolution<MetaAction>>);
+pub struct BehaviourLeaf<R: KnowledgeRenderer>(Box<Fn(&BehaviourInput<R>) -> LeafResolution<MetaAction>>);
 
 pub struct BehaviourSwitch<R: KnowledgeRenderer> {
-    call: Box<Fn(BehaviourInput<R>) -> SwitchResolution>,
+    call: Box<Fn(&BehaviourInput<R>) -> SwitchResolution>,
     return_to: Box<Fn(bool) -> SwitchReturn>,
 }
 
 pub type BehaviourGraph<K> = Graph<BehaviourLeaf<K>, BehaviourSwitch<K>>;
 
 impl<'a, R: KnowledgeRenderer> LeafFn<BehaviourInput<'a, R>, MetaAction> for BehaviourLeaf<R> {
-    fn call(&self, input: BehaviourInput<'a, R>) -> LeafResolution<MetaAction> {
+    fn call(&self, input: &BehaviourInput<'a, R>) -> LeafResolution<MetaAction> {
         (self.0)(input)
     }
 }
 
 impl<'a, R: KnowledgeRenderer> SwitchFn<BehaviourInput<'a, R>> for BehaviourSwitch<R> {
-    fn call(&self, input: BehaviourInput<'a, R>) -> SwitchResolution {
+    fn call(&self, input: &BehaviourInput<'a, R>) -> SwitchResolution {
         (self.call)(input)
     }
 
@@ -64,13 +64,13 @@ impl<'a, R: KnowledgeRenderer> SwitchFn<BehaviourInput<'a, R>> for BehaviourSwit
 }
 
 impl<R: KnowledgeRenderer> BehaviourLeaf<R> {
-    pub fn new<F: 'static + Fn(BehaviourInput<R>) -> LeafResolution<MetaAction>>(f: F) -> Self {
+    pub fn new<F: 'static + Fn(&BehaviourInput<R>) -> LeafResolution<MetaAction>>(f: F) -> Self {
         BehaviourLeaf(Box::new(f))
     }
 }
 
 impl<R: KnowledgeRenderer> BehaviourSwitch<R> {
-    pub fn new_returning<F: 'static + Fn(BehaviourInput<R>) -> SwitchResolution>(f: F) -> Self {
+    pub fn new_returning<F: 'static + Fn(&BehaviourInput<R>) -> SwitchResolution>(f: F) -> Self {
         BehaviourSwitch {
             call: Box::new(f),
             return_to: Box::new(|value| SwitchReturn::Return(value)),

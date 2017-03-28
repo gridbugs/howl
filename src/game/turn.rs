@@ -401,7 +401,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rng: self.rng,
             language: self.language,
         };
-        Ok(behaviour_state.run(self.behaviour_ctx.graph(), input)?)
+        Ok(behaviour_state.run(self.behaviour_ctx.graph(), &input)?)
     }
 
     fn declare_action_return(&self, value: bool) -> GameResult<bool> {
