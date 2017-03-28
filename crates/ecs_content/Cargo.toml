@@ -16,4 +16,4 @@ serde = "0.9"
 serde_derive = "0.9"
 
 [build-dependencies]
-statecs = { git = "https://github.com/stevebob/statecs.git", rev="0abade0" }
+statecs = { git = "https://github.com/stevebob/statecs.git", rev="9abecca" }
