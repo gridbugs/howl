@@ -53,7 +53,7 @@ if [ -z ${TRAVIS_OS_NAME+x} ]; then
     esac
 fi
 
-cargo test --release --verbose --no-default-features
+source $DIR/test.sh
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 

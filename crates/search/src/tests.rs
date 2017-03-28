@@ -1,4 +1,4 @@
-use search::*;
+use grid_search::*;
 use grid::*;
 use math::Coord;
 

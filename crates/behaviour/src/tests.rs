@@ -1,4 +1,4 @@
-use behaviour::behaviour::*;
+use behaviour::*;
 
 struct Leaf(Box<Fn(isize) -> LeafResolution<&'static str>>);
 struct Switch {

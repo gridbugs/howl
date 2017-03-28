@@ -11,6 +11,3 @@ mod schedule;
 pub use self::leaky_reserver::*;
 pub use self::best_map::*;
 pub use self::schedule::*;
-
-#[cfg(test)]
-mod tests;
