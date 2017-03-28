@@ -37,11 +37,11 @@ enum Resolution<A> {
 }
 
 pub trait LeafFn<K, A> {
-    fn call(&self, knowledge: &K) -> LeafResolution<A>;
+    fn call(&self, knowledge: &mut K) -> LeafResolution<A>;
 }
 
 pub trait SwitchFn<K> {
-    fn call(&self, knowledge: &K) -> SwitchResolution;
+    fn call(&self, knowledge: &mut K) -> SwitchResolution;
     fn return_to(&self, value: bool) -> SwitchReturn;
 }
 
@@ -284,7 +284,7 @@ impl<Leaf, Switch> Graph<Leaf, Switch> {
         }
     }
 
-    fn resolve_frame<K, A>(&self, frame: &mut StackFrame, knowledge: &K) -> Result<Resolution<A>>
+    fn resolve_frame<K, A>(&self, frame: &mut StackFrame, knowledge: &mut K) -> Result<Resolution<A>>
         where Leaf: LeafFn<K, A>,
               Switch: SwitchFn<K>
     {
@@ -385,7 +385,7 @@ impl State {
 
     fn resolve_switches<K, Leaf, Switch>(stack: &mut Vec<StackFrame>,
                                          graph: &Graph<Leaf, Switch>,
-                                         knowledge: &K)
+                                         knowledge: &mut K)
                                          -> Result<Option<StackTruncate>>
         where Switch: SwitchFn<K>
     {
@@ -418,7 +418,7 @@ impl State {
 
     pub fn run<K, A, Leaf, Switch>(&mut self,
                                    graph: &Graph<Leaf, Switch>,
-                                   knowledge: &K)
+                                   knowledge: &mut K)
                                    -> Result<A>
         where Leaf: LeafFn<K, A>,
               Switch: SwitchFn<K>

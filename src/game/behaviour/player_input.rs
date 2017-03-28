@@ -1,5 +1,4 @@
 use std::ops::Deref;
-use std::ops::DerefMut;
 use std::cmp;
 
 use control::*;
@@ -37,13 +36,12 @@ fn control_to_direction(control: Control) -> Option<Direction> {
     }
 }
 
-fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
+fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I, map: &ControlMap) {
 
-    let mut renderer = input.renderer.borrow_mut();
     let message_log = input.entity.borrow_message_log().unwrap();
 
     let mut offset = 0;
-    let num_lines = renderer.fullscreen_log_num_rows();
+    let num_lines = input.renderer.fullscreen_log_num_rows();
     let num_messages = message_log.len();
     let max_offset = if num_messages > num_lines {
         num_messages - num_lines
@@ -52,7 +50,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourIn
     };
 
     loop {
-        renderer.publish_fullscreen_log(message_log.deref(), offset, input.language);
+        input.renderer.publish_fullscreen_log(message_log.deref(), offset, input.language);
 
         if let Some(event) = input_source.next_input() {
             if let Some(control) = map.get(event) {
@@ -73,18 +71,17 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourIn
         }
     }
 
-    renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(input.entity, input.language);
 }
 
-fn aim<R: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<(EntityId, Direction)> {
+fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, map: &ControlMap, mut input_source: I) -> Option<(EntityId, Direction)> {
 
-    let mut renderer = input.renderer.borrow_mut();
     let mut message_log = input.entity.borrow_mut_message_log().expect("Expected component message_log");
 
     message_log.add_temporary(MessageType::ChooseDirection);
-    renderer.update_log_buffer(message_log.deref(), input.language);
-    renderer.draw_log();
-    renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.update_log_buffer(message_log.deref(), input.language);
+    input.renderer.draw_log();
+    input.renderer.publish_all_windows(input.entity, input.language);
 
     let mut should_clear_log = true;
 
@@ -109,14 +106,14 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<R>, map: &Co
     if should_clear_log {
         message_log.add_temporary(MessageType::Empty);
     }
-    renderer.update_log_buffer(message_log.deref(), input.language);
-    renderer.draw_log();
-    renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.update_log_buffer(message_log.deref(), input.language);
+    input.renderer.draw_log();
+    input.renderer.publish_all_windows(input.entity, input.language);
 
     ret
 }
 
-fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I) -> Option<EntityId> {
+fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> Option<EntityId> {
 
     let mut menu = SelectMenu::new();
     for entity_id in input.entity.borrow_inventory().expect("Missing component inventory").iter() {
@@ -129,7 +126,7 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mu
     let size = input.entity.borrow_inventory().expect("Missing component inventory").len();
 
     let ret = SelectMenuOperation::new(
-        input.renderer.borrow_mut().deref_mut(),
+        input.renderer,
         &mut input_source,
         Some(MessageType::Inventory {
             capacity: capacity,
@@ -140,12 +137,12 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mu
         None,
         Some(input.entity)).run_can_escape().map(|(id, _)| id);
 
-    input.renderer.borrow_mut().publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(input.entity, input.language);
 
     ret
 }
 
-fn try_consume_item<K: KnowledgeRenderer>(input: &BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
+fn try_consume_item<K: KnowledgeRenderer>(input: &mut BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
     let speed = input.entity.copy_current_speed().expect("Missing component current_speed");
     if speed == 0 {
         let mut inv = input.entity.borrow_mut_inventory().expect("Missing component inventory");
@@ -154,10 +151,9 @@ fn try_consume_item<K: KnowledgeRenderer>(input: &BehaviourInput<K>, item_id: En
     }
     let mut message_log = input.entity.borrow_mut_message_log().expect("Expected component message_log");
     message_log.add_temporary(MessageType::MustBeStopped);
-    let mut renderer = input.renderer.borrow_mut();
-    renderer.update_log_buffer(message_log.deref(), input.language);
-    renderer.draw_log();
-    renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.update_log_buffer(message_log.deref(), input.language);
+    input.renderer.draw_log();
+    input.renderer.publish_all_windows(input.entity, input.language);
     None
 }
 
@@ -171,8 +167,7 @@ fn direction_to_relative_message(direction: Direction) -> MessageType {
     }
 }
 
-fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I) {
-    let mut renderer = input.renderer.borrow_mut();
+fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) {
     let weapon_slots = input.entity.borrow_weapon_slots().expect("Expected component weapon_slots");
 
     let mut message = Message::new();
@@ -191,11 +186,11 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K
         message.push(MessagePart::Newline);
     }
 
-    display_message_scrolling(renderer.deref_mut(), &mut input_source, &message, true);
-    renderer.publish_all_windows(input.entity, input.language);
+    display_message_scrolling(input.renderer, &mut input_source, &message, true);
+    input.renderer.publish_all_windows(input.entity, input.language);
 }
 
-fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
+fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
 
     input_source.next_input().and_then(|event| {
         if event == InputEvent::Quit {

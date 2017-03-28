@@ -1,9 +1,7 @@
 use std::time::Duration;
 use std::thread;
 use std::cmp;
-use std::cell::RefCell;
 use std::ops::Deref;
-use std::ops::DerefMut;
 
 use rand::StdRng;
 use engine_defs::*;
@@ -67,7 +65,7 @@ pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub level_id: LevelId,
     pub entity_id: EntityId,
     pub pc_id: EntityId,
-    pub renderer: &'game RefCell<Renderer>,
+    pub renderer: &'game mut Renderer,
     pub ecs: &'level mut EcsCtx,
     pub spatial_hash: &'level mut SpatialHashTable,
     pub behaviour_ctx: &'game BehaviourCtx<Renderer>,
@@ -77,7 +75,7 @@ pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub turn_schedule: &'game mut TurnSchedule,
     pub pc_observer: &'game Shadowcast,
     pub entity_ids: &'game EntityIdReserver,
-    pub rng: &'game RefCell<StdRng>,
+    pub rng: &'game mut StdRng,
     pub language: &'game Box<Language>,
 }
 
@@ -259,14 +257,13 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         let changed = self.pc_observer.observe(position, self.spatial_hash, vision_distance, level_knowledge, action_env);
 
         if force == Some(ForceRender::IgnoreChange) || changed {
-            let mut renderer = self.renderer.borrow_mut();
-            renderer.update_and_publish_all_windows(*self.action_id,
-                                                    level_knowledge,
-                                                    position,
-                                                    message_log.deref(),
-                                                    entity,
-                                                    self.language);
-        }
+            self.renderer.update_and_publish_all_windows(*self.action_id,
+                                                         level_knowledge,
+                                                         position,
+                                                         message_log.deref(),
+                                                         entity,
+                                                         self.language);
+            }
 
         changed
     }
@@ -298,7 +295,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             *self.action_id += 1;
 
             // construct an action from the action args
-            args_to_action(action_event.event, &mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
+            args_to_action(action_event.event, &mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng);
 
             let mut action_time = 0;
             self.rule_reactions.clear();
@@ -348,7 +345,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                     }
                     RuleResolution::Consume(action_args) => {
                         // modify the current action with the new action args and retry
-                        args_to_action(action_args, &mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng.borrow_mut().deref_mut());
+                        args_to_action(action_args, &mut self.ecs_action, self.ecs, self.spatial_hash, self.entity_ids, self.rng);
                     }
                 }
             }
@@ -384,14 +381,14 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
         Ok(turn_time.map(|t| CommitResolution::Reschedule(cmp::max(t, MIN_TURN_TIME))))
     }
 
-    fn get_meta_action(&self) -> GameResult<MetaAction> {
+    fn get_meta_action(&mut self) -> GameResult<MetaAction> {
         let entity = self.ecs.entity(self.entity_id);
         let mut behaviour_state = entity.borrow_mut_behaviour_state().expect("Entity missing behaviour_state");
         if !behaviour_state.is_initialised() {
             let behaviour_type = entity.copy_behaviour_type().expect("Entity missing behaviour_type");
             behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
         }
-        let input = BehaviourInput {
+        let mut input = BehaviourInput {
             entity: entity,
             ecs: self.ecs,
             spatial_hash: self.spatial_hash,
@@ -401,7 +398,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             rng: self.rng,
             language: self.language,
         };
-        Ok(behaviour_state.run(self.behaviour_ctx.graph(), &input)?)
+        Ok(behaviour_state.run(self.behaviour_ctx.graph(), &mut input)?)
     }
 
     fn declare_action_return(&self, value: bool) -> GameResult<bool> {

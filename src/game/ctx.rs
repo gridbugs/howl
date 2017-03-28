@@ -1,6 +1,3 @@
-use std::cell::RefCell;
-use std::ops::DerefMut;
-
 use rand::{Rng, StdRng, SeedableRng};
 use engine_defs::*;
 use control::*;
@@ -61,7 +58,7 @@ enum WeaponMenuError {
 }
 
 pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
-    renderer: RefCell<Renderer>,
+    renderer: Renderer,
     input_source: Input,
     pc_observer: Shadowcast,
     behaviour_ctx: BehaviourCtx<Renderer>,
@@ -70,7 +67,7 @@ pub struct GameCtx<Renderer: KnowledgeRenderer, Input: InputSource> {
     action_schedule: Schedule<ActionArgs>,
     width: usize,
     height: usize,
-    rng: RefCell<StdRng>,
+    rng: StdRng,
     language: Box<Language>,
 }
 
@@ -185,7 +182,7 @@ const SHOP_MIN_ITEMS: usize = 6;
 impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<Renderer, Input> {
     pub fn new(renderer: Renderer, input_source: Input, seed: usize, width: usize, height: usize) -> Self {
         GameCtx {
-            renderer: RefCell::new(renderer),
+            renderer: renderer,
             input_source: input_source.clone(),
             pc_observer: Shadowcast::new(),
             behaviour_ctx: BehaviourCtx::new(input_source),
@@ -194,7 +191,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             action_schedule: Schedule::new(),
             width: width,
             height: height,
-            rng: RefCell::new(StdRng::from_seed(&[seed])),
+            rng: StdRng::from_seed(&[seed]),
             language: Box::new(languages::English),
         }
     }
@@ -206,7 +203,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
         loop {
 
-            self.renderer.borrow_mut().reset_buffers();
+            self.renderer.reset_buffers();
 
             let mut control_map = control_file::from_file(args.user_path.join(user_files::CONTROL)).unwrap_or_default();
 
@@ -226,10 +223,8 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             }
 
             let (item, menu_state) = {
-                let mut renderer_borrow = self.renderer.borrow_mut();
-                let renderer = renderer_borrow.deref_mut();
                 let menu_op = SelectMenuOperation::new(
-                    renderer,
+                    &mut self.renderer,
                     &mut self.input_source,
                     Some(MessageType::Title),
                     &self.language,
@@ -274,7 +269,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             Self::install_control_map(&mut game_state, control_map);
 
             loop {
-                self.renderer.borrow_mut().reset_buffers();
+                self.renderer.reset_buffers();
                 match self.game_loop(&mut game_state)? {
                     ExitReason::Pause => {
                         current_game_state = Some(game_state);
@@ -325,7 +320,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             menu.push(SelectMenuItem::new(MenuMessageType::NextDelivery, BetweenLevelsSelection::NextDelivery));
 
             let maybe_selection = SelectMenuOperation::new(
-                self.renderer.borrow_mut().deref_mut(),
+                &mut self.renderer,
                 &mut self.input_source,
                 Some(MessageType::SurvivorCamp),
                 &self.language,
@@ -382,7 +377,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             };
 
             let maybe_selection = SelectMenuOperation::new(
-                self.renderer.borrow_mut().deref_mut(),
+                &mut self.renderer,
                 &mut self.input_source,
                 Some(title),
                 &self.language,
@@ -418,7 +413,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             }
 
             let maybe_selection = SelectMenuOperation::new(
-                self.renderer.borrow_mut().deref_mut(),
+                &mut self.renderer,
                 &mut self.input_source,
                 Some(MessageType::Inventory {
                     capacity: capacity,
@@ -461,7 +456,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         menu.push(SelectMenuItem::new(MenuMessageType::Remove, ItemMenuSelection::Remove));
 
         let maybe_selection = SelectMenuOperation::new(
-            self.renderer.borrow_mut().deref_mut(),
+            &mut self.renderer,
             &mut self.input_source,
             Some(title),
             &self.language,
@@ -516,7 +511,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             };
 
             let maybe_selection = SelectMenuOperation::new(
-                self.renderer.borrow_mut().deref_mut(),
+                &mut self.renderer,
                 &mut self.input_source,
                 Some(title),
                 &self.language,
@@ -562,7 +557,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         };
 
         let maybe_selection = SelectMenuOperation::new(
-            self.renderer.borrow_mut().deref_mut(),
+            &mut self.renderer,
             &mut self.input_source,
             Some(title),
             &self.language,
@@ -719,15 +714,12 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
     fn prepare_between_levels(&mut self, game_state: &mut GameState) {
         let GlobalIds { pc_id, shop_id, .. } = game_state.global_ids.expect("Uninitialised game state");
 
-        let mut rng_borrow = self.rng.borrow_mut();
-        let mut rng = rng_borrow.deref_mut();
-
         let total_shop_roll = RANDOM_SHOP_ITEM_WEIGHTS.iter().fold(0, |acc, &x| acc + x);
-        let num_shop_items = rng.gen::<usize>() % (SHOP_MAX_ITEMS - SHOP_MIN_ITEMS) + SHOP_MIN_ITEMS;
+        let num_shop_items = self.rng.gen::<usize>() % (SHOP_MAX_ITEMS - SHOP_MIN_ITEMS) + SHOP_MIN_ITEMS;
         let mut inventory = EntitySet::new();
 
         for _ in 0..num_shop_items {
-            let mut roll = rng.gen::<usize>() % total_shop_roll;
+            let mut roll = self.rng.gen::<usize>() % total_shop_roll;
             for (weight, item_type) in izip!(RANDOM_SHOP_ITEM_WEIGHTS.iter(), RANDOM_SHOP_ITEM_TYPES.iter()) {
                 if roll < *weight {
                     let id = game_state.entity_ids.new_id();
@@ -812,7 +804,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         level_id: level_id,
                         entity_id: turn_event.event,
                         pc_id: pc_id,
-                        renderer: &self.renderer,
+                        renderer: &mut self.renderer,
                         ecs: &mut level.ecs,
                         spatial_hash: &mut level.spatial_hash,
                         behaviour_ctx: &self.behaviour_ctx,
@@ -822,7 +814,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         turn_schedule: &mut level.turn_schedule,
                         pc_observer: &self.pc_observer,
                         entity_ids: &game_state.entity_ids,
-                        rng: &self.rng,
+                        rng: &mut self.rng,
                         language: &self.language,
                     }.turn()?
 
@@ -859,11 +851,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         }
     }
 
-    fn death_message(&self, game_state: &GameState) {
+    fn death_message(&mut self, game_state: &GameState) {
         let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Unitialised game state");
         self.add_message(game_state, MessageType::YouDied);
         let entity = game_state.levels.level(level_id).ecs.entity(pc_id);
-        self.renderer.borrow_mut().update_and_publish_all_windows_for_entity_with_overlay(
+        self.renderer.update_and_publish_all_windows_for_entity_with_overlay(
             game_state.action_id,
             level_id,
             entity,
@@ -880,8 +872,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
     fn configure_controls(&mut self, control_map: &mut ControlMap) {
 
-        let mut renderer_borrow = self.renderer.borrow_mut();
-        let mut renderer = renderer_borrow.deref_mut();
         let mut current_menu_state = None;
 
         loop {
@@ -899,7 +889,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             }
 
             if let Some((control_to_change, menu_state)) = SelectMenuOperation::new(
-                renderer,
+                &mut self.renderer,
                 &mut self.input_source,
                 None,
                 &self.language,
@@ -924,7 +914,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     menu.push(SelectMenuItem::new(message, control));
                 }
                 SelectMenuOperation::new(
-                    renderer,
+                    &mut self.renderer,
                     &mut self.input_source,
                     None,
                     &self.language,
@@ -963,7 +953,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                                 pc_id,
                                                 &mut action,
                                                 &game_state.entity_ids,
-                                                self.rng.borrow_mut().deref_mut(),
+                                                &mut self.rng,
                                                 game_state.action_id,
                                                 None,
                                                 0);
@@ -1006,7 +996,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                                 entity_id,
                                                 &mut entity_insert,
                                                 &game_state.entity_ids,
-                                                self.rng.borrow_mut().deref_mut(),
+                                                &mut self.rng,
                                                 game_state.action_id,
                                                 None,
                                                 global_ids.level_id + 1);
@@ -1054,7 +1044,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                                            entity_id,
                                            &mut entity_insert,
                                            &game_state.entity_ids,
-                                            self.rng.borrow_mut().deref_mut(),
+                                           &mut self.rng,
                                            game_state.action_id,
                                            Some(parent_ctx),
                                            global_ids.level_id + 1)

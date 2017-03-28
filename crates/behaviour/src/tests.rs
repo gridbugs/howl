@@ -7,13 +7,13 @@ struct Switch {
 }
 
 impl<'a> LeafFn<isize, &'static str> for Leaf {
-    fn call(&self, knowledge: &isize) -> LeafResolution<&'static str> {
+    fn call(&self, knowledge: &mut isize) -> LeafResolution<&'static str> {
         (self.0)(knowledge)
     }
 }
 
 impl<'a> SwitchFn<isize> for Switch {
-    fn call(&self, knowledge: &isize) -> SwitchResolution {
+    fn call(&self, knowledge: &mut isize) -> SwitchResolution {
         (self.call)(knowledge)
     }
 
@@ -54,11 +54,11 @@ fn forever() {
     let mut state = State::new();
     state.initialise(&graph, root).unwrap();
 
-    assert_eq!(state.run(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run(&graph, &mut 0).unwrap(), "hello");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &0).unwrap(), "world");
+    assert_eq!(state.run(&graph, &mut 0).unwrap(), "world");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run(&graph, &mut 0).unwrap(), "hello");
     state.declare_return(true).unwrap();
 }
 
@@ -83,18 +83,18 @@ fn switch_select() {
     let mut state = State::new();
     state.initialise(&graph, switch).unwrap();
 
-    assert_eq!(state.run(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run(&graph, &mut 0).unwrap(), "hello");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &0).unwrap(), "world");
+    assert_eq!(state.run(&graph, &mut 0).unwrap(), "world");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &1).unwrap(), "one");
+    assert_eq!(state.run(&graph, &mut 1).unwrap(), "one");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &1).unwrap(), "two");
+    assert_eq!(state.run(&graph, &mut 1).unwrap(), "two");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &0).unwrap(), "hello");
+    assert_eq!(state.run(&graph, &mut 0).unwrap(), "hello");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &0).unwrap(), "world");
+    assert_eq!(state.run(&graph, &mut 0).unwrap(), "world");
     state.declare_return(true).unwrap();
-    assert_eq!(state.run(&graph, &1).unwrap(), "one");
+    assert_eq!(state.run(&graph, &mut 1).unwrap(), "one");
     state.declare_return(true).unwrap();
 }
