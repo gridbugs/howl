@@ -13,7 +13,9 @@ behaviour = { path = "crates/behaviour" }
 colour = { path = "crates/colour" }
 content_types = { path = "crates/content_types" }
 control = { path = "crates/control" }
+ecs_content = { path = "crates/ecs_content" }
 ecs_core = { path = "crates/ecs_core" }
+spatial_hash = { path = "crates/spatial_hash" }
 engine_defs = { path = "crates/engine_defs" }
 grid = { path = "crates/grid" }
 line = { path = "crates/line" }
@@ -40,8 +42,3 @@ features = ["image", "ttf"]
 
 [build-dependencies]
 copy_dir = "0.1"
-handlebars = "0.22"
-tomson = "0.1"
-rustc-serialize = "0.3"
-statecs = { git = "https://github.com/stevebob/statecs.git", rev="8ca95ff" }
-statecs-spatial-hash = { git = "https://github.com/stevebob/statecs-spatial-hash.git", rev="ba4c750" }

@@ -1,0 +1,18 @@
+[package]
+name = "ecs_content"
+version = "0.1.0"
+authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+
+[dependencies]
+math = { path = "../math" }
+ecs_core = { path = "../ecs_core" }
+control = { path = "../control" }
+engine_defs = { path = "../engine_defs" }
+message = { path = "../message" }
+content_types = { path = "../content_types" }
+util = { path = "../util" }
+serde = "0.9"
+serde_derive = "0.9"
+
+[build-dependencies]
+statecs = { git = "https://github.com/stevebob/statecs.git", rev="8ca95ff" }

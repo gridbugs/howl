@@ -1,5 +1,5 @@
 use math::Coord;
-use spatial_hash::generated::SpatialHashTableCoord;
+use generated::SpatialHashTableCoord;
 
 impl SpatialHashTableCoord for Coord {
     fn x(self) -> usize { self.x as usize }

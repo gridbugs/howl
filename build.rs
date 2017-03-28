@@ -2,30 +2,9 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-extern crate statecs;
-extern crate statecs_spatial_hash;
 extern crate copy_dir;
-extern crate tomson;
-extern crate handlebars;
-extern crate rustc_serialize;
 
 fn main() {
-
-    let mut cfg = statecs::Config::new();
-
-    cfg.combine_flag_set = false;
-    cfg.component_bookkeeping = true;
-    cfg.action_component_bookkeeping = true;
-    cfg.ecs_ctx_hash_collections = true;
-    cfg.ecs_action_hash_collections = true;
-    cfg.fnv_hasher = true;
-
-    statecs::generate_content("ecs.toml",
-                              Path::new("src").join("ecs_content").join("generated.rs"),
-                              cfg);
-
-    statecs_spatial_hash::generate("sh.toml", Path::new("src").join("spatial_hash").join("generated.rs"));
-
     copy_resources("resources");
     copy_resources("user");
 }

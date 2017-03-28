@@ -1,0 +1,14 @@
+[package]
+name = "spatial_hash"
+version = "0.1.0"
+authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+
+[dependencies]
+ecs_core = { path = "../ecs_core" }
+ecs_content = { path = "../ecs_content" }
+math = { path = "../math" }
+serde = "0.9"
+serde_derive = "0.9"
+
+[build-dependencies]
+statecs-spatial-hash = { git = "https://github.com/stevebob/statecs-spatial-hash.git", rev="ba4c750" }

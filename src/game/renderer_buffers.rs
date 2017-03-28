@@ -1,6 +1,7 @@
 use game::*;
 use message::*;
 
+
 pub struct RendererBuffers {
     pub tiles: TileBuffer,
     pub message_log: Vec<Message>,

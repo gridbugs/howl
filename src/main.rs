@@ -19,6 +19,7 @@ extern crate behaviour;
 extern crate colour;
 extern crate content_types;
 extern crate control;
+extern crate ecs_content;
 extern crate ecs_core;
 extern crate engine_defs;
 extern crate grid;
@@ -27,15 +28,14 @@ extern crate math;
 extern crate message;
 extern crate perlin;
 extern crate search;
+extern crate spatial_hash;
 extern crate util;
 
 use std::env;
 
 #[macro_use]
 mod debug;
-mod ecs_content;
 mod game;
-mod spatial_hash;
 
 fn print_usage(program: &str, opts: getopts::Options) {
     let brief = format!("Usage: {} [options]", program);

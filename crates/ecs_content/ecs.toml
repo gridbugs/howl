@@ -1,12 +1,11 @@
 imports = [
     "ecs_core::*",
-    "math::Coord",
+    "math::*",
     "control::*",
     "engine_defs::*",
     "message::*",
     "content_types::*",
     "util::ScheduleTicket",
-    "math::Direction",
 ]
 
 flags = [
