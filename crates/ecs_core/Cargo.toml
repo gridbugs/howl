@@ -2,6 +2,7 @@
 name = "ecs_core"
 version = "0.1.0"
 authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+build = 'build.rs'
 
 [dependencies]
 serde = "0.9"
