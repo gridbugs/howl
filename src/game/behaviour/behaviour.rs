@@ -10,7 +10,7 @@ use behaviour::{Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafRes
 
 pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub entity: EntityRefMut<'a>,
-    pub spatial_hash: &'a SpatialHashTable,
+    pub spatial_hash: &'a mut SpatialHashTable,
     pub level_id: LevelId,
     pub action_id: u64,
     pub renderer: &'a mut R,
