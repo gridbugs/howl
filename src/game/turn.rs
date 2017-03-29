@@ -13,6 +13,7 @@ use ecs_core::*;
 use ecs_content::*;
 use spatial_hash::*;
 use util::Schedule;
+use control::ControlMap;
 
 const FAILED_ACTION_DELAY: u64 = 16;
 const MIN_TURN_TIME: u64 = 1;
@@ -77,6 +78,7 @@ pub struct TurnEnv<'game, 'level: 'game, Renderer: 'game + KnowledgeRenderer> {
     pub entity_ids: &'game EntityIdReserver,
     pub rng: &'game mut StdRng,
     pub language: &'game Box<Language>,
+    pub control_map: &'game ControlMap,
 }
 
 impl<'game> Turn<'game> {
@@ -397,6 +399,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
             renderer: self.renderer,
             rng: self.rng,
             language: self.language,
+            control_map: self.control_map,
         };
         Ok(behaviour_state.run(self.behaviour_ctx.graph(), &mut input)?)
     }

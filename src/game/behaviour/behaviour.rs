@@ -5,6 +5,7 @@ use game::*;
 use message::*;
 use ecs_content::*;
 use spatial_hash::*;
+use control::ControlMap;
 use behaviour::{Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
 
 pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
@@ -16,6 +17,7 @@ pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub renderer: &'a mut R,
     pub rng: &'a mut StdRng,
     pub language: &'a Box<Language>,
+    pub control_map: &'a ControlMap,
 }
 
 pub struct BehaviourLeaf<R: KnowledgeRenderer>(Box<Fn(&mut BehaviourInput<R>) -> LeafResolution<MetaAction>>);

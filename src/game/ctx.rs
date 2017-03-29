@@ -8,8 +8,8 @@ use content_types::*;
 use ecs_core::*;
 use ecs_content::*;
 use util::Schedule;
-use math::Coord;
-use math::Direction;
+use math::{Coord, Direction};
+use control::ControlMap;
 
 enum MainMenuSelection {
     NewGame,
@@ -87,6 +87,7 @@ pub struct GameState {
     between_levels: bool,
     staging: EcsCtx,
     staged: Option<EntityId>,
+    control_map: ControlMap,
 }
 
 impl GameState {
@@ -100,6 +101,7 @@ impl GameState {
             between_levels: false,
             staging: EcsCtx::new(),
             staged: None,
+            control_map: ControlMap::new(),
         }
     }
 }
@@ -114,11 +116,12 @@ pub struct SerializableGameState {
     between_levels: bool,
     staging: SerializableEcsCtx,
     staged: Option<EntityId>,
+    control_map: ControlMap,
 }
 
 impl From<GameState> for SerializableGameState {
     fn from(game_state: GameState) -> Self {
-        let GameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels, staging, staged } = game_state;
+        let GameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels, staging, staged, control_map } = game_state;
         SerializableGameState {
             levels: SerializableLevelTable::from(levels),
             global_ids: global_ids,
@@ -128,13 +131,14 @@ impl From<GameState> for SerializableGameState {
             between_levels: between_levels,
             staging: SerializableEcsCtx::from(staging),
             staged: staged,
+            control_map: control_map,
         }
     }
 }
 
 impl From<SerializableGameState> for GameState {
     fn from(game_state: SerializableGameState) -> Self {
-        let SerializableGameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels, staging, staged } = game_state;
+        let SerializableGameState { levels, global_ids, entity_ids, turn_id, action_id, between_levels, staging, staged, control_map } = game_state;
         GameState {
             levels: LevelTable::from(levels),
             global_ids: global_ids,
@@ -144,6 +148,7 @@ impl From<SerializableGameState> for GameState {
             between_levels: between_levels,
             staging: EcsCtx::from(staging),
             staged: staged,
+            control_map: control_map,
         }
     }
 }
@@ -266,7 +271,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 }
             };
 
-            Self::install_control_map(&mut game_state, control_map);
+            game_state.control_map = control_map;
 
             loop {
                 self.renderer.reset_buffers();
@@ -774,13 +779,6 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         game_state.staging.insert_message_log(pc_id, MessageLog::new());
     }
 
-    fn install_control_map(game_state: &mut GameState, control_map: ControlMap) {
-        let GlobalIds { pc_id, level_id, .. } = game_state.global_ids.expect("Uninitialised game state");
-
-        let level = game_state.levels.level_mut(level_id);
-        level.ecs.insert_control_map(pc_id, control_map);
-    }
-
     fn game_loop(&mut self, game_state: &mut GameState) -> GameResult<ExitReason> {
 
         if game_state.between_levels {
@@ -816,6 +814,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                         entity_ids: &game_state.entity_ids,
                         rng: &mut self.rng,
                         language: &self.language,
+                        control_map: &game_state.control_map,
                     }.turn()?
 
                 } else {
