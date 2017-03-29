@@ -14,7 +14,7 @@ pub trait EntityExtra {
     }
 }
 
-impl<'a> EntityExtra for EntityRef<'a> {
+impl<E: Entity> EntityExtra for E {
     fn player_max_speed(&self) -> Option<usize> {
         self.copy_engine_health().map(|hp| (hp.ucurrent() + 1) / 2)
     }

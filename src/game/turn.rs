@@ -263,7 +263,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                                                          level_knowledge,
                                                          position,
                                                          message_log.deref(),
-                                                         entity,
+                                                         &entity,
                                                          self.language);
             }
 

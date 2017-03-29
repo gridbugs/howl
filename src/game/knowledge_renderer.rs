@@ -64,8 +64,8 @@ pub trait KnowledgeRenderer {
     fn draw_log(&mut self);
 
     /// Updates the hud based on a specified entity
-    fn draw_hud_bottom(&mut self, entity: EntityRef, language: &Box<Language>);
-    fn draw_hud(&mut self, entity: EntityRef, language: &Box<Language>);
+    fn draw_hud_bottom<E: Entity>(&mut self, entity: &E, language: &Box<Language>);
+    fn draw_hud<E: Entity>(&mut self, entity: &E, language: &Box<Language>);
 
     /// Updates the game window with the contents of the internal buffer
     /// drawing a specified overlay over the top
@@ -115,65 +115,65 @@ pub trait KnowledgeRenderer {
         self.publish();
     }
 
-    fn publish_all_windows(&mut self, entity: EntityRef, language: &Box<Language>) {
+    fn publish_all_windows<E: Entity>(&mut self, entity: &E, language: &Box<Language>) {
         self.draw_game_window();
         self.draw_log();
         self.draw_hud(entity, language);
         self.publish();
     }
 
-    fn publish_all_windows_with_overlay(&mut self, entity: EntityRef, language: &Box<Language>, overlay: &RenderOverlay) {
+    fn publish_all_windows_with_overlay<E: Entity>(&mut self, entity: &E, language: &Box<Language>, overlay: &RenderOverlay) {
         self.draw_game_window_with_overlay(overlay);
         self.draw_log();
         self.draw_hud(entity, language);
         self.publish();
     }
 
-    fn update_and_publish_all_windows(&mut self,
-                                      turn_id: u64,
-                                      knowledge: &DrawableKnowledgeLevel,
-                                      position: Coord,
-                                      messages: &MessageLog,
-                                      entity: EntityRef,
-                                      language: &Box<Language>) {
-
-        self.update_log_buffer(messages, language);
-        self.update_game_window_buffer(knowledge, turn_id, position);
-
-        self.draw_game_window();
-        self.draw_log();
-        self.draw_hud(entity, language);
-
-        self.publish();
-    }
-
-    fn update_and_publish_all_windows_with_overlay(&mut self,
-                                                   turn_id: u64,
-                                                   knowledge: &DrawableKnowledgeLevel,
-                                                   position: Coord,
-                                                   messages: &MessageLog,
-                                                   entity: EntityRef,
-                                                   language: &Box<Language>,
-                                                   overlay: &RenderOverlay) {
-
-        self.update_log_buffer(messages, language);
-        self.update_game_window_buffer(knowledge, turn_id, position);
-
-        self.draw_game_window_with_overlay(overlay);
-        self.draw_log();
-        self.draw_hud(entity, language);
-
-        self.publish();
-
-    }
-
-
-
-    fn update_and_publish_all_windows_for_entity(&mut self,
+    fn update_and_publish_all_windows<E: Entity>(&mut self,
                                                  turn_id: u64,
-                                                 level_id: LevelId,
-                                                 entity: EntityRef,
+                                                 knowledge: &DrawableKnowledgeLevel,
+                                                 position: Coord,
+                                                 messages: &MessageLog,
+                                                 entity: &E,
                                                  language: &Box<Language>) {
+
+        self.update_log_buffer(messages, language);
+        self.update_game_window_buffer(knowledge, turn_id, position);
+
+        self.draw_game_window();
+        self.draw_log();
+        self.draw_hud(entity, language);
+
+        self.publish();
+    }
+
+    fn update_and_publish_all_windows_with_overlay<E: Entity>(&mut self,
+                                                              turn_id: u64,
+                                                              knowledge: &DrawableKnowledgeLevel,
+                                                              position: Coord,
+                                                              messages: &MessageLog,
+                                                              entity: &E,
+                                                              language: &Box<Language>,
+                                                              overlay: &RenderOverlay) {
+
+        self.update_log_buffer(messages, language);
+        self.update_game_window_buffer(knowledge, turn_id, position);
+
+        self.draw_game_window_with_overlay(overlay);
+        self.draw_log();
+        self.draw_hud(entity, language);
+
+        self.publish();
+
+    }
+
+
+
+    fn update_and_publish_all_windows_for_entity<E: Entity>(&mut self,
+                                                            turn_id: u64,
+                                                            level_id: LevelId,
+                                                            entity: &E,
+                                                            language: &Box<Language>) {
         let knowledge = entity.borrow_drawable_knowledge().expect("Expected drawable_knowledge component");
         let knowledge_level = knowledge.level(level_id);
         self.update_and_publish_all_windows(turn_id,
@@ -184,12 +184,12 @@ pub trait KnowledgeRenderer {
                                             language);
     }
 
-    fn update_and_publish_all_windows_for_entity_with_overlay(&mut self,
-                                                              turn_id: u64,
-                                                              level_id: LevelId,
-                                                              entity: EntityRef,
-                                                              language: &Box<Language>,
-                                                              overlay: &RenderOverlay) {
+    fn update_and_publish_all_windows_for_entity_with_overlay<E: Entity>(&mut self,
+                                                                         turn_id: u64,
+                                                                         level_id: LevelId,
+                                                                         entity: &E,
+                                                                         language: &Box<Language>,
+                                                                         overlay: &RenderOverlay) {
         let knowledge = entity.borrow_drawable_knowledge().expect("Expected drawable_knowledge component");
         let knowledge_level = knowledge.level(level_id);
         self.update_and_publish_all_windows_with_overlay(turn_id,
@@ -206,8 +206,8 @@ pub trait KnowledgeRenderer {
         self.publish();
     }
 
-    fn publish_fullscreen_menu_with_hud<T>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState,
-                                           language: &Box<Language>, entity: EntityRef) {
+    fn publish_fullscreen_menu_with_hud<T, E: Entity>(&mut self, prelude: Option<MessageType>, menu: &SelectMenu<T>, state: &SelectMenuState,
+                                           language: &Box<Language>, entity: &E) {
         self.fullscreen_menu(prelude, menu, state, language);
         self.draw_hud_bottom(entity, language);
         self.publish();

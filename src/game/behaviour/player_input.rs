@@ -71,7 +71,7 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &mut Behavio
         }
     }
 
-    input.renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(&input.entity, input.language);
 }
 
 fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut input_source: I) -> Option<(EntityId, Direction)> {
@@ -81,7 +81,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut 
     message_log.add_temporary(MessageType::ChooseDirection);
     input.renderer.update_log_buffer(message_log.deref(), input.language);
     input.renderer.draw_log();
-    input.renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(&input.entity, input.language);
 
     let mut should_clear_log = true;
 
@@ -108,7 +108,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut 
     }
     input.renderer.update_log_buffer(message_log.deref(), input.language);
     input.renderer.draw_log();
-    input.renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(&input.entity, input.language);
 
     ret
 }
@@ -135,9 +135,9 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>
         input.language,
         menu,
         None,
-        Some(input.entity)).run_can_escape().map(|(id, _)| id);
+        Some(&input.entity)).run_can_escape().map(|(id, _)| id);
 
-    input.renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(&input.entity, input.language);
 
     ret
 }
@@ -153,7 +153,7 @@ fn try_consume_item<K: KnowledgeRenderer>(input: &mut BehaviourInput<K>, item_id
     message_log.add_temporary(MessageType::MustBeStopped);
     input.renderer.update_log_buffer(message_log.deref(), input.language);
     input.renderer.draw_log();
-    input.renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(&input.entity, input.language);
     None
 }
 
@@ -187,7 +187,7 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInp
     }
 
     display_message_scrolling(input.renderer, &mut input_source, &message, true);
-    input.renderer.publish_all_windows(input.entity, input.language);
+    input.renderer.publish_all_windows(&input.entity, input.language);
 }
 
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {

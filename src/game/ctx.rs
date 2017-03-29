@@ -228,14 +228,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             }
 
             let (item, menu_state) = {
-                let menu_op = SelectMenuOperation::new(
+                let menu_op = SelectMenuOperation::new_no_hud(
                     &mut self.renderer,
                     &mut self.input_source,
                     Some(MessageType::Title),
                     &self.language,
                     menu,
-                    current_menu_state,
-                    None);
+                    current_menu_state);
 
                 if current_game_state.is_some() {
                     menu_op.run_can_escape().unwrap_or((MainMenuSelection::Continue, SelectMenuState::new()))
@@ -331,7 +330,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 &self.language,
                 menu,
                 current_menu_state,
-                Some(game_state.staging.entity(pc_id))).run_can_escape();
+                Some(&game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((selection, menu_state)) = maybe_selection {
                 current_menu_state = Some(menu_state.clone());
@@ -388,7 +387,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 &self.language,
                 menu,
                 None,
-                Some(game_state.staging.entity(pc_id))).run_can_escape();
+                Some(&game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((item_id, _)) = maybe_selection {
 
@@ -427,7 +426,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 &self.language,
                 menu,
                 current_menu_state,
-                Some(game_state.staging.entity(pc_id))).run_can_escape();
+                Some(&game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((item_id, menu_state)) = maybe_selection {
                 match self.item_menu(game_state, item_id) {
@@ -467,7 +466,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             &self.language,
             menu,
             None,
-            Some(game_state.staging.entity(pc_id))).run_can_escape();
+            Some(&game_state.staging.entity(pc_id))).run_can_escape();
 
         if let Some((selection, _)) = maybe_selection {
             match selection {
@@ -522,7 +521,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 &self.language,
                 menu,
                 None,
-                Some(game_state.staging.entity(pc_id))).run_can_escape();
+                Some(&game_state.staging.entity(pc_id))).run_can_escape();
 
             if let Some((selection, _)) = maybe_selection {
                 result = self.weapon_slot_menu(game_state, selection);
@@ -568,7 +567,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
             &self.language,
             menu,
             None,
-            Some(game_state.staging.entity(pc_id))).run_can_escape();
+            Some(&game_state.staging.entity(pc_id))).run_can_escape();
 
         if let Some((selection, _)) = maybe_selection {
             if let Some(weapon_id) = selection {
@@ -857,7 +856,7 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
         self.renderer.update_and_publish_all_windows_for_entity_with_overlay(
             game_state.action_id,
             level_id,
-            entity,
+            &entity,
             &self.language,
             &RenderOverlay::Death);
     }
@@ -887,14 +886,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                 menu.push(SelectMenuItem::new(message, control));
             }
 
-            if let Some((control_to_change, menu_state)) = SelectMenuOperation::new(
+            if let Some((control_to_change, menu_state)) = SelectMenuOperation::new_no_hud(
                 &mut self.renderer,
                 &mut self.input_source,
                 None,
                 &self.language,
                 menu,
-                current_menu_state,
-                None).run_can_escape() {
+                current_menu_state).run_can_escape() {
 
                 current_menu_state = Some(menu_state.clone());
                 let mut menu = SelectMenu::new();
@@ -912,14 +910,13 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
 
                     menu.push(SelectMenuItem::new(message, control));
                 }
-                SelectMenuOperation::new(
+                SelectMenuOperation::new_no_hud(
                     &mut self.renderer,
                     &mut self.input_source,
                     None,
                     &self.language,
                     menu,
-                    Some(menu_state),
-                    None).publish();
+                    Some(menu_state)).publish();
 
                 if let Some(input) = self.input_source.next_input() {
                     ControlSpec::from(&*control_map).get(control_to_change).map(|input| {

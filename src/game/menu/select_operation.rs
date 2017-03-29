@@ -3,24 +3,35 @@ use game::*;
 use ecs_content::*;
 use message::*;
 
-pub struct SelectMenuOperation<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> {
+pub struct SelectMenuOperation<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T, E: 'd + Entity> {
     renderer: &'a mut R,
     input: &'b mut I,
     prelude: Option<MessageType>,
     language: &'c Box<Language>,
     menu: SelectMenu<T>,
     initial_state: Option<SelectMenuState>,
-    hud_entity: Option<EntityRef<'d>>,
+    hud_entity: Option<&'d E>,
 }
 
-impl<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOperation<'a, 'b, 'c, 'd, R, I, T> {
+impl<'a, 'b, 'c, 'd, 'e, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T> SelectMenuOperation<'a, 'b, 'c, 'd, R, I, T, EntityRef<'e>> {
+    pub fn new_no_hud(renderer: &'a mut R,
+                      input: &'b mut I,
+                      prelude: Option<MessageType>,
+                      language: &'c Box<Language>,
+                      menu: SelectMenu<T>,
+                      initial_state: Option<SelectMenuState>) -> Self {
+        Self::new(renderer, input, prelude, language, menu, initial_state, None)
+    }
+}
+
+impl<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T, E: Entity> SelectMenuOperation<'a, 'b, 'c, 'd, R, I, T, E> {
     pub fn new(renderer: &'a mut R,
                input: &'b mut I,
                prelude: Option<MessageType>,
                language: &'c Box<Language>,
                menu: SelectMenu<T>,
                initial_state: Option<SelectMenuState>,
-               hud_entity: Option<EntityRef<'d>>) -> Self {
+               hud_entity: Option<&'d E>) -> Self {
         SelectMenuOperation {
             renderer: renderer,
             input: input,

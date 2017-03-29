@@ -594,7 +594,7 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
         x + text_width + self.renderer.hud_height_px()
     }
 
-    fn draw_hud_internal(&mut self, entity: EntityRef, y: usize) {
+    fn draw_hud_internal<E: Entity>(&mut self, entity: &E, y: usize) {
         let mut cursor = LEFT_PADDING_PX;
 
         let hit_points = entity.hit_points().expect("Entity missing hit_points");
@@ -710,12 +710,12 @@ impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {
     }
 
 
-    fn draw_hud_bottom(&mut self, entity: EntityRef, _language: &Box<Language>) {
+    fn draw_hud_bottom<E: Entity>(&mut self, entity: &E, _language: &Box<Language>) {
         let y = self.renderer.total_height_px - self.renderer.hud_height_px() - HUD_TOP_PADDING_PX - BOTTOM_PADDING_PX;
         self.draw_hud_internal(entity, y);
     }
 
-    fn draw_hud(&mut self, entity: EntityRef, _language: &Box<Language>) {
+    fn draw_hud<E: Entity>(&mut self, entity: &E, _language: &Box<Language>) {
         self.renderer.clear_hud();
         let y = self.renderer.hud_position.y as usize + HUD_TOP_PADDING_PX;
         self.draw_hud_internal(entity, y);
