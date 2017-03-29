@@ -1,7 +1,6 @@
 imports = [
     "ecs_core::*",
     "math::*",
-    "control::*",
     "engine_defs::*",
     "message::*",
     "content_types::*",
@@ -80,7 +79,6 @@ data = [
 ]
 
 cells = [
-    { name = 'control_map', type = 'ControlMap' },
     { name = 'message_log', type = 'MessageLog' },
     { name = 'behaviour_state', type = 'BehaviourState' },
     { name = 'drawable_knowledge', type = 'DrawableKnowledge' },
