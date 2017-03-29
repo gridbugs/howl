@@ -7,8 +7,9 @@ use content_types::ActionArgs;
 
 pub fn zombie_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
-        let position = input.entity.copy_position().unwrap();
-        let knowledge = input.entity.borrow_simple_npc_knowledge().unwrap();
+        let entity = input.ecs.entity(input.entity_id);
+        let position = entity.copy_position().unwrap();
+        let knowledge = entity.borrow_simple_npc_knowledge().unwrap();
         let level_knowledge = knowledge.level(input.level_id);
 
         let action = if let Some(target) = level_knowledge.any_target() {
@@ -18,15 +19,15 @@ pub fn zombie_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
                 let delta = target - position;
                 if delta.x.abs() > delta.y.abs() {
                     if delta.x > 0 {
-                        ActionArgs::Walk(input.entity.id(), Direction::East)
+                        ActionArgs::Walk(entity.id(), Direction::East)
                     } else {
-                        ActionArgs::Walk(input.entity.id(), Direction::West)
+                        ActionArgs::Walk(entity.id(), Direction::West)
                     }
                 } else {
                     if delta.y > 0 {
-                        ActionArgs::Walk(input.entity.id(), Direction::South)
+                        ActionArgs::Walk(entity.id(), Direction::South)
                     } else {
-                        ActionArgs::Walk(input.entity.id(), Direction::North)
+                        ActionArgs::Walk(entity.id(), Direction::North)
                     }
                 }
             }

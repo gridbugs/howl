@@ -38,7 +38,9 @@ fn control_to_direction(control: Control) -> Option<Direction> {
 
 fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) {
 
-    let message_log = input.entity.borrow_message_log().unwrap();
+    let entity = input.ecs.entity(input.entity_id);
+
+    let message_log = entity.borrow_message_log().unwrap();
 
     let mut offset = 0;
     let num_lines = input.renderer.fullscreen_log_num_rows();
@@ -71,17 +73,18 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &mut Behavio
         }
     }
 
-    input.renderer.publish_all_windows(&input.entity, input.language);
+    input.renderer.publish_all_windows(&entity, input.language);
 }
 
 fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut input_source: I) -> Option<(EntityId, Direction)> {
 
-    let mut message_log = input.entity.borrow_mut_message_log().expect("Expected component message_log");
+    let entity = input.ecs.entity(input.entity_id);
+    let mut message_log = entity.borrow_mut_message_log().expect("Expected component message_log");
 
     message_log.add_temporary(MessageType::ChooseDirection);
     input.renderer.update_log_buffer(message_log.deref(), input.language);
     input.renderer.draw_log();
-    input.renderer.publish_all_windows(&input.entity, input.language);
+    input.renderer.publish_all_windows(&entity, input.language);
 
     let mut should_clear_log = true;
 
@@ -89,7 +92,7 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut 
         input.control_map.get(event).and_then(|control| {
             match control {
                 Control::Direction(direction) => {
-                    let weapon_slots = input.entity.borrow_weapon_slots().expect("Expected component weapon_slots");
+                    let weapon_slots = entity.borrow_weapon_slots().expect("Expected component weapon_slots");
                     if let Some(weapon) = weapon_slots.get(direction) {
                         Some((*weapon, direction))
                     } else {
@@ -108,22 +111,24 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut 
     }
     input.renderer.update_log_buffer(message_log.deref(), input.language);
     input.renderer.draw_log();
-    input.renderer.publish_all_windows(&input.entity, input.language);
+    input.renderer.publish_all_windows(&entity, input.language);
 
     ret
 }
 
 fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> Option<EntityId> {
 
+    let entity = input.ecs.entity(input.entity_id);
+
     let mut menu = SelectMenu::new();
-    for entity_id in input.entity.borrow_inventory().expect("Missing component inventory").iter() {
-        let name = input.entity.ecs().get_copy_name(entity_id).expect("Missing component name");
+    for entity_id in entity.borrow_inventory().expect("Missing component inventory").iter() {
+        let name = input.ecs.get_copy_name(entity_id).expect("Missing component name");
         let menu_message = MenuMessageType::Name(name);
         menu.push(SelectMenuItem::new(menu_message, entity_id));
     }
 
-    let capacity = input.entity.copy_inventory_capacity().expect("Missing component inventory_capacity");
-    let size = input.entity.borrow_inventory().expect("Missing component inventory").len();
+    let capacity = entity.copy_inventory_capacity().expect("Missing component inventory_capacity");
+    let size = entity.borrow_inventory().expect("Missing component inventory").len();
 
     let ret = SelectMenuOperation::new(
         input.renderer,
@@ -135,25 +140,26 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>
         input.language,
         menu,
         None,
-        Some(&input.entity)).run_can_escape().map(|(id, _)| id);
+        Some(&entity)).run_can_escape().map(|(id, _)| id);
 
-    input.renderer.publish_all_windows(&input.entity, input.language);
+    input.renderer.publish_all_windows(&entity, input.language);
 
     ret
 }
 
 fn try_consume_item<K: KnowledgeRenderer>(input: &mut BehaviourInput<K>, item_id: EntityId) -> Option<ActionArgs> {
-    let speed = input.entity.copy_current_speed().expect("Missing component current_speed");
+    let entity = input.ecs.entity(input.entity_id);
+    let speed = entity.copy_current_speed().expect("Missing component current_speed");
     if speed == 0 {
-        let mut inv = input.entity.borrow_mut_inventory().expect("Missing component inventory");
+        let mut inv = entity.borrow_mut_inventory().expect("Missing component inventory");
         inv.remove(item_id);
-        return Some(ActionArgs::Consume(input.entity.id(), item_id));
+        return Some(ActionArgs::Consume(input.entity_id, item_id));
     }
-    let mut message_log = input.entity.borrow_mut_message_log().expect("Expected component message_log");
+    let mut message_log = entity.borrow_mut_message_log().expect("Expected component message_log");
     message_log.add_temporary(MessageType::MustBeStopped);
     input.renderer.update_log_buffer(message_log.deref(), input.language);
     input.renderer.draw_log();
-    input.renderer.publish_all_windows(&input.entity, input.language);
+    input.renderer.publish_all_windows(&entity, input.language);
     None
 }
 
@@ -168,7 +174,8 @@ fn direction_to_relative_message(direction: Direction) -> MessageType {
 }
 
 fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) {
-    let weapon_slots = input.entity.borrow_weapon_slots().expect("Expected component weapon_slots");
+    let entity = input.ecs.entity(input.entity_id);
+    let weapon_slots = entity.borrow_weapon_slots().expect("Expected component weapon_slots");
 
     let mut message = Message::new();
 
@@ -178,7 +185,7 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInp
         message.push(MessagePart::plain(": "));
 
         if let Some(weapon_id) = weapon_slots.get(d) {
-            let name = input.entity.ecs().get_copy_name(*weapon_id).expect("Expected component name");
+            let name = input.ecs.get_copy_name(*weapon_id).expect("Expected component name");
             input.language.translate(MessageType::Name(name), &mut message);
         } else {
             input.language.translate(MessageType::EmptyWeaponSlot, &mut message);
@@ -187,7 +194,7 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInp
     }
 
     display_message_scrolling(input.renderer, &mut input_source, &message, true);
-    input.renderer.publish_all_windows(&input.entity, input.language);
+    input.renderer.publish_all_windows(&entity, input.language);
 }
 
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
@@ -198,15 +205,15 @@ fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourIn
         }
         input.control_map.get(event).and_then(|control| {
             match control {
-                Control::Direction(Direction::East) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity.id(), ChangeSpeed::Accelerate))),
-                Control::Direction(Direction::West) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity.id(), ChangeSpeed::Decelerate))),
-                Control::Direction(Direction::North) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity.id(), SteerDirection::Up))),
-                Control::Direction(Direction::South) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity.id(), SteerDirection::Down))),
+                Control::Direction(Direction::East) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity_id, ChangeSpeed::Accelerate))),
+                Control::Direction(Direction::West) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity_id, ChangeSpeed::Decelerate))),
+                Control::Direction(Direction::North) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity_id, SteerDirection::Up))),
+                Control::Direction(Direction::South) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity_id, SteerDirection::Down))),
                 Control::Fire => {
                     aim(input, input_source).map(|(gun_id, direction)| {
                         MetaAction::ActionArgs(ActionArgs::FireGun {
                             gun_id: gun_id,
-                            shooter_id: input.entity.id(),
+                            shooter_id: input.entity_id,
                             direction: direction,
                         })
                     })

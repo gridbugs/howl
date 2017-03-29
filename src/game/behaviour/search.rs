@@ -1,6 +1,5 @@
 use game::*;
-use ecs_content::Entity;
-
+use ecs_content::*;
 use engine_defs::*;
 use behaviour::{LeafResolution, SwitchResolution};
 use search::{GridSearchCfg, GridSearchCtx};
@@ -8,9 +7,9 @@ use content_types::ActionArgs;
 
 pub fn follow_path_step<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     BehaviourLeaf::new(move |input| {
-        let mut path_traverse = input.entity.borrow_mut_path_traverse().unwrap();
+        let mut path_traverse = input.ecs.borrow_mut_path_traverse(input.entity_id).unwrap();
         let action = if let Some(direction) = path_traverse.next_direction() {
-            MetaAction::ActionArgs(ActionArgs::Walk(input.entity.id(), direction))
+            MetaAction::ActionArgs(ActionArgs::Walk(input.entity_id, direction))
         } else {
             MetaAction::ActionArgs(ActionArgs::Null)
         };
@@ -23,10 +22,11 @@ pub fn simple_npc_update_path<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
     let search_cfg = GridSearchCfg::cardinal_directions();
 
     BehaviourLeaf::new(move |input| {
-        let position = input.entity.copy_position().unwrap();
-        let knowledge = input.entity.borrow_simple_npc_knowledge().unwrap();
+        let entity = input.ecs.entity(input.entity_id);
+        let position = entity.copy_position().unwrap();
+        let knowledge = entity.borrow_simple_npc_knowledge().unwrap();
         let level_knowledge = knowledge.level(input.level_id);
-        let mut path_traverse = input.entity.borrow_mut_path_traverse().unwrap();
+        let mut path_traverse = entity.borrow_mut_path_traverse().unwrap();
 
         let result = search_ctx.search_predicate(
             level_knowledge.grid(), position,
@@ -44,7 +44,7 @@ pub fn simple_npc_update_path<K: KnowledgeRenderer>() -> BehaviourLeaf<K> {
 
 pub fn simple_npc_coherence<K: KnowledgeRenderer>(child: BehaviourNodeIndex) -> BehaviourSwitch<K> {
     BehaviourSwitch::new_returning(move |input| {
-        let path_traverse = input.entity.borrow_mut_path_traverse().unwrap();
+        let path_traverse = input.ecs.borrow_mut_path_traverse(input.entity_id).unwrap();
         if path_traverse.is_complete() {
             return SwitchResolution::Reset(child);
         } else {

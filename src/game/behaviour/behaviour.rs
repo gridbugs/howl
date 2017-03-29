@@ -3,13 +3,15 @@ use engine_defs::*;
 
 use game::*;
 use message::*;
+use ecs_core::EntityId;
 use ecs_content::*;
 use spatial_hash::*;
 use control::ControlMap;
 use behaviour::{Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
 
 pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
-    pub entity: EntityRefMut<'a>,
+    pub entity_id: EntityId,
+    pub ecs: &'a mut EcsCtx,
     pub spatial_hash: &'a mut SpatialHashTable,
     pub level_id: LevelId,
     pub action_id: u64,
