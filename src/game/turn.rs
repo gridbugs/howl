@@ -384,29 +384,33 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
     }
 
     fn get_meta_action(&mut self) -> GameResult<MetaAction> {
-        let entity = self.ecs.entity(self.entity_id);
-        let mut behaviour_state = entity.borrow_mut_behaviour_state().expect("Entity missing behaviour_state");
-        if !behaviour_state.is_initialised() {
-            let behaviour_type = entity.copy_behaviour_type().expect("Entity missing behaviour_type");
-            behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
-        }
-        let mut input = BehaviourInput {
-            entity: entity,
-            ecs: self.ecs,
-            spatial_hash: self.spatial_hash,
-            level_id: self.level_id,
-            action_env: ActionEnv::new(self.ecs, *self.action_id),
-            renderer: self.renderer,
-            rng: self.rng,
-            language: self.language,
-            control_map: self.control_map,
+        let mut behaviour_state = self.ecs.remove_behaviour_state(self.entity_id).expect("Entity missing behaviour_state");
+        let result = {
+            let entity = self.ecs.entity(self.entity_id);
+            if !behaviour_state.is_initialised() {
+                let behaviour_type = entity.copy_behaviour_type().expect("Entity missing behaviour_type");
+                behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
+            }
+            let mut input = BehaviourInput {
+                entity: entity,
+                ecs: self.ecs,
+                spatial_hash: self.spatial_hash,
+                level_id: self.level_id,
+                action_env: ActionEnv::new(self.ecs, *self.action_id),
+                renderer: self.renderer,
+                rng: self.rng,
+                language: self.language,
+                control_map: self.control_map,
+            };
+            behaviour_state.run(self.behaviour_ctx.graph(), &mut input)
         };
-        Ok(behaviour_state.run(self.behaviour_ctx.graph(), &mut input)?)
+        self.ecs.insert_behaviour_state(self.entity_id, behaviour_state);
+
+        result.map_err(GameError::BehaviourError)
     }
 
-    fn declare_action_return(&self, value: bool) -> GameResult<bool> {
-        let entity = self.ecs.entity(self.entity_id);
-        if let Some(mut behaviour_state) = entity.borrow_mut_behaviour_state() {
+    fn declare_action_return(&mut self, value: bool) -> GameResult<bool> {
+        if let Some(mut behaviour_state) = self.ecs.get_mut_behaviour_state(self.entity_id) {
             behaviour_state.declare_return(value)?;
             Ok(true)
         } else {

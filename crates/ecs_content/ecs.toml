@@ -76,11 +76,11 @@ data = [
     { name = 'level_switch_group', type = 'usize', copy = true },
     { name = 'probabilistic_animation', type = 'FirstWeightedProbabilisticChoice<TileType>' },
     { name = 'realtime_velocity', type = 'RealtimeVelocity' },
+    { name = 'behaviour_state', type = 'BehaviourState' },
 ]
 
 cells = [
     { name = 'message_log', type = 'MessageLog' },
-    { name = 'behaviour_state', type = 'BehaviourState' },
     { name = 'drawable_knowledge', type = 'DrawableKnowledge' },
     { name = 'simple_npc_knowledge', type = 'SimpleNpcKnowledge' },
     { name = 'path_traverse', type = 'PathTraverse' },
