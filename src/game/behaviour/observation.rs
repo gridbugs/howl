@@ -18,9 +18,9 @@ pub fn simple_npc_shadowcast<K: KnowledgeRenderer>(child: BehaviourNodeIndex) ->
                                                                  input.spatial_hash.height());
 
         shadowcast.observe(eye, input.spatial_hash, vision_distance,
-                           level_knowledge, input.action_env);
+                           level_knowledge, ActionEnv::new(input.entity.ecs(), input.action_id));
 
-        if level_knowledge.last_target_update() == input.action_env.id {
+        if level_knowledge.last_target_update() == input.action_id {
             // the targets have changed
             SwitchResolution::Reset(child)
         } else {

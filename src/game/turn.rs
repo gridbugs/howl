@@ -386,17 +386,16 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
     fn get_meta_action(&mut self) -> GameResult<MetaAction> {
         let mut behaviour_state = self.ecs.remove_behaviour_state(self.entity_id).expect("Entity missing behaviour_state");
         let result = {
-            let entity = self.ecs.entity(self.entity_id);
+            let entity = self.ecs.entity_mut(self.entity_id);
             if !behaviour_state.is_initialised() {
                 let behaviour_type = entity.copy_behaviour_type().expect("Entity missing behaviour_type");
                 behaviour_state.initialise(self.behaviour_ctx.graph(), self.behaviour_ctx.nodes().index(behaviour_type))?;
             }
             let mut input = BehaviourInput {
                 entity: entity,
-                ecs: self.ecs,
                 spatial_hash: self.spatial_hash,
                 level_id: self.level_id,
-                action_env: ActionEnv::new(self.ecs, *self.action_id),
+                action_id: *self.action_id,
                 renderer: self.renderer,
                 rng: self.rng,
                 language: self.language,

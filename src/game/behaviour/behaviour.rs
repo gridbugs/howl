@@ -9,11 +9,10 @@ use control::ControlMap;
 use behaviour::{Graph, LeafFn, SwitchFn, SwitchReturn, SwitchResolution, LeafResolution};
 
 pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
-    pub entity: EntityRef<'a>,
-    pub ecs: &'a EcsCtx,
+    pub entity: EntityRefMut<'a>,
     pub spatial_hash: &'a SpatialHashTable,
     pub level_id: LevelId,
-    pub action_env: ActionEnv<'a>,
+    pub action_id: u64,
     pub renderer: &'a mut R,
     pub rng: &'a mut StdRng,
     pub language: &'a Box<Language>,

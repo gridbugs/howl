@@ -117,7 +117,7 @@ fn inventory<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>
 
     let mut menu = SelectMenu::new();
     for entity_id in input.entity.borrow_inventory().expect("Missing component inventory").iter() {
-        let name = input.ecs.get_copy_name(entity_id).expect("Missing component name");
+        let name = input.entity.ecs().get_copy_name(entity_id).expect("Missing component name");
         let menu_message = MenuMessageType::Name(name);
         menu.push(SelectMenuItem::new(menu_message, entity_id));
     }
@@ -178,7 +178,7 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInp
         message.push(MessagePart::plain(": "));
 
         if let Some(weapon_id) = weapon_slots.get(d) {
-            let name = input.ecs.get_copy_name(*weapon_id).expect("Expected component name");
+            let name = input.entity.ecs().get_copy_name(*weapon_id).expect("Expected component name");
             input.language.translate(MessageType::Name(name), &mut message);
         } else {
             input.language.translate(MessageType::EmptyWeaponSlot, &mut message);
