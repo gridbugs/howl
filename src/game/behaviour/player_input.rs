@@ -1,8 +1,6 @@
 use std::ops::Deref;
 use std::cmp;
 
-use rand::Rng;
-
 use control::*;
 use game::*;
 use message::*;
@@ -24,43 +22,19 @@ pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(inpu
 }
 
 fn animate_frame<K: KnowledgeRenderer>(input: &mut BehaviourInput<K>, frame: Frame) {
-    if frame.count() % 20 == 0 {
-        for id in input.ecs.id_iter_acid_animation() {
-            // don't always change every tile
-            if input.rng.next_f64() > 0.5 {
-                continue;
-            }
-
-            let animation = input.ecs.get_probabilistic_animation(id).expect("Entity missing probabilistic_animation");
-            let tile = *animation.choose(input.rng);
-            input.action.insert_tile(id, tile);
-        }
-    }
-
-    *input.action_id += 1;
-
-    input.spatial_hash.update(input.ecs, input.action, *input.action_id);
-    input.ecs.commit(input.action);
-
-    let pc = input.ecs.entity(input.entity_id);
-
-    let mut knowledge = pc.borrow_mut_drawable_knowledge()
-        .expect("PC missing drawable_knowledge");
-
-    let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
-                                                             input.spatial_hash.width(),
-                                                             input.spatial_hash.height());
-    let position = pc.copy_position().expect("PC missing position");
-    let vision_distance = pc.copy_vision_distance().expect("PC missing vision_distance");
-
-    let action_env = ActionEnv::new(input.ecs, *input.action_id);
-    let changed = input.pc_observer.observe(position, input.spatial_hash, vision_distance, level_knowledge, action_env);
-
-    if changed {
-        input.renderer.update_and_publish_game_window(*input.action_id, level_knowledge, position);
-    }
-
-    input.action.clear();
+    animation::animate_frame(
+        input.ecs,
+        input.action,
+        input.spatial_hash,
+        input.entity_id,
+        input.level_id,
+        input.action_id,
+        input.entity_ids,
+        input.rng,
+        input.pc_observer,
+        input.renderer,
+        frame
+    );
 }
 
 fn next_input<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> InputEvent {

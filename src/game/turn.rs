@@ -26,7 +26,6 @@ pub struct ActionEnv<'game> {
     pub id: u64,
 }
 
-#[derive(Clone, Copy)]
 pub struct Turn<'game> {
     pub ecs: &'game EcsCtx,
     pub id: u64,
@@ -402,6 +401,7 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 control_map: self.control_map,
                 action: self.ecs_action,
                 pc_observer: self.pc_observer,
+                entity_ids: self.entity_ids,
             };
             behaviour_state.run(self.behaviour_ctx.graph(), &mut input)
         };

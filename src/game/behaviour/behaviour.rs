@@ -21,6 +21,7 @@ pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub control_map: &'a ControlMap,
     pub action: &'a mut EcsAction,
     pub pc_observer: &'a Shadowcast,
+    pub entity_ids: &'a EntityIdReserver,
 }
 
 pub struct BehaviourLeaf<R: KnowledgeRenderer>(Box<Fn(&mut BehaviourInput<R>) -> LeafResolution<MetaAction>>);

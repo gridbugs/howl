@@ -51,3 +51,4 @@ pub mod save_file;
 pub mod game_file;
 pub mod user_files;
 pub mod control_file;
+pub mod animation;
