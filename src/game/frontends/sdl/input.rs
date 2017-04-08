@@ -21,16 +21,6 @@ pub struct SdlInputSource {
 #[derive(Clone)]
 pub struct SdlBlockingInputSource(SdlInputSource);
 
-impl SdlInputSource {
-    pub fn new(sdl: Sdl) -> Self {
-        SdlInputSource {
-            sdl: sdl,
-            last: time::Instant::now(),
-            count: 0,
-        }
-    }
-}
-
 fn is_shift_pressed(keymod: &Mod) -> bool {
     keymod.contains(keyboard::LSHIFTMOD) || keymod.contains(keyboard::RSHIFTMOD)
 }
@@ -112,6 +102,14 @@ fn event_to_input(event: Event) -> Option<InputEvent> {
 }
 
 impl SdlInputSource {
+    pub fn new(sdl: Sdl) -> Self {
+        SdlInputSource {
+            sdl: sdl,
+            last: time::Instant::now(),
+            count: 0,
+        }
+    }
+
     fn increase_count(&mut self) -> usize {
         let count = self.count;
         self.count += 1;
@@ -171,6 +169,12 @@ impl InputSource for SdlInputSource {
         } else {
             None
         }
+    }
+}
+
+impl SdlBlockingInputSource {
+    pub fn new(sdl: Sdl) -> Self {
+        SdlBlockingInputSource(SdlInputSource::new(sdl))
     }
 }
 

@@ -19,6 +19,7 @@ pub fn make_options() -> getopts::Options {
     opts.optopt("f", "frontend", "specify frontend", frontends.as_ref());
     opts.optflag("h", "help", "print this help menu");
     opts.optopt("r", "rngseed", "seed the random number generator with a non-negative integer", "SEED");
+    opts.optflag("a", "no-animation", "disable real-time animations");
 
     opts
 }
@@ -28,6 +29,7 @@ pub struct Arguments {
     pub debug: bool,
     pub frontend: Frontend,
     pub rng_seed: usize,
+    pub animation: bool,
     pub resource_path: path::PathBuf,
     pub user_path: path::PathBuf,
     pub config: GameConfig,
@@ -39,6 +41,10 @@ impl Arguments {
 
         if matches.opt_present("debug") {
             args.debug = true;
+        }
+
+        if matches.opt_present("no-animation") {
+            args.animation = false;
         }
 
         if let Some(rng_seed_str) = matches.opt_str("rngseed") {
@@ -117,6 +123,7 @@ impl Default for Arguments {
             debug: false,
             frontend: Frontend::Sdl,
             rng_seed: 0,
+            animation: true,
             resource_path: path::PathBuf::new(),
             user_path: path::PathBuf::new(),
             config: GameConfig::default(),

@@ -76,15 +76,19 @@ pub fn launch(args: Arguments) -> ExternalResult<()> {
         Err(SdlKnowledgeRendererError::HudLoadFailure) => return Err("Failed to load hud".to_string()),
     };
 
-    let input = frontends::sdl::SdlInputSource::new(sdl.clone());
-
-    let mut game = GameCtx::new(renderer,
-                                input,
-                                args.rng_seed,
-                                GAME_WIDTH,
-                                GAME_HEIGHT);
-
-    game.run(args)?;
+    if args.animation {
+        GameCtx::new(renderer,
+                     frontends::sdl::SdlInputSource::new(sdl.clone()),
+                     args.rng_seed,
+                     GAME_WIDTH,
+                     GAME_HEIGHT).run(args)?;
+    } else {
+        GameCtx::new(renderer,
+                     frontends::sdl::SdlBlockingInputSource::new(sdl.clone()),
+                     args.rng_seed,
+                     GAME_WIDTH,
+                     GAME_HEIGHT).run(args)?;
+    }
 
     Ok(())
 }
