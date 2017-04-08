@@ -129,6 +129,16 @@ pub trait KnowledgeRenderer {
         self.publish();
     }
 
+    fn update_and_publish_game_window(&mut self,
+                                      turn_id: u64,
+                                      knowledge: &DrawableKnowledgeLevel,
+                                      position: Coord) {
+        self.update_game_window_buffer(knowledge, turn_id, position);
+        self.draw_game_window();
+        self.publish();
+    }
+
+
     fn update_and_publish_all_windows<E: Entity>(&mut self,
                                                  turn_id: u64,
                                                  knowledge: &DrawableKnowledgeLevel,

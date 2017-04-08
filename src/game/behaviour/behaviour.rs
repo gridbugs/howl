@@ -14,11 +14,13 @@ pub struct BehaviourInput<'a, R: 'a + KnowledgeRenderer> {
     pub ecs: &'a mut EcsCtx,
     pub spatial_hash: &'a mut SpatialHashTable,
     pub level_id: LevelId,
-    pub action_id: u64,
+    pub action_id: &'a mut u64,
     pub renderer: &'a mut R,
     pub rng: &'a mut StdRng,
     pub language: &'a Box<Language>,
     pub control_map: &'a ControlMap,
+    pub action: &'a mut EcsAction,
+    pub pc_observer: &'a Shadowcast,
 }
 
 pub struct BehaviourLeaf<R: KnowledgeRenderer>(Box<Fn(&mut BehaviourInput<R>) -> LeafResolution<MetaAction>>);

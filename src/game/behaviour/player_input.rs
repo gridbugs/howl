@@ -1,6 +1,8 @@
 use std::ops::Deref;
 use std::cmp;
 
+use rand::Rng;
+
 use control::*;
 use game::*;
 use message::*;
@@ -21,10 +23,53 @@ pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(inpu
     })
 }
 
-fn get_direction<I: InputSource>(map: &ControlMap, mut input_source: I) -> Option<Direction> {
-    map.get(input_source.next_input()).and_then(|control| {
-        control_to_direction(control)
-    })
+fn animate_frame<K: KnowledgeRenderer>(input: &mut BehaviourInput<K>, frame: Frame) {
+    if frame.count() % 20 == 0 {
+        for id in input.ecs.id_iter_acid_animation() {
+            // don't always change every tile
+            if input.rng.next_f64() > 0.5 {
+                continue;
+            }
+
+            let animation = input.ecs.get_probabilistic_animation(id).expect("Entity missing probabilistic_animation");
+            let tile = *animation.choose(input.rng);
+            input.action.insert_tile(id, tile);
+        }
+    }
+
+    *input.action_id += 1;
+
+    input.spatial_hash.update(input.ecs, input.action, *input.action_id);
+    input.ecs.commit(input.action);
+
+    let pc = input.ecs.entity(input.entity_id);
+
+    let mut knowledge = pc.borrow_mut_drawable_knowledge()
+        .expect("PC missing drawable_knowledge");
+
+    let level_knowledge = knowledge.level_mut_or_insert_size(input.level_id,
+                                                             input.spatial_hash.width(),
+                                                             input.spatial_hash.height());
+    let position = pc.copy_position().expect("PC missing position");
+    let vision_distance = pc.copy_vision_distance().expect("PC missing vision_distance");
+
+    let action_env = ActionEnv::new(input.ecs, *input.action_id);
+    let changed = input.pc_observer.observe(position, input.spatial_hash, vision_distance, level_knowledge, action_env);
+
+    if changed {
+        input.renderer.update_and_publish_game_window(*input.action_id, level_knowledge, position);
+    }
+
+    input.action.clear();
+}
+
+fn next_input<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> InputEvent {
+    loop {
+        match input_source.next_external() {
+            ExternalEvent::Input(input_event) => return input_event,
+            ExternalEvent::Frame(frame) => animate_frame(input, frame),
+        }
+    }
 }
 
 fn control_to_direction(control: Control) -> Option<Direction> {
@@ -72,19 +117,24 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &mut Behavio
     input.renderer.publish_all_windows(&entity, input.language);
 }
 
-fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut input_source: I) -> Option<(EntityId, Direction)> {
+fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, input_source: I) -> Option<(EntityId, Direction)> {
 
-    let entity = input.ecs.entity(input.entity_id);
-    let mut message_log = entity.borrow_mut_message_log().expect("Expected component message_log");
+    {
+        let entity = input.ecs.entity(input.entity_id);
+        let mut message_log = entity.borrow_mut_message_log().expect("Expected component message_log");
 
-    message_log.add_temporary(MessageType::ChooseDirection);
-    input.renderer.update_log_buffer(message_log.deref(), input.language);
-    input.renderer.draw_log();
-    input.renderer.publish_all_windows(&entity, input.language);
+        message_log.add_temporary(MessageType::ChooseDirection);
+        input.renderer.update_log_buffer(message_log.deref(), input.language);
+        input.renderer.draw_log();
+        input.renderer.publish_all_windows(&entity, input.language);
+    }
 
     let mut should_clear_log = true;
 
-    let ret = input.control_map.get(input_source.next_input()).and_then(|control| {
+    let ret = input.control_map.get(next_input(input, input_source)).and_then(|control| {
+        let entity = input.ecs.entity(input.entity_id);
+        let mut message_log = entity.borrow_mut_message_log().expect("Expected component message_log");
+
         match control {
             Control::Direction(direction) => {
                 let weapon_slots = entity.borrow_weapon_slots().expect("Expected component weapon_slots");
@@ -100,12 +150,16 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut 
         }
     });
 
-    if should_clear_log {
-        message_log.add_temporary(MessageType::Empty);
+    {
+        let entity = input.ecs.entity(input.entity_id);
+        let mut message_log = entity.borrow_mut_message_log().expect("Expected component message_log");
+        if should_clear_log {
+            message_log.add_temporary(MessageType::Empty);
+        }
+        input.renderer.update_log_buffer(message_log.deref(), input.language);
+        input.renderer.draw_log();
+        input.renderer.publish_all_windows(&entity, input.language);
     }
-    input.renderer.update_log_buffer(message_log.deref(), input.language);
-    input.renderer.draw_log();
-    input.renderer.publish_all_windows(&entity, input.language);
 
     ret
 }
@@ -191,9 +245,9 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInp
     input.renderer.publish_all_windows(&entity, input.language);
 }
 
-fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
+fn get_meta_action<K: KnowledgeRenderer, I: InputSource + Clone>(input: &mut BehaviourInput<K>, input_source: I) -> Option<MetaAction> {
 
-    let event = input_source.next_input();
+    let event = next_input(input, input_source.clone());
     if event == InputEvent::Quit {
         return Some(MetaAction::External(External::Quit));
     }

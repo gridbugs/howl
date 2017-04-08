@@ -395,11 +395,13 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
                 ecs: self.ecs,
                 spatial_hash: self.spatial_hash,
                 level_id: self.level_id,
-                action_id: *self.action_id,
+                action_id: self.action_id,
                 renderer: self.renderer,
                 rng: self.rng,
                 language: self.language,
                 control_map: self.control_map,
+                action: self.ecs_action,
+                pc_observer: self.pc_observer,
             };
             behaviour_state.run(self.behaviour_ctx.graph(), &mut input)
         };

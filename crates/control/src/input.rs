@@ -15,27 +15,49 @@ pub enum InputEvent {
 
 pub enum ExternalEvent {
     Input(InputEvent),
-    Frame(time::Instant),
+    Frame(Frame),
+}
+
+pub struct Frame {
+    count: usize,
+    time: time::Instant,
+}
+
+impl Frame {
+    pub fn new(count: usize, time: time::Instant) -> Self {
+        Frame {
+            count: count,
+            time: time,
+        }
+    }
+
+    pub fn now(count: usize) -> Self { Self::new(count, time::Instant::now()) }
+
+    pub fn count(&self) -> usize { self.count }
+    pub fn time(&self) -> time::Instant { self.time }
+}
+
+pub struct Period(usize);
+
+impl Period {
+    pub fn new(count: usize) -> Self { Period(count) }
+    pub  fn decrease(&mut self) -> bool {
+        if self.0 == 0 {
+            return false;
+        } else {
+            self.0 -= 1;
+            return true;
+        }
+    }
+    pub fn is_empty(&self) -> bool { self.0 == 0 }
+    pub fn remaining(&self) -> usize { self.0 }
+    pub fn clear(&mut self) {
+        self.0 = 0;
+    }
 }
 
 pub trait InputSource {
-    /// Block until a key is pressed, returning the input associated with that key
     fn next_input(&mut self) -> InputEvent;
-
-    /// Block until an external event occurs, returning the event.
-    /// This is intended for use when waiting for either a timer tick for animation
-    /// or a keypress, allowing for animation while aiting for input.
-    fn next_external(&mut self, last_frame: time::Instant) -> ExternalEvent;
-
-    /// Block until the next frame, returning the instant it unblocks, and the
-    /// new number of repetitions, or None if called with 0 repetititions.
-    /// Intended for use in a loop resembling the following:
-    /// while let Some((frame, repeat)) = input.next_frame_repeating(frame, repeat) {
-    ///     // draw a frame of animation
-    /// }
-    ///
-    /// This allows an input source to prevent animation by blocking until `repeat`
-    /// frames would have passed, then returning None.
-    fn next_frame_repeating(&mut self, last_frame: time::Instant, repeat: usize)
-        -> Option<(time::Instant, usize)>;
+    fn next_external(&mut self) -> ExternalEvent;
+    fn next_frame_periodic(&mut self, period: &mut Period) -> Option<Frame>;
 }
