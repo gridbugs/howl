@@ -13,13 +13,13 @@ pub enum InputEvent {
     Space,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum ExternalEvent {
     Input(InputEvent),
     Frame(Frame),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Frame {
     count: usize,
     time: time::Instant,
@@ -39,7 +39,7 @@ impl Frame {
     pub fn time(&self) -> time::Instant { self.time }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Period(usize);
 
 impl Period {
