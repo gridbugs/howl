@@ -1,5 +1,4 @@
 use std::time;
-use std::cmp;
 use std::thread;
 
 use sdl2::Sdl;
@@ -8,7 +7,7 @@ use sdl2::keyboard::{self, Keycode, Mod};
 
 use control::*;
 
-const MIN_TIMEOUT_MS: u32 = 4;
+const MIN_TIMEOUT_MS: u32 = 1;
 const FRAME_TIME_MS: u64 = 16;
 
 #[derive(Clone)]
@@ -117,10 +116,18 @@ impl SdlInputSource {
     }
 
     fn frame_now(&mut self) -> Frame {
-        Frame::new(self.increase_count(), time::Instant::now())
+        let now = time::Instant::now();
+        self.last = now;
+        Frame::new(self.increase_count(), now)
     }
 
     fn frame_duration(&self) -> time::Duration { time::Duration::from_millis(FRAME_TIME_MS) }
+
+    fn remaining(&self) -> Option<u32> {
+        self.frame_duration().checked_sub(self.last.elapsed()).map(|remaining| {
+            remaining.subsec_nanos() / 1000000
+        })
+    }
 }
 
 impl InputSource for SdlInputSource {
@@ -136,19 +143,18 @@ impl InputSource for SdlInputSource {
     fn next_external(&mut self) -> ExternalEvent {
         let mut event_pump = self.sdl.event_pump().expect("Failed to initialise event pump");
 
-        let now = time::Instant::now();
-        let elapsed = now.duration_since(self.last);
-        let timeout = if let Some(remaining) = self.frame_duration().checked_sub(elapsed) {
-            let ms = remaining.subsec_nanos() / 1000000;
-            cmp::max(ms, MIN_TIMEOUT_MS)
-        } else {
-            MIN_TIMEOUT_MS
-        };
+        let mut timeout = self.remaining().unwrap_or(MIN_TIMEOUT_MS);
 
         loop {
             if let Some(event) = event_pump.wait_event_timeout(timeout) {
                 if let Some(input_event) = event_to_input(event) {
                     return ExternalEvent::Input(input_event);
+                } else {
+                    if let Some(remaining) = self.remaining() {
+                        timeout = remaining;
+                    } else {
+                        return ExternalEvent::Frame(self.frame_now());
+                    }
                 }
             } else {
                 return ExternalEvent::Frame(self.frame_now());
@@ -164,6 +170,7 @@ impl InputSource for SdlInputSource {
                 thread::sleep(remaining);
                 Some(self.frame_now())
             } else {
+                self.last = now;
                 Some(Frame::new(self.increase_count(), now))
             }
         } else {
