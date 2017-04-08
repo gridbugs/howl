@@ -235,7 +235,6 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
     }
 
     fn pc_render(&mut self, force: Option<ForceRender>) -> bool {
-
         let entity = self.ecs.entity(self.pc_id);
 
         if !(force == Some(ForceRender::IgnoreShouldRender) || self.ecs.contains_should_render(self.entity_id)) {

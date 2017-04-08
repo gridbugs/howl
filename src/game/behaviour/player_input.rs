@@ -33,6 +33,7 @@ fn animate_frame<K: KnowledgeRenderer>(input: &mut BehaviourInput<K>, frame: Fra
         input.rng,
         input.pc_observer,
         input.renderer,
+        input.language,
         frame
     );
 }
