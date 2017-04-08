@@ -53,19 +53,17 @@ impl<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T, E: Entit
                 self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
             }
 
-            if let Some(event) = self.input.next_input() {
-                match event {
-                    InputEvent::Down => {
-                        state.select_next(&self.menu);
-                    }
-                    InputEvent::Up => {
-                        state.select_prev(&self.menu);
-                    }
-                    InputEvent::Return => {
-                        return (state.confirm(self.menu), state);
-                    }
-                    _ => {}
+            match self.input.next_input() {
+                InputEvent::Down => {
+                    state.select_next(&self.menu);
                 }
+                InputEvent::Up => {
+                    state.select_prev(&self.menu);
+                }
+                InputEvent::Return => {
+                    return (state.confirm(self.menu), state);
+                }
+                _ => {}
             }
         }
     }
@@ -80,26 +78,24 @@ impl<'a, 'b, 'c, 'd, R: 'a + KnowledgeRenderer, I: 'b + InputSource, T, E: Entit
                 self.renderer.publish_fullscreen_menu(self.prelude, &self.menu, &state, self.language);
             }
 
-            if let Some(event) = self.input.next_input() {
-                match event {
-                    InputEvent::Down => {
-                        state.select_next(&self.menu);
-                    }
-                    InputEvent::Up => {
-                        state.select_prev(&self.menu);
-                    }
-                    InputEvent::Return => {
-                        if self.menu.is_empty() {
-                            return None;
-                        } else {
-                            return Some((state.confirm(self.menu), state));
-                        }
-                    }
-                    InputEvent::Escape => {
-                        return None;
-                    }
-                    _ => {}
+            match self.input.next_input() {
+                InputEvent::Down => {
+                    state.select_next(&self.menu);
                 }
+                InputEvent::Up => {
+                    state.select_prev(&self.menu);
+                }
+                InputEvent::Return => {
+                    if self.menu.is_empty() {
+                        return None;
+                    } else {
+                        return Some((state.confirm(self.menu), state));
+                    }
+                }
+                InputEvent::Escape => {
+                    return None;
+                }
+                _ => {}
             }
         }
     }

@@ -918,13 +918,11 @@ impl<Renderer: KnowledgeRenderer, Input: 'static + InputSource + Clone> GameCtx<
                     menu,
                     Some(menu_state)).publish();
 
-                if let Some(input) = self.input_source.next_input() {
-                    ControlSpec::from(&*control_map).get(control_to_change).map(|input| {
-                        control_map.remove(input);
-                    });
+                ControlSpec::from(&*control_map).get(control_to_change).map(|input| {
+                    control_map.remove(input);
+                });
 
-                    control_map.insert(input, control_to_change);
-                }
+                control_map.insert(self.input_source.next_input(), control_to_change);
             } else {
                 break;
             }

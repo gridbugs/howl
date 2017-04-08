@@ -22,10 +22,8 @@ pub fn player_input<K: KnowledgeRenderer, I: 'static + InputSource + Clone>(inpu
 }
 
 fn get_direction<I: InputSource>(map: &ControlMap, mut input_source: I) -> Option<Direction> {
-    input_source.next_input().and_then(|event| {
-        map.get(event).and_then(|control| {
-            control_to_direction(control)
-        })
+    map.get(input_source.next_input()).and_then(|control| {
+        control_to_direction(control)
     })
 }
 
@@ -54,21 +52,19 @@ fn display_message_log<K: KnowledgeRenderer, I: InputSource>(input: &mut Behavio
     loop {
         input.renderer.publish_fullscreen_log(message_log.deref(), offset, input.language);
 
-        if let Some(event) = input_source.next_input() {
-            if let Some(control) = input.control_map.get(event) {
-                match control {
-                    Control::Pause |
-                        Control::DisplayMessageLog => break,
-                    Control::Direction(Direction::North) => {
-                        offset = cmp::min(max_offset, offset + 1);
-                    }
-                    Control::Direction(Direction::South) => {
-                        if offset > 0 {
-                            offset -= 1;
-                        }
-                    }
-                    _ => {}
+        if let Some(control) = input.control_map.get(input_source.next_input()) {
+            match control {
+                Control::Pause |
+                    Control::DisplayMessageLog => break,
+                Control::Direction(Direction::North) => {
+                    offset = cmp::min(max_offset, offset + 1);
                 }
+                Control::Direction(Direction::South) => {
+                    if offset > 0 {
+                        offset -= 1;
+                    }
+                }
+                _ => {}
             }
         }
     }
@@ -88,22 +84,20 @@ fn aim<R: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<R>, mut 
 
     let mut should_clear_log = true;
 
-    let ret = input_source.next_input().and_then(|event| {
-        input.control_map.get(event).and_then(|control| {
-            match control {
-                Control::Direction(direction) => {
-                    let weapon_slots = entity.borrow_weapon_slots().expect("Expected component weapon_slots");
-                    if let Some(weapon) = weapon_slots.get(direction) {
-                        Some((*weapon, direction))
-                    } else {
-                        message_log.add_temporary(MessageType::EmptyWeaponSlotMessage);
-                        should_clear_log = false;
-                        None
-                    }
+    let ret = input.control_map.get(input_source.next_input()).and_then(|control| {
+        match control {
+            Control::Direction(direction) => {
+                let weapon_slots = entity.borrow_weapon_slots().expect("Expected component weapon_slots");
+                if let Some(weapon) = weapon_slots.get(direction) {
+                    Some((*weapon, direction))
+                } else {
+                    message_log.add_temporary(MessageType::EmptyWeaponSlotMessage);
+                    should_clear_log = false;
+                    None
                 }
-                _ => None,
             }
-        })
+            _ => None,
+        }
     });
 
     if should_clear_log {
@@ -199,42 +193,41 @@ fn display_status<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInp
 
 fn get_meta_action<K: KnowledgeRenderer, I: InputSource>(input: &mut BehaviourInput<K>, mut input_source: I) -> Option<MetaAction> {
 
-    input_source.next_input().and_then(|event| {
-        if event == InputEvent::Quit {
-            return Some(MetaAction::External(External::Quit));
-        }
-        input.control_map.get(event).and_then(|control| {
-            match control {
-                Control::Direction(Direction::East) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity_id, ChangeSpeed::Accelerate))),
-                Control::Direction(Direction::West) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity_id, ChangeSpeed::Decelerate))),
-                Control::Direction(Direction::North) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity_id, SteerDirection::Up))),
-                Control::Direction(Direction::South) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity_id, SteerDirection::Down))),
-                Control::Fire => {
-                    aim(input, input_source).map(|(gun_id, direction)| {
-                        MetaAction::ActionArgs(ActionArgs::FireGun {
-                            gun_id: gun_id,
-                            shooter_id: input.entity_id,
-                            direction: direction,
-                        })
+    let event = input_source.next_input();
+    if event == InputEvent::Quit {
+        return Some(MetaAction::External(External::Quit));
+    }
+    input.control_map.get(event).and_then(|control| {
+        match control {
+            Control::Direction(Direction::East) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity_id, ChangeSpeed::Accelerate))),
+            Control::Direction(Direction::West) => Some(MetaAction::ActionArgs(ActionArgs::ChangeSpeed(input.entity_id, ChangeSpeed::Decelerate))),
+            Control::Direction(Direction::North) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity_id, SteerDirection::Up))),
+            Control::Direction(Direction::South) => Some(MetaAction::ActionArgs(ActionArgs::Steer(input.entity_id, SteerDirection::Down))),
+            Control::Fire => {
+                aim(input, input_source).map(|(gun_id, direction)| {
+                    MetaAction::ActionArgs(ActionArgs::FireGun {
+                        gun_id: gun_id,
+                        shooter_id: input.entity_id,
+                        direction: direction,
                     })
-                }
-                Control::Inventory => {
-                    inventory(input, input_source).and_then(|item| try_consume_item(input, item)).map(MetaAction::ActionArgs)
-                }
-                Control::Wait => {
-                    Some(MetaAction::ActionArgs(ActionArgs::Null))
-                }
-                Control::Pause => Some(MetaAction::External(External::Pause)),
-                Control::DisplayMessageLog => {
-                    display_message_log(input, input_source);
-                    None
-                }
-                Control::Status => {
-                    display_status(input, input_source);
-                    None
-                }
-                _ => None,
+                })
             }
-        })
+            Control::Inventory => {
+                inventory(input, input_source).and_then(|item| try_consume_item(input, item)).map(MetaAction::ActionArgs)
+            }
+            Control::Wait => {
+                Some(MetaAction::ActionArgs(ActionArgs::Null))
+            }
+            Control::Pause => Some(MetaAction::External(External::Pause)),
+            Control::DisplayMessageLog => {
+                display_message_log(input, input_source);
+                None
+            }
+            Control::Status => {
+                display_status(input, input_source);
+                None
+            }
+            _ => None,
+        }
     })
 }

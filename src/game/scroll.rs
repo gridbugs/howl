@@ -22,31 +22,27 @@ pub fn display_message_scrolling<R: KnowledgeRenderer, I: InputSource>(renderer:
     loop {
         renderer.publish_fullscreen_translated_message(message, offset);
 
-        if let Some(event) = input_source.next_input() {
-            match event {
-                InputEvent::Down => {
-                    if max_offset == 0 {
-                        break;
-                    }
-                    offset = cmp::min(offset + 1, max_offset);
+        match input_source.next_input() {
+            InputEvent::Down => {
+                if max_offset == 0 {
+                    break;
                 }
-                InputEvent::Up => {
-                    if max_offset == 0 {
-                        break;
-                    }
-                    if offset > 0 {
-                        offset -= 1;
-                    }
+                offset = cmp::min(offset + 1, max_offset);
+            }
+            InputEvent::Up => {
+                if max_offset == 0 {
+                    break;
                 }
-                InputEvent::Escape => break,
-                _ => {
-                    if press_any_key {
-                        break;
-                    }
+                if offset > 0 {
+                    offset -= 1;
                 }
             }
-        } else {
-            break;
+            InputEvent::Escape => break,
+            _ => {
+                if press_any_key {
+                    break;
+                }
+            }
         }
     }
 }

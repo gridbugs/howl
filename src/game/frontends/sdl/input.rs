@@ -1,3 +1,4 @@
+use std::time;
 use sdl2::Sdl;
 use sdl2::event::Event;
 use sdl2::keyboard::{self, Keycode, Mod};
@@ -31,8 +32,8 @@ fn to_char_event(ch: char, keymod: &Mod) -> InputEvent {
     }
 }
 
-impl InputSource for SdlInputSource {
-    fn next_input(&mut self) -> Option<InputEvent> {
+impl SdlInputSource {
+    fn maybe_next_input(&mut self) -> Option<InputEvent> {
         let mut event_pump = self.sdl.event_pump().expect("Failed to initialise event pump");
 
         loop {
@@ -102,5 +103,25 @@ impl InputSource for SdlInputSource {
                 _ => (),
             }
         }
+    }
+}
+
+impl InputSource for SdlInputSource {
+    fn next_input(&mut self) -> InputEvent {
+        loop {
+            if let Some(input) = self.maybe_next_input() {
+                return input;
+            }
+        }
+    }
+
+    fn next_external(&mut self, _last_frame: time::Instant) -> ExternalEvent {
+        ExternalEvent::Input(self.next_input())
+    }
+
+    fn next_frame_repeating(&mut self, _last_frame: time::Instant, _repeat: usize)
+        -> Option<(time::Instant, usize)> {
+
+        None
     }
 }
