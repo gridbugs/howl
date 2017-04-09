@@ -3,7 +3,6 @@ pub enum BehaviourType {
     Null,
     PlayerInput,
     Zombie,
-    AcidAnimate,
     Physics,
     Car,
     Bike,

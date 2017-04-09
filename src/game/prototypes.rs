@@ -247,15 +247,6 @@ pub fn wreck<E: EntityMut, R: Rng>(mut entity: E, position: Coord, r: &mut R) ->
     entity
 }
 
-pub fn acid_animator<E: EntityMut>(mut entity: E) -> E {
-    entity.insert_behaviour_type(BehaviourType::AcidAnimate);
-    entity.insert_behaviour_state(BehaviourState::new());
-    entity.insert_turn_time(TURN_DURATION_BASE);
-    entity.insert_turn_offset(ANIMATION_TURN_OFFSET);
-
-    entity
-}
-
 pub fn physics<E: EntityMut>(mut entity: E) -> E {
     entity.insert_behaviour_type(BehaviourType::Physics);
     entity.insert_behaviour_state(BehaviourState::new());

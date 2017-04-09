@@ -8,7 +8,6 @@ pub use self::ctx::*;
 mod player_input;
 mod observation;
 mod search;
-mod acid_animation;
 mod physics;
 mod car;
 mod bike;

@@ -112,12 +112,6 @@ pub fn terrain_from_strings<S: TurnScheduleQueue, R: Rng>(strings: &[&str],
 pub fn add_management_entities<S: TurnScheduleQueue>(ids: &EntityIdReserver,
                                                      schedule: &mut S,
                                                      g: &mut EcsAction) {
-    let acid_animator_id = ids.new_id();
-    prototypes::acid_animator(g.entity_mut(acid_animator_id));
-    let turn_offset = g.get_copy_turn_offset(acid_animator_id).expect("Expected component turn_offset");
-    let ticket = schedule.schedule_turn(acid_animator_id, turn_offset);
-    g.insert_schedule_ticket(acid_animator_id, ticket);
-
     let physics_id = ids.new_id();
     prototypes::physics(g.entity_mut(physics_id));
     let turn_offset = g.get_copy_turn_offset(physics_id).expect("Expected component turn_offset");
