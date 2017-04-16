@@ -11,6 +11,7 @@ control = { path = "../control" }
 engine_defs = { path = "../engine_defs" }
 message = { path = "../message" }
 content_types = { path = "../content_types" }
+tile = { path = "../tile" }
 util = { path = "../util" }
 serde = "0.9"
 serde_derive = "0.9"

@@ -2,8 +2,4 @@
 pub enum BehaviourType {
     Null,
     PlayerInput,
-    Zombie,
-    Physics,
-    Car,
-    Bike,
 }

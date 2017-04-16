@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+
 pub const NUM_TILE_CHANNELS: usize = 3;
 
 #[derive(Hash, Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

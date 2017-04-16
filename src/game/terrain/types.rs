@@ -28,6 +28,5 @@ pub fn generate_terrain<S: TurnScheduleQueue, R: Rng>(terrain: TerrainType,
                                                       difficulty: usize) -> TerrainMetadata {
     match terrain {
         TerrainType::DemoA => generators::demo_a(ids, r, schedule, action),
-        TerrainType::Road => generators::road(ids, r, schedule, action, difficulty),
     }
 }

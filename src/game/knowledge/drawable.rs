@@ -5,6 +5,7 @@ use ecs_content::Entity;
 use spatial_hash::*;
 use grid::Grid;
 use math::Coord;
+use tile::TileType;
 
 impl LevelKnowledge for DrawableKnowledgeLevel {
     fn update_cell(&mut self, coord: Coord, world_cell: &SpatialHashCell, accuracy: f64, action_env: ActionEnv) -> bool {

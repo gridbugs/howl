@@ -7,6 +7,7 @@ authors = ["Stephen Sherratt <stephen@sherra.tt>"]
 math = { path = "../math" }
 line = { path = "../line" }
 grid = { path = "../grid" }
+tile = { path = "../tile" }
 util = { path = "../util" }
 search = { path = "../search" }
 ecs_core = { path = "../ecs_core" }

@@ -1,0 +1,8 @@
+[package]
+name = "tile"
+version = "0.1.0"
+authors = ["Stephen Sherratt <stephen@sherra.tt>"]
+
+[dependencies]
+serde = "0.9"
+serde_derive = "0.9"

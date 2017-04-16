@@ -277,10 +277,10 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
         Rect::new(coord.x as i32 * width, coord.y as i32 * height, width as u32, height as u32)
     }
 
-    fn simple_tile(tile: frontends::sdl::ComplexTile, is_front: bool) -> frontends::sdl::SimpleTile {
+    fn simple_tile(tile: &frontends::sdl::ComplexTile, is_front: bool) -> &frontends::sdl::SimpleTile {
         match tile {
-            frontends::sdl::ComplexTile::Simple(s) => s,
-            frontends::sdl::ComplexTile::Wall { front, back } => {
+            &frontends::sdl::ComplexTile::Simple(ref s) => s,
+            &frontends::sdl::ComplexTile::Wall { ref front, ref back } => {
                 if is_front {
                     front
                 } else {
@@ -300,15 +300,15 @@ impl<'a, 'b> SdlKnowledgeRendererInternal<'a, 'b> {
 
         if let Some(bg_type) = cell.background {
             let complex_tile = self.tileset.resolve(bg_type);
-            let tile = Self::simple_tile(*complex_tile, cell.front);
-            info.bg = tile.background();
-            info.fg = tile.foreground();
+            let tile = Self::simple_tile(complex_tile, cell.front);
+            info.bg = tile.rect(0);
+            info.fg = tile.rect(1);
         }
 
         if let Some(fg_type) = cell.foreground {
             let complex_tile = self.tileset.resolve(fg_type);
-            let tile = Self::simple_tile(*complex_tile, cell.front);
-            if let Some(fg) = tile.foreground() {
+            let tile = Self::simple_tile(complex_tile, cell.front);
+            if let Some(fg) = tile.rect(1) {
                 info.fg = Some(fg);
             }
         }
@@ -595,46 +595,8 @@ impl<'a, 'b> SdlKnowledgeRenderer<'a, 'b> {
     }
 
     fn draw_hud_internal<E: Entity>(&mut self, entity: &E, y: usize) {
-        let mut cursor = LEFT_PADDING_PX;
 
-        let hit_points = entity.hit_points().expect("Entity missing hit_points");
-        let hit_points_text = format!("{}/{}", hit_points.current(), hit_points.max());
-        let hit_points_symbol = self.renderer.hud.health;
-        cursor = self.draw_hud_component(hit_points_symbol, hit_points_text, cursor, y);
-
-        let engine = entity.engine_health().expect("Entity missing engine_health");
-        let engine_text = format!("{}/{}", engine.current(), engine.max());
-        let engine_symbol = self.renderer.hud.engine;
-        cursor = self.draw_hud_component(engine_symbol, engine_text, cursor, y);
-
-        let tyres = entity.tyre_health().expect("Entity missing tyre_health");
-        let tyres_text = format!("{}/{}", tyres.current(), tyres.max());
-        let tyre_symbol = self.renderer.hud.tyres;
-        cursor = self.draw_hud_component(tyre_symbol, tyres_text, cursor, y);
-
-        let armour = entity.armour().expect("Entity missing armour");
-        let armour_text = format!("{}", armour);
-        let armour_symbol = self.renderer.hud.armour;
-        cursor = self.draw_hud_component(armour_symbol, armour_text, cursor, y);
-
-        let speed = entity.current_speed().expect("Entity missing current_speed");
-        let max_speed = entity.player_max_speed().expect("Entity missing max_speed");
-        let speed_text = format!("{}/{}", speed, max_speed);
-        let speed_symbol = self.renderer.hud.speed;
-        cursor = self.draw_hud_component(speed_symbol, speed_text, cursor, y);
-
-        let letters = entity.letter_count().expect("Entity missing letter_count");
-        let letters_text = format!("{}", letters);
-        let letters_symbol = self.renderer.hud.letter;
-        cursor = self.draw_hud_component(letters_symbol, letters_text, cursor, y);
-
-        let bank = entity.bank().expect("Entity missing bank");
-        let bank_text = format!("{}", bank);
-        let bank_symbol = self.renderer.hud.money;
-        self.draw_hud_component(bank_symbol, bank_text, cursor, y);
     }
-
-
 }
 
 impl<'a, 'b> KnowledgeRenderer for SdlKnowledgeRenderer<'a, 'b> {

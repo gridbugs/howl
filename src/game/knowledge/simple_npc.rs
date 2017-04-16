@@ -35,7 +35,6 @@ impl KnowledgeCell for SimpleNpcKnowledgeCell {
             changed = true;
 
             self.solid = world_cell.is_solid();
-            self.acid = world_cell.is_acid();
         }
 
         self.last_updated = action_env.id;

@@ -1,69 +1,25 @@
 tile_width = 16
 tile_height = 16
-tile_padding = 0
 
 [extra]
-Death = { x = 0, y = 4 }
-Blank = { x = 0, y = 5 }
+Blank = [0, 4]
+Death = [1, 4]
+PostEldrich = [1, 4]
+Eldrich = [2, 4]
+PreEldrich = [3, 4]
 
-[tiles.Van]
-foreground = { x = 1, y = 0 }
+[tiles.StoneFloor]
+0 = [0, 0]
+1 = [1, 0]
 
-[tiles.Zombie]
-foreground = { x = 0, y = 0 }
+[tiles.Wall.front]
+1 = [0, 1]
 
-[tiles.Wreck0]
-foreground = { x = 2, y = 0 }
+[tiles.Wall.back]
+1 = [1, 1]
 
-[tiles.Wreck1]
-foreground = { x = 3, y = 0 }
+[tiles.Player]
+1 = [0, 2]
 
-[tiles.Wreck2]
-foreground = { x = 4, y = 0 }
-
-[tiles.Bullet]
-foreground = { x = 5, y = 0 }
-
-[tiles.Bloodstain]
-foreground = { x = 6, y = 0 }
-
-[tiles.Road0]
-background = { x = 0, y = 1 }
-foreground = { x = 1, y = 1 }
-
-[tiles.Dirt0]
-background = { x = 0, y = 2 }
-foreground = { x = 1, y = 2 }
-
-[tiles.Dirt1]
-background = { x = 0, y = 2 }
-foreground = { x = 2, y = 2 }
-
-[tiles.Acid0]
-background = { x = 0, y = 3 }
-foreground = { x = 1, y = 3 }
-
-[tiles.Acid1]
-background = { x = 0, y = 3 }
-foreground = { x = 2, y = 3 }
-
-[tiles.RailgunSlugVertical]
-foreground = { x = 7, y = 0 }
-
-[tiles.RailgunSlugHorizontal]
-foreground = { x = 8, y = 0 }
-
-[tiles.Car]
-foreground = { x = 9, y = 0 }
-
-[tiles.Bike]
-foreground = { x = 10, y = 0 }
-
-[tiles.Letter]
-foreground = { x = 11, y = 0 }
-
-[tiles.Barrel]
-foreground = { x = 12, y = 0 }
-
-[tiles.Explosion]
-background = { x = 0, y = 6 }
+[tiles.Rain]
+2 = [0, 3]

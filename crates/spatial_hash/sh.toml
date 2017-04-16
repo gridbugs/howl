@@ -6,15 +6,9 @@ position = 'position'
 fields = [
     { name = 'opacity', aggregate = 'sum_f64' },
     { name = 'solid', aggregate = 'any' },
-    { name = 'pc', aggregate = 'count_bool' },
-    { name = 'acid', aggregate = 'count_bool' },
-    { name = 'letter', aggregate = 'any' },
     { name = 'enemy', aggregate = 'any' },
+    { name = 'pc', aggregate = 'count_bool' },
     { name = 'level_switch', aggregate = 'any' },
     { name = 'floor', aggregate = 'any' },
-    { name = 'bump_attackable', aggregate = 'any' },
-    { name = 'projectile_collider', aggregate = 'any' },
-    { name = 'hit_points', aggregate = 'void' },
     { name = 'tile', aggregate = 'void' },
-    { name = 'destroyed_by_explosion', aggregate = 'set' },
 ]

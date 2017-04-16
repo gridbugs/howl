@@ -15,22 +15,7 @@ fn animation_policy(ecs: &mut EcsCtx,
                     rng: &mut StdRng,
                     frame: Frame) -> bool {
 
-    if frame.count() % 20 == 0 {
-        for id in ecs.id_iter_acid_animation() {
-            // don't always change every tile
-            if rng.next_f64() > 0.5 {
-                continue;
-            }
-
-            let animation = ecs.get_probabilistic_animation(id).expect("Entity missing probabilistic_animation");
-            let tile = *animation.choose(rng);
-            action.insert_tile(id, tile);
-        }
-
-        true
-    } else {
-        false
-    }
+    false
 }
 
 fn render_frame<K: KnowledgeRenderer>(ecs: &mut EcsCtx,

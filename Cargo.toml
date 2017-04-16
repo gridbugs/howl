@@ -23,6 +23,7 @@ math = { path = "crates/math" }
 message = { path = "crates/message" }
 perlin = { path = "crates/perlin" }
 search = { path = "crates/search" }
+tile = { path = "crates/tile" }
 util = { path = "crates/util" }
 rand = "0.3"
 num = "0.1"

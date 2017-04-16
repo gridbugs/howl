@@ -174,34 +174,6 @@ impl<'game, 'level, Renderer: KnowledgeRenderer> TurnEnv<'game, 'level, Renderer
 
     fn check_rules(&mut self) -> RuleResult {
 
-        let rule_env = RuleEnv {
-            ecs: self.ecs,
-            spatial_hash: self.spatial_hash,
-        };
-
-        if self.ecs_action.contains_property_no_commit() {
-            rules::projectile_collision(rule_env, self.ecs_action, self.rule_reactions)?;
-        } else {
-            rules::then(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::bounds(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::letter(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::acid(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::run_over(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::bump_attack(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::projectile_collision_trigger(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::collision(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::death(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::enemy_collision(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::pc_collision(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::level_switch(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::level_switch_auto(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::physics(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::driving(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::realtime_velocity_start(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::realtime_velocity(rule_env, self.ecs_action, self.rule_reactions)?;
-            rules::explosion_destroy(rule_env, self.ecs_action, self.rule_reactions)?;
-        }
-
         RULE_ACCEPT
     }
 

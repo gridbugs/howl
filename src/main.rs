@@ -30,6 +30,7 @@ extern crate message;
 extern crate perlin;
 extern crate search;
 extern crate spatial_hash;
+extern crate tile;
 extern crate util;
 
 use std::env;

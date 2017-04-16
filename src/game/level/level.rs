@@ -116,18 +116,6 @@ impl Level {
         let mut entity_remove = EcsAction::new();
         let mut entity_insert = EcsAction::new();
 
-        if let Some(weapon_slots) = self.ecs.borrow_weapon_slots(entity_id) {
-            for (_, id) in weapon_slots.iter() {
-                entity_remove.entity_delete_by_id(*id, &self.ecs);
-            }
-        }
-
-        if let Some(inventory) = self.ecs.borrow_inventory(entity_id) {
-            for id in inventory.iter() {
-                entity_remove.entity_delete_by_id(id, &self.ecs);
-            }
-        }
-
         entity_remove.entity_delete_by_id(entity_id, &self.ecs);
         self.commit_into(&mut entity_remove, &mut entity_insert, action_id);
 

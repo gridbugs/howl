@@ -2,8 +2,8 @@ use messages::*;
 use grid::{Grid, StaticGrid, DefaultGrid};
 use util::BestMap;
 use math::Coord;
+use tile::TileType;
 use hit_points::HitPoints;
-use tile_types::TileType;
 use knowledge::GameKnowledge;
 use dimension_constructor::TwoDimensionalCons;
 

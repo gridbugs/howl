@@ -12,4 +12,4 @@ serde = "0.9"
 serde_derive = "0.9"
 
 [build-dependencies]
-statecs-spatial-hash = { git = "https://github.com/stevebob/statecs-spatial-hash.git", rev="ba4c750" }
+statecs-spatial-hash = { git = "https://github.com/stevebob/statecs-spatial-hash.git", rev="5f26982" }

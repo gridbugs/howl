@@ -8,6 +8,7 @@ extern crate control;
 extern crate engine_defs;
 extern crate message;
 extern crate content_types;
+extern crate tile;
 extern crate util;
 
 mod generated;
