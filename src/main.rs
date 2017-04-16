@@ -16,6 +16,7 @@ extern crate fnv;
 #[cfg(feature = "sdl2")]
 extern crate sdl2;
 
+extern crate action;
 extern crate behaviour;
 extern crate colour;
 extern crate content_types;

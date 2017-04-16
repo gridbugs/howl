@@ -6,6 +6,7 @@ use std::ops::Deref;
 use rand::StdRng;
 use engine_defs::*;
 
+use action::*;
 use game::*;
 use message::*;
 use content_types::*;

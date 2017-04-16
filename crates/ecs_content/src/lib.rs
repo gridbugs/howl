@@ -10,6 +10,7 @@ extern crate message;
 extern crate content_types;
 extern crate tile;
 extern crate util;
+extern crate action;
 
 mod generated;
 pub use self::generated::*;

@@ -2,7 +2,7 @@ use std::result;
 
 use ecs_content::*;
 use spatial_hash::*;
-use content_types::ActionArgs;
+use action::ActionArgs;
 
 pub type RuleResult = result::Result<(), RuleResolution>;
 

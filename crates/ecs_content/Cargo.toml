@@ -5,6 +5,7 @@ authors = ["Stephen Sherratt <stephen@sherra.tt>"]
 build = 'build.rs'
 
 [dependencies]
+action = { path = "../action" }
 math = { path = "../math" }
 ecs_core = { path = "../ecs_core" }
 control = { path = "../control" }
